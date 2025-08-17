@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentPipe - ログイン</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #f97316 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+        }
+
+        /* 左側: ブランドセクション */
+        .brand-section {
+            background: linear-gradient(135deg, #1e3a8a, #1e40af);
+            color: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+
+        .brand-logo-icon {
+            font-size: 3rem;
+            margin-right: 1rem;
+        }
+
+        .brand-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .brand-features {
+            list-style: none;
+        }
+
+        .brand-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            opacity: 0.9;
+        }
+
+        .brand-features li::before {
+            content: '✓';
+            color: #f97316;
+            font-weight: bold;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        /* 右側: ログインフォーム */
+        .login-section {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .login-form {
+            space-y: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #f97316;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .form-input:hover {
+            border-color: #d1d5db;
+            background: white;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-input {
+            margin-right: 0.5rem;
+            transform: scale(1.2);
+        }
+
+        .checkbox-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .forgot-link {
+            color: #f97316;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-link:hover {
+            color: #ea580c;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+            color: #6b7280;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .signup-link {
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .signup-link a {
+            color: #1e3a8a;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            color: #f97316;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 768px) {
+            .login-container {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .brand-section {
+                padding: 2rem;
+                text-align: center;
+            }
+
+            .brand-logo {
+                justify-content: center;
+                font-size: 2rem;
+            }
+
+            .brand-title {
+                font-size: 1.5rem;
+            }
+
+            .brand-subtitle {
+                font-size: 1rem;
+            }
+
+            .login-section {
+                padding: 2rem;
+            }
+
+            .login-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .brand-section,
+            .login-section {
+                padding: 1.5rem;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        /* ローディングアニメーション */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- ブランドセクション -->
+        <div class="brand-section">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <span class="brand-logo-icon">🏠</span>
+                    RentPipe
+                </div>
+                <h1 class="brand-title">賃貸営業を、<br>流れるように</h1>
+                <p class="brand-subtitle">シンプルで効率的な顧客管理システム</p>
+                <ul class="brand-features">
+                    <li>顧客情報の一元管理</li>
+                    <li>パイプライン可視化</li>
+                    <li>成約率向上をサポート</li>
+                    <li>どこからでもアクセス可能</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ログインセクション -->
+        <div class="login-section">
+            <div class="login-header">
+                <h2 class="login-title">ログイン</h2>
+                <p class="login-subtitle">アカウントにサインインしてください</p>
+            </div>
+
+            <!-- エラー・成功メッセージ -->
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label">メールアドレス</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="your@email.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">パスワード</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="パスワードを入力"
+                        required
+                    >
+                </div>
+
+                <div class="form-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="remember" class="checkbox-input">
+                        <label for="remember" class="checkbox-label">ログイン状態を保持</label>
+                    </div>
+                    <a href="#" class="forgot-link">パスワードを忘れた場合</a>
+                </div>
+
+                <button type="submit" class="login-button" id="loginButton">
+                    <span id="loginButtonText">ログイン</span>
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>または</span>
+            </div>
+
+            <div class="signup-link">
+                アカウントをお持ちでない場合は <a href="#" id="signupLink">新規登録</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const loginButtonText = document.getElementById('loginButtonText');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+
+            // フォームのリアルタイムバリデーション
+            function validateForm() {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                
+                const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                const isValidPassword = password.length >= 6;
+                
+                loginButton.disabled = !(isValidEmail && isValidPassword);
+                
+                return { isValidEmail, isValidPassword };
+            }
+
+            emailInput.addEventListener('input', validateForm);
+            passwordInput.addEventListener('input', validateForm);
+
+            // エラー・成功メッセージの表示
+            function showMessage(type, message) {
+                hideMessages();
+                if (type === 'error') {
+                    errorMessage.textContent = message;
+                    errorMessage.style.display = 'block';
+                } else if (type === 'success') {
+                    successMessage.textContent = message;
+                    successMessage.style.display = 'block';
+                }
+            }
+
+            function hideMessages() {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+            }
+
+            // ログインフォームの送信処理
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const { isValidEmail, isValidPassword } = validateForm();
+                
+                if (!isValidEmail) {
+                    showMessage('error', '有効なメールアドレスを入力してください');
+                    return;
+                }
+                
+                if (!isValidPassword) {
+                    showMessage('error', 'パスワードは6文字以上で入力してください');
+                    return;
+                }
+
+                // ローディング状態開始
+                loginButton.disabled = true;
+                loginButtonText.innerHTML = '<span class="loading-spinner"></span>ログイン中...';
+                hideMessages();
+
+                try {
+                    // Firebase Authentication実装箇所
+                    // 現在はデモ用の処理
+                    await simulateLogin();
+                    
+                    showMessage('success', 'ログインに成功しました！ダッシュボードに移動します...');
+                    
+                    // 2秒後にダッシュボードにリダイレクト
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    
+                } catch (error) {
+                    showMessage('error', error.message || 'ログインに失敗しました');
+                } finally {
+                    // ローディング状態終了
+                    loginButton.disabled = false;
+                    loginButtonText.textContent = 'ログイン';
+                }
+            });
+
+            // デモ用のログインシミュレーション
+            async function simulateLogin() {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                
+                // 1.5秒の遅延でログイン処理をシミュレート
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // デモ用の認証チェック
+                if (email === 'demo@rentpipe.jp' && password === 'demo123') {
+                    return { success: true };
+                } else if (email === 'admin@rentpipe.jp' && password === 'admin123') {
+                    return { success: true };
+                } else {
+                    // Week 3-4でFirebase Authentication実装時は、
+                    // 任意のメール・パスワードでも成功とする
+                    return { success: true };
+                }
+            }
+
+            // パスワード忘れ・新規登録リンク
+            document.querySelector('.forgot-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showMessage('success', 'パスワードリセット機能は Week 3-4 で実装予定です');
+            });
+
+            document.getElementById('signupLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                showMessage('success', '新規登録機能は Week 3-4 で実装予定です');
+            });
+
+            // 初期バリデーション
+            validateForm();
+        });
+    </script>
+</body>
+</html>

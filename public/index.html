@@ -469,6 +469,19 @@
     <script>
         // 簡単なインタラクション
         document.addEventListener('DOMContentLoaded', function() {
+
+            // ユーザーアバターにログアウト機能を追加
+            const userAvatar = document.querySelector(".user-avatar");
+            if (userAvatar) {
+                userAvatar.addEventListener("click", function() {
+                    const result = confirm("ログアウトしますか？");
+                    if (result) {
+                        window.location.href = "login.html";
+                    }
+                });
+                userAvatar.style.cursor = "pointer";
+                userAvatar.title = "クリックでログアウト";
+            }
             // ナビゲーションのアクティブ状態管理
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
@@ -502,3 +515,34 @@
     </script>
 </body>
 </html>
+
+<!-- ログイン画面への遷移テスト用 -->
+<script>
+// ユーザーメニューにログアウト機能を追加
+document.addEventListener('DOMContentLoaded', function() {
+
+            // ユーザーアバターにログアウト機能を追加
+            const userAvatar = document.querySelector(".user-avatar");
+            if (userAvatar) {
+                userAvatar.addEventListener("click", function() {
+                    const result = confirm("ログアウトしますか？");
+                    if (result) {
+                        window.location.href = "login.html";
+                    }
+                });
+                userAvatar.style.cursor = "pointer";
+                userAvatar.title = "クリックでログアウト";
+            }
+    const userAvatar = document.querySelector('.user-avatar');
+    if (userAvatar) {
+        userAvatar.addEventListener('click', function() {
+            const result = confirm('ログアウトしますか？');
+            if (result) {
+                window.location.href = 'login.html';
+            }
+        });
+        userAvatar.style.cursor = 'pointer';
+        userAvatar.title = 'クリックでログアウト';
+    }
+});
+</script>
