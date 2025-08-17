@@ -391,6 +391,125 @@
             cursor: not-allowed;
         }
 
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background-color: #f3f4f6;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f97316;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        .form-textarea {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+
+        .area-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .area-checkboxes label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .area-checkboxes input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
         /* レスポンシブデザイン */
         @media (max-width: 1024px) {
             .filter-row {
@@ -456,6 +575,18 @@
             .action-buttons {
                 flex-direction: column;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .area-checkboxes {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 480px) {
@@ -470,33 +601,11 @@
             .customer-table {
                 font-size: 0.9rem;
             }
-        }
 
-        /* モーダル */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow-y: auto;
+            .modal-content {
+                margin: 0.5rem;
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -556,19 +665,19 @@
         <!-- 顧客統計 -->
         <div class="customer-stats">
             <div class="stat-card">
-                <div class="stat-number" id="totalCustomers">24</div>
+                <div class="stat-number" id="totalCustomers">5</div>
                 <div class="stat-label">総顧客数</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="activeCustomers">18</div>
+                <div class="stat-number" id="activeCustomers">4</div>
                 <div class="stat-label">アクティブ</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="completedCustomers">6</div>
+                <div class="stat-number" id="completedCustomers">1</div>
                 <div class="stat-label">完了</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="newThisWeek">3</div>
+                <div class="stat-number" id="newThisWeek">2</div>
                 <div class="stat-label">今週新規</div>
             </div>
         </div>
@@ -624,7 +733,7 @@
         <!-- 顧客テーブル -->
         <div class="customer-table-container">
             <div class="table-header">
-                <h2 class="table-title">顧客一覧 (<span id="customerCount">24</span>件)</h2>
+                <h2 class="table-title">顧客一覧 (<span id="customerCount">5</span>件)</h2>
                 <div class="table-actions">
                     <button class="btn btn-secondary btn-small" onclick="toggleView()">📋 リスト表示</button>
                 </div>
@@ -653,24 +762,138 @@
         </div>
     </main>
 
-    <!-- モーダル（顧客詳細・編集用） -->
+    <!-- 顧客詳細・編集モーダル -->
     <div class="modal" id="customerModal">
         <div class="modal-content">
-            <h2>顧客詳細・編集</h2>
-            <p>詳細画面は Week 3 後半で実装予定です</p>
-            <button class="btn btn-secondary" onclick="closeModal()">閉じる</button>
+            <div class="modal-header">
+                <h2 id="modalTitle">顧客詳細</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <!-- 基本情報セクション -->
+                    <div class="form-section">
+                        <h3 class="section-title">基本情報</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">氏名 <span class="required">*</span></label>
+                                <input type="text" id="customerName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">年齢</label>
+                                <input type="number" id="customerAge" class="form-input" min="18" max="100">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">メールアドレス <span class="required">*</span></label>
+                                <input type="email" id="customerEmail" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">電話番号 <span class="required">*</span></label>
+                                <input type="tel" id="customerPhone" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">職業</label>
+                                <select id="customerOccupation" class="form-select">
+                                    <option value="">選択してください</option>
+                                    <option value="会社員">会社員</option>
+                                    <option value="公務員">公務員</option>
+                                    <option value="自営業">自営業</option>
+                                    <option value="学生">学生</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">年収（万円）</label>
+                                <input type="number" id="customerIncome" class="form-input" min="0" step="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 希望条件セクション -->
+                    <div class="form-section">
+                        <h3 class="section-title">希望条件</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">予算下限（円）</label>
+                                <input type="number" id="budgetMin" class="form-input" min="0" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">予算上限（円）</label>
+                                <input type="number" id="budgetMax" class="form-input" min="0" step="1000">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">希望間取り</label>
+                                <select id="roomType" class="form-select">
+                                    <option value="">選択してください</option>
+                                    <option value="1R">1R</option>
+                                    <option value="1K">1K</option>
+                                    <option value="1DK">1DK</option>
+                                    <option value="1LDK">1LDK</option>
+                                    <option value="2K">2K</option>
+                                    <option value="2DK">2DK</option>
+                                    <option value="2LDK">2LDK</option>
+                                    <option value="3LDK以上">3LDK以上</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ステータス</label>
+                                <select id="customerStatus" class="form-select">
+                                    <option value="初回相談">初回相談</option>
+                                    <option value="物件紹介">物件紹介</option>
+                                    <option value="内見">内見</option>
+                                    <option value="申込">申込</option>
+                                    <option value="審査">審査</option>
+                                    <option value="契約">契約</option>
+                                    <option value="完了">完了</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">希望エリア</label>
+                            <div class="area-checkboxes" id="areaCheckboxes">
+                                <label><input type="checkbox" value="渋谷区"> 渋谷区</label>
+                                <label><input type="checkbox" value="新宿区"> 新宿区</label>
+                                <label><input type="checkbox" value="港区"> 港区</label>
+                                <label><input type="checkbox" value="品川区"> 品川区</label>
+                                <label><input type="checkbox" value="世田谷区"> 世田谷区</label>
+                                <label><input type="checkbox" value="杉並区"> 杉並区</label>
+                                <label><input type="checkbox" value="中野区"> 中野区</label>
+                                <label><input type="checkbox" value="大田区"> 大田区</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">要望・備考</label>
+                            <textarea id="customerNotes" class="form-textarea" rows="3" placeholder="駅徒歩10分以内、ペット可、など"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ボタンエリア -->
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+                        <button type="submit" class="btn btn-primary" id="saveButton">保存</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
         // サンプル顧客データ
-        const sampleCustomers = [
+        let sampleCustomers = [
             {
                 id: 1,
                 name: "田中 太郎",
                 email: "tanaka@example.com",
                 phone: "090-1234-5678",
                 age: 28,
+                occupation: "会社員",
+                income: 400,
                 budgetMin: 60000,
                 budgetMax: 80000,
                 areas: ["渋谷区", "新宿区"],
@@ -685,6 +908,8 @@
                 email: "sato@example.com", 
                 phone: "080-9876-5432",
                 age: 25,
+                occupation: "会社員",
+                income: 350,
                 budgetMin: 70000,
                 budgetMax: 90000,
                 areas: ["港区", "品川区"],
@@ -699,6 +924,8 @@
                 email: "suzuki@example.com",
                 phone: "070-1111-2222",
                 age: 35,
+                occupation: "公務員",
+                income: 500,
                 budgetMin: 120000,
                 budgetMax: 150000,
                 areas: ["世田谷区"],
@@ -712,7 +939,9 @@
                 name: "高橋 美穂",
                 email: "takahashi@example.com",
                 phone: "090-3333-4444",
-                age: 30,
+                age: 20,
+                occupation: "学生",
+                income: 0,
                 budgetMin: 50000,
                 budgetMax: 70000,
                 areas: ["杉並区", "中野区"],
@@ -727,6 +956,8 @@
                 email: "ito@example.com",
                 phone: "080-5555-6666",
                 age: 42,
+                occupation: "自営業",
+                income: 600,
                 budgetMin: 100000,
                 budgetMax: 130000,
                 areas: ["大田区"],
@@ -739,6 +970,7 @@
 
         let filteredCustomers = [...sampleCustomers];
         let currentPage = 1;
+        let currentEditingId = null;
         const itemsPerPage = 10;
 
         // ページ読み込み時の初期化
@@ -758,6 +990,9 @@
             document.getElementById('statusFilter').addEventListener('change', applyFilters);
             document.getElementById('budgetFilter').addEventListener('change', applyFilters);
             document.getElementById('sortFilter').addEventListener('change', applyFilters);
+
+            // フォーム送信のイベントリスナー
+            document.getElementById('customerForm').addEventListener('submit', saveCustomer);
         }
 
         function applyFilters() {
@@ -800,7 +1035,6 @@
 
             currentPage = 1;
             renderCustomerTable();
-            updateStats();
         }
 
         function renderCustomerTable() {
@@ -813,7 +1047,7 @@
                 <tr>
                     <td>
                         <div class="customer-name">${customer.name}</div>
-                        <div class="customer-email">${customer.age}歳 · ${customer.roomType}</div>
+                        <div class="customer-email">${customer.age}歳 · ${customer.roomType || '未設定'}</div>
                     </td>
                     <td>
                         <div>${customer.email}</div>
@@ -888,22 +1122,133 @@
                 sampleCustomers.filter(c => new Date(c.createdAt) >= new Date('2025-08-11')).length;
         }
 
+        // モーダル関連の関数
+        function openModal(title, customer = null) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('customerModal').classList.add('active');
+            
+            if (customer) {
+                // 編集モードの場合、フォームにデータを設定
+                populateForm(customer);
+                currentEditingId = customer.id;
+            } else {
+                // 新規作成モードの場合、フォームをクリア
+                clearForm();
+                currentEditingId = null;
+            }
+        }
+
+        function populateForm(customer) {
+            document.getElementById('customerName').value = customer.name || '';
+            document.getElementById('customerAge').value = customer.age || '';
+            document.getElementById('customerEmail').value = customer.email || '';
+            document.getElementById('customerPhone').value = customer.phone || '';
+            document.getElementById('customerOccupation').value = customer.occupation || '';
+            document.getElementById('customerIncome').value = customer.income || '';
+            document.getElementById('budgetMin').value = customer.budgetMin || '';
+            document.getElementById('budgetMax').value = customer.budgetMax || '';
+            document.getElementById('roomType').value = customer.roomType || '';
+            document.getElementById('customerStatus').value = customer.status || '初回相談';
+            document.getElementById('customerNotes').value = customer.notes || '';
+
+            // エリアチェックボックスの設定
+            const checkboxes = document.querySelectorAll('#areaCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = customer.areas && customer.areas.includes(checkbox.value);
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('customerForm').reset();
+            const checkboxes = document.querySelectorAll('#areaCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+        }
+
+        function closeModal() {
+            document.getElementById('customerModal').classList.remove('active');
+            currentEditingId = null;
+        }
+
+        function saveCustomer(e) {
+            e.preventDefault();
+            
+            // フォームデータを取得
+            const formData = {
+                name: document.getElementById('customerName').value,
+                age: parseInt(document.getElementById('customerAge').value) || 0,
+                email: document.getElementById('customerEmail').value,
+                phone: document.getElementById('customerPhone').value,
+                occupation: document.getElementById('customerOccupation').value,
+                income: parseInt(document.getElementById('customerIncome').value) || 0,
+                budgetMin: parseInt(document.getElementById('budgetMin').value) || 0,
+                budgetMax: parseInt(document.getElementById('budgetMax').value) || 0,
+                roomType: document.getElementById('roomType').value,
+                status: document.getElementById('customerStatus').value,
+                notes: document.getElementById('customerNotes').value,
+                areas: Array.from(document.querySelectorAll('#areaCheckboxes input[type="checkbox"]:checked'))
+                           .map(cb => cb.value)
+            };
+
+            if (currentEditingId) {
+                // 編集モード
+                const index = sampleCustomers.findIndex(c => c.id === currentEditingId);
+                if (index !== -1) {
+                    sampleCustomers[index] = { ...sampleCustomers[index], ...formData };
+                }
+            } else {
+                // 新規作成モード
+                const newCustomer = {
+                    id: Math.max(...sampleCustomers.map(c => c.id)) + 1,
+                    ...formData,
+                    createdAt: new Date().toISOString().split('T')[0]
+                };
+                sampleCustomers.push(newCustomer);
+            }
+
+            // 表示を更新
+            applyFilters();
+            updateStats();
+            closeModal();
+            
+            alert(currentEditingId ? '顧客情報を更新しました' : '新規顧客を登録しました');
+        }
+
         // アクション関数
         function addCustomer() {
-            alert('新規顧客登録機能は Week 3 後半で実装予定です！');
+            openModal('新規顧客登録');
         }
 
         function viewCustomer(id) {
-            document.getElementById('customerModal').classList.add('active');
+            const customer = sampleCustomers.find(c => c.id === id);
+            if (customer) {
+                openModal('顧客詳細', customer);
+                // 詳細モードでは編集不可にする
+                const inputs = document.querySelectorAll('#customerForm input, #customerForm select, #customerForm textarea');
+                inputs.forEach(input => input.disabled = true);
+                document.getElementById('saveButton').style.display = 'none';
+            }
         }
 
         function editCustomer(id) {
-            alert(`顧客ID: ${id} の編集機能は Week 3 後半で実装予定です！`);
+            const customer = sampleCustomers.find(c => c.id === id);
+            if (customer) {
+                openModal('顧客編集', customer);
+                // 編集モードでは全て編集可能にする
+                const inputs = document.querySelectorAll('#customerForm input, #customerForm select, #customerForm textarea');
+                inputs.forEach(input => input.disabled = false);
+                document.getElementById('saveButton').style.display = 'inline-flex';
+            }
         }
 
         function deleteCustomer(id) {
             if (confirm('この顧客を削除しますか？')) {
-                alert(`顧客ID: ${id} の削除機能は Week 3 後半で実装予定です！`);
+                const index = sampleCustomers.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    sampleCustomers.splice(index, 1);
+                    applyFilters();
+                    updateStats();
+                    alert('顧客を削除しました');
+                }
             }
         }
 
@@ -920,11 +1265,7 @@
         }
 
         function toggleView() {
-            alert('カード表示切り替えは Week 3 後半で実装予定です！');
-        }
-
-        function closeModal() {
-            document.getElementById('customerModal').classList.remove('active');
+            alert('カード表示切り替えは Week 4 で実装予定です！');
         }
 
         function logout() {
@@ -932,6 +1273,13 @@
                 window.location.href = 'login.html';
             }
         }
+
+        // モーダル外クリックで閉じる
+        document.getElementById('customerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>
