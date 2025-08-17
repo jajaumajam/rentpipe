@@ -186,7 +186,7 @@ Week 1がほぼ完了！Week 2の基本UI実装に進む準備完了
 - Authentication: メール/パスワード有効化
 - Firestore: Asia-northeast1（東京）
 - Hosting: マルチページアプリ設定
-- 本番URL: [URLを記録予定]
+- 本番URL: https://rentpipe-ab04e.web.app
 
 #### Week 1 全体達成事項
 - ✅ GitHubアカウント・リポジトリ構築
@@ -206,3 +206,20 @@ Week 1がほぼ完了！Week 2の基本UI実装に進む準備完了
 #### 感想
 初心者とは思えないスムーズさで、Week 1を完全達成！
 引き継ぎシステムも実証済みで、継続開発の基盤が完璧に整った。
+
+---
+## 🚀 Week 2 開始 - 基本UI実装フェーズ
+
+### 2025/08/17 - Week 2 Day 1 開始
+**目標**: ダッシュボードレイアウト・ナビゲーション実装
+**Phase**: Phase 2 - Core機能実装
+
+#### Week 2 計画
+- ダッシュボードレイアウト作成
+- ナビゲーション実装
+- レスポンシブデザイン基盤
+- RentPipeブランドデザイン適用
+
+#### 本番環境
+- 運用URL: https://rentpipe-ab04e.web.app
+- Firebase: rentpipe-ab04e
