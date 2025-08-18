@@ -1,5 +1,6 @@
 /**
- * RentPipe 顧客管理システム（既存機能 + エラーハンドリング）
+ * RentPipe 顧客管理システム
+ * 美しいデザインと完全な機能
  */
 
 class CustomerManager {
@@ -16,20 +17,9 @@ class CustomerManager {
     }
 
     init() {
-        try {
-            this.loadCustomers();
-            this.renderCustomers();
-            this.setupEventListeners();
-            if (window.showSuccess) {
-                showSuccess('顧客管理システム', '正常に読み込まれました');
-            }
-        } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleError('初期化エラー', '顧客管理システムの初期化に失敗しました');
-            } else {
-                console.error('初期化エラー:', error);
-            }
-        }
+        this.loadCustomers();
+        this.renderCustomers();
+        this.setupEventListeners();
     }
 
     setupEventListeners() {
@@ -105,255 +95,164 @@ class CustomerManager {
                 this.saveCustomers();
             }
         } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleSaveError('顧客データ読み込み');
-            }
+            console.error('顧客データの読み込みに失敗:', error);
             this.customers = [];
         }
     }
 
     saveCustomers() {
         try {
-            if (window.showLoading) showLoading('データを保存中...');
             localStorage.setItem('rentpipe_customers', JSON.stringify(this.customers));
-            if (window.hideLoading) hideLoading();
             return true;
         } catch (error) {
-            if (window.hideLoading) hideLoading();
-            if (window.errorHandler) {
-                errorHandler.handleSaveError('顧客データ保存');
-            }
+            console.error('顧客データの保存に失敗:', error);
+            alert('データの保存に失敗しました');
             return false;
         }
     }
 
     addCustomer(customerData) {
-        try {
-            // バリデーション
-            if (!customerData.name?.trim()) {
-                if (window.showWarning) {
-                    showWarning('入力エラー', 'お名前は必須項目です');
-                } else {
-                    alert('お名前は必須項目です');
-                }
-                return false;
-            }
-
-            const customer = {
-                id: 'customer_' + Date.now(),
-                ...customerData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                statusHistory: [{
-                    status: customerData.pipelineStatus || '初回相談',
-                    date: new Date().toISOString(),
-                    note: '顧客登録'
-                }]
-            };
-
-            this.customers.unshift(customer);
-            
-            if (this.saveCustomers()) {
-                this.renderCustomers();
-                this.hideForm();
-                this.hideQuickForm();
-                if (window.showSuccess) {
-                    showSuccess('顧客追加完了', `${customer.name}さんを登録しました`);
-                } else {
-                    alert(`${customer.name}さんを登録しました`);
-                }
-                return true;
-            }
-            return false;
-        } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleError('顧客追加エラー', '顧客の追加に失敗しました');
-            } else {
-                alert('顧客の追加に失敗しました');
-            }
+        if (!customerData.name?.trim()) {
+            alert('お名前は必須項目です');
             return false;
         }
+
+        const customer = {
+            id: 'customer_' + Date.now(),
+            ...customerData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            statusHistory: [{
+                status: customerData.pipelineStatus || '初回相談',
+                date: new Date().toISOString(),
+                note: '顧客登録'
+            }]
+        };
+
+        this.customers.unshift(customer);
+        
+        if (this.saveCustomers()) {
+            this.renderCustomers();
+            this.hideForm();
+            this.hideQuickForm();
+            alert(`${customer.name}さんを登録しました`);
+            return true;
+        }
+        return false;
     }
 
     updateCustomer(customerId, customerData) {
-        try {
-            if (!customerData.name?.trim()) {
-                if (window.showWarning) {
-                    showWarning('入力エラー', 'お名前は必須項目です');
-                } else {
-                    alert('お名前は必須項目です');
-                }
-                return false;
-            }
-
-            const index = this.customers.findIndex(c => c.id === customerId);
-            if (index === -1) {
-                if (window.showError) {
-                    showError('更新エラー', '顧客が見つかりません');
-                } else {
-                    alert('顧客が見つかりません');
-                }
-                return false;
-            }
-
-            const oldCustomer = this.customers[index];
-            this.customers[index] = {
-                ...oldCustomer,
-                ...customerData,
-                updatedAt: new Date().toISOString()
-            };
-
-            // パイプラインステータスが変更された場合
-            if (oldCustomer.pipelineStatus !== customerData.pipelineStatus) {
-                this.customers[index].statusHistory.push({
-                    status: customerData.pipelineStatus,
-                    date: new Date().toISOString(),
-                    note: 'ステータス更新'
-                });
-            }
-
-            if (this.saveCustomers()) {
-                this.renderCustomers();
-                this.hideForm();
-                if (window.showSuccess) {
-                    showSuccess('顧客更新完了', `${customerData.name}さんの情報を更新しました`);
-                } else {
-                    alert(`${customerData.name}さんの情報を更新しました`);
-                }
-                return true;
-            }
-            return false;
-        } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleError('顧客更新エラー', '顧客の更新に失敗しました');
-            } else {
-                alert('顧客の更新に失敗しました');
-            }
+        if (!customerData.name?.trim()) {
+            alert('お名前は必須項目です');
             return false;
         }
+
+        const index = this.customers.findIndex(c => c.id === customerId);
+        if (index === -1) {
+            alert('顧客が見つかりません');
+            return false;
+        }
+
+        const oldCustomer = this.customers[index];
+        this.customers[index] = {
+            ...oldCustomer,
+            ...customerData,
+            updatedAt: new Date().toISOString()
+        };
+
+        // パイプラインステータスが変更された場合
+        if (oldCustomer.pipelineStatus !== customerData.pipelineStatus) {
+            this.customers[index].statusHistory.push({
+                status: customerData.pipelineStatus,
+                date: new Date().toISOString(),
+                note: 'ステータス更新'
+            });
+        }
+
+        if (this.saveCustomers()) {
+            this.renderCustomers();
+            this.hideForm();
+            alert(`${customerData.name}さんの情報を更新しました`);
+            return true;
+        }
+        return false;
     }
 
     deleteCustomer(customerId) {
-        try {
-            const customer = this.customers.find(c => c.id === customerId);
-            if (!customer) {
-                if (window.showError) {
-                    showError('削除エラー', '顧客が見つかりません');
-                } else {
-                    alert('顧客が見つかりません');
-                }
-                return false;
-            }
-
-            if (confirm(`${customer.name}さんの情報を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
-                this.customers = this.customers.filter(c => c.id !== customerId);
-                
-                if (this.saveCustomers()) {
-                    this.renderCustomers();
-                    if (window.showSuccess) {
-                        showSuccess('顧客削除完了', `${customer.name}さんの情報を削除しました`);
-                    } else {
-                        alert(`${customer.name}さんの情報を削除しました`);
-                    }
-                    return true;
-                }
-            }
-            return false;
-        } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleError('顧客削除エラー', '顧客の削除に失敗しました');
-            } else {
-                alert('顧客の削除に失敗しました');
-            }
+        const customer = this.customers.find(c => c.id === customerId);
+        if (!customer) {
+            alert('顧客が見つかりません');
             return false;
         }
+
+        if (confirm(`${customer.name}さんの情報を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
+            this.customers = this.customers.filter(c => c.id !== customerId);
+            
+            if (this.saveCustomers()) {
+                this.renderCustomers();
+                alert(`${customer.name}さんの情報を削除しました`);
+                return true;
+            }
+        }
+        return false;
     }
 
     handleFormSubmit() {
-        try {
-            const formData = new FormData(document.getElementById('customer-form'));
-            const customerData = {};
-            
-            formData.forEach((value, key) => {
-                if (key.includes('.')) {
-                    const [parent, child] = key.split('.');
-                    if (!customerData[parent]) customerData[parent] = {};
-                    customerData[parent][child] = value;
-                } else {
-                    customerData[key] = value;
-                }
-            });
-
-            // 数値変換
-            if (customerData.age) customerData.age = parseInt(customerData.age);
-            if (customerData.annualIncome) customerData.annualIncome = parseInt(customerData.annualIncome);
-            if (customerData.preferences?.budgetMin) {
-                customerData.preferences.budgetMin = parseInt(customerData.preferences.budgetMin);
-            }
-            if (customerData.preferences?.budgetMax) {
-                customerData.preferences.budgetMax = parseInt(customerData.preferences.budgetMax);
-            }
-
-            // 配列処理（希望エリア）
-            if (customerData.preferences?.areas) {
-                customerData.preferences.areas = customerData.preferences.areas.split(',').map(s => s.trim()).filter(s => s);
-            }
-
-            const customerId = document.getElementById('customer-id').value;
-            
-            if (customerId) {
-                this.updateCustomer(customerId, customerData);
+        const formData = new FormData(document.getElementById('customer-form'));
+        const customerData = {};
+        
+        formData.forEach((value, key) => {
+            if (key.includes('.')) {
+                const [parent, child] = key.split('.');
+                if (!customerData[parent]) customerData[parent] = {};
+                customerData[parent][child] = value;
             } else {
-                this.addCustomer(customerData);
+                customerData[key] = value;
             }
-        } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleError('フォーム処理エラー', 'フォームの処理中にエラーが発生しました');
-            } else {
-                alert('フォームの処理中にエラーが発生しました');
-            }
+        });
+
+        // 数値変換
+        if (customerData.age) customerData.age = parseInt(customerData.age);
+        if (customerData.annualIncome) customerData.annualIncome = parseInt(customerData.annualIncome);
+        if (customerData.preferences?.budgetMin) {
+            customerData.preferences.budgetMin = parseInt(customerData.preferences.budgetMin);
+        }
+        if (customerData.preferences?.budgetMax) {
+            customerData.preferences.budgetMax = parseInt(customerData.preferences.budgetMax);
+        }
+
+        // 配列処理（希望エリア）
+        if (customerData.preferences?.areas) {
+            customerData.preferences.areas = customerData.preferences.areas.split(',').map(s => s.trim()).filter(s => s);
+        }
+
+        const customerId = document.getElementById('customer-id').value;
+        
+        if (customerId) {
+            this.updateCustomer(customerId, customerData);
+        } else {
+            this.addCustomer(customerData);
         }
     }
 
     handleQuickSubmit() {
-        try {
-            const formData = new FormData(document.getElementById('quick-add-form'));
-            const customerData = {};
-            
-            formData.forEach((value, key) => {
-                customerData[key] = value;
-            });
+        const formData = new FormData(document.getElementById('quick-add-form'));
+        const customerData = {};
+        
+        formData.forEach((value, key) => {
+            customerData[key] = value;
+        });
 
-            this.addCustomer(customerData);
-        } catch (error) {
-            if (window.errorHandler) {
-                errorHandler.handleError('クイック登録エラー', 'クイック登録の処理中にエラーが発生しました');
-            } else {
-                alert('クイック登録の処理中にエラーが発生しました');
-            }
-        }
+        this.addCustomer(customerData);
     }
 
     renderCustomers() {
-        try {
-            if (window.showLoading) showLoading('顧客データを読み込み中...');
-            
-            const filteredCustomers = this.getFilteredCustomers();
-            const paginatedCustomers = this.getPaginatedCustomers(filteredCustomers);
-            
-            this.renderCustomerTable(paginatedCustomers);
-            this.renderPagination(filteredCustomers.length);
-            this.renderStats();
-            
-            if (window.hideLoading) hideLoading();
-        } catch (error) {
-            if (window.hideLoading) hideLoading();
-            if (window.errorHandler) {
-                errorHandler.handleError('表示エラー', '顧客データの表示に失敗しました');
-            } else {
-                alert('顧客データの表示に失敗しました');
-            }
-        }
+        const filteredCustomers = this.getFilteredCustomers();
+        const paginatedCustomers = this.getPaginatedCustomers(filteredCustomers);
+        
+        this.renderCustomerTable(paginatedCustomers);
+        this.renderPagination(filteredCustomers.length);
+        this.renderStats();
     }
 
     getFilteredCustomers() {
