@@ -646,3 +646,207 @@ body {
         margin: 5px 0;
     }
 }
+
+/* ===== モバイル専用スタイル強化 ===== */
+@media (max-width: 768px) {
+    /* モバイル用ボタン強化 */
+    .btn {
+        min-height: 48px;
+        font-size: 16px;
+        padding: 14px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .customer-actions .btn {
+        width: 100%;
+        margin-bottom: 10px;
+        text-align: center;
+        display: block;
+    }
+    
+    /* モバイル用モーダル強化 */
+    .mobile-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        z-index: 2000;
+        padding: 10px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .mobile-modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 400px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .mobile-modal-header {
+        padding: 20px;
+        border-bottom: 2px solid #f1f5f9;
+        background: #f8fafc;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    
+    .mobile-modal-header h2 {
+        font-size: 20px;
+        margin: 0;
+        color: #1e293b;
+    }
+    
+    .mobile-btn-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: #64748b;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 4px;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .mobile-btn-close:active {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+    
+    .mobile-form-grid {
+        display: block;
+        padding: 20px;
+    }
+    
+    .mobile-form-grid .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .mobile-form-input {
+        width: 100%;
+        padding: 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        background: white;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
+        min-height: 48px;
+    }
+    
+    .mobile-form-input:focus {
+        outline: none;
+        border-color: #1e3a8a;
+        box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    }
+    
+    .mobile-budget-inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .mobile-budget-inputs span {
+        text-align: center;
+        font-weight: bold;
+        color: #64748b;
+        padding: 5px 0;
+    }
+    
+    .mobile-modal-actions {
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 0 0 12px 12px;
+        border-top: 2px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+    }
+    
+    .mobile-btn {
+        width: 100%;
+        min-height: 48px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* タッチフレンドリーな要素 */
+    .customer-card {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .customer-card:active {
+        transform: scale(0.98);
+    }
+    
+    /* モバイル用デバッグ表示 */
+    .mobile-debug {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 3000;
+        display: none;
+    }
+    
+    .mobile-debug.show {
+        display: block;
+    }
+}
+
+/* iOS Safari 固有の修正 */
+@supports (-webkit-touch-callout: none) {
+    .mobile-modal-content {
+        margin-top: env(safe-area-inset-top, 20px);
+        margin-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    
+    .mobile-form-input {
+        border-radius: 8px;
+        -webkit-appearance: none;
+    }
+}

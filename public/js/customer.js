@@ -273,3 +273,247 @@ async function submitNewCustomer() {
         alert('顧客登録に失敗しました。もう一度お試しください。');
     }
 }
+
+// モバイル対応の新規顧客登録機能
+function showAddCustomerModalMobile() {
+    console.log('showAddCustomerModal called on mobile');
+    
+    try {
+        // 既存のモーダルがあれば削除
+        const existingModal = document.getElementById('addCustomerModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'addCustomerModal';
+        modal.className = 'modal mobile-modal';
+        modal.style.display = 'flex';
+
+        modal.innerHTML = `
+            <div class="modal-content mobile-modal-content">
+                <div class="modal-header mobile-modal-header">
+                    <h2>新規顧客登録</h2>
+                    <button onclick="closeAddCustomerModal()" class="btn-close mobile-btn-close" type="button">×</button>
+                </div>
+                
+                <form id="addCustomerForm" class="mobile-form">
+                    <div class="form-grid mobile-form-grid">
+                        <div class="form-group">
+                            <label for="customerName" class="form-label required">お名前</label>
+                            <input type="text" id="customerName" name="name" class="form-input mobile-form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customerEmail" class="form-label required">メールアドレス</label>
+                            <input type="email" id="customerEmail" name="email" class="form-input mobile-form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customerPhone" class="form-label required">電話番号</label>
+                            <input type="tel" id="customerPhone" name="phone" class="form-input mobile-form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customerAge" class="form-label">年齢</label>
+                            <input type="number" id="customerAge" name="age" class="form-input mobile-form-input" min="18" max="100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customerOccupation" class="form-label">職業</label>
+                            <select id="customerOccupation" name="occupation" class="form-input mobile-form-input">
+                                <option value="">選択してください</option>
+                                <option value="会社員">会社員</option>
+                                <option value="公務員">公務員</option>
+                                <option value="自営業">自営業</option>
+                                <option value="フリーランス">フリーランス</option>
+                                <option value="学生">学生</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customerIncome" class="form-label">年収（万円）</label>
+                            <input type="number" id="customerIncome" name="annualIncome" class="form-input mobile-form-input" min="0">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="customerBudgetMin" class="form-label">予算（家賃）</label>
+                            <div class="budget-inputs mobile-budget-inputs">
+                                <input type="number" id="customerBudgetMin" name="budgetMin" class="form-input mobile-form-input" placeholder="最低金額">
+                                <span>〜</span>
+                                <input type="number" id="customerBudgetMax" name="budgetMax" class="form-input mobile-form-input" placeholder="最高金額">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="customerNotes" class="form-label">備考</label>
+                            <textarea id="customerNotes" name="notes" class="form-input mobile-form-input" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions mobile-modal-actions">
+                        <button type="button" onclick="closeAddCustomerModal()" class="btn btn-outline mobile-btn">キャンセル</button>
+                        <button type="submit" class="btn btn-primary mobile-btn">顧客を登録</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        
+        // フォーム送信イベント（タッチデバイス対応）
+        const form = document.getElementById('addCustomerForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Form submitted on mobile');
+            await submitNewCustomer();
+        });
+        
+        // モーダル外タップで閉じる（モバイル対応）
+        modal.addEventListener('touchstart', (e) => {
+            if (e.target === modal) {
+                closeAddCustomerModal();
+            }
+        });
+        
+        console.log('Mobile modal created successfully');
+        
+    } catch (error) {
+        console.error('Error creating mobile modal:', error);
+        alert('モーダルの表示に失敗しました: ' + error.message);
+    }
+}
+
+// デバイス判定
+function isMobileDevice() {
+    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+}
+
+// 統一された新規顧客登録関数（デバイス自動判定）
+function showAddCustomerModalUnified() {
+    console.log('Device check:', isMobileDevice() ? 'Mobile' : 'Desktop');
+    
+    if (isMobileDevice()) {
+        showAddCustomerModalMobile();
+    } else {
+        showAddCustomerModal();
+    }
+}
+
+// デバッグ用：ボタンクリックテスト
+function testButtonClick() {
+    console.log('Button clicked!');
+    alert('ボタンが正常にクリックされました！');
+}
+
+// モバイル用のタッチイベント改善
+document.addEventListener('DOMContentLoaded', function() {
+    // モバイルデバイスかどうかをチェック
+    if (isMobileDevice()) {
+        console.log('Mobile device detected, applying mobile enhancements');
+        
+        // すべてのボタンにタッチ対応を追加
+        document.addEventListener('touchstart', function() {}, {passive: true});
+        
+        // 新規顧客登録ボタンがあれば、イベントリスナーを追加
+        setTimeout(() => {
+            const addCustomerBtn = document.querySelector('button[onclick*="showAddCustomerModal"]');
+            if (addCustomerBtn) {
+                console.log('Found add customer button, adding mobile events');
+                
+                // 既存のonclick属性を削除して、新しいイベントリスナーを追加
+                addCustomerBtn.removeAttribute('onclick');
+                addCustomerBtn.addEventListener('click', showAddCustomerModalUnified);
+                addCustomerBtn.addEventListener('touchend', showAddCustomerModalUnified);
+                
+                console.log('Mobile events added to add customer button');
+            }
+        }, 1000);
+    }
+});
+
+// モバイルデバッグ機能
+function initMobileDebug() {
+    const debugElement = document.getElementById('mobileDebug');
+    const deviceType = document.getElementById('deviceType');
+    const screenSize = document.getElementById('screenSize');
+    
+    if (debugElement && deviceType && screenSize) {
+        deviceType.textContent = isMobileDevice() ? 'Mobile' : 'Desktop';
+        screenSize.textContent = `${window.innerWidth}x${window.innerHeight}`;
+        
+        // URLパラメータでデバッグ表示
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('debug') === 'true') {
+            debugElement.classList.add('show');
+        }
+        
+        // 画面サイズ変更時に更新
+        window.addEventListener('resize', () => {
+            screenSize.textContent = `${window.innerWidth}x${window.innerHeight}`;
+        });
+    }
+}
+
+// タッチイベントテスト
+function testTouchEvents() {
+    console.log('Testing touch events on mobile');
+    
+    const testButton = document.createElement('button');
+    testButton.textContent = 'タッチテスト';
+    testButton.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        padding: 20px;
+        background: red;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+    `;
+    
+    testButton.addEventListener('click', () => {
+        alert('タッチイベント正常動作！');
+        testButton.remove();
+    });
+    
+    testButton.addEventListener('touchstart', () => {
+        console.log('Touch start detected');
+    });
+    
+    testButton.addEventListener('touchend', () => {
+        console.log('Touch end detected');
+    });
+    
+    document.body.appendChild(testButton);
+    
+    // 5秒後に自動削除
+    setTimeout(() => {
+        if (testButton.parentNode) {
+            testButton.remove();
+        }
+    }, 5000);
+}
+
+// 初期化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing mobile features');
+    
+    // デバッグ機能初期化
+    setTimeout(initMobileDebug, 100);
+    
+    // モバイルデバイスの場合、追加の初期化
+    if (isMobileDevice()) {
+        console.log('Mobile device detected, initializing mobile-specific features');
+        
+        // URLに ?test=true が含まれている場合、タッチテストを表示
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('test') === 'true') {
+            setTimeout(testTouchEvents, 2000);
+        }
+    }
+});

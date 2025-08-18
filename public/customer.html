@@ -266,7 +266,7 @@
         </div>
 
         <div class="customer-actions">
-            <button onclick="showAddCustomerModal()" class="btn btn-primary">
+            <button onclick="showAddCustomerModalUnified()" class="btn btn-primary">
                 👤 新規顧客登録
             </button>
             <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
@@ -344,5 +344,13 @@
             }
         }
     </script>
-</body>
+    <!-- モバイルデバッグ情報 -->
+    <div id="mobileDebug" class="mobile-debug">
+        デバイス: <span id="deviceType"></span><br>
+        画面: <span id="screenSize"></span>
+    <!-- モバイルデバッグ情報 -->
+    <div id="mobileDebug" class="mobile-debug">
+        デバイス: <span id="deviceType"></span><br>
+        画面: <span id="screenSize"></span>
+    </div>    </div></body>
 </html>
