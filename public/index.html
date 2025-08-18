@@ -3,546 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RentPipe - ダッシュボード</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9fafb;
-            color: #374151;
-            line-height: 1.6;
-        }
-
-        /* ヘッダー */
-        .header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .logo-icon {
-            margin-right: 0.5rem;
-            font-size: 1.8rem;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #f97316;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* ナビゲーション */
-        .nav {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 0;
-        }
-
-        .nav-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .nav-menu {
-            display: flex;
-            list-style: none;
-        }
-
-        .nav-item {
-            position: relative;
-        }
-
-        .nav-link {
-            display: block;
-            padding: 1rem 1.5rem;
-            text-decoration: none;
-            color: #6b7280;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            color: #1e3a8a;
-            border-bottom-color: #f97316;
-            background-color: #f8fafc;
-        }
-
-        /* メインコンテンツ */
-        .main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        .dashboard-header {
-            margin-bottom: 2rem;
-        }
-
-        .dashboard-title {
-            font-size: 2rem;
-            color: #1e3a8a;
-            margin-bottom: 0.5rem;
-        }
-
-        .dashboard-subtitle {
-            color: #6b7280;
-            font-size: 1.1rem;
-        }
-
-        /* 統計カード */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid #f97316;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .stat-title {
-            color: #6b7280;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .stat-icon {
-            font-size: 1.5rem;
-            color: #f97316;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #1e3a8a;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-change {
-            font-size: 0.8rem;
-            color: #10b981;
-        }
-
-        /* アクションボタン */
-        .actions {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #1e3a8a;
-            border: 2px solid #e5e7eb;
-        }
-
-        .btn-secondary:hover {
-            border-color: #1e3a8a;
-            background: #f8fafc;
-        }
-
-        /* パイプラインプレビュー */
-        .pipeline-preview {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
-
-        .pipeline-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .pipeline-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #1e3a8a;
-        }
-
-        .pipeline-stages {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .stage {
-            text-align: center;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .stage:hover {
-            border-color: #f97316;
-            background: white;
-        }
-
-        .stage-name {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-        }
-
-        .stage-count {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1e3a8a;
-        }
-
-        /* レスポンシブデザイン */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .nav-menu {
-                flex-direction: column;
-            }
-
-            .nav-link {
-                text-align: center;
-                border-bottom: none;
-                border-left: 3px solid transparent;
-            }
-
-            .nav-link:hover,
-            .nav-link.active {
-                border-left-color: #f97316;
-                border-bottom-color: transparent;
-            }
-
-            .main {
-                padding: 1rem;
-            }
-
-            .dashboard-title {
-                font-size: 1.5rem;
-            }
-
-            .actions {
-                justify-content: center;
-            }
-
-            .pipeline-stages {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .pipeline-stages {
-                grid-template-columns: 1fr;
-            }
-
-            .actions {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <title>ダッシュボード - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <!-- ヘッダー -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <span class="logo-icon">🏠</span>
-                RentPipe
-            </div>
-            <div class="user-menu">
-                <span>田中エージェント</span>
-                <div class="user-avatar">田</div>
-            </div>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>RentPipe</h1>
+            <span class="nav-subtitle">賃貸営業を、流れるように</span>
         </div>
-    </header>
-
-    <!-- ナビゲーション -->
-    <nav class="nav">
-        <div class="nav-content">
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="index.html" class="nav-link active">📊 ダッシュボード</a>
-                </li>
-                <li class="nav-item">
-                    <a href="customer.html" class="nav-link">👥 顧客管理</a>
-                </li>
-                <li class="nav-item">
-                    <a href="pipeline.html" class="nav-link">🔄 パイプライン</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">📝 フォーム</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">📤 エクスポート</a>
-                </li>
-            </ul>
+        <div class="nav-menu">
+            <a href="index.html" class="nav-link active">📊 ダッシュボード</a>
+            <a href="customer.html" class="nav-link">👥 顧客管理</a>
+            <a href="pipeline.html" class="nav-link">🔄 パイプライン</a>
+            <a href="#" class="nav-link">📈 レポート</a>
+            <button onclick="logout()" class="btn btn-outline">ログアウト</button>
         </div>
     </nav>
 
-    <!-- メインコンテンツ -->
-    <main class="main">
+    <main class="dashboard-container">
         <!-- ダッシュボードヘッダー -->
-        <div class="dashboard-header">
-            <h1 class="dashboard-title">ダッシュボード</h1>
-            <p class="dashboard-subtitle">賃貸営業の進捗を一目で確認</p>
-        </div>
-
-        <!-- 統計カード -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">総顧客数</span>
-                    <span class="stat-icon">👥</span>
-                </div>
-                <div class="stat-value">24</div>
-                <div class="stat-change">+3 今週</div>
+        <section class="dashboard-header">
+            <div class="header-content">
+                <h1>ダッシュボード</h1>
+                <p>本日の業務概要と重要な指標をご確認ください</p>
             </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">今月成約</span>
-                    <span class="stat-icon">🎉</span>
-                </div>
-                <div class="stat-value">7</div>
-                <div class="stat-change">+2 先月比</div>
+            <div class="header-actions">
+                <button onclick="window.location.href='customer.html'" class="btn btn-primary">
+                    👤 新規顧客登録
+                </button>
             </div>
+        </section>
 
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">内見予定</span>
-                    <span class="stat-icon">🏠</span>
+        <!-- 重要指標 -->
+        <section class="dashboard-stats">
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <h3 id="totalCustomers">0</h3>
+                        <p>総顧客数</p>
+                    </div>
                 </div>
-                <div class="stat-value">5</div>
-                <div class="stat-change">今週中</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">成約率</span>
-                    <span class="stat-icon">📈</span>
+                <div class="stat-card success">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <h3 id="completedDeals">0</h3>
+                        <p>今月成約</p>
+                    </div>
                 </div>
-                <div class="stat-value">29%</div>
-                <div class="stat-change">+5% 改善</div>
-            </div>
-        </div>
-
-        <!-- アクションボタン -->
-        <div class="actions">
-            <a href="#" class="btn btn-primary">
-                ➕ 新規顧客登録
-            </a>
-            <a href="#" class="btn btn-secondary">
-                📝 フォーム作成
-            </a>
-            <a href="#" class="btn btn-secondary">
-                📊 レポート出力
-            </a>
-        </div>
-
-        <!-- パイプラインプレビュー -->
-        <div class="pipeline-preview">
-            <div class="pipeline-header">
-                <h2 class="pipeline-title">パイプライン状況</h2>
-                <a href="#" class="btn btn-secondary">詳細を見る</a>
-            </div>
-            <div class="pipeline-stages">
-                <div class="stage">
-                    <div class="stage-name">初回相談</div>
-                    <div class="stage-count">8</div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-content">
+                        <h3 id="activeDeals">0</h3>
+                        <p>進行中案件</p>
+                    </div>
                 </div>
-                <div class="stage">
-                    <div class="stage-name">物件紹介</div>
-                    <div class="stage-count">6</div>
-                </div>
-                <div class="stage">
-                    <div class="stage-name">内見</div>
-                    <div class="stage-count">5</div>
-                </div>
-                <div class="stage">
-                    <div class="stage-name">申込</div>
-                    <div class="stage-count">3</div>
-                </div>
-                <div class="stage">
-                    <div class="stage-name">審査</div>
-                    <div class="stage-count">2</div>
-                </div>
-                <div class="stage">
-                    <div class="stage-name">契約</div>
-                    <div class="stage-count">1</div>
-                </div>
-                <div class="stage">
-                    <div class="stage-name">完了</div>
-                    <div class="stage-count">7</div>
+                <div class="stat-card info">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-content">
+                        <h3 id="conversionRate">0%</h3>
+                        <p>成約率</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- パイプライン概要 -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2>パイプライン概要</h2>
+                <a href="pipeline.html" class="btn btn-outline">詳細表示</a>
+            </div>
+            <div class="pipeline-overview">
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-初回相談">0</div>
+                    <div class="stage-label">初回相談</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-物件紹介">0</div>
+                    <div class="stage-label">物件紹介</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-内見">0</div>
+                    <div class="stage-label">内見</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-申込">0</div>
+                    <div class="stage-label">申込</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-審査">0</div>
+                    <div class="stage-label">審査</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-契約">0</div>
+                    <div class="stage-label">契約</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage success">
+                    <div class="stage-number" id="stage-完了">0</div>
+                    <div class="stage-label">完了</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 最近の顧客 -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2>最近の顧客</h2>
+                <a href="customer.html" class="btn btn-outline">全て表示</a>
+            </div>
+            <div class="recent-customers" id="recentCustomers">
+                <p style="text-align: center; color: #64748b; padding: 20px;">
+                    最近の顧客情報を読み込み中...
+                </p>
+            </div>
+        </section>
+
+        <!-- 今日のタスク -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2>今日のタスク</h2>
+                <button class="btn btn-outline">タスク追加</button>
+            </div>
+            <div class="tasks-list">
+                <div class="task-item">
+                    <div class="task-content">
+                        <h4>田中様 内見予定</h4>
+                        <p>時間: 14:00 - 15:00</p>
+                    </div>
+                    <div class="task-status">今日</div>
+                </div>
+                <div class="task-item">
+                    <div class="task-content">
+                        <h4>山田様 契約書準備</h4>
+                        <p>契約予定: 明日</p>
+                    </div>
+                    <div class="task-status">急ぎ</div>
+                </div>
+                <div class="task-item">
+                    <div class="task-content">
+                        <h4>新規物件情報更新</h4>
+                        <p>物件データベース更新</p>
+                    </div>
+                    <div class="task-status">通常</div>
+                </div>
+            </div>
+        </section>
     </main>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
     <script>
-        // 簡単なインタラクション
-        document.addEventListener('DOMContentLoaded', function() {
-
-            // ユーザーアバターにログアウト機能を追加
-            const userAvatar = document.querySelector(".user-avatar");
-            if (userAvatar) {
-                userAvatar.addEventListener("click", function() {
-                    const result = confirm("ログアウトしますか？");
-                    if (result) {
-                        window.location.href = "login.html";
-                    }
-                });
-                userAvatar.style.cursor = "pointer";
-                userAvatar.title = "クリックでログアウト";
+        // ログアウト機能
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                window.location.href = 'login.html';
             }
-            // ナビゲーションのアクティブ状態管理
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-
-            // 統計カードのホバーエフェクト
-            const statCards = document.querySelectorAll('.stat-card');
-            statCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.borderLeftColor = '#1e3a8a';
-                });
-                card.addEventListener('mouseleave', function() {
-                    this.style.borderLeftColor = '#f97316';
-                });
-            });
-
-            // アクションボタンのクリックイベント
-            const actionBtns = document.querySelectorAll('.btn');
-            actionBtns.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    alert('この機能は Week 3-4 で実装予定です！');
-                });
-            });
-        });
+        }
     </script>
 </body>
 </html>
-
-<!-- ログイン画面への遷移テスト用 -->
-<script>
-// ユーザーメニューにログアウト機能を追加
-document.addEventListener('DOMContentLoaded', function() {
-
-            // ユーザーアバターにログアウト機能を追加
-            const userAvatar = document.querySelector(".user-avatar");
-            if (userAvatar) {
-                userAvatar.addEventListener("click", function() {
-                    const result = confirm("ログアウトしますか？");
-                    if (result) {
-                        window.location.href = "login.html";
-                    }
-                });
-                userAvatar.style.cursor = "pointer";
-                userAvatar.title = "クリックでログアウト";
-            }
-    const userAvatar = document.querySelector('.user-avatar');
-    if (userAvatar) {
-        userAvatar.addEventListener('click', function() {
-            const result = confirm('ログアウトしますか？');
-            if (result) {
-                window.location.href = 'login.html';
-            }
-        });
-        userAvatar.style.cursor = 'pointer';
-        userAvatar.title = 'クリックでログアウト';
-    }
-});
-</script>
