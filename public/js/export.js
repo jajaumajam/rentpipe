@@ -11,21 +11,28 @@ class DataExporter {
 
     async loadCustomers() {
         try {
-            const snapshot = await db.collection('customers')
-                .orderBy('updatedAt', 'desc')
-                .get();
-            
-            this.customers = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            // Firebase接続チェック
+            if (window.db && typeof window.db.collection === 'function') {
+                const snapshot = await window.db.collection('customers')
+                    .orderBy('updatedAt', 'desc')
+                    .get();
+                
+                this.customers = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                console.log('Firebaseから顧客データを読み込みました');
+            } else {
+                throw new Error('Firebase not available, using demo data');
+            }
         } catch (error) {
-            console.error('顧客データの読み込みエラー:', error);
+            console.warn('顧客データの読み込み警告:', error.message);
             
             // デモデータ + フォームデータを結合
             const demoCustomers = this.getDemoCustomers();
             const formCustomers = JSON.parse(localStorage.getItem('demoCustomers') || '[]');
             this.customers = [...demoCustomers, ...formCustomers];
+            console.log('デモデータを使用します。顧客数:', this.customers.length);
         }
     }
 
@@ -146,47 +153,6 @@ class DataExporter {
         this.showExportNotification('JSON', customers.length);
     }
 
-    // 期間指定エクスポート
-    exportByDateRange(startDate, endDate, format = 'csv') {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // 終了日の最後まで
-
-        const filteredCustomers = this.customers.filter(customer => {
-            const createdDate = new Date(customer.createdAt);
-            return createdDate >= start && createdDate <= end;
-        });
-
-        if (filteredCustomers.length === 0) {
-            alert('指定期間内のデータがありません。');
-            return;
-        }
-
-        if (format === 'csv') {
-            this.exportToCSV(filteredCustomers);
-        } else {
-            this.exportToJSON(filteredCustomers);
-        }
-    }
-
-    // ステータス別エクスポート
-    exportByStatus(status, format = 'csv') {
-        const filteredCustomers = this.customers.filter(customer => 
-            customer.pipelineStatus === status
-        );
-
-        if (filteredCustomers.length === 0) {
-            alert(`「${status}」のデータがありません。`);
-            return;
-        }
-
-        if (format === 'csv') {
-            this.exportToCSV(filteredCustomers);
-        } else {
-            this.exportToJSON(filteredCustomers);
-        }
-    }
-
     // ファイルダウンロード
     downloadFile(blob, filename) {
         const url = window.URL.createObjectURL(blob);
@@ -284,48 +250,6 @@ class DataExporter {
                     </label>
                 </div>
 
-                <div style="margin-bottom: 20px;">
-                    <h3 style="margin-bottom: 10px; color: #1e293b;">エクスポート範囲</h3>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="radio" name="exportRange" value="all" checked style="margin-right: 8px;">
-                        全てのデータ
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="radio" name="exportRange" value="dateRange" style="margin-right: 8px;">
-                        期間指定
-                    </label>
-                    <label style="display: block;">
-                        <input type="radio" name="exportRange" value="status" style="margin-right: 8px;">
-                        ステータス別
-                    </label>
-                </div>
-
-                <div id="dateRangeInputs" style="display: none; margin-bottom: 20px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">開始日</label>
-                            <input type="date" id="startDate" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;">
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">終了日</label>
-                            <input type="date" id="endDate" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="statusInputs" style="display: none; margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">ステータス</label>
-                    <select id="statusSelect" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;">
-                        <option value="初回相談">初回相談</option>
-                        <option value="物件紹介">物件紹介</option>
-                        <option value="内見">内見</option>
-                        <option value="申込">申込</option>
-                        <option value="審査">審査</option>
-                        <option value="契約">契約</option>
-                        <option value="完了">完了</option>
-                    </select>
-                </div>
-
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button onclick="closeExportModal()" style="
                         padding: 10px 20px;
@@ -347,22 +271,6 @@ class DataExporter {
         `;
 
         document.body.appendChild(modal);
-
-        // ラジオボタンイベント
-        document.querySelectorAll('input[name="exportRange"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                document.getElementById('dateRangeInputs').style.display = 
-                    radio.value === 'dateRange' ? 'block' : 'none';
-                document.getElementById('statusInputs').style.display = 
-                    radio.value === 'status' ? 'block' : 'none';
-            });
-        });
-
-        // デフォルト日付設定
-        const today = new Date();
-        const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
-        document.getElementById('endDate').value = today.toISOString().split('T')[0];
     }
 }
 
@@ -376,44 +284,19 @@ function closeExportModal() {
 
 function executeExport() {
     const format = document.querySelector('input[name="exportFormat"]:checked').value;
-    const range = document.querySelector('input[name="exportRange"]:checked').value;
 
-    if (range === 'all') {
-        if (format === 'csv') {
-            dataExporter.exportToCSV();
-        } else {
-            dataExporter.exportToJSON();
-        }
-    } else if (range === 'dateRange') {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        
-        if (!startDate || !endDate) {
-            alert('開始日と終了日を入力してください。');
-            return;
-        }
-        
-        dataExporter.exportByDateRange(startDate, endDate, format);
-    } else if (range === 'status') {
-        const status = document.getElementById('statusSelect').value;
-        dataExporter.exportByStatus(status, format);
+    if (format === 'csv') {
+        dataExporter.exportToCSV();
+    } else {
+        dataExporter.exportToJSON();
     }
 
     closeExportModal();
 }
 
-// アニメーション用CSS
-const exportStyle = document.createElement('style');
-exportStyle.textContent = `
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-document.head.appendChild(exportStyle);
-
 // エクスポート機能初期化
 let dataExporter;
 document.addEventListener('DOMContentLoaded', () => {
     dataExporter = new DataExporter();
+    console.log('DataExporter initialized');
 });

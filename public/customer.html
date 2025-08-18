@@ -244,10 +244,10 @@
             <span class="nav-subtitle">賃貸営業を、流れるように</span>
         </div>
         <div class="nav-menu">
-            <a href="index.html" class="nav-link">ダッシュボード</a>
-            <a href="customer.html" class="nav-link active">顧客管理</a>
-            <a href="pipeline.html" class="nav-link">パイプライン</a>
-            <a href="#" class="nav-link">レポート</a>
+            <a href="index.html" class="nav-link">📊 ダッシュボード</a>
+            <a href="customer.html" class="nav-link active">👥 顧客管理</a>
+            <a href="pipeline.html" class="nav-link">🔄 パイプライン</a>
+            <a href="#" class="nav-link">📈 レポート</a>
             <button onclick="logout()" class="btn btn-outline">ログアウト</button>
         </div>
     </nav>
@@ -277,10 +277,10 @@
                     <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">顧客に送って自分で入力してもらう</p>
                 </div>
             </div>
-        </div>        <div class="customer-actions">
-            <button onclick="debugQuickRegister()" class="btn" style="background: #dc2626; color: white;" title="デバッグ用">
-                🔧 デバッグテスト
-            </button>            <button onclick="showQuickRegisterModal()">
+        </div>
+
+        <div class="customer-actions">
+            <button id="quickRegisterBtn" class="btn btn-primary">
                 ⚡ クイック登録
             </button>
             <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
@@ -288,7 +288,7 @@
             </button>
             <button onclick="showFormURLModal()" class="btn btn-outline" title="顧客フォームURL生成">
                 📝 詳細フォーム（顧客用）
-            </a>
+            </button>
         </div>
 
         <div class="search-container">
@@ -338,83 +338,26 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script>
-        console.log("Firebase config loaded, db available:", window.db ? "Yes" : "No");
-        console.log("Quick register function available:", typeof showQuickRegisterModal);
-    </script>    <script src="js/customer.js"></script>
+    <script src="js/customer.js"></script>
     <script src="js/export.js"></script>
-    <script>
-        // ログアウト機能
-        function logout() {
-            if (confirm('ログアウトしますか？')) {
-                window.location.href = 'login.html';
-            }
-        }
 
-        // フィルタークリア
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('sortBy').value = 'updatedAt';
-            if (window.customerManager) {
-                customerManager.applyFilters();
-            }
-        }
-    </script>
-    <!-- モバイルデバッグ情報 -->
-    <div id="mobileDebug" class="mobile-debug">
-        デバイス: <span id="deviceType"></span><br>
-        画面: <span id="screenSize"></span>
-    <!-- モバイルデバッグ情報 -->
-    <div id="mobileDebug" class="mobile-debug">
-        デバイス: <span id="deviceType"></span><br>
-        画面: <span id="screenSize"></span>
+    <!-- クイック登録機能（インライン定義） -->
     <script>
-        // デバッグ情報表示
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log("=== RentPipe Debug Info ===");
-            console.log("Firebase db:", window.db ? "Available" : "Not available");
-            console.log("showQuickRegisterModal:", typeof window.showQuickRegisterModal);
-            console.log("customerManager:", typeof window.customerManager);
-            console.log("dataExporter:", typeof window.dataExporter);
-            
-            // クイック登録ボタンのテスト
-            setTimeout(() => {
-                const quickBtn = document.querySelector("button[onclick*='showQuickRegisterModal']");
-                if (quickBtn) {
-                    console.log("Quick register button found:", quickBtn);
-                } else {
-                    console.log("Quick register button NOT found");
-                }
-            }, 1000);
-        });
-        
-        // 手動テスト用関数
-        function testQuickRegister() {
-            if (typeof window.showQuickRegisterModal === "function") {
-                window.showQuickRegisterModal();
-            } else {
-                alert("showQuickRegisterModal関数が利用できません");
-            }
-        }
-        
-        window.testQuickRegister = testQuickRegister;
-    <script>
-        // クイック登録機能を直接定義（確実な動作のため）
+        // クイック登録機能
         function showQuickRegisterModal() {
-            console.log("showQuickRegisterModal called from inline script");
+            console.log('showQuickRegisterModal called');
             
             // 既存のモーダルがあれば削除
-            const existingModal = document.getElementById("quickRegisterModal");
+            const existingModal = document.getElementById('quickRegisterModal');
             if (existingModal) {
                 existingModal.remove();
             }
             
-            const modal = document.createElement("div");
-            modal.id = "quickRegisterModal";
-            modal.className = "modal";
-            modal.style.display = "flex";
-            
+            const modal = document.createElement('div');
+            modal.id = 'quickRegisterModal';
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
@@ -464,81 +407,70 @@
                     </form>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
-            
+
             // フォーム送信イベント
-            const form = document.getElementById("quickRegisterForm");
+            const form = document.getElementById('quickRegisterForm');
             if (form) {
-                form.addEventListener("submit", async (e) => {
+                form.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     await submitQuickRegister();
                 });
             }
             
-            console.log("Quick register modal created successfully");
+            console.log('Quick register modal created successfully');
         }
-        
+
         function closeQuickRegisterModal() {
-            const modal = document.getElementById("quickRegisterModal");
+            const modal = document.getElementById('quickRegisterModal');
             if (modal) {
                 modal.remove();
             }
         }
-        
+
         async function submitQuickRegister() {
             try {
-                console.log("Submitting quick register form");
+                console.log('Submitting quick register form');
                 
-                const formData = new FormData(document.getElementById("quickRegisterForm"));
+                const formData = new FormData(document.getElementById('quickRegisterForm'));
                 
                 const customerData = {
-                    name: formData.get("name"),
-                    email: formData.get("email"),
-                    phone: formData.get("phone"),
-                    notes: formData.get("notes"),
-                    pipelineStatus: "初回相談",
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    notes: formData.get('notes'),
+                    pipelineStatus: '初回相談',
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    source: "quick_register",
+                    source: 'quick_register',
                     id: `quick-${Date.now()}`,
                     age: null,
-                    occupation: "",
+                    occupation: '',
                     annualIncome: null,
                     preferences: {
                         budgetMin: null,
                         budgetMax: null,
                         areas: [],
-                        roomType: "",
+                        roomType: '',
                         requirements: []
                     }
                 };
-                
+
                 // バリデーション
                 if (!customerData.name || !customerData.phone) {
-                    alert("名前と電話番号は必須です。");
+                    alert('名前と電話番号は必須です。');
                     return;
                 }
-                
+
                 // データ保存
-                console.log("クイック登録データ:", customerData);
+                console.log('クイック登録データ:', customerData);
                 
                 // ローカルストレージに保存（デモ用）
-                const existingCustomers = JSON.parse(localStorage.getItem("demoCustomers") || "[]");
+                const existingCustomers = JSON.parse(localStorage.getItem('demoCustomers') || '[]');
                 existingCustomers.push(customerData);
-                localStorage.setItem("demoCustomers", JSON.stringify(existingCustomers));
-                
-                // 顧客リストを更新
-                if (window.customerManager && window.customerManager.customers) {
-                    window.customerManager.customers.push(customerData);
-                    if (typeof window.customerManager.renderCustomers === "function") {
-                        window.customerManager.renderCustomers();
-                    }
-                    if (typeof window.customerManager.updateStats === "function") {
-                        window.customerManager.updateStats();
-                    }
-                }
-                
+                localStorage.setItem('demoCustomers', JSON.stringify(existingCustomers));
+
                 // 成功メッセージ
                 alert(`${customerData.name} 様をクイック登録しました！\n詳細情報は後で編集できます。`);
                 
@@ -549,32 +481,36 @@
                 window.location.reload();
                 
             } catch (error) {
-                console.error("クイック登録エラー:", error);
-                alert("クイック登録に失敗しました。もう一度お試しください。");
+                console.error('クイック登録エラー:', error);
+                alert('クイック登録に失敗しました。もう一度お試しください。');
             }
         }
-        
-        // グローバルに設定
-        window.showQuickRegisterModal = showQuickRegisterModal;
-        window.closeQuickRegisterModal = closeQuickRegisterModal;
-        window.submitQuickRegister = submitQuickRegister;
-        
-        console.log("Quick register functions defined inline");
-    <script>
-        function debugQuickRegister() {
-            console.log("=== クイック登録デバッグ ===");
-            console.log("showQuickRegisterModal type:", typeof showQuickRegisterModal);
-            console.log("closeQuickRegisterModal type:", typeof closeQuickRegisterModal);
-            console.log("submitQuickRegister type:", typeof submitQuickRegister);
-            
-            if (typeof showQuickRegisterModal === "function") {
-                alert("✅ 関数は正常に定義されています。クイック登録を開きます。");
-                showQuickRegisterModal();
-            } else {
-                alert("❌ showQuickRegisterModal関数が定義されていません。");
+
+        // ボタンにイベントリスナーを追加
+        document.addEventListener('DOMContentLoaded', function() {
+            const quickRegisterBtn = document.getElementById('quickRegisterBtn');
+            if (quickRegisterBtn) {
+                quickRegisterBtn.addEventListener('click', showQuickRegisterModal);
+                console.log('Quick register button event listener added');
+            }
+        });
+
+        // ログアウト機能
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                window.location.href = 'login.html';
             }
         }
-        
-        window.debugQuickRegister = debugQuickRegister;
-    </script>    </script>    </script>    </div>    </div></body>
+
+        // フィルタークリア
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('sortBy').value = 'updatedAt';
+            if (window.customerManager) {
+                customerManager.applyFilters();
+            }
+        }
+    </script>
+</body>
 </html>
