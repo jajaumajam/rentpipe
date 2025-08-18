@@ -265,15 +265,27 @@
             </div>
         </div>
 
-        <div class="customer-actions">
-            <button onclick="showAddCustomerModalUnified()" class="btn btn-primary">
-                👤 新規顧客登録
+        <div class="feature-explanation" style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #1e3a8a;">
+            <h3 style="color: #1e293b; margin-bottom: 10px;">💡 顧客登録の使い分け</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <strong style="color: #1e3a8a;">⚡ クイック登録</strong>
+                    <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">電話中に素早く基本情報を登録</p>
+                </div>
+                <div>
+                    <strong style="color: #1e3a8a;">📝 詳細フォーム</strong>
+                    <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">顧客に送って自分で入力してもらう</p>
+                </div>
+            </div>
+        </div>        <div class="customer-actions">
+            <button onclick="showQuickRegisterModal()" class="btn btn-primary">
+                ⚡ クイック登録
             </button>
             <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
                 📊 エクスポート
             </button>
             <button onclick="showFormURLModal()" class="btn btn-outline" title="顧客フォームURL生成">
-                📝 顧客フォーム
+                📝 詳細フォーム（顧客用）
             </a>
         </div>
 

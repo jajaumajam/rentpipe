@@ -517,3 +517,138 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// クイック登録モーダル（エージェント用）
+function showQuickRegisterModal() {
+    const modal = document.createElement('div');
+    modal.id = 'quickRegisterModal';
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚡ クイック登録</h2>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #64748b;">
+                    電話中に素早く基本情報を登録できます
+                </p>
+                <button onclick="closeQuickRegisterModal()" class="btn-close">×</button>
+            </div>
+            
+            <form id="quickRegisterForm">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="quickName" class="form-label required">お名前</label>
+                        <input type="text" id="quickName" name="name" class="form-input" required 
+                               placeholder="例: 田中太郎">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quickEmail" class="form-label">メールアドレス</label>
+                        <input type="email" id="quickEmail" name="email" class="form-input" 
+                               placeholder="例: tanaka@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quickPhone" class="form-label required">電話番号</label>
+                        <input type="tel" id="quickPhone" name="phone" class="form-input" required
+                               placeholder="例: 090-1234-5678">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="quickNotes" class="form-label">メモ・要望</label>
+                        <textarea id="quickNotes" name="notes" class="form-input" rows="3" 
+                                  placeholder="例: 急ぎで物件をお探し。渋谷エリア希望。"></textarea>
+                    </div>
+                </div>
+                
+                <div class="quick-register-info">
+                    <p>💡 <strong>ヒント:</strong> 基本情報のみ登録して、詳細は後で編集できます</p>
+                    <p>📝 完全な顧客フォームは「顧客フォーム」ボタンから顧客に送信できます</p>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="closeQuickRegisterModal()" class="btn btn-outline">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">⚡ 登録する</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // フォーム送信イベント
+    document.getElementById('quickRegisterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await submitQuickRegister();
+    });
+}
+
+// クイック登録モーダルを閉じる
+function closeQuickRegisterModal() {
+    const modal = document.getElementById('quickRegisterModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// クイック登録データ送信
+async function submitQuickRegister() {
+    try {
+        const formData = new FormData(document.getElementById('quickRegisterForm'));
+        
+        const customerData = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            notes: formData.get('notes'),
+            pipelineStatus: '初回相談',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            source: 'quick_register',
+            // 詳細情報は空で作成（後で編集可能）
+            age: null,
+            occupation: '',
+            annualIncome: null,
+            preferences: {
+                budgetMin: null,
+                budgetMax: null,
+                areas: [],
+                roomType: '',
+                requirements: []
+            }
+        };
+
+        // バリデーション
+        if (!customerData.name || !customerData.phone) {
+            alert('名前と電話番号は必須です。');
+            return;
+        }
+
+        // データ保存
+        console.log('クイック登録データ:', customerData);
+        
+        // ローカルストレージに保存（デモ用）
+        const existingCustomers = JSON.parse(localStorage.getItem('demoCustomers') || '[]');
+        customerData.id = `quick-${Date.now()}`;
+        existingCustomers.push(customerData);
+        localStorage.setItem('demoCustomers', JSON.stringify(existingCustomers));
+
+        // 顧客リストを更新
+        if (window.customerManager) {
+            customerManager.customers.push(customerData);
+            customerManager.renderCustomers();
+            customerManager.updateStats();
+        }
+
+        // 成功メッセージ
+        alert(`${customerData.name} 様をクイック登録しました！\n詳細情報は後で編集できます。`);
+        
+        // モーダルを閉じる
+        closeQuickRegisterModal();
+
+    } catch (error) {
+        console.error('クイック登録エラー:', error);
+        alert('クイック登録に失敗しました。もう一度お試しください。');
+    }
+}
