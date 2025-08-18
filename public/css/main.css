@@ -409,3 +409,299 @@ body {
     max-height: 80vh;
     overflow-y: auto;
 }
+
+/* ===== モーダル専用スタイル ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 2px solid #f1f5f9;
+    background: #f8fafc;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 30px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+.form-input {
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+    background: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #1e3a8a;
+}
+
+.budget-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.budget-inputs input {
+    flex: 1;
+}
+
+.budget-inputs span {
+    color: #64748b;
+    font-weight: bold;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px 30px;
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+    border-top: 2px solid #f1f5f9;
+}
+
+/* ===== PC版CSS強化 ===== */
+@media (min-width: 769px) {
+    /* ナビゲーション - PC版 */
+    .navbar {
+        padding: 0 40px;
+        min-height: 80px;
+    }
+    
+    .nav-brand h1 {
+        font-size: 32px;
+    }
+    
+    .nav-subtitle {
+        font-size: 14px;
+    }
+    
+    .nav-menu {
+        gap: 10px;
+    }
+    
+    .nav-link {
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+    
+    /* ダッシュボード - PC版 */
+    .dashboard-container {
+        padding: 40px;
+    }
+    
+    .dashboard-header {
+        padding: 40px;
+        margin-bottom: 40px;
+    }
+    
+    .header-content h1 {
+        font-size: 36px;
+    }
+    
+    .header-content p {
+        font-size: 18px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+    }
+    
+    .stat-card {
+        padding: 30px;
+    }
+    
+    .stat-icon {
+        font-size: 56px;
+        width: 100px;
+        height: 100px;
+    }
+    
+    .stat-content h3 {
+        font-size: 42px;
+    }
+    
+    .stat-content p {
+        font-size: 16px;
+    }
+    
+    .dashboard-section {
+        padding: 40px;
+        margin-bottom: 40px;
+    }
+    
+    .section-header h2 {
+        font-size: 28px;
+    }
+    
+    .pipeline-stage {
+        min-width: 120px;
+    }
+    
+    .stage-number {
+        width: 80px;
+        height: 80px;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    
+    .stage-label {
+        font-size: 15px;
+    }
+    
+    .pipeline-arrow {
+        font-size: 28px;
+        margin: 0 20px;
+    }
+    
+    /* 顧客管理画面 - PC版 */
+    .customer-container {
+        padding: 40px;
+    }
+    
+    .customer-header {
+        padding: 40px;
+    }
+    
+    .search-container {
+        padding: 30px;
+    }
+    
+    .customer-card {
+        padding: 30px;
+    }
+    
+    .customer-name {
+        font-size: 20px;
+    }
+    
+    .customer-contact {
+        font-size: 16px;
+    }
+    
+    /* フォーム - PC版 */
+    .form-container {
+        padding: 40px;
+    }
+    
+    .form-header {
+        padding: 40px;
+    }
+    
+    .form-step {
+        padding: 40px;
+    }
+    
+    .form-input {
+        font-size: 16px;
+        padding: 14px 18px;
+    }
+    
+    .form-grid {
+        gap: 30px;
+    }
+}
+
+/* ===== モバイル版調整 ===== */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-actions {
+        padding: 15px 20px;
+        flex-direction: column;
+    }
+    
+    .budget-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .budget-inputs span {
+        text-align: center;
+        margin: 5px 0;
+    }
+}
