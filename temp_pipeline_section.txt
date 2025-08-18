@@ -1,0 +1,43 @@
+        <!-- パイプライン概要 -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2>パイプライン概要</h2>
+                <a href="pipeline.html" class="btn btn-outline">詳細表示</a>
+            </div>
+            <div class="pipeline-overview">
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-初回相談">0</div>
+                    <div class="stage-label">初回相談</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-物件紹介">0</div>
+                    <div class="stage-label">物件紹介</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-内見">0</div>
+                    <div class="stage-label">内見</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-申込">0</div>
+                    <div class="stage-label">申込</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-審査">0</div>
+                    <div class="stage-label">審査</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage">
+                    <div class="stage-number" id="stage-契約">0</div>
+                    <div class="stage-label">契約</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-stage success">
+                    <div class="stage-number" id="stage-完了">0</div>
+                    <div class="stage-label">完了</div>
+                </div>
+            </div>
+        </section>

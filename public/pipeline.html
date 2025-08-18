@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パイプライン管理 - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .pipeline-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .pipeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .pipeline-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-card h3 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .stat-card p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .pipeline-board {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .pipeline-column {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            min-height: 600px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .column-header {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            border-left: 4px solid #f97316;
+        }
+
+        .column-header.shokkai { border-left-color: #ef4444; }
+        .column-header.shokai { border-left-color: #f97316; }
+        .column-header.naiken { border-left-color: #eab308; }
+        .column-header.moshikomi { border-left-color: #22c55e; }
+        .column-header.shinsa { border-left-color: #3b82f6; }
+        .column-header.keiyaku { border-left-color: #8b5cf6; }
+        .column-header.kanryo { border-left-color: #10b981; }
+
+        .customer-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: grab;
+            transition: all 0.2s ease;
+            border-left: 4px solid #e2e8f0;
+        }
+
+        .customer-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .customer-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #1e293b;
+        }
+
+        .customer-info {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 3px;
+        }
+
+        .customer-budget {
+            font-size: 12px;
+            color: #f97316;
+            font-weight: bold;
+        }
+
+        .drag-over {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+
+        .pipeline-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #1e3a8a;
+            color: white;
+            border-color: #1e3a8a;
+        }
+
+        .history-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #64748b;
+            margin-right: 15px;
+            min-width: 80px;
+        }
+
+        .history-content {
+            flex: 1;
+        }
+
+        .history-customer {
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .history-change {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        @media (max-width: 1200px) {
+            .pipeline-board {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .pipeline-board {
+                grid-template-columns: 1fr;
+            }
+            
+            .pipeline-stats {
+                flex-wrap: wrap;
+            }
+            
+            .stat-card {
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>RentPipe</h1>
+            <span class="nav-subtitle">賃貸営業を、流れるように</span>
+        </div>
+        <div class="nav-menu">
+            <a href="index.html" class="nav-link">ダッシュボード</a>
+            <a href="customer.html" class="nav-link">顧客管理</a>
+            <a href="pipeline.html" class="nav-link active">パイプライン</a>
+            <a href="#" class="nav-link">レポート</a>
+            <button onclick="logout()" class="btn btn-outline">ログアウト</button>
+        </div>
+    </nav>
+
+    <main class="pipeline-container">
+        <div class="pipeline-header">
+            <div>
+                <h1>パイプライン管理</h1>
+                <p>顧客の進捗状況を可視化・管理します</p>
+            </div>
+            <div class="pipeline-stats">
+                <div class="stat-card">
+                    <h3 id="totalCustomers">0</h3>
+                    <p>総顧客数</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="monthlyConversions">0</h3>
+                    <p>今月成約</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="conversionRate">0%</h3>
+                    <p>成約率</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="avgDays">0</h3>
+                    <p>平均日数</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pipeline-controls">
+            <button class="filter-btn active" onclick="filterPipeline('all')">全て</button>
+            <button class="filter-btn" onclick="filterPipeline('thisWeek')">今週</button>
+            <button class="filter-btn" onclick="filterPipeline('thisMonth')">今月</button>
+            <button class="filter-btn" onclick="filterPipeline('urgent')">急ぎ</button>
+        </div>
+
+        <div class="pipeline-board" id="pipelineBoard">
+            <div class="pipeline-column" data-status="初回相談">
+                <div class="column-header shokkai">
+                    初回相談
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-初回相談">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-初回相談"></div>
+            </div>
+
+            <div class="pipeline-column" data-status="物件紹介">
+                <div class="column-header shokai">
+                    物件紹介
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-物件紹介">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-物件紹介"></div>
+            </div>
+
+            <div class="pipeline-column" data-status="内見">
+                <div class="column-header naiken">
+                    内見
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-内見">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-内見"></div>
+            </div>
+
+            <div class="pipeline-column" data-status="申込">
+                <div class="column-header moshikomi">
+                    申込
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-申込">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-申込"></div>
+            </div>
+
+            <div class="pipeline-column" data-status="審査">
+                <div class="column-header shinsa">
+                    審査
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-審査">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-審査"></div>
+            </div>
+
+            <div class="pipeline-column" data-status="契約">
+                <div class="column-header keiyaku">
+                    契約
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-契約">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-契約"></div>
+            </div>
+
+            <div class="pipeline-column" data-status="完了">
+                <div class="column-header kanryo">
+                    完了
+                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+                        <span id="count-完了">0</span>件
+                    </div>
+                </div>
+                <div class="customer-list" id="list-完了"></div>
+            </div>
+        </div>
+
+        <div class="history-panel">
+            <h3>最近のステータス変更</h3>
+            <div id="statusHistory">
+                <p style="text-align: center; color: #64748b; padding: 20px;">
+                    ステータス変更履歴がここに表示されます
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/pipeline.js"></script>
+    <script>
+        // ログアウト機能
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>
