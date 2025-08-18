@@ -278,7 +278,7 @@
                 </div>
             </div>
         </div>        <div class="customer-actions">
-            <button onclick="showQuickRegisterModal()" class="btn btn-primary">
+            <button onclick="window.showQuickRegisterModal ? window.showQuickRegisterModal() : alert('関数が読み込まれていません')" class="btn btn-primary">
                 ⚡ クイック登録
             </button>
             <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
@@ -336,7 +336,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script src="js/customer.js"></script>
+    <script>
+        console.log("Firebase config loaded, db available:", window.db ? "Yes" : "No");
+        console.log("Quick register function available:", typeof showQuickRegisterModal);
+    </script>    <script src="js/customer.js"></script>
     <script src="js/export.js"></script>
     <script>
         // ログアウト機能
@@ -364,5 +367,35 @@
     <div id="mobileDebug" class="mobile-debug">
         デバイス: <span id="deviceType"></span><br>
         画面: <span id="screenSize"></span>
-    </div>    </div></body>
+    <script>
+        // デバッグ情報表示
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("=== RentPipe Debug Info ===");
+            console.log("Firebase db:", window.db ? "Available" : "Not available");
+            console.log("showQuickRegisterModal:", typeof window.showQuickRegisterModal);
+            console.log("customerManager:", typeof window.customerManager);
+            console.log("dataExporter:", typeof window.dataExporter);
+            
+            // クイック登録ボタンのテスト
+            setTimeout(() => {
+                const quickBtn = document.querySelector("button[onclick*='showQuickRegisterModal']");
+                if (quickBtn) {
+                    console.log("Quick register button found:", quickBtn);
+                } else {
+                    console.log("Quick register button NOT found");
+                }
+            }, 1000);
+        });
+        
+        // 手動テスト用関数
+        function testQuickRegister() {
+            if (typeof window.showQuickRegisterModal === "function") {
+                window.showQuickRegisterModal();
+            } else {
+                alert("showQuickRegisterModal関数が利用できません");
+            }
+        }
+        
+        window.testQuickRegister = testQuickRegister;
+    </script>    </div>    </div></body>
 </html>
