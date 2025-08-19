@@ -1,47 +1,68 @@
-// データエクスポート機能 - ローカルデータ専用版
+// データエクスポート機能 - 完全修正版
 class DataExporter {
     constructor() {
         this.customers = [];
-        this.isReady = false;
-        this.init();
+        // 初期化を非同期で実行（エラーを防ぐため）
+        setTimeout(() => {
+            this.init().catch(error => {
+                console.warn('DataExporter初期化警告:', error.message);
+            });
+        }, 100);
     }
 
     async init() {
         try {
-            console.log('🚀 DataExporter初期化開始...');
             await this.loadCustomers();
-            this.isReady = true;
-            console.log('✅ DataExporter初期化完了。顧客数:', this.customers.length);
+            console.log('DataExporter初期化完了。顧客数:', this.customers.length);
         } catch (error) {
-            console.warn('⚠️ DataExporter初期化警告:', error.message);
+            console.warn('DataExporter初期化エラー:', error.message);
+            // デモデータで初期化
             this.customers = this.getDemoCustomers();
-            this.isReady = true;
-            console.log('✅ デモデータで初期化完了。顧客数:', this.customers.length);
+            console.log('デモデータで初期化完了。顧客数:', this.customers.length);
         }
     }
 
     async loadCustomers() {
-        // ローカルストレージからデータを読み込み
-        const localCustomers = window.DemoDataManager ? 
-            window.DemoDataManager.getCustomers() : 
-            this.getLocalStorageCustomers();
-        
-        const demoCustomers = this.getDemoCustomers();
-        
-        // ローカルデータとデモデータを結合
-        this.customers = [...localCustomers, ...demoCustomers];
-        
-        console.log('📊 データ読み込み完了:', {
-            ローカル顧客: localCustomers.length,
-            デモ顧客: demoCustomers.length,
-            合計: this.customers.length
-        });
+        try {
+            // Firebase接続の安全な確認
+            const firebaseAvailable = window.db && 
+                                    typeof window.db === 'object' && 
+                                    typeof window.db.collection === 'function';
+            
+            if (firebaseAvailable) {
+                console.log('Firebase接続を試行中...');
+                const snapshot = await window.db.collection('customers')
+                    .orderBy('updatedAt', 'desc')
+                    .get();
+                
+                this.customers = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                console.log('✅ Firebaseから顧客データを読み込みました:', this.customers.length, '件');
+                return;
+            } else {
+                throw new Error('Firebase未利用環境です');
+            }
+        } catch (error) {
+            console.warn('⚠️ Firebase接続エラー:', error.message);
+            
+            // デモデータ + ローカルストレージデータを結合
+            const demoCustomers = this.getDemoCustomers();
+            const localCustomers = this.getLocalStorageCustomers();
+            this.customers = [...demoCustomers, ...localCustomers];
+            
+            console.log('✅ ローカルデータを使用:', {
+                デモ顧客: demoCustomers.length,
+                登録顧客: localCustomers.length,
+                合計: this.customers.length
+            });
+        }
     }
 
     getLocalStorageCustomers() {
         try {
-            const stored = localStorage.getItem('demoCustomers') || 
-                          localStorage.getItem('rentpipe_demo_customers');
+            const stored = localStorage.getItem('demoCustomers');
             return stored ? JSON.parse(stored) : [];
         } catch (error) {
             console.warn('ローカルストレージ読み込みエラー:', error);
@@ -51,34 +72,28 @@ class DataExporter {
 
     getDemoCustomers() {
         const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
-        const areas = ['渋谷区', '新宿区', '港区', '中央区', '世田谷区', '品川区'];
-        const roomTypes = ['ワンルーム', '1K', '1DK', '1LDK', '2K', '2DK'];
-        const occupations = ['会社員', '公務員', '自営業', 'フリーランス', '学生'];
-        
         const customers = [];
         
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 12; i++) {
             customers.push({
                 id: `demo-${i}`,
-                name: `サンプル顧客${i}`,
+                name: `サンプル${i}`,
                 email: `sample${i}@example.com`,
-                phone: `090-0000-${String(1000 + i).slice(-4)}`,
-                age: 22 + (i % 20),
-                occupation: occupations[i % occupations.length],
-                annualIncome: 250 + (i * 25),
+                phone: `090-0000-${String(i).padStart(4, '0')}`,
+                age: 25 + (i % 15),
+                occupation: ['会社員', '公務員', '自営業', 'フリーランス'][i % 4],
+                annualIncome: 300 + (i * 20),
                 pipelineStatus: statuses[i % statuses.length],
                 preferences: {
-                    budgetMin: 40000 + (i * 5000),
-                    budgetMax: 70000 + (i * 5000),
-                    areas: [areas[i % areas.length]],
-                    roomType: roomTypes[i % roomTypes.length],
-                    requirements: i % 2 === 0 ? ['駅徒歩10分以内', 'バストイレ別'] : ['エアコン付']
+                    budgetMin: 50000 + (i * 3000),
+                    budgetMax: 80000 + (i * 3000),
+                    areas: ['渋谷区', '新宿区', '港区', '中央区'][i % 4],
+                    roomType: ['1K', '1DK', '1LDK', '2K'][i % 4],
+                    requirements: ['駅徒歩10分以内', 'バストイレ別', 'エアコン付'][i % 3] ? [['駅徒歩10分以内', 'バストイレ別', 'エアコン付'][i % 3]] : []
                 },
-                notes: i % 3 === 0 ? '急ぎでお願いします' : i % 2 === 0 ? '条件相談可能' : '',
-                urgency: i % 4 === 0 ? '急ぎ' : '普通',
-                contactTime: 'いつでも',
-                createdAt: new Date(Date.now() - (i * 2 * 24 * 60 * 60 * 1000)),
-                updatedAt: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
+                notes: i % 3 === 0 ? '急ぎの案件です' : i % 2 === 0 ? '条件要相談' : '',
+                createdAt: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
+                updatedAt: new Date(Date.now() - (i * 12 * 60 * 60 * 1000)),
                 source: 'demo'
             });
         }
@@ -87,30 +102,26 @@ class DataExporter {
     }
 
     // CSV エクスポート
-    exportToCSV() {
+    exportToCSV(filteredCustomers = null) {
         try {
-            if (!this.isReady) {
-                alert('データ読み込み中です。少々お待ちください。');
-                return;
-            }
-
-            if (this.customers.length === 0) {
+            const customers = filteredCustomers || this.customers;
+            
+            if (!customers || customers.length === 0) {
                 alert('エクスポートするデータがありません。');
                 return;
             }
 
-            console.log('📥 CSV エクスポート開始:', this.customers.length, '件');
+            console.log('CSV エクスポート開始:', customers.length, '件');
 
             // CSV ヘッダー
             const headers = [
                 'ID', '名前', 'メールアドレス', '電話番号', '年齢', '職業', '年収（万円）',
                 'ステータス', '最低予算', '最高予算', '希望エリア', '間取り',
-                'こだわり条件', '備考', '緊急度', '連絡希望時間',
-                '登録日', '更新日', '登録元'
+                'こだわり条件', '備考', '登録日', '更新日', '登録元'
             ];
 
             // CSV データ変換
-            const csvData = this.customers.map(customer => [
+            const csvData = customers.map(customer => [
                 customer.id || '',
                 customer.name || '',
                 customer.email || '',
@@ -125,8 +136,6 @@ class DataExporter {
                 customer.preferences?.roomType || '',
                 (customer.preferences?.requirements || []).join('・'),
                 customer.notes || '',
-                customer.urgency || '',
-                customer.contactTime || '',
                 this.formatDate(customer.createdAt),
                 this.formatDate(customer.updatedAt),
                 customer.source || 'unknown'
@@ -142,7 +151,9 @@ class DataExporter {
             const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
             
             this.downloadFile(blob, `RentPipe顧客データ_${this.formatDateForFilename(new Date())}.csv`);
-            this.showExportNotification('CSV', this.customers.length);
+            
+            // エクスポート完了通知
+            this.showExportNotification('CSV', customers.length);
             
         } catch (error) {
             console.error('CSV エクスポートエラー:', error);
@@ -151,34 +162,29 @@ class DataExporter {
     }
 
     // JSON エクスポート
-    exportToJSON() {
+    exportToJSON(filteredCustomers = null) {
         try {
-            if (!this.isReady) {
-                alert('データ読み込み中です。少々お待ちください。');
-                return;
-            }
-
-            if (this.customers.length === 0) {
+            const customers = filteredCustomers || this.customers;
+            
+            if (!customers || customers.length === 0) {
                 alert('エクスポートするデータがありません。');
                 return;
             }
 
-            console.log('📥 JSON エクスポート開始:', this.customers.length, '件');
+            console.log('JSON エクスポート開始:', customers.length, '件');
 
             // JSON データ準備
             const jsonData = {
                 exportInfo: {
                     date: new Date().toISOString(),
-                    totalCount: this.customers.length,
-                    source: 'RentPipe デモ環境',
+                    totalCount: customers.length,
+                    source: 'RentPipe顧客管理システム',
                     version: '1.0'
                 },
-                customers: this.customers.map(customer => ({
+                customers: customers.map(customer => ({
                     ...customer,
-                    createdAt: customer.createdAt instanceof Date ? 
-                        customer.createdAt.toISOString() : customer.createdAt,
-                    updatedAt: customer.updatedAt instanceof Date ? 
-                        customer.updatedAt.toISOString() : customer.updatedAt
+                    createdAt: customer.createdAt instanceof Date ? customer.createdAt.toISOString() : customer.createdAt,
+                    updatedAt: customer.updatedAt instanceof Date ? customer.updatedAt.toISOString() : customer.updatedAt
                 }))
             };
 
@@ -187,7 +193,9 @@ class DataExporter {
             const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
             
             this.downloadFile(blob, `RentPipe顧客データ_${this.formatDateForFilename(new Date())}.json`);
-            this.showExportNotification('JSON', this.customers.length);
+            
+            // エクスポート完了通知
+            this.showExportNotification('JSON', customers.length);
             
         } catch (error) {
             console.error('JSON エクスポートエラー:', error);
@@ -195,6 +203,7 @@ class DataExporter {
         }
     }
 
+    // ファイルダウンロード
     downloadFile(blob, filename) {
         try {
             const url = window.URL.createObjectURL(blob);
@@ -202,19 +211,19 @@ class DataExporter {
             link.href = url;
             link.download = filename;
             link.style.display = 'none';
-            
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
             
-            console.log('✅ ダウンロード完了:', filename);
+            console.log('✅ ファイルダウンロード完了:', filename);
         } catch (error) {
-            console.error('ダウンロードエラー:', error);
+            console.error('ファイルダウンロードエラー:', error);
             alert('ファイルのダウンロードに失敗しました。');
         }
     }
 
+    // 日付フォーマット
     formatDate(date) {
         if (!date) return '';
         try {
@@ -229,168 +238,168 @@ class DataExporter {
                 minute: '2-digit'
             });
         } catch (error) {
+            console.warn('日付フォーマットエラー:', error);
             return '';
         }
     }
 
     formatDateForFilename(date) {
-        return date.toISOString().slice(0, 10).replace(/-/g, '') + '_' + 
-               date.toTimeString().slice(0, 8).replace(/:/g, '');
+        try {
+            return date.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
+        } catch (error) {
+            return 'unknown_date';
+        }
     }
 
+    // エクスポート完了通知
     showExportNotification(format, count) {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3);
-            z-index: 10000;
-            font-family: system-ui, sans-serif;
-            transform: translateX(100%);
-            transition: transform 0.3s ease-out;
-        `;
-        
-        notification.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="font-size: 24px;">📥</div>
-                <div>
-                    <div style="font-weight: bold; margin-bottom: 4px;">エクスポート完了</div>
-                    <div style="font-size: 14px; opacity: 0.9;">${format}形式 • ${count}件のデータ</div>
+        try {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+                z-index: 10000;
+                font-family: system-ui, -apple-system, sans-serif;
+                font-size: 14px;
+                max-width: 300px;
+                animation: slideInFromRight 0.3s ease-out;
+            `;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 18px;">✅</span>
+                    <div>
+                        <div style="font-weight: bold;">エクスポート完了</div>
+                        <div style="font-size: 12px; opacity: 0.9;">${format}形式 • ${count}件のデータ</div>
+                    </div>
                 </div>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // アニメーション
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // 自動削除
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => notification.remove(), 300);
-        }, 4000);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 4秒後に自動削除
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOutToRight 0.3s ease-in';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 4000);
+            
+        } catch (error) {
+            console.warn('通知表示エラー:', error);
+        }
     }
 
+    // エクスポートモーダル表示
     showExportModal() {
-        const modal = document.createElement('div');
-        modal.id = 'exportModal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20000;
-            backdrop-filter: blur(8px);
-        `;
-
-        modal.innerHTML = `
-            <div style="
-                background: white;
-                border-radius: 16px;
-                padding: 32px;
-                max-width: 500px;
-                width: 90%;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                font-family: system-ui, sans-serif;
-            ">
-                <h2 style="margin: 0 0 24px 0; color: #1e293b; font-size: 24px; text-align: center;">
-                    📊 データエクスポート
-                </h2>
-                
-                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
-                    <p style="margin: 0; font-size: 16px; color: #64748b;">
-                        現在 <strong style="color: #1e3a8a; font-size: 20px;">${this.customers.length}件</strong> の顧客データ
-                    </p>
-                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #64748b;">
-                        エクスポート可能です
-                    </p>
-                </div>
-                
-                <div style="margin-bottom: 32px;">
-                    <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">エクスポート形式を選択</h3>
-                    
-                    <label style="display: block; margin-bottom: 12px; cursor: pointer; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; transition: all 0.2s;">
-                        <input type="radio" name="exportFormat" value="csv" checked style="margin-right: 12px;">
-                        <div style="display: inline-block;">
-                            <div style="font-weight: 600; color: #1e293b;">📊 CSV形式</div>
-                            <div style="font-size: 14px; color: #64748b;">Excel・Googleスプレッドシートで開けます</div>
-                        </div>
-                    </label>
-                    
-                    <label style="display: block; cursor: pointer; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; transition: all 0.2s;">
-                        <input type="radio" name="exportFormat" value="json" style="margin-right: 12px;">
-                        <div style="display: inline-block;">
-                            <div style="font-weight: 600; color: #1e293b;">💻 JSON形式</div>
-                            <div style="font-size: 14px; color: #64748b;">プログラムでの処理・分析に最適</div>
-                        </div>
-                    </label>
-                </div>
-
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="closeExportModal()" style="
-                        flex: 1;
-                        padding: 14px;
-                        border: 2px solid #e2e8f0;
-                        background: white;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 16px;
-                        transition: all 0.2s;
-                    ">キャンセル</button>
-                    
-                    <button onclick="executeExport()" style="
-                        flex: 2;
-                        padding: 14px;
-                        border: none;
-                        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-                        color: white;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 16px;
-                        font-weight: 600;
-                        transition: all 0.2s;
-                    ">📥 エクスポート実行</button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-        
-        // ラジオボタンのホバー効果
-        modal.querySelectorAll('label').forEach(label => {
-            label.addEventListener('mouseenter', () => {
-                label.style.borderColor = '#3b82f6';
-                label.style.backgroundColor = '#f8fafc';
-            });
-            label.addEventListener('mouseleave', () => {
-                label.style.borderColor = '#e2e8f0';
-                label.style.backgroundColor = 'transparent';
-            });
-        });
-        
-        // モーダル外クリックで閉じる
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeExportModal();
+        try {
+            // 既存のモーダルがあれば削除
+            const existingModal = document.getElementById('exportModal');
+            if (existingModal) {
+                existingModal.remove();
             }
-        });
+            
+            const modal = document.createElement('div');
+            modal.id = 'exportModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 20000;
+                backdrop-filter: blur(4px);
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 12px;
+                    padding: 30px;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                    font-family: system-ui, -apple-system, sans-serif;
+                ">
+                    <h2 style="margin-bottom: 20px; color: #1e293b; font-size: 24px;">📊 データエクスポート</h2>
+                    
+                    <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 14px; color: #64748b;">
+                            現在 <strong style="color: #1e3a8a;">${this.customers.length}件</strong> の顧客データがエクスポート可能です
+                        </p>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin-bottom: 12px; color: #1e293b; font-size: 16px;">エクスポート形式</h3>
+                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <input type="radio" name="exportFormat" value="csv" checked style="margin-right: 10px;">
+                            <div>
+                                <div style="font-weight: 600; color: #1e293b;">CSV形式</div>
+                                <div style="font-size: 12px; color: #64748b;">Excel・スプレッドシートで開けます</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <input type="radio" name="exportFormat" value="json" style="margin-right: 10px;">
+                            <div>
+                                <div style="font-weight: 600; color: #1e293b;">JSON形式</div>
+                                <div style="font-size: 12px; color: #64748b;">プログラムでの処理に適しています</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button onclick="closeExportModal()" style="
+                            padding: 12px 20px;
+                            border: 2px solid #e2e8f0;
+                            background: white;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            transition: all 0.2s ease;
+                        " onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">キャンセル</button>
+                        <button onclick="executeExport()" style="
+                            padding: 12px 24px;
+                            border: none;
+                            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+                            color: white;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: 600;
+                            transition: all 0.2s ease;
+                        " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">📥 エクスポート実行</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            
+            // モーダル外クリックで閉じる
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeExportModal();
+                }
+            });
+            
+        } catch (error) {
+            console.error('エクスポートモーダル表示エラー:', error);
+            alert('エクスポート画面の表示に失敗しました。');
+        }
     }
 }
 
-// グローバル関数
+// グローバル関数定義
 function closeExportModal() {
     const modal = document.getElementById('exportModal');
     if (modal) {
@@ -402,6 +411,8 @@ function executeExport() {
     try {
         const formatRadio = document.querySelector('input[name="exportFormat"]:checked');
         const format = formatRadio ? formatRadio.value : 'csv';
+
+        console.log('エクスポート実行:', format);
 
         if (format === 'csv') {
             window.dataExporter.exportToCSV();
@@ -416,10 +427,34 @@ function executeExport() {
     }
 }
 
-// 初期化
+// アニメーション用CSS追加
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInFromRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutToRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// エクスポート機能初期化（安全な初期化）
 let dataExporter;
 document.addEventListener('DOMContentLoaded', () => {
-    dataExporter = new DataExporter();
-    window.dataExporter = dataExporter;
-    console.log('✅ DataExporter (ローカル版) 初期化完了');
+    try {
+        dataExporter = new DataExporter();
+        window.dataExporter = dataExporter;
+        console.log('✅ DataExporter初期化成功');
+    } catch (error) {
+        console.error('❌ DataExporter初期化失敗:', error);
+        // フォールバック用の最小限のオブジェクト
+        window.dataExporter = {
+            showExportModal: () => alert('エクスポート機能が利用できません。'),
+            exportToCSV: () => alert('CSV エクスポートが利用できません。'),
+            exportToJSON: () => alert('JSON エクスポートが利用できません。')
+        };
+    }
 });
