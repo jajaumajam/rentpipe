@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentPipe - テナント管理テスト</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="logo-icon">🏠</span>
+                <span class="logo-text">RentPipe</span>
+                <span style="margin-left: 10px; font-size: 12px; color: #f97316;">テナント管理</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+        <div class="container">
+            <!-- ページヘッダー -->
+            <div class="page-header">
+                <h1>テナント管理テスト</h1>
+                <p class="page-description">マルチテナント機能の動作確認</p>
+            </div>
+
+            <!-- 現在のテナント情報 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>現在のテナント情報</h2>
+                </div>
+                <div class="card-body">
+                    <div id="currentTenantInfo">
+                        <p>読み込み中...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 使用状況 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>使用状況</h2>
+                </div>
+                <div class="card-body">
+                    <div id="usageStats">
+                        <p>読み込み中...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- テスト機能 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>テスト機能</h2>
+                </div>
+                <div class="card-body">
+                    <div class="action-buttons">
+                        <button onclick="testAddCustomer()" class="btn btn-primary">
+                            テスト顧客追加
+                        </button>
+                        <button onclick="testUpgradePlan()" class="btn btn-outline">
+                            プランアップグレード
+                        </button>
+                        <button onclick="testDataMigration()" class="btn btn-outline">
+                            データ移行テスト
+                        </button>
+                        <button onclick="resetTenantData()" class="btn btn-outline" style="color: #dc3545;">
+                            データリセット
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ログ表示 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>実行ログ</h2>
+                    <button onclick="clearLog()" class="btn btn-sm btn-outline">クリア</button>
+                </div>
+                <div class="card-body">
+                    <div id="logOutput" style="font-family: monospace; font-size: 12px; background: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto;">
+                        <p>ログ出力エリア</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="js/tenant-manager.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script>
+        // ログ出力関数
+        function addLog(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString('ja-JP');
+            const color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#333';
+            
+            logOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        // ログクリア
+        function clearLog() {
+            document.getElementById('logOutput').innerHTML = '<p>ログ出力エリア</p>';
+        }
+
+        // テナント情報表示
+        function displayTenantInfo() {
+            const tenant = window.TenantManager.currentTenant;
+            const tenantInfo = document.getElementById('currentTenantInfo');
+            
+            if (tenant) {
+                tenantInfo.innerHTML = `
+                    <table style="width: 100%;">
+                        <tr><td><strong>テナントID:</strong></td><td>${tenant.id}</td></tr>
+                        <tr><td><strong>名前:</strong></td><td>${tenant.name}</td></tr>
+                        <tr><td><strong>メール:</strong></td><td>${tenant.email}</td></tr>
+                        <tr><td><strong>プラン:</strong></td><td>${tenant.plan}</td></tr>
+                        <tr><td><strong>会社名:</strong></td><td>${tenant.settings.companyName}</td></tr>
+                        <tr><td><strong>エージェント名:</strong></td><td>${tenant.settings.agentName}</td></tr>
+                        <tr><td><strong>顧客数上限:</strong></td><td>${tenant.settings.maxCustomers === -1 ? '無制限' : tenant.settings.maxCustomers}</td></tr>
+                        <tr><td><strong>作成日:</strong></td><td>${new Date(tenant.createdAt).toLocaleDateString('ja-JP')}</td></tr>
+                    </table>
+                `;
+                addLog('テナント情報を表示しました', 'success');
+            } else {
+                tenantInfo.innerHTML = '<p style="color: #dc3545;">テナント情報が取得できません</p>';
+                addLog('テナント情報の取得に失敗しました', 'error');
+            }
+        }
+
+        // 使用状況表示
+        function displayUsageStats() {
+            const stats = window.TenantManager.getUsageStats();
+            const usageStats = document.getElementById('usageStats');
+            
+            if (stats) {
+                const usageColor = stats.usagePercentage > 80 ? '#dc3545' : 
+                                  stats.usagePercentage > 50 ? '#ffc107' : '#28a745';
+                
+                usageStats.innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <strong>顧客数:</strong> ${stats.customersUsed} / ${stats.customersLimit === -1 ? '無制限' : stats.customersLimit}
+                        <div style="background: #e0e0e0; height: 20px; border-radius: 10px; margin-top: 5px;">
+                            <div style="background: ${usageColor}; width: ${stats.customersLimit === -1 ? 0 : stats.usagePercentage}%; height: 100%; border-radius: 10px; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                    <table style="width: 100%;">
+                        <tr><td><strong>エクスポート機能:</strong></td><td>${stats.features.export ? '✅ 利用可能' : '❌ 利用不可'}</td></tr>
+                        <tr><td><strong>分析機能:</strong></td><td>${stats.features.analytics ? '✅ 利用可能' : '❌ 利用不可'}</td></tr>
+                        <tr><td><strong>チームメンバー:</strong></td><td>${stats.features.teamMembers === -1 ? '無制限' : stats.features.teamMembers + '名'}</td></tr>
+                    </table>
+                `;
+                addLog('使用状況を更新しました', 'success');
+            } else {
+                usageStats.innerHTML = '<p style="color: #dc3545;">使用状況が取得できません</p>';
+                addLog('使用状況の取得に失敗しました', 'error');
+            }
+        }
+
+        // テスト顧客追加
+        function testAddCustomer() {
+            const testCustomer = {
+                name: `テスト顧客 ${Date.now()}`,
+                email: `test${Date.now()}@example.com`,
+                phone: '090-0000-0000',
+                pipelineStatus: '初回相談'
+            };
+            
+            const result = window.DemoDataManager.addCustomer(testCustomer);
+            
+            if (result) {
+                addLog(`テスト顧客「${result.name}」を追加しました`, 'success');
+                displayUsageStats();
+            } else {
+                addLog('顧客の追加に失敗しました（上限到達の可能性）', 'error');
+            }
+        }
+
+        // プランアップグレードテスト
+        function testUpgradePlan() {
+            const currentPlan = window.TenantManager.currentTenant.plan;
+            const newPlan = currentPlan === 'free' ? 'standard' : 
+                          currentPlan === 'standard' ? 'pro' : 'enterprise';
+            
+            if (window.TenantManager.upgradePlan(newPlan)) {
+                addLog(`プランを ${currentPlan} から ${newPlan} にアップグレードしました`, 'success');
+                displayTenantInfo();
+                displayUsageStats();
+            } else {
+                addLog('プランアップグレードに失敗しました', 'error');
+            }
+        }
+
+        // データ移行テスト
+        function testDataMigration() {
+            addLog('データ移行を開始します...', 'info');
+            
+            if (window.DemoDataManager.migrateToMultiTenant()) {
+                addLog('データ移行が完了しました', 'success');
+                displayUsageStats();
+            } else {
+                addLog('データ移行に失敗しました', 'error');
+            }
+        }
+
+        // データリセット
+        function resetTenantData() {
+            if (confirm('本当にテナントデータをリセットしますか？')) {
+                window.TenantManager.resetTenantData();
+                addLog('テナントデータをリセットしました', 'success');
+                displayUsageStats();
+            }
+        }
+
+        // ページ読み込み時の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            // テナントマネージャーが初期化されるのを待つ
+            setTimeout(() => {
+                displayTenantInfo();
+                displayUsageStats();
+                addLog('テナント管理テストページを読み込みました', 'info');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
