@@ -156,17 +156,6 @@
             border-color: #ef4444;
         }
 
-        .form-select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -190,19 +179,6 @@
 
         .checkbox-item input[type="checkbox"] {
             margin-right: 8px;
-        }
-
-        .budget-slider {
-            width: 100%;
-            margin: 20px 0;
-        }
-
-        .slider-values {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #64748b;
         }
 
         .budget-display {
@@ -351,12 +327,14 @@
             <span class="nav-subtitle">賃貸営業を、流れるように</span>
         </div>
         <div class="nav-menu">
-            <a href="index.html" class="nav-link">ダッシュボード</a>
-            <a href="customer.html" class="nav-link">顧客管理</a>
-            <a href="pipeline.html" class="nav-link">パイプライン</a>
-            <a href="#" class="nav-link">レポート</a>
+            <a href="index.html" class="nav-link">📊 ダッシュボード</a>
+            <a href="customer.html" class="nav-link">👥 顧客管理</a>
+            <a href="pipeline.html" class="nav-link">🔄 パイプライン</a>
+            <a href="#" class="nav-link">📈 レポート</a>
         </div>
-    </nav>    <div class="form-container">
+    </nav>
+
+    <div class="form-container">
         <div class="form-header">
             <h1>顧客情報入力フォーム</h1>
             <p>賃貸物件をお探しのお客様の基本情報・ご希望条件をお聞かせください</p>
@@ -420,7 +398,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="occupation">職業</label>
-                        <select id="occupation" name="occupation" class="form-select">
+                        <select id="occupation" name="occupation" class="form-input">
                             <option value="">選択してください</option>
                             <option value="会社員">会社員</option>
                             <option value="公務員">公務員</option>
@@ -492,7 +470,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label required" for="roomType">間取り</label>
-                        <select id="roomType" name="roomType" class="form-select" required>
+                        <select id="roomType" name="roomType" class="form-input" required>
                             <option value="">選択してください</option>
                             <option value="ワンルーム">ワンルーム</option>
                             <option value="1K">1K</option>
@@ -559,7 +537,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="urgency">緊急度</label>
-                        <select id="urgency" name="urgency" class="form-select">
+                        <select id="urgency" name="urgency" class="form-input">
                             <option value="普通">普通</option>
                             <option value="急ぎ">急ぎ</option>
                             <option value="非常に急ぎ">非常に急ぎ</option>
@@ -567,7 +545,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="contactTime">連絡希望時間</label>
-                        <select id="contactTime" name="contactTime" class="form-select">
+                        <select id="contactTime" name="contactTime" class="form-input">
                             <option value="いつでも">いつでも</option>
                             <option value="平日9-18時">平日9-18時</option>
                             <option value="平日18時以降">平日18時以降</option>

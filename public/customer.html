@@ -139,75 +139,6 @@
             font-weight: 500;
         }
 
-        .customer-actions-card {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s ease;
-        }
-
-        .btn-edit {
-            background: #1e3a8a;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background: #1e40af;
-        }
-
-        .btn-delete {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background: #b91c1c;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 30px;
-        }
-
-        .pagination button {
-            padding: 8px 12px;
-            border: 2px solid #e2e8f0;
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .pagination button:hover:not(:disabled) {
-            background: #1e3a8a;
-            color: white;
-            border-color: #1e3a8a;
-        }
-
-        .pagination button.active {
-            background: #1e3a8a;
-            color: white;
-            border-color: #1e3a8a;
-        }
-
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .no-customers {
             text-align: center;
             padding: 40px;
@@ -328,11 +259,6 @@
         </div>
     </main>
 
-    <!-- 顧客追加/編集モーダル -->
-    <div id="customerModal" class="modal" style="display: none;">
-        <!-- モーダル内容は JavaScript で生成 -->
-    </div>
-
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -341,13 +267,12 @@
     <script src="js/customer.js"></script>
     <script src="js/export.js"></script>
 
-    <!-- クイック登録機能（インライン定義） -->
+    <!-- クイック登録機能 -->
     <script>
         // クイック登録機能
         function showQuickRegisterModal() {
             console.log('showQuickRegisterModal called');
             
-            // 既存のモーダルがあれば削除
             const existingModal = document.getElementById('quickRegisterModal');
             if (existingModal) {
                 existingModal.remove();
@@ -410,7 +335,6 @@
 
             document.body.appendChild(modal);
 
-            // フォーム送信イベント
             const form = document.getElementById('quickRegisterForm');
             if (form) {
                 form.addEventListener('submit', async (e) => {
@@ -457,27 +381,20 @@
                     }
                 };
 
-                // バリデーション
                 if (!customerData.name || !customerData.phone) {
                     alert('名前と電話番号は必須です。');
                     return;
                 }
 
-                // データ保存
                 console.log('クイック登録データ:', customerData);
                 
-                // ローカルストレージに保存（デモ用）
                 const existingCustomers = JSON.parse(localStorage.getItem('demoCustomers') || '[]');
                 existingCustomers.push(customerData);
                 localStorage.setItem('demoCustomers', JSON.stringify(existingCustomers));
 
-                // 成功メッセージ
-                alert(`${customerData.name} 様をクイック登録しました！\n詳細情報は後で編集できます。`);
+                alert(`${customerData.name} 様をクイック登録しました！\\n詳細情報は後で編集できます。`);
                 
-                // モーダルを閉じる
                 closeQuickRegisterModal();
-                
-                // ページリロード（確実にリストを更新）
                 window.location.reload();
                 
             } catch (error) {
@@ -486,22 +403,10 @@
             }
         }
 
-        // ボタンにイベントリスナーを追加
-        document.addEventListener('DOMContentLoaded', function() {
-            const quickRegisterBtn = document.getElementById('quickRegisterBtn');
-            if (quickRegisterBtn) {
-                quickRegisterBtn.addEventListener('click', showQuickRegisterModal);
-                console.log('Quick register button event listener added');
-            }
-        });
-
-        // ログアウト機能
-
         // フォームURL生成機能
         function showFormURLModal() {
             console.log('showFormURLModal called');
             
-            // 既存のモーダルがあれば削除
             const existingModal = document.getElementById('formURLModal');
             if (existingModal) {
                 existingModal.remove();
@@ -512,7 +417,7 @@
             modal.className = 'modal';
             modal.style.display = 'flex';
 
-            const agentName = 'デモエージェント'; // 実際はログイン情報から取得
+            const agentName = 'デモエージェント';
             const agentId = 'demo-agent';
             const formURL = `${window.location.origin}/customer-form.html?agent=${agentId}&name=${encodeURIComponent(agentName)}`;
 
@@ -573,19 +478,6 @@
                                 <li>自動的に顧客管理に追加されます</li>
                             </ol>
                         </div>
-
-                        <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
-                            <h4 style="margin: 0 0 10px 0; color: #92400e;">💡 メール例文</h4>
-                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 14px; color: #374151;">
-                                <strong>件名:</strong> 賃貸物件ご希望条件の確認について<br><br>
-                                <strong>本文:</strong><br>
-                                この度はお問い合わせありがとうございます。<br>
-                                ご希望の物件条件を詳しくお聞かせください。<br><br>
-                                下記のフォームからご入力をお願いします：<br>
-                                <span style="color: #3b82f6; word-break: break-all;">${formURL}</span><br><br>
-                                ご入力いただいた内容を基に、最適な物件をご提案いたします。
-                            </div>
-                        </div>
                         
                         <div class="modal-actions">
                             <button onclick="closeFormURLModal()" class="btn btn-outline">閉じる</button>
@@ -598,7 +490,6 @@
             `;
 
             document.body.appendChild(modal);
-            
             console.log('Form URL modal created successfully');
         }
 
@@ -613,12 +504,11 @@
             const input = document.getElementById('formURLInput');
             if (input) {
                 input.select();
-                input.setSelectionRange(0, 99999); // モバイル対応
+                input.setSelectionRange(0, 99999);
                 
                 try {
                     document.execCommand('copy');
                     
-                    // コピー完了フィードバック
                     const button = event.target;
                     const originalText = button.textContent;
                     const originalColor = button.style.background;
@@ -634,12 +524,21 @@
                     console.log('Form URL copied to clipboard');
                 } catch (err) {
                     console.error('コピー失敗:', err);
-                    
-                    // フォールバック: 選択状態のまま表示
                     alert('URLが選択されました。Ctrl+C（Mac: Cmd+C）でコピーしてください。');
                 }
             }
         }
+
+        // ボタンにイベントリスナーを追加
+        document.addEventListener('DOMContentLoaded', function() {
+            const quickRegisterBtn = document.getElementById('quickRegisterBtn');
+            if (quickRegisterBtn) {
+                quickRegisterBtn.addEventListener('click', showQuickRegisterModal);
+                console.log('Quick register button event listener added');
+            }
+        });
+
+        // ログアウト機能
         function logout() {
             if (confirm('ログアウトしますか？')) {
                 window.location.href = 'login.html';

@@ -6,7 +6,6 @@
     <title>パイプライン管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <style>
-        /* パイプライン固有のスタイル */
         .pipeline-container {
             padding: 20px;
             max-width: 1400px;
@@ -207,17 +206,16 @@
     </style>
 </head>
 <body>
-    <!-- 統一されたナビゲーションバー -->
     <nav class="navbar">
         <div class="nav-brand">
             <h1>RentPipe</h1>
             <span class="nav-subtitle">賃貸営業を、流れるように</span>
         </div>
         <div class="nav-menu">
-            <a href="index.html" class="nav-link">ダッシュボード</a>
-            <a href="customer.html" class="nav-link">顧客管理</a>
-            <a href="pipeline.html" class="nav-link active">パイプライン</a>
-            <a href="#" class="nav-link">レポート</a>
+            <a href="index.html" class="nav-link">📊 ダッシュボード</a>
+            <a href="customer.html" class="nav-link">👥 顧客管理</a>
+            <a href="pipeline.html" class="nav-link active">🔄 パイプライン</a>
+            <a href="#" class="nav-link">📈 レポート</a>
             <button onclick="logout()" class="btn btn-outline">ログアウト</button>
         </div>
     </nav>
@@ -344,7 +342,6 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/pipeline.js"></script>
     <script>
-        // ログアウト機能
         function logout() {
             if (confirm('ログアウトしますか？')) {
                 window.location.href = 'login.html';
