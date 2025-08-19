@@ -496,6 +496,150 @@
         });
 
         // ログアウト機能
+
+        // フォームURL生成機能
+        function showFormURLModal() {
+            console.log('showFormURLModal called');
+            
+            // 既存のモーダルがあれば削除
+            const existingModal = document.getElementById('formURLModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const modal = document.createElement('div');
+            modal.id = 'formURLModal';
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+
+            const agentName = 'デモエージェント'; // 実際はログイン情報から取得
+            const agentId = 'demo-agent';
+            const formURL = `${window.location.origin}/customer-form.html?agent=${agentId}&name=${encodeURIComponent(agentName)}`;
+
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>📝 顧客フォーム URL生成</h2>
+                        <p style="margin: 8px 0 0 0; font-size: 14px; color: #64748b;">
+                            顧客に送信する専用フォームURLを生成します
+                        </p>
+                        <button onclick="closeFormURLModal()" class="btn-close" type="button">×</button>
+                    </div>
+                    
+                    <div style="padding: 30px;">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">エージェント情報</label>
+                            <div style="background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 14px;">
+                                <strong>名前:</strong> ${agentName}<br>
+                                <strong>ID:</strong> ${agentId}
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">生成されたフォームURL</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" 
+                                       id="formURLInput" 
+                                       value="${formURL}"
+                                       readonly
+                                       style="
+                                           flex: 1;
+                                           padding: 12px 16px;
+                                           border: 2px solid #e2e8f0;
+                                           border-radius: 8px;
+                                           background: #f8fafc;
+                                           font-family: monospace;
+                                           font-size: 13px;
+                                       ">
+                                <button onclick="copyFormURL()" style="
+                                    padding: 12px 20px;
+                                    background: #1e3a8a;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-weight: bold;
+                                    min-width: 80px;
+                                ">コピー</button>
+                            </div>
+                        </div>
+
+                        <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
+                            <h4 style="margin: 0 0 10px 0; color: #1e40af;">📋 使用方法</h4>
+                            <ol style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px;">
+                                <li>上記URLをコピーボタンでコピー</li>
+                                <li>メール・LINE・SMSで顧客に送信</li>
+                                <li>顧客が情報を入力・送信</li>
+                                <li>自動的に顧客管理に追加されます</li>
+                            </ol>
+                        </div>
+
+                        <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+                            <h4 style="margin: 0 0 10px 0; color: #92400e;">💡 メール例文</h4>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 14px; color: #374151;">
+                                <strong>件名:</strong> 賃貸物件ご希望条件の確認について<br><br>
+                                <strong>本文:</strong><br>
+                                この度はお問い合わせありがとうございます。<br>
+                                ご希望の物件条件を詳しくお聞かせください。<br><br>
+                                下記のフォームからご入力をお願いします：<br>
+                                <span style="color: #3b82f6; word-break: break-all;">${formURL}</span><br><br>
+                                ご入力いただいた内容を基に、最適な物件をご提案いたします。
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button onclick="closeFormURLModal()" class="btn btn-outline">閉じる</button>
+                            <a href="${formURL}" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+                                🔍 プレビュー
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            
+            console.log('Form URL modal created successfully');
+        }
+
+        function closeFormURLModal() {
+            const modal = document.getElementById('formURLModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function copyFormURL() {
+            const input = document.getElementById('formURLInput');
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999); // モバイル対応
+                
+                try {
+                    document.execCommand('copy');
+                    
+                    // コピー完了フィードバック
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    const originalColor = button.style.background;
+                    
+                    button.textContent = '✅ コピー完了';
+                    button.style.background = '#22c55e';
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = originalColor;
+                    }, 2000);
+                    
+                    console.log('Form URL copied to clipboard');
+                } catch (err) {
+                    console.error('コピー失敗:', err);
+                    
+                    // フォールバック: 選択状態のまま表示
+                    alert('URLが選択されました。Ctrl+C（Mac: Cmd+C）でコピーしてください。');
+                }
+            }
+        }
         function logout() {
             if (confirm('ログアウトしますか？')) {
                 window.location.href = 'login.html';
