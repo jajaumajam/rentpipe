@@ -3,174 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ダッシュボード - RentPipe</title>
+    <title>RentPipe - ダッシュボード</title>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- ナビゲーション -->
     <nav class="navbar">
-        <div class="nav-brand">
-            <h1>RentPipe</h1>
-            <span class="nav-subtitle">賃貸営業を、流れるように</span>
-        </div>
-        <div class="nav-menu">
-            <a href="index.html" class="nav-link active">📊 ダッシュボード</a>
-            <a href="customer.html" class="nav-link">👥 顧客管理</a>
-            <a href="pipeline.html" class="nav-link">🔄 パイプライン</a>
-            <a href="#" class="nav-link">📈 レポート</a>
-            <button onclick="logout()" class="btn btn-outline">ログアウト</button>
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="logo-icon">🏠</span>
+                <span class="logo-text">RentPipe</span>
+            </div>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="メニュー">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link active">
+                    <span class="nav-icon">📊</span>
+                    <span>ダッシュボード</span>
+                </a>
+                <a href="customer.html" class="nav-link">
+                    <span class="nav-icon">👥</span>
+                    <span>顧客管理</span>
+                </a>
+                <a href="pipeline.html" class="nav-link">
+                    <span class="nav-icon">📈</span>
+                    <span>パイプライン</span>
+                </a>
+                <a href="customer-form.html" class="nav-link">
+                    <span class="nav-icon">📝</span>
+                    <span>顧客フォーム</span>
+                </a>
+            </div>
         </div>
     </nav>
 
-    <main class="dashboard-container">
-        <!-- ダッシュボードヘッダー -->
-        <section class="dashboard-header">
-            <div class="header-content">
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+        <div class="container">
+            <!-- ページヘッダー -->
+            <div class="page-header">
                 <h1>ダッシュボード</h1>
-                <p>本日の業務概要と重要な指標をご確認ください</p>
+                <p class="page-description">全体の状況を一目で確認</p>
             </div>
-            <div class="header-actions">
-                <button onclick="window.location.href='customer.html'" class="btn btn-primary">
-                    👤 新規顧客登録
-                </button>
-            </div>
-        </section>
 
-        <!-- 重要指標 -->
-        <section class="dashboard-stats">
+            <!-- 統計カード -->
             <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-icon">👥</div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                        👥
+                    </div>
                     <div class="stat-content">
-                        <h3 id="totalCustomers">0</h3>
-                        <p>総顧客数</p>
+                        <div class="stat-label">総顧客数</div>
+                        <div class="stat-value" id="totalCustomers">0</div>
                     </div>
                 </div>
-                <div class="stat-card success">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-content">
-                        <h3 id="completedDeals">0</h3>
-                        <p>今月成約</p>
-                    </div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-content">
-                        <h3 id="activeDeals">0</h3>
-                        <p>進行中案件</p>
-                    </div>
-                </div>
-                <div class="stat-card info">
-                    <div class="stat-icon">📈</div>
-                    <div class="stat-content">
-                        <h3 id="conversionRate">0%</h3>
-                        <p>成約率</p>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- パイプライン概要 -->
-        <section class="dashboard-section">
-            <div class="section-header">
-                <h2>パイプライン概要</h2>
-                <a href="pipeline.html" class="btn btn-outline">詳細表示</a>
-            </div>
-            <div class="pipeline-overview">
-                <div class="pipeline-stage">
-                    <div class="stage-number" id="stage-初回相談">0</div>
-                    <div class="stage-label">初回相談</div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                        📈
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">進行中案件</div>
+                        <div class="stat-value" id="activeDeals">0</div>
+                    </div>
                 </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-stage">
-                    <div class="stage-number" id="stage-物件紹介">0</div>
-                    <div class="stage-label">物件紹介</div>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-stage">
-                    <div class="stage-number" id="stage-内見">0</div>
-                    <div class="stage-label">内見</div>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-stage">
-                    <div class="stage-number" id="stage-申込">0</div>
-                    <div class="stage-label">申込</div>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-stage">
-                    <div class="stage-number" id="stage-審査">0</div>
-                    <div class="stage-label">審査</div>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-stage">
-                    <div class="stage-number" id="stage-契約">0</div>
-                    <div class="stage-label">契約</div>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-stage success">
-                    <div class="stage-number" id="stage-完了">0</div>
-                    <div class="stage-label">完了</div>
-                </div>
-            </div>
-        </section>
 
-        <!-- 最近の顧客 -->
-        <section class="dashboard-section">
-            <div class="section-header">
-                <h2>最近の顧客</h2>
-                <a href="customer.html" class="btn btn-outline">全て表示</a>
-            </div>
-            <div class="recent-customers" id="recentCustomers">
-                <p style="text-align: center; color: #64748b; padding: 20px;">
-                    最近の顧客情報を読み込み中...
-                </p>
-            </div>
-        </section>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                        ✅
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">今月の成約</div>
+                        <div class="stat-value" id="monthlyCompleted">0</div>
+                    </div>
+                </div>
 
-        <!-- 今日のタスク -->
-        <section class="dashboard-section">
-            <div class="section-header">
-                <h2>今日のタスク</h2>
-                <button class="btn btn-outline">タスク追加</button>
-            </div>
-            <div class="tasks-list">
-                <div class="task-item">
-                    <div class="task-content">
-                        <h4>田中様 内見予定</h4>
-                        <p>時間: 14:00 - 15:00</p>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                        📊
                     </div>
-                    <div class="task-status">今日</div>
-                </div>
-                <div class="task-item">
-                    <div class="task-content">
-                        <h4>山田様 契約書準備</h4>
-                        <p>契約予定: 明日</p>
+                    <div class="stat-content">
+                        <div class="stat-label">成約率</div>
+                        <div class="stat-value" id="conversionRate">0%</div>
                     </div>
-                    <div class="task-status">急ぎ</div>
-                </div>
-                <div class="task-item">
-                    <div class="task-content">
-                        <h4>新規物件情報更新</h4>
-                        <p>物件データベース更新</p>
-                    </div>
-                    <div class="task-status">通常</div>
                 </div>
             </div>
-        </section>
+
+            <!-- 最近の活動 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>最近の活動</h2>
+                    <button class="btn btn-sm btn-outline" onclick="refreshActivities()">更新</button>
+                </div>
+                <div class="card-body">
+                    <div id="recentActivities" class="activity-list">
+                        <div class="empty-state">
+                            <span class="empty-icon">📋</span>
+                            <p>まだ活動履歴がありません</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- クイックアクション -->
+            <div class="quick-actions">
+                <h3>クイックアクション</h3>
+                <div class="action-buttons">
+                    <a href="customer.html" class="action-btn">
+                        <span class="action-icon">➕</span>
+                        <span>新規顧客追加</span>
+                    </a>
+                    <a href="pipeline.html" class="action-btn">
+                        <span class="action-icon">📊</span>
+                        <span>パイプライン確認</span>
+                    </a>
+                    <a href="customer-form.html" class="action-btn">
+                        <span class="action-icon">🔗</span>
+                        <span>フォームURL生成</span>
+                    </a>
+                    <button onclick="exportData()" class="action-btn">
+                        <span class="action-icon">💾</span>
+                        <span>データエクスポート</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- JavaScript -->
     <script src="js/firebase-config.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script src="js/performance.js"></script>
     <script>
-        // ログアウト機能
-        function logout() {
-            if (confirm('ログアウトしますか？')) {
-                window.location.href = 'login.html';
+        // ナビゲーショントグル
+        document.getElementById('navToggle').addEventListener('click', function() {
+            document.getElementById('navMenu').classList.toggle('active');
+            this.classList.toggle('active');
+        });
+
+        // ダッシュボードデータの更新
+        function updateDashboard() {
+            try {
+                const customers = window.DemoDataManager.getCustomers();
+                const history = window.DemoDataManager.getHistory();
+                
+                // 統計を計算
+                document.getElementById('totalCustomers').textContent = customers.length;
+                
+                const activeCount = customers.filter(c => 
+                    c.pipelineStatus && c.pipelineStatus !== '完了'
+                ).length;
+                document.getElementById('activeDeals').textContent = activeCount;
+                
+                // 今月の成約を計算
+                const now = new Date();
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                const monthlyCompleted = customers.filter(c => {
+                    if (c.pipelineStatus !== '完了') return false;
+                    const updatedAt = new Date(c.updatedAt);
+                    return updatedAt >= monthStart;
+                }).length;
+                document.getElementById('monthlyCompleted').textContent = monthlyCompleted;
+                
+                // 成約率を計算
+                const completedTotal = customers.filter(c => c.pipelineStatus === '完了').length;
+                const rate = customers.length > 0 ? 
+                    Math.round((completedTotal / customers.length) * 100) : 0;
+                document.getElementById('conversionRate').textContent = rate + '%';
+                
+                // 最近の活動を表示
+                updateRecentActivities(history.slice(0, 5));
+                
+            } catch (error) {
+                console.error('ダッシュボード更新エラー:', error);
+                ErrorHandler.showError('ダッシュボードの更新に失敗しました', error.message);
             }
         }
+
+        // 最近の活動を更新
+        function updateRecentActivities(activities) {
+            const container = document.getElementById('recentActivities');
+            
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">📋</span>
+                        <p>まだ活動履歴がありません</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon">📝</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.note || '活動記録'}</div>
+                        <div class="activity-time">${formatDate(activity.timestamp)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 日付フォーマット
+        function formatDate(date) {
+            const d = new Date(date);
+            const now = new Date();
+            const diff = now - d;
+            
+            if (diff < 60000) return 'たった今';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '時間前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '日前';
+            
+            return d.toLocaleDateString('ja-JP');
+        }
+
+        // 活動を更新
+        function refreshActivities() {
+            ErrorHandler.showLoading('更新中...');
+            
+            setTimeout(() => {
+                updateDashboard();
+                ErrorHandler.hideLoading();
+                ErrorHandler.showSuccess('更新完了しました');
+            }, 500);
+        }
+
+        // データエクスポート
+        function exportData() {
+            ErrorHandler.confirm(
+                'データをエクスポートしますか？',
+                () => {
+                    try {
+                        const customers = window.DemoDataManager.getCustomers();
+                        const dataStr = JSON.stringify(customers, null, 2);
+                        const blob = new Blob([dataStr], {type: 'application/json'});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `rentpipe_data_${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        
+                        ErrorHandler.showSuccess('データのエクスポートが完了しました');
+                    } catch (error) {
+                        ErrorHandler.handleSaveError(error, 'エクスポートデータ');
+                    }
+                }
+            );
+        }
+
+        // ページ読み込み時の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDashboard();
+            
+            // 定期的に更新（パフォーマンスを考慮）
+            setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    updateDashboard();
+                }
+            }, 30000); // 30秒ごと
+        });
     </script>
 </body>
 </html>
