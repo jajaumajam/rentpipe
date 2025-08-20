@@ -9,7 +9,7 @@
         .customer-container {
             padding: 20px;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 60px auto 0;
         }
 
         .customer-header {
@@ -50,17 +50,9 @@
             font-size: 16px;
         }
 
-        .filter-select {
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            min-width: 150px;
-        }
-
         .customer-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -70,143 +62,36 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             cursor: pointer;
+            border: 2px solid transparent;
         }
 
         .customer-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .customer-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .customer-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 5px;
-        }
-
-        .customer-contact {
-            font-size: 14px;
-            color: #64748b;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #3b82f6;
         }
 
         .status-badge {
-            padding: 6px 12px;
+            display: inline-block;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .status-初回相談 { background: #fee2e2; color: #dc2626; }
-        .status-物件紹介 { background: #fed7aa; color: #ea580c; }
-        .status-内見 { background: #fef3c7; color: #d97706; }
-        .status-申込 { background: #dcfce7; color: #16a34a; }
-        .status-審査 { background: #dbeafe; color: #2563eb; }
-        .status-契約 { background: #e9d5ff; color: #9333ea; }
-        .status-完了 { background: #d1fae5; color: #059669; }
-
-        .customer-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .detail-label {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-
-        .detail-value {
-            font-size: 14px;
-            color: #1e293b;
-            font-weight: 500;
-        }
-
-        .no-customers {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        @media (max-width: 768px) {
-            .customer-header {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .search-container {
-                flex-direction: column;
-            }
-
-            .customer-details {
-                grid-template-columns: 1fr;
-            }
-
-            .customer-actions {
-                justify-content: center;
-            }
+            font-weight: 600;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <h1>RentPipe</h1>
-            <span class="nav-subtitle">賃貸営業を、流れるように</span>
-        </div>
-        <div class="nav-menu">
-            <a href="index.html" class="nav-link">📊 ダッシュボード</a>
-            <a href="customer.html" class="nav-link active">👥 顧客管理</a>
-            <a href="pipeline.html" class="nav-link">🔄 パイプライン</a>
-            <a href="#" class="nav-link">📈 レポート</a>
-            <button onclick="logout()" class="btn btn-outline">ログアウト</button>
-        </div>
-    </nav>
-
-    <main class="customer-container">
+    <div class="customer-container">
         <div class="customer-header">
             <div>
                 <h1>顧客管理</h1>
-                <p>登録されている顧客情報を管理します</p>
+                <p style="color: #64748b; margin-top: 5px;">顧客情報を管理・検索できます</p>
             </div>
-            <div style="text-align: right;">
-                <div class="customer-stats">
-                    <span id="totalCustomersCount">0</span> 名の顧客
-                </div>
-            </div>
-        </div>
-
-        <div class="feature-explanation" style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #1e3a8a;">
-            <h3 style="color: #1e293b; margin-bottom: 10px;">💡 顧客登録の使い分け</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <strong style="color: #1e3a8a;">⚡ クイック登録</strong>
-                    <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">電話中に素早く基本情報を登録</p>
-                </div>
-                <div>
-                    <strong style="color: #1e3a8a;">📝 詳細フォーム</strong>
-                    <p style="font-size: 14px; color: #64748b; margin: 5px 0 0 0;">顧客に送って自分で入力してもらう</p>
-                </div>
+            <div style="display: flex; gap: 10px;">
+                <span id="customerCount" class="info-badge">0件</span>
             </div>
         </div>
 
@@ -215,20 +100,20 @@
                 ⚡ クイック登録
             </button>
             <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
-                📊 エクスポート
+                📥 エクスポート
             </button>
             <button onclick="showFormURLModal()" class="btn btn-outline" title="顧客フォームURL生成">
-                📝 詳細フォーム（顧客用）
+                🔗 フォームURL
             </button>
         </div>
 
         <div class="search-container">
             <input type="text" 
-                   id="searchInput" 
                    class="search-input" 
-                   placeholder="顧客名、メール、電話番号で検索...">
+                   id="searchInput" 
+                   placeholder="🔍 名前・メール・電話番号で検索">
             
-            <select id="statusFilter" class="filter-select">
+            <select id="statusFilter" class="search-input" style="max-width: 200px;">
                 <option value="">全てのステータス</option>
                 <option value="初回相談">初回相談</option>
                 <option value="物件紹介">物件紹介</option>
@@ -238,323 +123,224 @@
                 <option value="契約">契約</option>
                 <option value="完了">完了</option>
             </select>
-
-            <select id="sortBy" class="filter-select">
-                <option value="updatedAt">更新日順</option>
-                <option value="createdAt">登録日順</option>
-                <option value="name">名前順</option>
+            
+            <select id="sortOrder" class="search-input" style="max-width: 200px;">
+                <option value="updatedDesc">更新日（新しい順）</option>
+                <option value="updatedAsc">更新日（古い順）</option>
+                <option value="createdDesc">登録日（新しい順）</option>
+                <option value="createdAsc">登録日（古い順）</option>
+                <option value="nameAsc">名前（昇順）</option>
+                <option value="nameDesc">名前（降順）</option>
             </select>
-
+            
             <button onclick="clearFilters()" class="btn btn-outline">
-                🔄 リセット
+                クリア
             </button>
         </div>
 
-        <div class="customer-grid" id="customerGrid">
-            <!-- JavaScript で生成 -->
+        <div id="customerGrid" class="customer-grid">
+            <!-- 顧客カードがここに表示されます -->
         </div>
 
-        <div class="pagination" id="pagination">
-            <!-- JavaScript で生成 -->
+        <div id="noResults" style="display: none; text-align: center; padding: 60px 20px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+            <h3 style="color: #64748b;">顧客が見つかりません</h3>
+            <p style="color: #94a3b8;">検索条件を変更するか、新しい顧客を登録してください</p>
         </div>
-    </main>
+    </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- クイック登録モーダル -->
+    <div id="quickRegisterModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>⚡ クイック顧客登録</h2>
+                <button onclick="closeQuickRegisterModal()" class="btn-close" type="button">×</button>
+            </div>
+            <form id="quickRegisterForm" onsubmit="submitQuickRegister(event)">
+                <div class="modal-body">
+                    <p style="color: #64748b; margin-bottom: 20px;">
+                        最小限の情報で素早く顧客を登録できます。詳細は後から編集可能です。
+                    </p>
+                    
+                    <div class="form-group">
+                        <label for="quickName">お名前 <span class="required">*</span></label>
+                        <input type="text" id="quickName" name="name" required 
+                               placeholder="例: 山田 太郎">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quickPhone">電話番号 <span class="required">*</span></label>
+                        <input type="tel" id="quickPhone" name="phone" required 
+                               placeholder="例: 090-1234-5678">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quickEmail">メールアドレス</label>
+                        <input type="email" id="quickEmail" name="email" 
+                               placeholder="例: yamada@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quickStatus">ステータス</label>
+                        <select id="quickStatus" name="status">
+                            <option value="初回相談">初回相談</option>
+                            <option value="物件紹介">物件紹介</option>
+                            <option value="内見">内見</option>
+                            <option value="申込">申込</option>
+                            <option value="審査">審査</option>
+                            <option value="契約">契約</option>
+                            <option value="完了">完了</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quickNote">メモ</label>
+                        <textarea id="quickNote" name="note" rows="3" 
+                                  placeholder="例: 3月末までに引っ越し希望"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeQuickRegisterModal()" class="btn btn-outline">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">⚡ 登録する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 顧客詳細モーダル -->
+    <div id="customerDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="detailCustomerName">顧客詳細</h2>
+                <button onclick="closeDetailModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="customerDetailContent">
+                    <!-- 詳細情報がここに表示されます -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeDetailModal()" class="btn btn-outline">閉じる</button>
+                <button onclick="editCustomer()" class="btn btn-primary">編集</button>
+                <button onclick="deleteCustomer()" class="btn btn-danger">削除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顧客編集モーダル -->
+    <div id="customerEditModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>顧客情報編集</h2>
+                <button onclick="closeEditModal()" class="btn-close">×</button>
+            </div>
+            <form id="editCustomerForm" onsubmit="saveCustomerEdit(event)">
+                <div class="modal-body">
+                    <!-- 編集フォームがここに表示されます -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeEditModal()" class="btn btn-outline">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- フォームURL生成モーダル -->
+    <div id="formURLModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>🔗 顧客入力フォームURL</h2>
+                <button onclick="closeFormURLModal()" class="btn-close" type="button">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #64748b; margin-bottom: 20px;">
+                    このURLを顧客に送信することで、顧客自身が情報を入力できます。
+                </p>
+                
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">
+                        📋 フォームURL
+                    </label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" 
+                               id="formURLDisplay" 
+                               readonly 
+                               style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white;">
+                        <button onclick="copyFormURL()" style="
+                            padding: 10px 20px;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            white-space: nowrap;
+                        ">
+                            📋 コピー
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <h4 style="margin: 0 0 10px 0; color: #92400e;">💡 使い方のヒント</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #92400e;">
+                        <li>メールやLINEでURLを送信</li>
+                        <li>QRコードを生成して店舗に設置</li>
+                        <li>ウェブサイトにリンクを設置</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeFormURLModal()" class="btn btn-outline">閉じる</button>
+                <a href="${formURL}" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+                    🔗 フォームを開く
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- エクスポートモーダル -->
+    <div id="exportModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>📥 データエクスポート</h2>
+                <button onclick="dataExporter.closeModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #64748b; margin-bottom: 20px;">
+                    顧客データをエクスポートする形式を選択してください。
+                </p>
+                
+                <div class="export-options">
+                    <button onclick="dataExporter.exportAsCSV()" class="export-option">
+                        <span class="export-icon">📊</span>
+                        <span class="export-label">CSV形式</span>
+                        <span class="export-desc">Excel等で開けます</span>
+                    </button>
+                    
+                    <button onclick="dataExporter.exportAsJSON()" class="export-option">
+                        <span class="export-icon">💾</span>
+                        <span class="export-label">JSON形式</span>
+                        <span class="export-desc">バックアップ・連携用</span>
+                    </button>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0284c7;">
+                    <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
+                        <strong>💡 ヒント:</strong> エクスポートしたデータは定期的にバックアップとして保存することをお勧めします。
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="dataExporter.closeModal()" class="btn btn-outline">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/customer.js"></script>
     <script src="js/export.js"></script>
-
-    <!-- クイック登録機能 -->
-    <script>
-        // クイック登録機能
-        function showQuickRegisterModal() {
-            console.log('showQuickRegisterModal called');
-            
-            const existingModal = document.getElementById('quickRegisterModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            const modal = document.createElement('div');
-            modal.id = 'quickRegisterModal';
-            modal.className = 'modal';
-            modal.style.display = 'flex';
-
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>⚡ クイック登録</h2>
-                        <p style="margin: 8px 0 0 0; font-size: 14px; color: #64748b;">
-                            電話中に素早く基本情報を登録できます
-                        </p>
-                        <button onclick="closeQuickRegisterModal()" class="btn-close" type="button">×</button>
-                    </div>
-                    
-                    <form id="quickRegisterForm">
-                        <div class="form-grid">
-                            <div class="form-group full-width">
-                                <label for="quickName" class="form-label required">お名前</label>
-                                <input type="text" id="quickName" name="name" class="form-input" required 
-                                       placeholder="例: 田中太郎">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="quickEmail" class="form-label">メールアドレス</label>
-                                <input type="email" id="quickEmail" name="email" class="form-input" 
-                                       placeholder="例: tanaka@example.com">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="quickPhone" class="form-label required">電話番号</label>
-                                <input type="tel" id="quickPhone" name="phone" class="form-input" required
-                                       placeholder="例: 090-1234-5678">
-                            </div>
-                            
-                            <div class="form-group full-width">
-                                <label for="quickNotes" class="form-label">メモ・要望</label>
-                                <textarea id="quickNotes" name="notes" class="form-input" rows="3" 
-                                          placeholder="例: 急ぎで物件をお探し。渋谷エリア希望。"></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="quick-register-info">
-                            <p>💡 <strong>ヒント:</strong> 基本情報のみ登録して、詳細は後で編集できます</p>
-                            <p>📝 完全な顧客フォームは「詳細フォーム」ボタンから顧客に送信できます</p>
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <button type="button" onclick="closeQuickRegisterModal()" class="btn btn-outline">キャンセル</button>
-                            <button type="submit" class="btn btn-primary">⚡ 登録する</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            const form = document.getElementById('quickRegisterForm');
-            if (form) {
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    await submitQuickRegister();
-                });
-            }
-            
-            console.log('Quick register modal created successfully');
-        }
-
-        function closeQuickRegisterModal() {
-            const modal = document.getElementById('quickRegisterModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-        async function submitQuickRegister() {
-            try {
-                console.log('Submitting quick register form');
-                
-                const formData = new FormData(document.getElementById('quickRegisterForm'));
-                
-                const customerData = {
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone'),
-                    notes: formData.get('notes'),
-                    pipelineStatus: '初回相談',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    source: 'quick_register',
-                    id: `quick-${Date.now()}`,
-                    age: null,
-                    occupation: '',
-                    annualIncome: null,
-                    preferences: {
-                        budgetMin: null,
-                        budgetMax: null,
-                        areas: [],
-                        roomType: '',
-                        requirements: []
-                    }
-                };
-
-                if (!customerData.name || !customerData.phone) {
-                    alert('名前と電話番号は必須です。');
-                    return;
-                }
-
-                console.log('クイック登録データ:', customerData);
-                
-                const existingCustomers = JSON.parse(localStorage.getItem('demoCustomers') || '[]');
-                existingCustomers.push(customerData);
-                localStorage.setItem('demoCustomers', JSON.stringify(existingCustomers));
-
-                alert(`${customerData.name} 様をクイック登録しました！\\n詳細情報は後で編集できます。`);
-                
-                closeQuickRegisterModal();
-                window.location.reload();
-                
-            } catch (error) {
-                console.error('クイック登録エラー:', error);
-                alert('クイック登録に失敗しました。もう一度お試しください。');
-            }
-        }
-
-        // フォームURL生成機能
-        function showFormURLModal() {
-            console.log('showFormURLModal called');
-            
-            const existingModal = document.getElementById('formURLModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            const modal = document.createElement('div');
-            modal.id = 'formURLModal';
-            modal.className = 'modal';
-            modal.style.display = 'flex';
-
-            const agentName = 'デモエージェント';
-            const agentId = 'demo-agent';
-            const formURL = `${window.location.origin}/customer-form.html?agent=${agentId}&name=${encodeURIComponent(agentName)}`;
-
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>📝 顧客フォーム URL生成</h2>
-                        <p style="margin: 8px 0 0 0; font-size: 14px; color: #64748b;">
-                            顧客に送信する専用フォームURLを生成します
-                        </p>
-                        <button onclick="closeFormURLModal()" class="btn-close" type="button">×</button>
-                    </div>
-                    
-                    <div style="padding: 30px;">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">エージェント情報</label>
-                            <div style="background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 14px;">
-                                <strong>名前:</strong> ${agentName}<br>
-                                <strong>ID:</strong> ${agentId}
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">生成されたフォームURL</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" 
-                                       id="formURLInput" 
-                                       value="${formURL}"
-                                       readonly
-                                       style="
-                                           flex: 1;
-                                           padding: 12px 16px;
-                                           border: 2px solid #e2e8f0;
-                                           border-radius: 8px;
-                                           background: #f8fafc;
-                                           font-family: monospace;
-                                           font-size: 13px;
-                                       ">
-                                <button onclick="copyFormURL()" style="
-                                    padding: 12px 20px;
-                                    background: #1e3a8a;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 8px;
-                                    cursor: pointer;
-                                    font-weight: bold;
-                                    min-width: 80px;
-                                ">コピー</button>
-                            </div>
-                        </div>
-
-                        <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
-                            <h4 style="margin: 0 0 10px 0; color: #1e40af;">📋 使用方法</h4>
-                            <ol style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px;">
-                                <li>上記URLをコピーボタンでコピー</li>
-                                <li>メール・LINE・SMSで顧客に送信</li>
-                                <li>顧客が情報を入力・送信</li>
-                                <li>自動的に顧客管理に追加されます</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <button onclick="closeFormURLModal()" class="btn btn-outline">閉じる</button>
-                            <a href="${formURL}" target="_blank" class="btn btn-primary" style="text-decoration: none;">
-                                🔍 プレビュー
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-            console.log('Form URL modal created successfully');
-        }
-
-        function closeFormURLModal() {
-            const modal = document.getElementById('formURLModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-        function copyFormURL() {
-            const input = document.getElementById('formURLInput');
-            if (input) {
-                input.select();
-                input.setSelectionRange(0, 99999);
-                
-                try {
-                    document.execCommand('copy');
-                    
-                    const button = event.target;
-                    const originalText = button.textContent;
-                    const originalColor = button.style.background;
-                    
-                    button.textContent = '✅ コピー完了';
-                    button.style.background = '#22c55e';
-                    
-                    setTimeout(() => {
-                        button.textContent = originalText;
-                        button.style.background = originalColor;
-                    }, 2000);
-                    
-                    console.log('Form URL copied to clipboard');
-                } catch (err) {
-                    console.error('コピー失敗:', err);
-                    alert('URLが選択されました。Ctrl+C（Mac: Cmd+C）でコピーしてください。');
-                }
-            }
-        }
-
-        // ボタンにイベントリスナーを追加
-        document.addEventListener('DOMContentLoaded', function() {
-            const quickRegisterBtn = document.getElementById('quickRegisterBtn');
-            if (quickRegisterBtn) {
-                quickRegisterBtn.addEventListener('click', showQuickRegisterModal);
-                console.log('Quick register button event listener added');
-            }
-        });
-
-        // ログアウト機能
-//         function logout() {
-//             if (confirm('ログアウトしますか？')) {
-//                 window.location.href = 'login.html';
-//             }
-        }
-
-        // フィルタークリア
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('sortBy').value = 'updatedAt';
-            if (window.customerManager) {
-                customerManager.applyFilters();
-            }
-        }
-    </script>
-    <script src="js/auth-manager.js"></script>
-    <script src="js/auth-check.js"></script></body>
+</body>
 </html>

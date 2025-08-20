@@ -819,3 +819,28 @@ textarea.error {
         max-width: none;
     }
 }
+
+/* ===== 統一ナビゲーションスタイル ===== */
+.nav-logout {
+    margin-left: auto;
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-logout:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .nav-logout {
+        margin: 10px 15px;
+        width: calc(100% - 30px);
+    }
+}

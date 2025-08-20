@@ -9,7 +9,7 @@
         .pipeline-container {
             padding: 20px;
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 60px auto 0;
         }
 
         .pipeline-header {
@@ -48,183 +48,148 @@
             opacity: 0.9;
         }
 
+        .filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
         .pipeline-board {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 20px;
         }
 
         .pipeline-column {
+            min-width: 280px;
             background: #f8fafc;
             border-radius: 12px;
             padding: 15px;
-            min-height: 600px;
-            border: 2px solid #e2e8f0;
         }
 
         .column-header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px;
-            background: white;
-            border-radius: 8px;
             margin-bottom: 15px;
-            font-weight: bold;
-            font-size: 14px;
-            border-left: 4px solid #f97316;
-        }
-
-        .column-header.shokkai { border-left-color: #ef4444; }
-        .column-header.shokai { border-left-color: #f97316; }
-        .column-header.naiken { border-left-color: #eab308; }
-        .column-header.moshikomi { border-left-color: #22c55e; }
-        .column-header.shinsa { border-left-color: #3b82f6; }
-        .column-header.keiyaku { border-left-color: #8b5cf6; }
-        .column-header.kanryo { border-left-color: #10b981; }
-
-        .customer-card {
-            background: white;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: grab;
-            transition: all 0.2s ease;
-            border-left: 4px solid #e2e8f0;
         }
 
-        .customer-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .customer-card.dragging {
-            opacity: 0.5;
-            cursor: grabbing;
-        }
-
-        .customer-name {
-            font-weight: bold;
+        .column-title {
+            font-weight: 600;
             font-size: 14px;
+            color: white;
+        }
+
+        .column-count {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .pipeline-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        .pipeline-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: move;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pipeline-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+
+        .pipeline-card.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .pipeline-column.drag-over {
+            background: #e0e7ff;
+            border: 2px dashed #3b82f6;
+        }
+
+        .card-name {
+            font-weight: 600;
             margin-bottom: 5px;
             color: #1e293b;
         }
 
-        .customer-info {
+        .card-info {
             font-size: 12px;
             color: #64748b;
             margin-bottom: 3px;
         }
 
-        .customer-budget {
-            font-size: 12px;
-            color: #f97316;
-            font-weight: bold;
+        .card-date {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 8px;
         }
 
-        .drag-over {
-            background: #dbeafe;
-            border-color: #3b82f6;
-        }
-
-        .pipeline-controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .filter-btn {
-            background: white;
-            border: 2px solid #e2e8f0;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-btn:hover,
-        .filter-btn.active {
-            background: #1e3a8a;
-            color: white;
-            border-color: #1e3a8a;
-        }
-
-        .history-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .history-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .history-time {
-            font-size: 12px;
-            color: #64748b;
-            margin-right: 15px;
-            min-width: 80px;
-        }
-
-        .history-content {
-            flex: 1;
-        }
-
-        .history-customer {
-            font-weight: bold;
-            color: #1e293b;
-        }
-
-        .history-change {
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        @media (max-width: 1200px) {
-            .pipeline-board {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
+        .status-initial { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+        .status-proposal { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .status-viewing { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .status-application { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .status-review { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .status-contract { background: linear-gradient(135deg, #10b981, #059669); }
+        .status-completed { background: linear-gradient(135deg, #6b7280, #4b5563); }
 
         @media (max-width: 768px) {
-            .pipeline-board {
-                grid-template-columns: 1fr;
-            }
-            
             .pipeline-stats {
                 flex-wrap: wrap;
             }
             
             .stat-card {
+                flex: 1;
                 min-width: 80px;
+            }
+            
+            .pipeline-board {
+                padding: 10px;
+            }
+            
+            .pipeline-column {
+                min-width: 250px;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <h1>RentPipe</h1>
-            <span class="nav-subtitle">賃貸営業を、流れるように</span>
-        </div>
-        <div class="nav-menu">
-            <a href="index.html" class="nav-link">📊 ダッシュボード</a>
-            <a href="customer.html" class="nav-link">👥 顧客管理</a>
-            <a href="pipeline.html" class="nav-link active">🔄 パイプライン</a>
-            <a href="#" class="nav-link">📈 レポート</a>
-            <button onclick="logout()" class="btn btn-outline">ログアウト</button>
-        </div>
-    </nav>
-
-    <main class="pipeline-container">
+    <div class="pipeline-container">
         <div class="pipeline-header">
             <div>
                 <h1>パイプライン管理</h1>
-                <p>顧客の進捗状況を可視化・管理します</p>
+                <p style="color: #64748b; margin-top: 5px;">顧客の進捗状況を可視化・管理</p>
             </div>
             <div class="pipeline-stats">
                 <div class="stat-card">
@@ -232,7 +197,7 @@
                     <p>総顧客数</p>
                 </div>
                 <div class="stat-card">
-                    <h3 id="monthlyConversions">0</h3>
+                    <h3 id="monthlyContracts">0</h3>
                     <p>今月成約</p>
                 </div>
                 <div class="stat-card">
@@ -240,114 +205,112 @@
                     <p>成約率</p>
                 </div>
                 <div class="stat-card">
-                    <h3 id="avgDays">0</h3>
-                    <p>平均日数</p>
+                    <h3 id="averageDays">0日</h3>
+                    <p>平均期間</p>
                 </div>
             </div>
         </div>
 
-        <div class="pipeline-controls">
-            <button class="filter-btn active" onclick="filterPipeline('all')">全て</button>
-            <button class="filter-btn" onclick="filterPipeline('thisWeek')">今週</button>
-            <button class="filter-btn" onclick="filterPipeline('thisMonth')">今月</button>
-            <button class="filter-btn" onclick="filterPipeline('urgent')">急ぎ</button>
+        <div class="filter-container">
+            <select id="periodFilter" class="filter-select" onchange="applyFilters()">
+                <option value="all">全期間</option>
+                <option value="week">今週</option>
+                <option value="month">今月</option>
+                <option value="quarter">今四半期</option>
+            </select>
+            
+            <select id="urgencyFilter" class="filter-select" onchange="applyFilters()">
+                <option value="all">全ての緊急度</option>
+                <option value="high">高優先度</option>
+                <option value="medium">中優先度</option>
+                <option value="low">低優先度</option>
+            </select>
+            
+            <button onclick="refreshPipeline()" class="btn btn-outline">
+                🔄 更新
+            </button>
         </div>
 
         <div class="pipeline-board" id="pipelineBoard">
             <div class="pipeline-column" data-status="初回相談">
-                <div class="column-header shokkai">
-                    初回相談
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-初回相談">0</span>件
-                    </div>
+                <div class="column-header status-initial">
+                    <span class="column-title">初回相談</span>
+                    <span class="column-count" data-count="初回相談">0</span>
                 </div>
-                <div class="customer-list" id="list-初回相談"></div>
+                <div class="pipeline-cards" data-column="初回相談"></div>
             </div>
 
             <div class="pipeline-column" data-status="物件紹介">
-                <div class="column-header shokai">
-                    物件紹介
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-物件紹介">0</span>件
-                    </div>
+                <div class="column-header status-proposal">
+                    <span class="column-title">物件紹介</span>
+                    <span class="column-count" data-count="物件紹介">0</span>
                 </div>
-                <div class="customer-list" id="list-物件紹介"></div>
+                <div class="pipeline-cards" data-column="物件紹介"></div>
             </div>
 
             <div class="pipeline-column" data-status="内見">
-                <div class="column-header naiken">
-                    内見
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-内見">0</span>件
-                    </div>
+                <div class="column-header status-viewing">
+                    <span class="column-title">内見</span>
+                    <span class="column-count" data-count="内見">0</span>
                 </div>
-                <div class="customer-list" id="list-内見"></div>
+                <div class="pipeline-cards" data-column="内見"></div>
             </div>
 
             <div class="pipeline-column" data-status="申込">
-                <div class="column-header moshikomi">
-                    申込
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-申込">0</span>件
-                    </div>
+                <div class="column-header status-application">
+                    <span class="column-title">申込</span>
+                    <span class="column-count" data-count="申込">0</span>
                 </div>
-                <div class="customer-list" id="list-申込"></div>
+                <div class="pipeline-cards" data-column="申込"></div>
             </div>
 
             <div class="pipeline-column" data-status="審査">
-                <div class="column-header shinsa">
-                    審査
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-審査">0</span>件
-                    </div>
+                <div class="column-header status-review">
+                    <span class="column-title">審査</span>
+                    <span class="column-count" data-count="審査">0</span>
                 </div>
-                <div class="customer-list" id="list-審査"></div>
+                <div class="pipeline-cards" data-column="審査"></div>
             </div>
 
             <div class="pipeline-column" data-status="契約">
-                <div class="column-header keiyaku">
-                    契約
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-契約">0</span>件
-                    </div>
+                <div class="column-header status-contract">
+                    <span class="column-title">契約</span>
+                    <span class="column-count" data-count="契約">0</span>
                 </div>
-                <div class="customer-list" id="list-契約"></div>
+                <div class="pipeline-cards" data-column="契約"></div>
             </div>
 
             <div class="pipeline-column" data-status="完了">
-                <div class="column-header kanryo">
-                    完了
-                    <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-                        <span id="count-完了">0</span>件
-                    </div>
+                <div class="column-header status-completed">
+                    <span class="column-title">完了</span>
+                    <span class="column-count" data-count="完了">0</span>
                 </div>
-                <div class="customer-list" id="list-完了"></div>
+                <div class="pipeline-cards" data-column="完了"></div>
             </div>
         </div>
+    </div>
 
-        <div class="history-panel">
-            <h3>最近のステータス変更</h3>
-            <div id="statusHistory">
-                <p style="text-align: center; color: #64748b; padding: 20px;">
-                    ステータス変更履歴がここに表示されます
-                </p>
+    <!-- 顧客詳細モーダル -->
+    <div id="customerDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="modalCustomerName">顧客詳細</h2>
+                <button onclick="closeDetailModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="customerDetailContent">
+                    <!-- 詳細情報がここに表示されます -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeDetailModal()" class="btn btn-outline">閉じる</button>
+                <button onclick="editCustomerStatus()" class="btn btn-primary">ステータス変更</button>
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/navigation.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/pipeline.js"></script>
-    <script>
-        function logout() {
-            if (confirm('ログアウトしますか？')) {
-                window.location.href = 'login.html';
-            }
-        }
-    </script>
-    <script src="js/auth-manager.js"></script>
-    <script src="js/auth-check.js"></script></body>
+</body>
 </html>
