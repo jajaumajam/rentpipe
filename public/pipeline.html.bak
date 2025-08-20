@@ -348,6 +348,5 @@
             }
         }
     </script>
-    <script src="js/auth-manager.js"></script>
-    <script src="js/auth-check.js"></script></body>
+</body>
 </html>
