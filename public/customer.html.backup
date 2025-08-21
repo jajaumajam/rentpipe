@@ -264,6 +264,6 @@
     <script src="js/navigation.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/customer.js"></script>
-    <script src="js/export.js"></script>
+    <script src="js/quick-register.js"></script>    <script src="js/export.js"></script>
 </body>
 </html>
