@@ -29,10 +29,6 @@ function createNavigation() {
                     <span class="nav-icon">📈</span>
                     <span>パイプライン</span>
                 </a>
-                <a href="customer-form.html" class="nav-link ${currentPage === 'customer-form.html' ? 'active' : ''}">
-                    <span class="nav-icon">📝</span>
-                    <span>顧客フォーム</span>
-                </a>
                 <button onclick="logout()" class="btn btn-outline nav-logout">ログアウト</button>
             </div>
         </div>

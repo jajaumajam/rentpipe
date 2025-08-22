@@ -48,6 +48,10 @@
                 <span>📊</span>
                 <span>パイプライン確認</span>
             </a>
+            <a href="customer-form.html" class="action-btn">
+                <span>📝</span>
+                <span>顧客フォーム</span>
+            </a>
             <button onclick="exportData()" class="action-btn">
                 <span>💾</span>
                 <span>データエクスポート</span>
