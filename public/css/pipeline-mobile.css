@@ -1,0 +1,194 @@
+@media (max-width: 768px) {
+    .pipeline-container {
+        padding: 10px;
+    }
+    
+    .pipeline-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .pipeline-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .stat-card {
+        min-width: auto;
+        padding: 12px;
+    }
+    
+    .stat-card h3 {
+        font-size: 18px;
+    }
+    
+    .stat-card p {
+        font-size: 11px;
+    }
+    
+    /* フィルターをスマホ向けに最適化 */
+    .filter-container {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 10px 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .filter-select {
+        min-width: 120px;
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    /* パイプラインボードのスマホ対応 */
+    .pipeline-board {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        padding: 10px 0;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+    
+    .pipeline-column {
+        flex: 0 0 280px;
+        scroll-snap-align: start;
+        min-height: 400px;
+        padding: 12px;
+    }
+    
+    .column-header {
+        padding: 12px;
+        margin-bottom: 12px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .column-count {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 4px;
+    }
+    
+    /* カードのスマホ最適化 */
+    .customer-card {
+        margin-bottom: 12px;
+        padding: 15px;
+        border-radius: 8px;
+        background: white;
+        border-left: 4px solid #3b82f6;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        /* タッチ対応 */
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+    }
+    
+    .customer-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .customer-card.dragging {
+        opacity: 0.7;
+        transform: rotate(2deg);
+        z-index: 1000;
+    }
+    
+    .customer-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+    
+    .customer-contact {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    
+    .customer-budget {
+        font-size: 13px;
+        color: #059669;
+        font-weight: 500;
+    }
+    
+    .customer-urgent {
+        color: #ef4444;
+        font-size: 11px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    /* ドラッグオーバー効果 */
+    .pipeline-column.drag-over {
+        background-color: #f0f9ff;
+        border: 2px dashed #3b82f6;
+    }
+    
+    /* タッチフィードバック */
+    .pipeline-column:active,
+    .customer-card:active {
+        background-color: #f8fafc;
+    }
+    
+    /* 横スクロールインジケーター */
+    .pipeline-board::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .pipeline-board::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+    
+    .pipeline-board::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    
+    .pipeline-board::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+}
+
+/* タブレット用調整 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .pipeline-board {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+    
+    .pipeline-column {
+        min-height: 500px;
+    }
+    
+    .customer-card {
+        padding: 12px;
+    }
+}
+
+/* タッチ操作改善用共通スタイル */
+.touch-feedback {
+    transition: all 0.15s ease;
+}
+
+.touch-feedback:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+}
+
+/* プルダウン効果（オプション） */
+.pipeline-board.pulling {
+    transform: translateY(20px);
+    transition: transform 0.2s ease;
+}
