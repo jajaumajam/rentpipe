@@ -120,11 +120,6 @@
     <script src="js/pipeline-touch.js"></script>
 
     <script>
-        // ページ初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Pipeline page loaded');
-        });
-
         // フィルター機能
         function applyFilters() {
             const periodFilter = document.getElementById('periodFilter').value;
@@ -144,15 +139,6 @@
             }
         }
 
-        // 認証チェック
-        function checkAuth() {
-            const currentUser = localStorage.getItem('rentpipe_current_user');
-            if (!currentUser) {
-                window.location.href = 'login.html';
-                return;
-            }
-        }
-
         // ログアウト機能
         function logout() {
             if (confirm('ログアウトしますか？')) {
@@ -160,9 +146,6 @@
                 window.location.href = 'login.html';
             }
         }
-
-        // 初期化実行
-        checkAuth();
     </script>
 </body>
 </html>
