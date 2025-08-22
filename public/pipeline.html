@@ -35,22 +35,11 @@
         </div>
 
         <div class="filter-container">
-            <select id="periodFilter" class="filter-select" onchange="applyFilters()">
-                <option value="all">全期間</option>
-                <option value="week">今週</option>
-                <option value="month">今月</option>
-                <option value="quarter">今四半期</option>
-            </select>
-            
-            <select id="urgencyFilter" class="filter-select" onchange="applyFilters()">
-                <option value="all">全ての緊急度</option>
-                <option value="high">高優先度</option>
-                <option value="medium">中優先度</option>
-                <option value="low">低優先度</option>
-            </select>
-            
-            <button onclick="refreshPipeline()" class="btn btn-outline">
+            <button onclick="refreshPipeline()" class="btn btn-primary">
                 🔄 更新
+            </button>
+            <button onclick="generateDemoData()" class="btn btn-outline">
+                📝 デモデータ生成
             </button>
         </div>
 
@@ -115,21 +104,10 @@
 
     <!-- JavaScript -->
     <script src="js/navigation.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/pipeline.js"></script>
+    <script src="js/pipeline-simple.js"></script>
     <script src="js/pipeline-touch.js"></script>
 
     <script>
-        // フィルター機能
-        function applyFilters() {
-            const periodFilter = document.getElementById('periodFilter').value;
-            const urgencyFilter = document.getElementById('urgencyFilter').value;
-            
-            if (window.pipelineManager) {
-                window.pipelineManager.applyFilters(periodFilter, urgencyFilter);
-            }
-        }
-
         // 更新機能
         function refreshPipeline() {
             if (window.pipelineManager) {
@@ -139,11 +117,13 @@
             }
         }
 
-        // ログアウト機能
-        function logout() {
-            if (confirm('ログアウトしますか？')) {
-                localStorage.removeItem('rentpipe_current_user');
-                window.location.href = 'login.html';
+        // デモデータ生成
+        function generateDemoData() {
+            if (window.pipelineManager) {
+                window.pipelineManager.customers = window.pipelineManager.generateDemoData();
+                window.pipelineManager.renderPipeline();
+                window.pipelineManager.updateStats();
+                alert('デモデータを生成しました！');
             }
         }
     </script>
