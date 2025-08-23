@@ -1,4 +1,4 @@
-// RentPipe 統一ナビゲーションシステム
+// RentPipe 統一ナビゲーションシステム（データヘルス管理対応版）
 function createNavigation() {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
@@ -28,6 +28,10 @@ function createNavigation() {
                 <a href="pipeline.html" class="nav-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
                     <span class="nav-icon">📈</span>
                     <span>パイプライン</span>
+                </a>
+                <a href="data-health.html" class="nav-link ${currentPage === 'data-health.html' ? 'active' : ''}">
+                    <span class="nav-icon">🔍</span>
+                    <span>データヘルス</span>
                 </a>
                 <a href="profile.html" class="nav-link ${currentPage === 'profile.html' ? 'active' : ''}">
                     <span class="nav-icon">👤</span>
@@ -110,4 +114,4 @@ if (document.readyState === 'loading') {
     createNavigation();
 }
 
-console.log('✅ 統一ナビゲーションシステム準備完了');
+console.log('✅ データヘルス対応統一ナビゲーションシステム準備完了');
