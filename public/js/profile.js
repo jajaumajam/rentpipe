@@ -1,27 +1,37 @@
-// RentPipe プロフィール管理機能
+// RentPipe プロフィール管理機能（統一認証対応版）
 class ProfileManager {
     constructor() {
-        this.PROFILE_KEY = 'rentpipe_user_profile';
-        this.AUTH_KEY = 'rentpipe_auth';  // 統一された認証キー
         this.init();
     }
 
     init() {
         console.log('👤 プロフィール管理システム初期化中...');
         
-        // DOMが読み込まれてから実行
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.setupEventListeners();
-                this.loadProfile();
-            });
-        } else {
+        // 統一認証システムの準備を待つ
+        if (window.UnifiedAuth) {
             this.setupEventListeners();
             this.loadProfile();
+        } else {
+            // 統一認証システムが読み込まれるまで待機
+            setTimeout(() => {
+                this.setupEventListeners();
+                this.loadProfile();
+            }, 500);
         }
     }
 
     setupEventListeners() {
+        // DOMが読み込まれてから実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.bindEvents();
+            });
+        } else {
+            this.bindEvents();
+        }
+    }
+
+    bindEvents() {
         // プロフィール更新フォーム
         const profileForm = document.getElementById('profileForm');
         if (profileForm) {
@@ -43,52 +53,21 @@ class ProfileManager {
         console.log('✅ プロフィール管理イベントリスナー設定完了');
     }
 
-    // 現在の認証データを取得
-    getCurrentAuthData() {
-        // 複数の認証キーをチェック
-        const possibleKeys = [
-            'rentpipe_auth',
-            'rentpipe_demo_user', 
-            'rentpipe_current_user'
-        ];
-        
-        for (const key of possibleKeys) {
-            const stored = localStorage.getItem(key);
-            if (stored) {
-                try {
-                    const data = JSON.parse(stored);
-                    console.log(`🔑 認証データ発見: ${key}`, data);
-                    return { key, data };
-                } catch (error) {
-                    console.warn(`❌ ${key} の解析に失敗:`, error);
-                }
-            }
-        }
-        
-        return null;
-    }
-
     // プロフィール情報を読み込み
     loadProfile() {
         try {
-            const savedProfile = localStorage.getItem(this.PROFILE_KEY);
-            const authResult = this.getCurrentAuthData();
+            const currentUser = window.UnifiedAuth ? window.UnifiedAuth.getCurrentUser() : null;
             
             let profile = {};
             
-            if (savedProfile) {
-                profile = JSON.parse(savedProfile);
-            } else if (authResult) {
-                // 既存の認証情報からデフォルトプロフィールを作成
-                const authData = authResult.data;
+            if (currentUser) {
                 profile = {
-                    agentName: authData.name || authData.displayName || 'デモエージェント',
-                    email: authData.email || 'demo@rentpipe.jp',
-                    phone: authData.phone || '090-0000-0000',
-                    company: authData.company || 'デモ不動産',
-                    businessAreas: authData.businessAreas || '渋谷区、港区、新宿区'
+                    agentName: currentUser.name || currentUser.displayName || 'デモエージェント',
+                    email: currentUser.email || 'demo@rentpipe.jp',
+                    phone: currentUser.phone || '090-0000-0000',
+                    company: currentUser.company || 'デモ不動産',
+                    businessAreas: currentUser.businessAreas || '渋谷区、港区、新宿区'
                 };
-                this.saveProfile(profile);
             } else {
                 // デフォルトプロフィール
                 profile = {
@@ -121,17 +100,6 @@ class ProfileManager {
         });
     }
 
-    // プロフィール情報を保存
-    saveProfile(profile) {
-        try {
-            localStorage.setItem(this.PROFILE_KEY, JSON.stringify(profile));
-            return true;
-        } catch (error) {
-            console.error('❌ プロフィール保存エラー:', error);
-            return false;
-        }
-    }
-
     // プロフィール更新
     updateProfile() {
         try {
@@ -148,14 +116,8 @@ class ProfileManager {
                 return false;
             }
 
-            // 更新日時を追加
-            profile.updatedAt = new Date().toISOString();
-
-            // 保存
-            if (this.saveProfile(profile)) {
-                // 認証情報も更新
-                this.updateAuthInfo(profile);
-                
+            // 統一認証システムを使用して更新
+            if (window.UnifiedAuth && window.UnifiedAuth.updateProfile(profile)) {
                 this.showSuccess('プロフィールを更新しました');
                 console.log('✅ プロフィール更新完了');
                 return true;
@@ -168,23 +130,6 @@ class ProfileManager {
             console.error('❌ プロフィール更新エラー:', error);
             this.showError('プロフィール更新中にエラーが発生しました');
             return false;
-        }
-    }
-
-    // 認証情報の更新
-    updateAuthInfo(profile) {
-        try {
-            const authResult = this.getCurrentAuthData();
-            if (authResult) {
-                const { key, data } = authResult;
-                data.name = profile.agentName;
-                data.email = profile.email;
-                data.updatedAt = new Date().toISOString();
-                localStorage.setItem(key, JSON.stringify(data));
-                console.log('✅ 認証情報更新完了');
-            }
-        } catch (error) {
-            console.error('❌ 認証情報更新エラー:', error);
         }
     }
 
@@ -222,14 +167,14 @@ class ProfileManager {
                 return false;
             }
 
-            // 現在のパスワードの確認（デモモード対応強化）
-            if (!this.verifyCurrentPassword(currentPassword)) {
+            // 現在のパスワードの確認
+            if (!window.UnifiedAuth || !window.UnifiedAuth.verifyPassword(currentPassword)) {
                 this.showError('現在のパスワードが正しくありません');
                 return false;
             }
 
             // パスワード更新
-            if (this.updatePassword(newPassword)) {
+            if (window.UnifiedAuth.updatePassword(newPassword)) {
                 // フォームをクリア
                 document.getElementById('passwordForm').reset();
                 this.showSuccess('パスワードを変更しました');
@@ -245,33 +190,6 @@ class ProfileManager {
             this.showError('パスワード変更中にエラーが発生しました');
             return false;
         }
-    }
-
-    // 現在のパスワードを確認
-    verifyCurrentPassword(inputPassword) {
-        const authResult = this.getCurrentAuthData();
-        
-        if (authResult) {
-            const { data } = authResult;
-            
-            // パスワードが保存されている場合
-            if (data.password) {
-                return data.password === inputPassword;
-            }
-            
-            // パスワードハッシュが保存されている場合
-            if (data.passwordHash) {
-                return data.passwordHash === btoa(inputPassword);
-            }
-            
-            // デモアカウントの場合、demo123を許可
-            if (data.email === 'demo@rentpipe.jp' && inputPassword === 'demo123') {
-                return true;
-            }
-        }
-        
-        // デフォルトのデモパスワードも許可
-        return inputPassword === 'demo123';
     }
 
     // パスワード変更のバリデーション
@@ -297,38 +215,6 @@ class ProfileManager {
         }
 
         return true;
-    }
-
-    // パスワード更新（統一対応版）
-    updatePassword(newPassword) {
-        try {
-            const authResult = this.getCurrentAuthData();
-            
-            if (authResult) {
-                const { key, data } = authResult;
-                data.password = newPassword;
-                data.passwordHash = btoa(newPassword);
-                data.passwordUpdatedAt = new Date().toISOString();
-                
-                localStorage.setItem(key, JSON.stringify(data));
-                console.log('✅ パスワード保存完了:', key);
-                return true;
-            } else {
-                // 認証データが見つからない場合、新しく作成
-                const newAuthData = {
-                    password: newPassword,
-                    passwordHash: btoa(newPassword),
-                    email: 'demo@rentpipe.jp',
-                    passwordUpdatedAt: new Date().toISOString()
-                };
-                localStorage.setItem(this.AUTH_KEY, JSON.stringify(newAuthData));
-                console.log('✅ 新規認証データ作成完了');
-                return true;
-            }
-        } catch (error) {
-            console.error('❌ パスワード保存エラー:', error);
-            return false;
-        }
     }
 
     // メールアドレスの形式チェック
@@ -409,45 +295,21 @@ function confirmAccountDeletion() {
     }
 }
 
-// アカウント削除の実行（自動ログイン防止対応）
+// アカウント削除の実行（統一認証対応版）
 function deleteAccount() {
     try {
         console.log('⚠️ アカウント削除処理開始...');
         
-        // すべてのローカルストレージデータを削除
-        const keysToDelete = [
-            'rentpipe_user_profile',
-            'rentpipe_demo_user',
-            'rentpipe_auth',
-            'rentpipe_current_user',
-            'rentpipe_stable_customers',
-            'rentpipe_pipeline_history',
-            'rentpipe_demo_customers',
-            'customers',
-            'rentpipe_customers',
-            'rentpipe_redirect_after_login'
-        ];
-        
-        keysToDelete.forEach(key => {
-            if (localStorage.getItem(key)) {
-                localStorage.removeItem(key);
-                console.log(`🗑️ ${key} を削除しました`);
-            }
-        });
-        
-        // セッションストレージもクリア
-        sessionStorage.clear();
-        console.log('🗑️ セッションストレージをクリア');
-        
-        // アカウント削除フラグを設定（自動ログイン防止）
-        localStorage.setItem('rentpipe_account_deleted', 'true');
-        
-        alert('アカウントとすべてのデータを削除しました。ログイン画面に移動します。');
-        
-        // ログイン画面にリダイレクト（少し遅延を入れる）
-        setTimeout(() => {
-            window.location.replace('login.html');
-        }, 1000);
+        if (window.UnifiedAuth && window.UnifiedAuth.deleteAccount()) {
+            alert('アカウントとすべてのデータを削除しました。ログイン画面に移動します。');
+            
+            // ログイン画面にリダイレクト
+            setTimeout(() => {
+                window.location.replace('login.html');
+            }, 1000);
+        } else {
+            alert('アカウント削除中にエラーが発生しました。管理者にお問い合わせください。');
+        }
         
     } catch (error) {
         console.error('❌ アカウント削除エラー:', error);
@@ -461,4 +323,4 @@ const profileManager = new ProfileManager();
 // デバッグ用のグローバルアクセス
 window.ProfileManager = profileManager;
 
-console.log('✅ プロフィール管理システム準備完了');
+console.log('✅ 統一認証対応プロフィール管理システム準備完了');

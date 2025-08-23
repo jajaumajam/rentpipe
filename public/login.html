@@ -189,6 +189,7 @@
         </div>
     </div>
 
+    <script src="js/unified-auth.js"></script>
     <script>
         // アカウント削除チェック
         function checkAccountDeletion() {
@@ -246,25 +247,19 @@
                 return;
             }
 
-            // ログイン処理（デモモード）
-            const userData = {
-                email: email,
-                password: password,
-                passwordHash: btoa(password),
-                name: email.split('@')[0],
-                loginAt: new Date().toISOString(),
-                isDemoUser: true
-            };
-
-            // 認証データを保存
-            localStorage.setItem('rentpipe_auth', JSON.stringify(userData));
+            // 統一認証システムでログイン
+            const result = window.UnifiedAuth.login(email, password);
             
-            showMessage('ログインに成功しました！', 'success');
-            
-            // ダッシュボードにリダイレクト
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1000);
+            if (result.success) {
+                showMessage('ログインに成功しました！', 'success');
+                
+                // ダッシュボードにリダイレクト
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                showMessage(result.error || 'ログインに失敗しました');
+            }
         });
 
         // ページ読み込み時の処理
@@ -274,20 +269,12 @@
             
             // 既にログイン済みの場合はリダイレクト（削除フラグがない場合のみ）
             if (!localStorage.getItem('rentpipe_account_deleted')) {
-                const existingAuth = localStorage.getItem('rentpipe_auth');
-                if (existingAuth) {
-                    try {
-                        const authData = JSON.parse(existingAuth);
-                        if (authData.email) {
-                            console.log('既にログイン済み、ダッシュボードにリダイレクト');
-                            setTimeout(() => {
-                                window.location.href = 'index.html';
-                            }, 500);
-                        }
-                    } catch (error) {
-                        console.error('認証データ解析エラー:', error);
+                setTimeout(() => {
+                    if (window.UnifiedAuth && window.UnifiedAuth.isAuthenticated()) {
+                        console.log('既にログイン済み、ダッシュボードにリダイレクト');
+                        window.location.href = 'index.html';
                     }
-                }
+                }, 500);
             }
         });
     </script>
