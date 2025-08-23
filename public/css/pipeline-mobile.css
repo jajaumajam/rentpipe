@@ -1,13 +1,91 @@
-/* RentPipe Pipeline Mobile Optimization v3 */
+/* RentPipe Pipeline Mobile Optimization v6 - 完全レスポンシブ版 */
 
-/* PC版：通常のグリッド表示 */
-@media (min-width: 1025px) {
+/* 全体のレイアウト調整 */
+.pipeline-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* 共通：ステージタイトルの強制色指定 */
+.pipeline-column .column-header,
+.column-header.status-initial,
+.column-header.status-proposal, 
+.column-header.status-viewing,
+.column-header.status-application,
+.column-header.status-review,
+.column-header.status-contract,
+.column-header.status-complete {
+    text-align: center !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    margin-bottom: 15px !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* ステージ別の背景色 */
+[data-status="初回相談"] .column-header,
+.column-header.status-initial { 
+    background: #dc2626 !important;
+}
+
+[data-status="物件紹介"] .column-header,
+.column-header.status-proposal { 
+    background: #ea580c !important;
+}
+
+[data-status="内見"] .column-header,
+.column-header.status-viewing { 
+    background: #d97706 !important;
+}
+
+[data-status="申込"] .column-header,
+.column-header.status-application { 
+    background: #16a34a !important;
+}
+
+[data-status="審査"] .column-header,
+.column-header.status-review { 
+    background: #2563eb !important;
+}
+
+[data-status="契約"] .column-header,
+.column-header.status-contract { 
+    background: #7c3aed !important;
+}
+
+[data-status="完了"] .column-header,
+.column-header.status-complete { 
+    background: #059669 !important;
+}
+
+.column-count {
+    font-size: 12px !important;
+    opacity: 0.9 !important;
+    margin-top: 4px !important;
+    color: #ffffff !important;
+}
+
+/* 完全レスポンシブ：1列〜7列 */
+
+/* 超大画面：7列 */
+@media (min-width: 1400px) {
+    .pipeline-container {
+        padding: 20px !important;
+    }
+    
     .pipeline-board {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 20px;
-        padding: 20px 0;
-        overflow: visible;
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 16px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
     }
     
     .pipeline-column {
@@ -16,87 +94,244 @@
         padding: 15px;
         min-height: 600px;
         border: 2px solid #e2e8f0;
+        width: 100%;
     }
     
     .column-header {
-        text-align: center;
-        padding: 10px;
-        background: white;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        font-weight: bold;
-        font-size: 14px;
-        color: #1f2937;
-    }
-    
-    /* PC版ステージ色 */
-    .column-header.status-initial { border-left: 4px solid #ef4444; }
-    .column-header.status-proposal { border-left: 4px solid #f97316; }
-    .column-header.status-viewing { border-left: 4px solid #eab308; }
-    .column-header.status-application { border-left: 4px solid #22c55e; }
-    .column-header.status-review { border-left: 4px solid #3b82f6; }
-    .column-header.status-contract { border-left: 4px solid #8b5cf6; }
-    .column-header.status-complete { border-left: 4px solid #059669; }
-    
-    .customer-contact,
-    .customer-notes {
-        display: block;
+        font-size: 14px !important;
     }
 }
 
-/* タブレット版：4列表示 */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* 大画面：6列 */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .pipeline-container {
+        padding: 18px !important;
+    }
+    
     .pipeline-board {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        padding: 15px 0;
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 14px !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
     }
     
     .pipeline-column {
         background: #f8fafc;
-        border-radius: 12px;
-        padding: 12px;
-        min-height: 500px;
+        border-radius: 10px;
+        padding: 13px;
+        min-height: 580px;
         border: 2px solid #e2e8f0;
     }
     
     .column-header {
-        text-align: center;
-        padding: 8px;
-        background: white;
-        border-radius: 6px;
-        margin-bottom: 12px;
-        font-weight: bold;
-        font-size: 13px;
-        color: #1f2937;
+        font-size: 13px !important;
+    }
+}
+
+/* 中大画面：5列 */
+@media (min-width: 1000px) and (max-width: 1199px) {
+    .pipeline-container {
+        padding: 16px !important;
     }
     
-    /* タブレット版ステージ色 */
-    .column-header.status-initial { border-left: 4px solid #ef4444; }
-    .column-header.status-proposal { border-left: 4px solid #f97316; }
-    .column-header.status-viewing { border-left: 4px solid #eab308; }
-    .column-header.status-application { border-left: 4px solid #22c55e; }
-    .column-header.status-review { border-left: 4px solid #3b82f6; }
-    .column-header.status-contract { border-left: 4px solid #8b5cf6; }
-    .column-header.status-complete { border-left: 4px solid #059669; }
+    .pipeline-board {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 12px !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
     
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 12px;
+        min-height: 560px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .column-header {
+        font-size: 13px !important;
+    }
+}
+
+/* 中画面：4列 */
+@media (min-width: 850px) and (max-width: 999px) {
+    .pipeline-container {
+        padding: 15px !important;
+    }
+    
+    .pipeline-board {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 10px !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+    
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 10px;
+        min-height: 520px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .column-header {
+        font-size: 12px !important;
+        padding: 10px !important;
+    }
+}
+
+/* 中小画面：3列 */
+@media (min-width: 700px) and (max-width: 849px) {
+    .pipeline-container {
+        padding: 12px !important;
+    }
+    
+    .pipeline-board {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 10px !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+    
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 10px;
+        min-height: 480px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .column-header {
+        font-size: 12px !important;
+        padding: 8px !important;
+    }
+}
+
+/* 小画面：2列 */
+@media (min-width: 550px) and (max-width: 699px) {
+    .pipeline-container {
+        padding: 10px !important;
+    }
+    
+    .pipeline-board {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+    
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 8px;
+        min-height: 450px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .column-header {
+        font-size: 11px !important;
+        padding: 8px !important;
+    }
+}
+
+/* 超小画面：1列 */
+@media (min-width: 480px) and (max-width: 549px) {
+    .pipeline-container {
+        padding: 8px !important;
+    }
+    
+    .pipeline-board {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+    
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 8px;
+        min-height: 200px;
+        border: 2px solid #e2e8f0;
+        margin-bottom: 10px;
+    }
+    
+    .column-header {
+        font-size: 11px !important;
+        padding: 6px !important;
+    }
+}
+
+/* PC版で全情報表示（480px以上） */
+@media (min-width: 480px) {
     .customer-contact,
     .customer-notes {
         display: block;
     }
+    
+    .customer-card {
+        padding: 12px;
+        margin-bottom: 10px;
+        background: white;
+        border-left: 3px solid #3b82f6;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        border-radius: 6px;
+    }
+    
+    .customer-name {
+        font-size: 14px;
+        font-weight: bold;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+    
+    .customer-budget {
+        font-size: 12px;
+        color: #059669;
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+    
+    .customer-contact {
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 2px;
+    }
+    
+    .customer-area {
+        font-size: 11px;
+        color: #7c3aed;
+        font-weight: 500;
+    }
 }
 
-/* スマホ版：横スクロール + 長押しメニュー方式 */
-@media (max-width: 768px) {
+/* スマホ版：横スクロール + 長押しメニュー方式（480px未満） */
+@media (max-width: 479px) {
     .pipeline-container {
-        padding: 10px;
+        padding: 10px !important;
     }
     
     .pipeline-header {
         flex-direction: column;
         gap: 15px;
         padding: 15px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
     }
     
     .pipeline-stats {
@@ -109,22 +344,28 @@
     .stat-card {
         min-width: auto;
         padding: 10px;
+        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+        color: white;
+        border-radius: 8px;
+        text-align: center;
     }
     
     .stat-card h3 {
         font-size: 16px;
+        margin: 0;
     }
     
     .stat-card p {
         font-size: 10px;
+        margin: 5px 0 0 0;
+        opacity: 0.9;
     }
     
-    /* フィルターをスマホ向けに最適化 */
     .filter-container {
         display: flex;
         gap: 8px;
         overflow-x: auto;
-        padding: 10px 0;
+        padding: 10px 0 20px 0;
         -webkit-overflow-scrolling: touch;
     }
     
@@ -132,78 +373,35 @@
         white-space: nowrap;
         font-size: 12px;
         padding: 8px 12px;
+        border-radius: 6px;
     }
     
-    /* パイプラインボードのスマホ対応 */
+    /* スマホ版パイプラインボード */
     .pipeline-board {
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        padding: 10px 0;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
+        display: flex !important;
+        gap: 12px !important;
+        overflow-x: auto !important;
+        padding: 10px 0 !important;
+        -webkit-overflow-scrolling: touch !important;
+        scroll-snap-type: x mandatory !important;
+    }
+    
+    /* スワイプヒントを削除 */
+    .pipeline-board::before {
+        display: none !important;
     }
     
     .pipeline-column {
-        flex: 0 0 200px;
-        scroll-snap-align: start;
-        min-height: 400px;
-        padding: 8px;
-        border-radius: 8px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        flex: 0 0 200px !important;
+        scroll-snap-align: start !important;
+        min-height: 400px !important;
+        padding: 8px !important;
+        border-radius: 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
     }
     
-    .column-header {
-        padding: 8px;
-        margin-bottom: 8px;
-        text-align: center;
-        font-size: 12px;
-        font-weight: bold;
-        border-radius: 6px;
-        background: white;
-        color: #1f2937; /* 黒文字に固定 */
-    }
-    
-    /* スマホ版ステージ色（PC版と同じ） */
-    .column-header.status-initial { 
-        border-left: 4px solid #ef4444; 
-        color: #1f2937;
-    }
-    .column-header.status-proposal { 
-        border-left: 4px solid #f97316; 
-        color: #1f2937;
-    }
-    .column-header.status-viewing { 
-        border-left: 4px solid #eab308; 
-        color: #1f2937;
-    }
-    .column-header.status-application { 
-        border-left: 4px solid #22c55e; 
-        color: #1f2937;
-    }
-    .column-header.status-review { 
-        border-left: 4px solid #3b82f6; 
-        color: #1f2937;
-    }
-    .column-header.status-contract { 
-        border-left: 4px solid #8b5cf6; 
-        color: #1f2937;
-    }
-    .column-header.status-complete { 
-        border-left: 4px solid #059669; 
-        color: #1f2937;
-        background: #f0fdf4;
-    }
-    
-    .column-count {
-        font-size: 10px;
-        opacity: 0.7;
-        margin-top: 2px;
-        color: #1f2937;
-    }
-    
-    /* カードのスマホ最適化 */
+    /* スマホ版カード */
     .customer-card {
         margin-bottom: 8px;
         padding: 8px;
@@ -249,10 +447,7 @@
     }
     
     .customer-contact {
-        font-size: 10px;
-        color: #64748b;
-        margin-bottom: 2px;
-        display: none; /* スマホでは非表示 */
+        display: none;
     }
     
     .customer-area {
@@ -262,7 +457,7 @@
     }
     
     .customer-notes {
-        display: none; /* スマホでは非表示 */
+        display: none;
     }
     
     /* 横スクロールインジケーター */
@@ -279,23 +474,6 @@
         background: #cbd5e1;
         border-radius: 2px;
     }
-    
-    /* スワイプヒント */
-    .pipeline-board::before {
-        content: "← 左右にスワイプして他のステージを表示 →";
-        position: sticky;
-        left: 50%;
-        transform: translateX(-50%);
-        display: block;
-        text-align: center;
-        font-size: 10px;
-        color: #94a3b8;
-        padding: 5px 0;
-        z-index: 1;
-        background: rgba(248, 250, 252, 0.9);
-        border-radius: 4px;
-        margin-bottom: 5px;
-    }
 }
 
 /* 長押しメニュー */
@@ -308,6 +486,7 @@
     z-index: 10000;
     display: none;
     min-width: 200px;
+    border: 1px solid #e5e7eb;
 }
 
 .stage-menu.show {
@@ -324,6 +503,7 @@
     transition: all 0.15s ease;
     text-align: center;
     margin: 2px 0;
+    color: #1f2937;
 }
 
 .stage-menu-item:hover {
@@ -337,7 +517,7 @@
     font-weight: bold;
 }
 
-/* メニューアニメーション */
+/* アニメーション */
 @keyframes menuSlideIn {
     from { 
         opacity: 0; 
@@ -346,5 +526,27 @@
     to { 
         opacity: 1; 
         transform: scale(1) translateY(0); 
+    }
+}
+
+@keyframes slideDown {
+    from { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(0); 
+    }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(0); 
+    }
+    to { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(-20px); 
     }
 }
