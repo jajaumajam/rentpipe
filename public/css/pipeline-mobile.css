@@ -1,3 +1,6 @@
+/* RentPipe Pipeline Mobile Optimization v2 */
+
+/* スマホ専用レスポンシブ対応 */
 @media (max-width: 768px) {
     .pipeline-container {
         padding: 10px;
@@ -18,15 +21,15 @@
     
     .stat-card {
         min-width: auto;
-        padding: 12px;
+        padding: 10px;
     }
     
     .stat-card h3 {
-        font-size: 18px;
+        font-size: 16px;
     }
     
     .stat-card p {
-        font-size: 11px;
+        font-size: 10px;
     }
     
     /* フィルターをスマホ向けに最適化 */
@@ -38,16 +41,16 @@
         -webkit-overflow-scrolling: touch;
     }
     
-    .filter-select {
-        min-width: 120px;
-        font-size: 14px;
+    .btn {
+        white-space: nowrap;
+        font-size: 12px;
         padding: 8px 12px;
     }
     
     /* パイプラインボードのスマホ対応 */
     .pipeline-board {
         display: flex;
-        gap: 15px;
+        gap: 12px;
         overflow-x: auto;
         padding: 10px 0;
         -webkit-overflow-scrolling: touch;
@@ -55,34 +58,71 @@
     }
     
     .pipeline-column {
-        flex: 0 0 280px;
+        flex: 0 0 200px; /* 幅を200pxに縮小 */
         scroll-snap-align: start;
         min-height: 400px;
-        padding: 12px;
+        padding: 8px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
     }
     
     .column-header {
-        padding: 12px;
-        margin-bottom: 12px;
+        padding: 8px;
+        margin-bottom: 8px;
         text-align: center;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: bold;
+        border-radius: 6px;
+        background: white;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    /* ステージ別の色設定（タイトルを見やすく） */
+    .column-header.status-initial { 
+        border-left-color: #ef4444; 
+        color: #1f2937;
+    }
+    .column-header.status-proposal { 
+        border-left-color: #f97316; 
+        color: #1f2937;
+    }
+    .column-header.status-viewing { 
+        border-left-color: #eab308; 
+        color: #1f2937;
+    }
+    .column-header.status-application { 
+        border-left-color: #22c55e; 
+        color: #1f2937;
+    }
+    .column-header.status-review { 
+        border-left-color: #3b82f6; 
+        color: #1f2937;
+    }
+    .column-header.status-contract { 
+        border-left-color: #8b5cf6; 
+        color: #1f2937;
+    }
+    .column-header.status-complete { 
+        border-left-color: #059669; 
+        color: #1f2937;
+        background: #f0fdf4;
     }
     
     .column-count {
-        font-size: 12px;
-        opacity: 0.8;
-        margin-top: 4px;
+        font-size: 10px;
+        opacity: 0.7;
+        margin-top: 2px;
     }
     
-    /* カードのスマホ最適化 */
+    /* カードのスマホ最適化 - コンパクト版 */
     .customer-card {
-        margin-bottom: 12px;
-        padding: 15px;
-        border-radius: 8px;
+        margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 6px;
         background: white;
-        border-left: 4px solid #3b82f6;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 3px solid #3b82f6;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         cursor: pointer;
         transition: all 0.2s ease;
         /* タッチ対応 */
@@ -90,80 +130,110 @@
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
+        min-height: 60px;
     }
     
     .customer-card:active {
         transform: scale(0.98);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     
     .customer-card.dragging {
-        opacity: 0.7;
-        transform: rotate(2deg);
+        opacity: 0.8;
+        transform: rotate(1deg) scale(1.05);
         z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
     
     .customer-name {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: bold;
         color: #1e293b;
-        margin-bottom: 8px;
-    }
-    
-    .customer-contact {
-        font-size: 12px;
-        color: #64748b;
         margin-bottom: 4px;
+        line-height: 1.2;
     }
     
     .customer-budget {
-        font-size: 13px;
+        font-size: 11px;
         color: #059669;
         font-weight: 500;
+        margin-bottom: 2px;
+    }
+    
+    .customer-contact {
+        font-size: 10px;
+        color: #64748b;
+        margin-bottom: 2px;
+        display: none; /* スマホでは非表示 */
+    }
+    
+    .customer-area {
+        font-size: 10px;
+        color: #7c3aed;
+        font-weight: 500;
+    }
+    
+    .customer-notes {
+        display: none; /* スマホでは非表示 */
     }
     
     .customer-urgent {
         color: #ef4444;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: bold;
-        margin-top: 5px;
+        margin-top: 3px;
     }
     
     /* ドラッグオーバー効果 */
     .pipeline-column.drag-over {
-        background-color: #f0f9ff;
+        background-color: #dbeafe;
         border: 2px dashed #3b82f6;
+        transform: scale(1.02);
     }
     
     /* タッチフィードバック */
-    .pipeline-column:active,
-    .customer-card:active {
-        background-color: #f8fafc;
+    .pipeline-column:active {
+        background-color: #f1f5f9;
     }
     
     /* 横スクロールインジケーター */
     .pipeline-board::-webkit-scrollbar {
-        height: 6px;
+        height: 4px;
     }
     
     .pipeline-board::-webkit-scrollbar-track {
         background: #f1f5f9;
-        border-radius: 3px;
+        border-radius: 2px;
     }
     
     .pipeline-board::-webkit-scrollbar-thumb {
         background: #cbd5e1;
-        border-radius: 3px;
+        border-radius: 2px;
     }
     
     .pipeline-board::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
+    }
+    
+    /* スワイプヒント */
+    .pipeline-board::before {
+        content: "← 左右にスワイプ →";
+        position: sticky;
+        left: 50%;
+        transform: translateX(-50%);
+        display: block;
+        text-align: center;
+        font-size: 10px;
+        color: #94a3b8;
+        padding: 5px 0;
+        z-index: 1;
     }
 }
 
 /* タブレット用調整 */
 @media (min-width: 769px) and (max-width: 1024px) {
     .pipeline-board {
+        display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
     }
@@ -174,6 +244,19 @@
     
     .customer-card {
         padding: 12px;
+    }
+    
+    .customer-contact,
+    .customer-notes {
+        display: block;
+    }
+}
+
+/* PC版では全情報表示 */
+@media (min-width: 1025px) {
+    .customer-contact,
+    .customer-notes {
+        display: block;
     }
 }
 
@@ -187,8 +270,28 @@
     opacity: 0.8;
 }
 
-/* プルダウン効果（オプション） */
+/* ドラッグプレビュー専用スタイル */
+.drag-preview {
+    border: 2px solid #3b82f6 !important;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3) !important;
+    background: #eff6ff !important;
+}
+
+/* プルダウン効果 */
 .pipeline-board.pulling {
-    transform: translateY(20px);
+    transform: translateY(10px);
     transition: transform 0.2s ease;
+}
+
+/* 成功フィードバック */
+.success-drop {
+    background-color: #dcfce7 !important;
+    border-color: #16a34a !important;
+    animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
