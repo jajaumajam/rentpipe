@@ -1,14 +1,25 @@
-/* RentPipe Pipeline Mobile Optimization v6 - 完全レスポンシブ版 */
+/* RentPipe Pipeline Responsive Styles - 完全版 */
 
-/* 全体のレイアウト調整 */
-.pipeline-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
+/* 全体のレイアウト調整（右側切れ問題を完全解決） */
+* {
+    box-sizing: border-box;
 }
 
-/* 共通：ステージタイトルの強制色指定 */
+.pipeline-container {
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+.pipeline-header,
+.filter-container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+/* 共通：ステージタイトルの色指定 */
 .pipeline-column .column-header,
 .column-header.status-initial,
 .column-header.status-proposal, 
@@ -29,39 +40,25 @@
 
 /* ステージ別の背景色 */
 [data-status="初回相談"] .column-header,
-.column-header.status-initial { 
-    background: #dc2626 !important;
-}
+.column-header.status-initial { background: #dc2626 !important; }
 
 [data-status="物件紹介"] .column-header,
-.column-header.status-proposal { 
-    background: #ea580c !important;
-}
+.column-header.status-proposal { background: #ea580c !important; }
 
 [data-status="内見"] .column-header,
-.column-header.status-viewing { 
-    background: #d97706 !important;
-}
+.column-header.status-viewing { background: #d97706 !important; }
 
 [data-status="申込"] .column-header,
-.column-header.status-application { 
-    background: #16a34a !important;
-}
+.column-header.status-application { background: #16a34a !important; }
 
 [data-status="審査"] .column-header,
-.column-header.status-review { 
-    background: #2563eb !important;
-}
+.column-header.status-review { background: #2563eb !important; }
 
 [data-status="契約"] .column-header,
-.column-header.status-contract { 
-    background: #7c3aed !important;
-}
+.column-header.status-contract { background: #7c3aed !important; }
 
 [data-status="完了"] .column-header,
-.column-header.status-complete { 
-    background: #059669 !important;
-}
+.column-header.status-complete { background: #059669 !important; }
 
 .column-count {
     font-size: 12px !important;
@@ -70,22 +67,18 @@
     color: #ffffff !important;
 }
 
-/* 完全レスポンシブ：1列〜7列 */
+/* 完全レスポンシブ：1列〜7列（右側切れ完全防止） */
 
-/* 超大画面：7列 */
+/* 7列：1400px以上 */
 @media (min-width: 1400px) {
-    .pipeline-container {
-        padding: 20px !important;
-    }
-    
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
         gap: 16px !important;
-        padding: 0 !important;
+        padding: 20px !important;
         margin: 0 !important;
-        overflow: visible !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -94,27 +87,20 @@
         padding: 15px;
         min-height: 600px;
         border: 2px solid #e2e8f0;
-        width: 100%;
-    }
-    
-    .column-header {
-        font-size: 14px !important;
+        min-width: 0;
     }
 }
 
-/* 大画面：6列 */
+/* 6列：1200-1399px */
 @media (min-width: 1200px) and (max-width: 1399px) {
-    .pipeline-container {
-        padding: 18px !important;
-    }
-    
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: repeat(6, 1fr) !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         gap: 14px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+        padding: 18px !important;
+        margin: 0 !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -123,26 +109,20 @@
         padding: 13px;
         min-height: 580px;
         border: 2px solid #e2e8f0;
-    }
-    
-    .column-header {
-        font-size: 13px !important;
+        min-width: 0;
     }
 }
 
-/* 中大画面：5列 */
+/* 5列：1000-1199px */
 @media (min-width: 1000px) and (max-width: 1199px) {
-    .pipeline-container {
-        padding: 16px !important;
-    }
-    
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
         gap: 12px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+        padding: 16px !important;
+        margin: 0 !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -151,26 +131,20 @@
         padding: 12px;
         min-height: 560px;
         border: 2px solid #e2e8f0;
-    }
-    
-    .column-header {
-        font-size: 13px !important;
+        min-width: 0;
     }
 }
 
-/* 中画面：4列 */
+/* 4列：850-999px */
 @media (min-width: 850px) and (max-width: 999px) {
-    .pipeline-container {
-        padding: 15px !important;
-    }
-    
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         gap: 10px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+        padding: 15px !important;
+        margin: 0 !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -179,6 +153,7 @@
         padding: 10px;
         min-height: 520px;
         border: 2px solid #e2e8f0;
+        min-width: 0;
     }
     
     .column-header {
@@ -187,19 +162,16 @@
     }
 }
 
-/* 中小画面：3列 */
+/* 3列：700-849px */
 @media (min-width: 700px) and (max-width: 849px) {
-    .pipeline-container {
-        padding: 12px !important;
-    }
-    
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 10px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+        padding: 12px !important;
+        margin: 0 !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -208,6 +180,7 @@
         padding: 10px;
         min-height: 480px;
         border: 2px solid #e2e8f0;
+        min-width: 0;
     }
     
     .column-header {
@@ -216,19 +189,16 @@
     }
 }
 
-/* 小画面：2列 */
-@media (min-width: 550px) and (max-width: 699px) {
-    .pipeline-container {
-        padding: 10px !important;
-    }
-    
+/* 2列：500-699px */
+@media (min-width: 500px) and (max-width: 699px) {
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 8px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+        padding: 10px !important;
+        margin: 0 !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -237,6 +207,7 @@
         padding: 8px;
         min-height: 450px;
         border: 2px solid #e2e8f0;
+        min-width: 0;
     }
     
     .column-header {
@@ -245,19 +216,16 @@
     }
 }
 
-/* 超小画面：1列 */
-@media (min-width: 480px) and (max-width: 549px) {
-    .pipeline-container {
-        padding: 8px !important;
-    }
-    
+/* 1列：480-499px */
+@media (min-width: 480px) and (max-width: 499px) {
     .pipeline-board {
         display: grid !important;
-        grid-template-columns: 1fr !important;
+        grid-template-columns: minmax(0, 1fr) !important;
         gap: 8px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+        padding: 8px !important;
+        margin: 0 !important;
         width: 100% !important;
+        overflow: visible !important;
     }
     
     .pipeline-column {
@@ -267,6 +235,7 @@
         min-height: 200px;
         border: 2px solid #e2e8f0;
         margin-bottom: 10px;
+        min-width: 0;
     }
     
     .column-header {
@@ -289,6 +258,8 @@
         border-left: 3px solid #3b82f6;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         border-radius: 6px;
+        width: 100%;
+        box-sizing: border-box;
     }
     
     .customer-name {
@@ -318,7 +289,7 @@
     }
 }
 
-/* スマホ版：横スクロール + 長押しメニュー方式（480px未満） */
+/* スマホ版：横スクロール + 長押しメニュー方式（479px以下） */
 @media (max-width: 479px) {
     .pipeline-container {
         padding: 10px !important;
@@ -376,7 +347,6 @@
         border-radius: 6px;
     }
     
-    /* スマホ版パイプラインボード */
     .pipeline-board {
         display: flex !important;
         gap: 12px !important;
@@ -386,7 +356,6 @@
         scroll-snap-type: x mandatory !important;
     }
     
-    /* スワイプヒントを削除 */
     .pipeline-board::before {
         display: none !important;
     }
@@ -401,7 +370,6 @@
         border: 1px solid #e2e8f0 !important;
     }
     
-    /* スマホ版カード */
     .customer-card {
         margin-bottom: 8px;
         padding: 8px;
@@ -460,7 +428,6 @@
         display: none;
     }
     
-    /* 横スクロールインジケーター */
     .pipeline-board::-webkit-scrollbar {
         height: 4px;
     }
@@ -517,36 +484,17 @@
     font-weight: bold;
 }
 
-/* アニメーション */
 @keyframes menuSlideIn {
-    from { 
-        opacity: 0; 
-        transform: scale(0.8) translateY(-10px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: scale(1) translateY(0); 
-    }
+    from { opacity: 0; transform: scale(0.8) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes slideDown {
-    from { 
-        opacity: 0; 
-        transform: translateX(-50%) translateY(-20px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateX(-50%) translateY(0); 
-    }
+    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 @keyframes slideUp {
-    from { 
-        opacity: 1; 
-        transform: translateX(-50%) translateY(0); 
-    }
-    to { 
-        opacity: 0; 
-        transform: translateX(-50%) translateY(-20px); 
-    }
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
 }

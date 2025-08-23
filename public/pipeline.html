@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>パイプライン管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/pipeline-mobile.css">
+    <link rel="stylesheet" href="css/pipeline-responsive.css">
 </head>
 <body>
     <div class="pipeline-container">
@@ -108,7 +108,6 @@
     <script src="js/pipeline-touch.js"></script>
 
     <script>
-        // 更新機能
         function refreshPipeline() {
             if (window.pipelineManager) {
                 window.pipelineManager.loadCustomers();
@@ -117,7 +116,6 @@
             }
         }
 
-        // デモデータ生成
         function generateDemoData() {
             if (window.pipelineManager) {
                 window.pipelineManager.customers = window.pipelineManager.generateDemoData();
