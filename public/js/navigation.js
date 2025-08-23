@@ -29,6 +29,10 @@ function createNavigation() {
                     <span class="nav-icon">📈</span>
                     <span>パイプライン</span>
                 </a>
+                <a href="profile.html" class="nav-link ${currentPage === 'profile.html' ? 'active' : ''}">
+                    <span class="nav-icon">👤</span>
+                    <span>プロフィール</span>
+                </a>
                 <button onclick="logout()" class="btn btn-outline nav-logout">ログアウト</button>
             </div>
         </div>
@@ -64,7 +68,20 @@ function createNavigation() {
 if (typeof logout === 'undefined') {
     function logout() {
         if (confirm('ログアウトしますか？')) {
-            localStorage.removeItem('rentpipe_current_user');
+            // 全てのローカルストレージデータをクリア
+            const keysToKeep = ['rentpipe_user_profile']; // プロフィール情報は保持
+            const keysToRemove = [
+                'rentpipe_demo_user',
+                'rentpipe_current_user',
+                'rentpipe_stable_customers',
+                'rentpipe_demo_customers'
+            ];
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            console.log('✅ ログアウト完了');
             window.location.href = 'login.html';
         }
     }
@@ -76,3 +93,5 @@ if (document.readyState === 'loading') {
 } else {
     createNavigation();
 }
+
+console.log('✅ 統一ナビゲーションシステム準備完了（プロフィール対応版）');

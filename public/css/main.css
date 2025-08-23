@@ -1542,3 +1542,251 @@ textarea.error {
     border-bottom: 2px solid #1e3a8a;
     padding-bottom: 5px;
 }
+
+/* ===== プロフィール管理画面専用スタイル ===== */
+.profile-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.profile-header h1 {
+    color: #1e3a8a;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.profile-header p {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title::before {
+    content: "⚙️";
+    font-size: 1.1em;
+}
+
+.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.danger-zone {
+    border: 2px solid #fca5a5;
+    border-radius: 12px;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    position: relative;
+}
+
+.danger-zone::before {
+    content: "⚠️";
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+}
+
+.danger-zone h3 {
+    color: #dc2626;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.danger-zone p {
+    color: #991b1b;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger::before {
+    content: "🗑️";
+}
+
+.success-message, .error-message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: none;
+    animation: slideInDown 0.3s ease;
+    font-weight: 500;
+}
+
+.success-message {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border: 2px solid #10b981;
+    color: #065f46;
+}
+
+.success-message::before {
+    content: "✅ ";
+}
+
+.error-message {
+    background: linear-gradient(135deg, #fee2e2, #fca5a5);
+    border: 2px solid #ef4444;
+    color: #991b1b;
+}
+
+.error-message::before {
+    content: "❌ ";
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .two-column {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .profile-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .profile-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .profile-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-card {
+        padding: 1rem;
+    }
+    
+    .danger-zone {
+        padding: 1.5rem;
+    }
+    
+    .form-group input, 
+    .form-group textarea {
+        padding: 0.625rem;
+    }
+}
+
+/* アニメーション */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ナビゲーションのプロフィールアイコン強調 */
+.nav-link[href="profile.html"] {
+    position: relative;
+}
+
+.nav-link[href="profile.html"].active::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: #f97316;
+    border-radius: 1px;
+}

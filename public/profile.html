@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール管理 - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-header h1 {
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            margin-right: 1rem;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .danger-zone {
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: #fef2f2;
+        }
+        
+        .danger-zone h3 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+        }
+        
+        .success-message, .error-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-container {
+                margin: 1rem auto;
+                padding: 0 0.5rem;
+            }
+            
+            .profile-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="nav-logo">🏠</span>
+                <span class="nav-title">RentPipe</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">ダッシュボード</a>
+                </li>
+                <li class="nav-item">
+                    <a href="customer.html" class="nav-link">顧客管理</a>
+                </li>
+                <li class="nav-item">
+                    <a href="pipeline.html" class="nav-link">パイプライン</a>
+                </li>
+                <li class="nav-item">
+                    <a href="profile.html" class="nav-link active">プロフィール</a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link logout-btn">ログアウト</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <!-- プロフィール編集 -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <h1>プロフィール管理</h1>
+                <p>あなたのアカウント情報を管理します</p>
+            </div>
+            
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+            
+            <form id="profileForm">
+                <div class="section-title">基本情報</div>
+                
+                <div class="two-column">
+                    <div class="form-group">
+                        <label for="agentName">エージェント名 *</label>
+                        <input type="text" id="agentName" name="agentName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">メールアドレス *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+                
+                <div class="two-column">
+                    <div class="form-group">
+                        <label for="phone">電話番号</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company">会社名</label>
+                        <input type="text" id="company" name="company">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessAreas">営業エリア</label>
+                    <textarea id="businessAreas" name="businessAreas" rows="3" placeholder="例：渋谷区、港区、目黒区"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">プロフィールを更新</button>
+            </form>
+        </div>
+        
+        <!-- パスワード変更 -->
+        <div class="profile-card">
+            <div class="section-title">パスワード変更</div>
+            
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="currentPassword">現在のパスワード *</label>
+                    <input type="password" id="currentPassword" name="currentPassword" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">新しいパスワード *</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                    <small style="color: #6b7280;">8文字以上で設定してください</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">新しいパスワード（確認） *</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">パスワードを変更</button>
+            </form>
+        </div>
+        
+        <!-- 危険ゾーン -->
+        <div class="profile-card danger-zone">
+            <h3>危険ゾーン</h3>
+            <p>以下の操作は元に戻すことができません。慎重に実行してください。</p>
+            
+            <div style="margin-top: 1.5rem;">
+                <button class="btn btn-danger" onclick="confirmAccountDeletion()">アカウントを削除する</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/navigation.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>
