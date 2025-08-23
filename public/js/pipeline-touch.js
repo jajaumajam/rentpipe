@@ -1,254 +1,272 @@
-// RentPipe Pipeline Touch Enhancement v2（スマホUX最適化版）
+// RentPipe Pipeline Touch Enhancement v3（長押しメニュー方式）
 class TouchPipelineManager {
     constructor(pipelineManager) {
         this.pipelineManager = pipelineManager;
-        this.isDragging = false;
-        this.draggedElement = null;
-        this.touchOffset = { x: 0, y: 0 };
-        this.lastTouchPosition = { x: 0, y: 0 };
-        this.dragThreshold = 10; // ドラッグ開始の閾値
+        this.isLongPress = false;
+        this.longPressTimer = null;
+        this.currentCard = null;
+        this.stageMenu = null;
+        this.longPressThreshold = 500; // 500ms長押し
         this.init();
     }
 
     init() {
-        console.log('TouchPipelineManager v2 初期化');
+        console.log('TouchPipelineManager v3 初期化 - 長押しメニュー方式');
         this.addTouchEvents();
+        this.createStageMenu();
         this.addMobileOptimizations();
-        this.addSwipeGestures();
     }
 
     addTouchEvents() {
         document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
-        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
         document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: true });
+        
+        // メニュー外タップでメニューを閉じる
+        document.addEventListener('click', this.hideStageMenu.bind(this));
     }
 
     handleTouchStart(e) {
-        const touch = e.touches[0];
-        const element = touch.target.closest('.customer-card');
+        const card = e.target.closest('.customer-card');
         
-        if (element) {
-            this.isDragging = false; // 最初はfalse
-            this.draggedElement = element;
-            this.initialTouch = { x: touch.clientX, y: touch.clientY };
+        if (card) {
+            this.currentCard = card;
+            this.isLongPress = false;
             
-            const rect = element.getBoundingClientRect();
-            this.touchOffset = {
-                x: touch.clientX - rect.left,
-                y: touch.clientY - rect.top
-            };
+            // 長押し検出タイマー開始
+            this.longPressTimer = setTimeout(() => {
+                this.isLongPress = true;
+                this.handleLongPress(card, e.touches[0]);
+            }, this.longPressThreshold);
             
-            this.lastTouchPosition = {
-                x: touch.clientX,
-                y: touch.clientY
-            };
-            
-            // 即座に視覚的フィードバック
-            element.style.transform = 'scale(1.02)';
-            element.style.transition = 'transform 0.1s ease';
-            
-            // 少し遅らせてドラッグ準備
-            setTimeout(() => {
-                if (this.draggedElement === element) {
-                    element.classList.add('dragging');
-                }
-            }, 100);
+            // 視覚的フィードバック（軽微）
+            card.style.transform = 'scale(1.02)';
+            card.style.transition = 'transform 0.1s ease';
         }
     }
 
     handleTouchMove(e) {
-        if (!this.draggedElement) return;
-        
-        const touch = e.touches[0];
-        const deltaX = Math.abs(touch.clientX - this.initialTouch.x);
-        const deltaY = Math.abs(touch.clientY - this.initialTouch.y);
-        
-        // 閾値を超えたらドラッグ開始
-        if (!this.isDragging && (deltaX > this.dragThreshold || deltaY > this.dragThreshold)) {
-            this.isDragging = true;
-            this.addDragPreview(this.draggedElement, touch);
-            
-            // 元のカードを半透明に
-            this.draggedElement.style.opacity = '0.3';
-            
-            // スクロールを無効化
-            document.body.style.overflow = 'hidden';
-            
-            console.log('ドラッグ開始');
+        // タッチ移動時は長押しをキャンセル
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
         }
         
-        if (this.isDragging) {
-            // ドラッグプレビューの位置更新
-            if (this.dragPreview) {
-                this.dragPreview.style.left = (touch.clientX - this.touchOffset.x) + 'px';
-                this.dragPreview.style.top = (touch.clientY - this.touchOffset.y) + 'px';
-            }
-            
-            // ドロップ可能エリアのハイライト
-            this.updateDropZoneHighlight(touch.clientX, touch.clientY);
-            
-            e.preventDefault(); // スクロール防止
+        if (this.currentCard) {
+            this.currentCard.style.transform = '';
+            this.currentCard.style.transition = '';
         }
-        
-        this.lastTouchPosition = {
-            x: touch.clientX,
-            y: touch.clientY
-        };
     }
 
     handleTouchEnd(e) {
-        if (!this.draggedElement) return;
+        // 長押しタイマーをクリア
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
         
-        const touch = e.changedTouches[0];
-        
-        if (this.isDragging) {
-            const dropTarget = this.findDropTarget(touch.clientX, touch.clientY);
+        if (this.currentCard) {
+            this.currentCard.style.transform = '';
+            this.currentCard.style.transition = '';
             
-            if (dropTarget && dropTarget.dataset.status) {
-                const customerId = this.draggedElement.dataset.customerId;
-                const newStatus = dropTarget.dataset.status;
-                
-                if (customerId && newStatus) {
-                    // ステータス更新
-                    this.pipelineManager.updateCustomerStatus(customerId, newStatus);
-                    
-                    // 成功フィードバック
-                    this.showSuccessFeedback(dropTarget);
-                    this.showMovementAnimation(this.draggedElement, dropTarget);
+            // 長押しでなく、メニューも表示されていない場合は詳細表示
+            if (!this.isLongPress && !this.stageMenu.classList.contains('show')) {
+                const customerId = this.currentCard.dataset.customerId;
+                const customer = this.pipelineManager.customers.find(c => c.id === customerId);
+                if (customer) {
+                    setTimeout(() => {
+                        this.pipelineManager.showCustomerDetail(customer);
+                    }, 50);
                 }
             }
-        } else {
-            // ドラッグしなかった場合は詳細表示（元の動作）
-            const customer = this.pipelineManager.customers.find(c => c.id === this.draggedElement.dataset.customerId);
-            if (customer) {
-                setTimeout(() => {
-                    this.pipelineManager.showCustomerDetail(customer);
-                }, 50);
-            }
         }
         
-        // クリーンアップ
-        this.cleanup();
+        this.currentCard = null;
+        this.isLongPress = false;
     }
 
-    addDragPreview(element, touch) {
-        this.dragPreview = element.cloneNode(true);
-        this.dragPreview.style.position = 'fixed';
-        this.dragPreview.style.left = (touch.clientX - this.touchOffset.x) + 'px';
-        this.dragPreview.style.top = (touch.clientY - this.touchOffset.y) + 'px';
-        this.dragPreview.style.width = '180px'; // 固定幅でコンパクト
-        this.dragPreview.style.zIndex = '9999';
-        this.dragPreview.style.opacity = '0.9';
-        this.dragPreview.style.transform = 'rotate(3deg) scale(1.05)';
-        this.dragPreview.style.pointerEvents = 'none';
-        this.dragPreview.style.transition = 'none';
-        this.dragPreview.classList.add('drag-preview');
-        
-        // よりクリアな視覚効果
-        this.dragPreview.style.border = '2px solid #3b82f6';
-        this.dragPreview.style.boxShadow = '0 12px 24px rgba(59, 130, 246, 0.4)';
-        this.dragPreview.style.background = '#eff6ff';
-        
-        document.body.appendChild(this.dragPreview);
-    }
-
-    updateDropZoneHighlight(x, y) {
-        // 全てのハイライトを削除
-        document.querySelectorAll('.pipeline-column').forEach(col => {
-            col.classList.remove('drag-over');
-        });
-        
-        // 現在の位置のドロップゾーンを検出
-        const elementBelow = document.elementFromPoint(x, y);
-        const dropZone = elementBelow?.closest('.pipeline-column');
-        
-        if (dropZone) {
-            dropZone.classList.add('drag-over');
-            
-            // 視覚的強化
-            dropZone.style.transform = 'scale(1.02)';
-            dropZone.style.transition = 'all 0.2s ease';
-        }
-        
-        // 他のカラムの変形をリセット
-        document.querySelectorAll('.pipeline-column:not(.drag-over)').forEach(col => {
-            col.style.transform = '';
-        });
-    }
-
-    findDropTarget(x, y) {
-        const elementBelow = document.elementFromPoint(x, y);
-        return elementBelow?.closest('.pipeline-column');
-    }
-
-    showSuccessFeedback(target) {
-        // 成功アニメーション
-        target.classList.add('success-drop');
-        
-        setTimeout(() => {
-            target.classList.remove('success-drop');
-        }, 600);
+    handleLongPress(card, touch) {
+        console.log('長押し検出');
         
         // ハプティクスフィードバック
         if (navigator.vibrate) {
-            navigator.vibrate([50, 50, 50]); // 3回の短い振動
+            navigator.vibrate(100);
+        }
+        
+        // カードの視覚的変化
+        card.classList.add('long-press');
+        
+        // メニューを表示
+        this.showStageMenu(card, touch);
+    }
+
+    createStageMenu() {
+        // メニューDOM作成
+        this.stageMenu = document.createElement('div');
+        this.stageMenu.className = 'stage-menu';
+        
+        const stages = [
+            { key: '初回相談', label: '📞 初回相談', color: '#ef4444' },
+            { key: '物件紹介', label: '🏠 物件紹介', color: '#f97316' },
+            { key: '内見', label: '👁 内見', color: '#eab308' },
+            { key: '申込', label: '📝 申込', color: '#22c55e' },
+            { key: '審査', label: '🔍 審査', color: '#3b82f6' },
+            { key: '契約', label: '✍️ 契約', color: '#8b5cf6' },
+            { key: '完了', label: '✅ 完了', color: '#059669' }
+        ];
+        
+        stages.forEach(stage => {
+            const item = document.createElement('div');
+            item.className = 'stage-menu-item';
+            item.dataset.stage = stage.key;
+            item.innerHTML = stage.label;
+            item.style.borderLeft = `4px solid ${stage.color}`;
+            
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleStageSelect(stage.key);
+            });
+            
+            this.stageMenu.appendChild(item);
+        });
+        
+        // キャンセルボタン
+        const cancelItem = document.createElement('div');
+        cancelItem.className = 'stage-menu-item';
+        cancelItem.innerHTML = '❌ キャンセル';
+        cancelItem.style.borderLeft = '4px solid #64748b';
+        cancelItem.style.marginTop = '8px';
+        cancelItem.style.background = '#f8fafc';
+        
+        cancelItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.hideStageMenu();
+        });
+        
+        this.stageMenu.appendChild(cancelItem);
+        document.body.appendChild(this.stageMenu);
+    }
+
+    showStageMenu(card, touch) {
+        const customerId = card.dataset.customerId;
+        const customer = this.pipelineManager.customers.find(c => c.id === customerId);
+        
+        if (!customer) return;
+        
+        // 現在のステージをハイライト
+        this.stageMenu.querySelectorAll('.stage-menu-item').forEach(item => {
+            item.classList.remove('current');
+            if (item.dataset.stage === customer.pipelineStatus) {
+                item.classList.add('current');
+            }
+        });
+        
+        // メニュー位置計算
+        const menuWidth = 200;
+        const menuHeight = 280;
+        let left = touch.clientX - menuWidth / 2;
+        let top = touch.clientY - menuHeight / 2;
+        
+        // 画面外にはみ出る場合の調整
+        const padding = 20;
+        if (left < padding) left = padding;
+        if (left + menuWidth > window.innerWidth - padding) {
+            left = window.innerWidth - menuWidth - padding;
+        }
+        if (top < padding) top = padding;
+        if (top + menuHeight > window.innerHeight - padding) {
+            top = window.innerHeight - menuHeight - padding;
+        }
+        
+        // メニュー表示
+        this.stageMenu.style.left = left + 'px';
+        this.stageMenu.style.top = top + 'px';
+        this.stageMenu.classList.add('show');
+        
+        // 顧客IDを保存
+        this.stageMenu.dataset.customerId = customerId;
+        
+        console.log(`${customer.name}のステージメニュー表示`);
+    }
+
+    hideStageMenu() {
+        if (this.stageMenu && this.stageMenu.classList.contains('show')) {
+            this.stageMenu.classList.remove('show');
+            
+            // 長押し状態のカードをリセット
+            document.querySelectorAll('.customer-card.long-press').forEach(card => {
+                card.classList.remove('long-press');
+            });
+            
+            console.log('ステージメニュー非表示');
         }
     }
 
-    showMovementAnimation(fromElement, toElement) {
-        // 移動アニメーション効果
-        const moveIndicator = document.createElement('div');
-        moveIndicator.style.cssText = `
+    handleStageSelect(newStage) {
+        const customerId = this.stageMenu.dataset.customerId;
+        const customer = this.pipelineManager.customers.find(c => c.id === customerId);
+        
+        if (customer && customer.pipelineStatus !== newStage) {
+            const oldStage = customer.pipelineStatus;
+            
+            // ステータス更新
+            this.pipelineManager.updateCustomerStatus(customerId, newStage);
+            
+            // 成功フィードバック
+            this.showMoveSuccess(customer.name, oldStage, newStage);
+            
+            // ハプティクスフィードバック
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 50, 100]);
+            }
+            
+            console.log(`${customer.name}: ${oldStage} → ${newStage}`);
+        }
+        
+        // メニューを非表示
+        this.hideStageMenu();
+    }
+
+    showMoveSuccess(customerName, oldStage, newStage) {
+        // 成功通知
+        const notification = document.createElement('div');
+        notification.style.cssText = `
             position: fixed;
-            top: 50%;
+            top: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
             background: #059669;
             color: white;
-            padding: 8px 16px;
+            padding: 12px 20px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
             z-index: 10001;
-            animation: bounceIn 0.3s ease;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
+            animation: slideDown 0.3s ease;
         `;
-        moveIndicator.textContent = '移動完了！';
         
-        document.body.appendChild(moveIndicator);
+        notification.innerHTML = `
+            ✅ ${customerName}<br>
+            <small style="opacity: 0.9;">${oldStage} → ${newStage}</small>
+        `;
+        
+        document.body.appendChild(notification);
         
         setTimeout(() => {
-            moveIndicator.style.animation = 'bounceOut 0.3s ease forwards';
-            setTimeout(() => moveIndicator.remove(), 300);
-        }, 1000);
-    }
-
-    cleanup() {
-        this.isDragging = false;
-        
-        if (this.draggedElement) {
-            this.draggedElement.classList.remove('dragging');
-            this.draggedElement.style.opacity = '';
-            this.draggedElement.style.transform = '';
-            this.draggedElement.style.transition = '';
-            this.draggedElement = null;
-        }
-        
-        if (this.dragPreview) {
-            this.dragPreview.remove();
-            this.dragPreview = null;
-        }
-        
-        // スクロールを再有効化
-        document.body.style.overflow = '';
-        
-        // ドロップゾーンハイライトを削除
-        document.querySelectorAll('.pipeline-column').forEach(col => {
-            col.classList.remove('drag-over');
-            col.style.transform = '';
-        });
+            notification.style.animation = 'slideUp 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
     }
 
     addMobileOptimizations() {
+        // 従来のドラッグ&ドロップを無効化
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.closest('.customer-card')) {
+                e.preventDefault();
+            }
+        });
+        
         // 長押しメニューを無効化
         document.addEventListener('contextmenu', (e) => {
             if (e.target.closest('.customer-card')) {
@@ -256,126 +274,11 @@ class TouchPipelineManager {
             }
         });
         
-        // プルリフレッシュ機能を改善
-        this.addPullToRefresh();
-        
-        // スムーズスクロール
-        this.addSmoothScroll();
-        
         // ダブルタップ防止
         this.addDoubleTapPrevention();
-    }
-
-    addSwipeGestures() {
-        // クイックスワイプでステージ移動
-        document.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.customer-card')) {
-                this.swipeStart = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY,
-                    time: Date.now()
-                };
-            }
-        });
         
-        document.addEventListener('touchend', (e) => {
-            if (this.swipeStart && e.target.closest('.customer-card') && !this.isDragging) {
-                const touch = e.changedTouches[0];
-                const deltaX = touch.clientX - this.swipeStart.x;
-                const deltaY = Math.abs(touch.clientY - this.swipeStart.y);
-                const deltaTime = Date.now() - this.swipeStart.time;
-                
-                // 素早い左右スワイプを検出
-                if (Math.abs(deltaX) > 50 && deltaY < 30 && deltaTime < 300) {
-                    const card = e.target.closest('.customer-card');
-                    const customerId = card.dataset.customerId;
-                    
-                    if (customerId) {
-                        this.handleQuickSwipe(customerId, deltaX > 0 ? 'right' : 'left');
-                    }
-                }
-            }
-            this.swipeStart = null;
-        });
-    }
-
-    handleQuickSwipe(customerId, direction) {
-        const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
-        const customer = this.pipelineManager.customers.find(c => c.id === customerId);
-        
-        if (customer) {
-            const currentIndex = statuses.indexOf(customer.pipelineStatus);
-            let newIndex;
-            
-            if (direction === 'right' && currentIndex < statuses.length - 1) {
-                newIndex = currentIndex + 1;
-            } else if (direction === 'left' && currentIndex > 0) {
-                newIndex = currentIndex - 1;
-            }
-            
-            if (newIndex !== undefined) {
-                this.pipelineManager.updateCustomerStatus(customerId, statuses[newIndex]);
-                console.log(`クイックスワイプ: ${customer.name} → ${statuses[newIndex]}`);
-                
-                // フィードバック
-                if (navigator.vibrate) {
-                    navigator.vibrate(30);
-                }
-            }
-        }
-    }
-
-    addPullToRefresh() {
-        let startY = 0;
-        let currentY = 0;
-        let isPulling = false;
-        
-        const pipelineBoard = document.querySelector('.pipeline-board');
-        
-        pipelineBoard.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-        });
-        
-        pipelineBoard.addEventListener('touchmove', (e) => {
-            if (this.isDragging) return; // ドラッグ中は無効
-            
-            currentY = e.touches[0].clientY;
-            const diff = currentY - startY;
-            
-            if (diff > 60 && pipelineBoard.scrollLeft === 0) {
-                isPulling = true;
-                pipelineBoard.classList.add('pulling');
-            }
-        });
-        
-        pipelineBoard.addEventListener('touchend', () => {
-            if (isPulling) {
-                console.log('プルリフレッシュ実行');
-                this.pipelineManager.loadCustomers();
-                this.pipelineManager.renderPipeline();
-                this.pipelineManager.updateStats();
-                
-                setTimeout(() => {
-                    pipelineBoard.classList.remove('pulling');
-                }, 300);
-            }
-            isPulling = false;
-        });
-    }
-
-    addSmoothScroll() {
-        const pipelineBoard = document.querySelector('.pipeline-board');
-        pipelineBoard.style.scrollBehavior = 'smooth';
-        
-        // カラムヘッダークリックで中央に配置
-        document.querySelectorAll('.column-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const column = header.closest('.pipeline-column');
-                const board = document.querySelector('.pipeline-board');
-                const scrollLeft = column.offsetLeft - (board.offsetWidth / 2) + (column.offsetWidth / 2);
-                board.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-            });
-        });
+        // プルリフレッシュ（簡易版）
+        this.addPullToRefresh();
     }
 
     addDoubleTapPrevention() {
@@ -389,20 +292,70 @@ class TouchPipelineManager {
             lastTap = currentTime;
         });
     }
+
+    addPullToRefresh() {
+        let startY = 0;
+        let currentY = 0;
+        let isPulling = false;
+        
+        const pipelineBoard = document.querySelector('.pipeline-board');
+        
+        pipelineBoard.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.customer-card')) return; // カード上では無効
+            startY = e.touches[0].clientY;
+        });
+        
+        pipelineBoard.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.customer-card')) return; // カード上では無効
+            
+            currentY = e.touches[0].clientY;
+            const diff = currentY - startY;
+            
+            if (diff > 80 && pipelineBoard.scrollTop === 0) {
+                isPulling = true;
+                pipelineBoard.style.transform = `translateY(${Math.min(diff - 80, 30)}px)`;
+                pipelineBoard.style.transition = 'none';
+            }
+        });
+        
+        pipelineBoard.addEventListener('touchend', () => {
+            if (isPulling) {
+                pipelineBoard.style.transform = '';
+                pipelineBoard.style.transition = 'transform 0.3s ease';
+                
+                console.log('プルリフレッシュ実行');
+                this.pipelineManager.loadCustomers();
+                this.pipelineManager.renderPipeline();
+                this.pipelineManager.updateStats();
+            }
+            isPulling = false;
+        });
+    }
 }
 
 // アニメーション用CSS追加
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes bounceIn {
-        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-        50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    @keyframes slideDown {
+        from { 
+            opacity: 0; 
+            transform: translateX(-50%) translateY(-20px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0); 
+        }
     }
     
-    @keyframes bounceOut {
-        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    @keyframes slideUp {
+        from { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0); 
+        }
+        to { 
+            opacity: 0; 
+            transform: translateX(-50%) translateY(-20px); 
+        }
     }
 `;
 document.head.appendChild(style);
@@ -413,12 +366,12 @@ function initTouchSupport() {
     const hasTouch = 'ontouchstart' in window;
     
     if (isMobile || hasTouch) {
-        console.log('タッチデバイス検出 - TouchPipelineManager初期化');
+        console.log('タッチデバイス検出 - 長押しメニュー方式で初期化');
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (window.pipelineManager) {
                     new TouchPipelineManager(window.pipelineManager);
-                    console.log('✅ タッチ操作機能初期化完了');
+                    console.log('✅ 長押しメニューシステム初期化完了');
                 }
             }, 200);
         });

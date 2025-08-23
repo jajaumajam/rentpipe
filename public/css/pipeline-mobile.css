@@ -1,6 +1,93 @@
-/* RentPipe Pipeline Mobile Optimization v2 */
+/* RentPipe Pipeline Mobile Optimization v3 */
 
-/* スマホ専用レスポンシブ対応 */
+/* PC版：通常のグリッド表示 */
+@media (min-width: 1025px) {
+    .pipeline-board {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 20px;
+        padding: 20px 0;
+        overflow: visible;
+    }
+    
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 15px;
+        min-height: 600px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .column-header {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-weight: bold;
+        font-size: 14px;
+        color: #1f2937;
+    }
+    
+    /* PC版ステージ色 */
+    .column-header.status-initial { border-left: 4px solid #ef4444; }
+    .column-header.status-proposal { border-left: 4px solid #f97316; }
+    .column-header.status-viewing { border-left: 4px solid #eab308; }
+    .column-header.status-application { border-left: 4px solid #22c55e; }
+    .column-header.status-review { border-left: 4px solid #3b82f6; }
+    .column-header.status-contract { border-left: 4px solid #8b5cf6; }
+    .column-header.status-complete { border-left: 4px solid #059669; }
+    
+    .customer-contact,
+    .customer-notes {
+        display: block;
+    }
+}
+
+/* タブレット版：4列表示 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .pipeline-board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        padding: 15px 0;
+    }
+    
+    .pipeline-column {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 500px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .column-header {
+        text-align: center;
+        padding: 8px;
+        background: white;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        font-weight: bold;
+        font-size: 13px;
+        color: #1f2937;
+    }
+    
+    /* タブレット版ステージ色 */
+    .column-header.status-initial { border-left: 4px solid #ef4444; }
+    .column-header.status-proposal { border-left: 4px solid #f97316; }
+    .column-header.status-viewing { border-left: 4px solid #eab308; }
+    .column-header.status-application { border-left: 4px solid #22c55e; }
+    .column-header.status-review { border-left: 4px solid #3b82f6; }
+    .column-header.status-contract { border-left: 4px solid #8b5cf6; }
+    .column-header.status-complete { border-left: 4px solid #059669; }
+    
+    .customer-contact,
+    .customer-notes {
+        display: block;
+    }
+}
+
+/* スマホ版：横スクロール + 長押しメニュー方式 */
 @media (max-width: 768px) {
     .pipeline-container {
         padding: 10px;
@@ -58,7 +145,7 @@
     }
     
     .pipeline-column {
-        flex: 0 0 200px; /* 幅を200pxに縮小 */
+        flex: 0 0 200px;
         scroll-snap-align: start;
         min-height: 400px;
         padding: 8px;
@@ -75,36 +162,36 @@
         font-weight: bold;
         border-radius: 6px;
         background: white;
-        border-left: 4px solid #3b82f6;
+        color: #1f2937; /* 黒文字に固定 */
     }
     
-    /* ステージ別の色設定（タイトルを見やすく） */
+    /* スマホ版ステージ色（PC版と同じ） */
     .column-header.status-initial { 
-        border-left-color: #ef4444; 
+        border-left: 4px solid #ef4444; 
         color: #1f2937;
     }
     .column-header.status-proposal { 
-        border-left-color: #f97316; 
+        border-left: 4px solid #f97316; 
         color: #1f2937;
     }
     .column-header.status-viewing { 
-        border-left-color: #eab308; 
+        border-left: 4px solid #eab308; 
         color: #1f2937;
     }
     .column-header.status-application { 
-        border-left-color: #22c55e; 
+        border-left: 4px solid #22c55e; 
         color: #1f2937;
     }
     .column-header.status-review { 
-        border-left-color: #3b82f6; 
+        border-left: 4px solid #3b82f6; 
         color: #1f2937;
     }
     .column-header.status-contract { 
-        border-left-color: #8b5cf6; 
+        border-left: 4px solid #8b5cf6; 
         color: #1f2937;
     }
     .column-header.status-complete { 
-        border-left-color: #059669; 
+        border-left: 4px solid #059669; 
         color: #1f2937;
         background: #f0fdf4;
     }
@@ -113,9 +200,10 @@
         font-size: 10px;
         opacity: 0.7;
         margin-top: 2px;
+        color: #1f2937;
     }
     
-    /* カードのスマホ最適化 - コンパクト版 */
+    /* カードのスマホ最適化 */
     .customer-card {
         margin-bottom: 8px;
         padding: 8px;
@@ -125,12 +213,12 @@
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         cursor: pointer;
         transition: all 0.2s ease;
-        /* タッチ対応 */
         touch-action: manipulation;
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         min-height: 60px;
+        position: relative;
     }
     
     .customer-card:active {
@@ -138,11 +226,11 @@
         box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     
-    .customer-card.dragging {
-        opacity: 0.8;
-        transform: rotate(1deg) scale(1.05);
-        z-index: 1000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    .customer-card.long-press {
+        background: #fef3c7;
+        border-left-color: #f59e0b;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
     }
     
     .customer-name {
@@ -177,25 +265,6 @@
         display: none; /* スマホでは非表示 */
     }
     
-    .customer-urgent {
-        color: #ef4444;
-        font-size: 10px;
-        font-weight: bold;
-        margin-top: 3px;
-    }
-    
-    /* ドラッグオーバー効果 */
-    .pipeline-column.drag-over {
-        background-color: #dbeafe;
-        border: 2px dashed #3b82f6;
-        transform: scale(1.02);
-    }
-    
-    /* タッチフィードバック */
-    .pipeline-column:active {
-        background-color: #f1f5f9;
-    }
-    
     /* 横スクロールインジケーター */
     .pipeline-board::-webkit-scrollbar {
         height: 4px;
@@ -211,13 +280,9 @@
         border-radius: 2px;
     }
     
-    .pipeline-board::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-    
     /* スワイプヒント */
     .pipeline-board::before {
-        content: "← 左右にスワイプ →";
+        content: "← 左右にスワイプして他のステージを表示 →";
         position: sticky;
         left: 50%;
         transform: translateX(-50%);
@@ -227,71 +292,59 @@
         color: #94a3b8;
         padding: 5px 0;
         z-index: 1;
+        background: rgba(248, 250, 252, 0.9);
+        border-radius: 4px;
+        margin-bottom: 5px;
     }
 }
 
-/* タブレット用調整 */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .pipeline-board {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-    }
-    
-    .pipeline-column {
-        min-height: 500px;
-    }
-    
-    .customer-card {
-        padding: 12px;
-    }
-    
-    .customer-contact,
-    .customer-notes {
-        display: block;
-    }
+/* 長押しメニュー */
+.stage-menu {
+    position: fixed;
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    z-index: 10000;
+    display: none;
+    min-width: 200px;
 }
 
-/* PC版では全情報表示 */
-@media (min-width: 1025px) {
-    .customer-contact,
-    .customer-notes {
-        display: block;
-    }
+.stage-menu.show {
+    display: block;
+    animation: menuSlideIn 0.2s ease;
 }
 
-/* タッチ操作改善用共通スタイル */
-.touch-feedback {
+.stage-menu-item {
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
     transition: all 0.15s ease;
+    text-align: center;
+    margin: 2px 0;
 }
 
-.touch-feedback:active {
-    transform: scale(0.95);
-    opacity: 0.8;
+.stage-menu-item:hover {
+    background: #f1f5f9;
+    transform: translateX(4px);
 }
 
-/* ドラッグプレビュー専用スタイル */
-.drag-preview {
-    border: 2px solid #3b82f6 !important;
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3) !important;
-    background: #eff6ff !important;
+.stage-menu-item.current {
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: bold;
 }
 
-/* プルダウン効果 */
-.pipeline-board.pulling {
-    transform: translateY(10px);
-    transition: transform 0.2s ease;
-}
-
-/* 成功フィードバック */
-.success-drop {
-    background-color: #dcfce7 !important;
-    border-color: #16a34a !important;
-    animation: successPulse 0.5s ease;
-}
-
-@keyframes successPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+/* メニューアニメーション */
+@keyframes menuSlideIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.8) translateY(-10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
 }
