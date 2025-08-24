@@ -1,4 +1,4 @@
-// RentPipe 統一データ管理システム
+// RentPipe 統一データ管理システム（修正版）
 class UnifiedDataManager {
     constructor() {
         // 統一データキー（全画面で共通使用）
@@ -7,19 +7,21 @@ class UnifiedDataManager {
         this.AUTH_KEY = 'rentpipe_auth';
         this.PROFILE_KEY = 'rentpipe_user_profile';
         
+        console.log('📊 統一データ管理システム初期化開始...');
         this.init();
     }
 
     init() {
-        console.log('📊 統一データ管理システム初期化中...');
+        console.log('📦 統一データ管理システム初期化中...');
         
         // 古いデータの移行・統合
         this.migrateOldData();
         
-        // 初期データの確認・生成
+        // 初期データの確認・生成（強制実行）
         this.ensureDataExists();
         
         console.log('✅ 統一データ管理システム準備完了');
+        console.log('📊 最終顧客数:', this.getCustomers().length);
     }
 
     // 古いデータを統一キーに移行
@@ -31,20 +33,24 @@ class UnifiedDataManager {
             'rentpipe_stable_customers',
             'rentpipe_demo_customers', 
             'customers',
-            'demo_customers'
+            'demo_customers',
+            'demoCustomers'
         ];
         
         let migratedCustomers = null;
+        let foundDataCount = 0;
         
         for (const oldKey of oldCustomerKeys) {
             const oldData = localStorage.getItem(oldKey);
-            if (oldData && !migratedCustomers) {
+            if (oldData) {
                 try {
                     const parsedData = JSON.parse(oldData);
                     if (Array.isArray(parsedData) && parsedData.length > 0) {
-                        migratedCustomers = parsedData;
-                        console.log(`📦 ${oldKey} から顧客データを移行: ${parsedData.length}件`);
-                        break;
+                        if (!migratedCustomers || parsedData.length > migratedCustomers.length) {
+                            migratedCustomers = parsedData;
+                            foundDataCount = parsedData.length;
+                            console.log(`📦 ${oldKey} から顧客データを発見: ${parsedData.length}件`);
+                        }
                     }
                 } catch (error) {
                     console.warn(`❌ ${oldKey} の解析に失敗:`, error);
@@ -52,21 +58,43 @@ class UnifiedDataManager {
             }
         }
         
+        // 既存の統一データも確認
+        const existingData = localStorage.getItem(this.CUSTOMERS_KEY);
+        if (existingData) {
+            try {
+                const existing = JSON.parse(existingData);
+                if (Array.isArray(existing) && existing.length > 0) {
+                    console.log(`📊 既存の統一データ: ${existing.length}件`);
+                    if (!migratedCustomers || existing.length > migratedCustomers.length) {
+                        migratedCustomers = existing;
+                        foundDataCount = existing.length;
+                    }
+                }
+            } catch (error) {
+                console.warn('❌ 既存統一データの解析に失敗:', error);
+            }
+        }
+        
         // 統一キーに保存
-        if (migratedCustomers) {
+        if (migratedCustomers && migratedCustomers.length > 0) {
             localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(migratedCustomers));
-            console.log(`✅ ${migratedCustomers.length}件の顧客データを統一キーに移行`);
+            console.log(`✅ ${foundDataCount}件の顧客データを統一キーに移行`);
+        } else {
+            console.log('📦 移行可能なデータが見つかりません - 新規デモデータを生成します');
         }
         
         // 古いキーをクリーンアップ
         oldCustomerKeys.forEach(key => {
             if (key !== this.CUSTOMERS_KEY && localStorage.getItem(key)) {
-                localStorage.removeItem(key);
-                console.log(`🗑️ 古いデータキー削除: ${key}`);
+                // 重要: データが正常に移行された場合のみ削除
+                if (foundDataCount > 0) {
+                    localStorage.removeItem(key);
+                    console.log(`🗑️ 古いデータキー削除: ${key}`);
+                }
             }
         });
         
-        // パイプライン履歴の確認
+        // パイプライン履歴の初期化
         const historyData = localStorage.getItem(this.HISTORY_KEY);
         if (!historyData) {
             localStorage.setItem(this.HISTORY_KEY, JSON.stringify([]));
@@ -74,18 +102,57 @@ class UnifiedDataManager {
         }
     }
 
-    // データの存在確認・生成
+    // データの存在確認・生成（強制実行版）
     ensureDataExists() {
-        const customersData = this.getCustomers();
+        let customersData = this.getCustomers();
+        
+        console.log('🔍 現在のデータ状況:', {
+            顧客数: customersData.length,
+            ローカルストレージキー: Object.keys(localStorage).filter(k => k.startsWith('rentpipe'))
+        });
         
         if (!customersData || customersData.length === 0) {
-            console.log('👥 顧客データが存在しないため、デモデータを生成します...');
+            console.log('👥 顧客データが存在しないため、デモデータを強制生成します...');
             const demoCustomers = this.generateUnifiedDemoData();
-            this.saveCustomers(demoCustomers);
-            console.log(`✅ ${demoCustomers.length}件のデモ顧客データを生成`);
+            
+            // 強制保存
+            const success = this.saveCustomers(demoCustomers);
+            if (success) {
+                console.log(`✅ ${demoCustomers.length}件のデモ顧客データを生成・保存完了`);
+                
+                // 履歴も生成
+                this.generateInitialHistory(demoCustomers);
+            } else {
+                console.error('❌ デモデータの保存に失敗しました');
+            }
         } else {
             console.log(`📊 既存の顧客データを確認: ${customersData.length}件`);
         }
+        
+        // 保存後の確認
+        const finalData = this.getCustomers();
+        console.log(`🎯 最終確認 - 顧客データ数: ${finalData.length}`);
+    }
+
+    // デモ履歴の生成
+    generateInitialHistory(customers) {
+        const history = [];
+        const now = new Date();
+        
+        customers.forEach((customer, index) => {
+            // 各顧客の登録履歴を作成
+            history.push({
+                id: `history-${Date.now()}-${index}`,
+                customerId: customer.id,
+                fromStatus: '',
+                toStatus: customer.pipelineStatus,
+                timestamp: new Date(now.getTime() - (customers.length - index) * 24 * 60 * 60 * 1000).toISOString(),
+                notes: '初回登録'
+            });
+        });
+        
+        this.saveHistory(history);
+        console.log(`📝 ${history.length}件の初期履歴を生成`);
     }
 
     // 統一デモデータの生成
@@ -254,6 +321,7 @@ class UnifiedDataManager {
             }
         ];
 
+        console.log('🏗️ 統一デモデータ生成:', demoCustomers.length, '件');
         return demoCustomers;
     }
 
@@ -282,6 +350,12 @@ class UnifiedDataManager {
             
             localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(customers));
             console.log(`💾 顧客データ保存完了: ${customers.length}件`);
+            
+            // 保存後の確認
+            const saved = localStorage.getItem(this.CUSTOMERS_KEY);
+            const parsed = JSON.parse(saved);
+            console.log(`✅ 保存確認: ${parsed.length}件が正常に保存されました`);
+            
             return true;
         } catch (error) {
             console.error('❌ 顧客データ保存エラー:', error);
@@ -367,9 +441,11 @@ class UnifiedDataManager {
             this.addHistoryEntry(customerId, oldStatus, updateData.pipelineStatus);
         }
         
-        this.saveCustomers(customers);
-        console.log(`✅ 顧客データ更新完了: ${customerId}`);
-        return true;
+        const success = this.saveCustomers(customers);
+        if (success) {
+            console.log(`✅ 顧客データ更新完了: ${customerId}`);
+        }
+        return success;
     }
 
     // 新規顧客の追加
@@ -396,13 +472,25 @@ class UnifiedDataManager {
         };
         
         customers.push(newCustomer);
-        this.saveCustomers(customers);
+        const success = this.saveCustomers(customers);
         
-        // 履歴エントリを追加
-        this.addHistoryEntry(newCustomer.id, '', newCustomer.pipelineStatus, '新規顧客登録');
-        
-        console.log(`✅ 新規顧客追加: ${newCustomer.name}(${newCustomer.id})`);
-        return newCustomer;
+        if (success) {
+            // 履歴エントリを追加
+            this.addHistoryEntry(newCustomer.id, '', newCustomer.pipelineStatus, '新規顧客登録');
+            
+            console.log(`✅ 新規顧客追加: ${newCustomer.name}(${newCustomer.id})`);
+            
+            // データ変更イベントを発火
+            const event = new CustomEvent('dataChanged', {
+                detail: { source: 'addCustomer', customerId: newCustomer.id }
+            });
+            window.dispatchEvent(event);
+            
+            return newCustomer;
+        } else {
+            console.error('❌ 顧客追加に失敗');
+            return null;
+        }
     }
 
     // 顧客の削除
@@ -417,13 +505,16 @@ class UnifiedDataManager {
         
         const deletedCustomer = customers[index];
         customers.splice(index, 1);
-        this.saveCustomers(customers);
+        const success = this.saveCustomers(customers);
         
-        // 削除履歴を記録
-        this.addHistoryEntry(customerId, deletedCustomer.pipelineStatus, '削除', '顧客データ削除');
+        if (success) {
+            // 削除履歴を記録
+            this.addHistoryEntry(customerId, deletedCustomer.pipelineStatus, '削除', '顧客データ削除');
+            
+            console.log(`🗑️ 顧客削除完了: ${deletedCustomer.name}(${customerId})`);
+        }
         
-        console.log(`🗑️ 顧客削除完了: ${deletedCustomer.name}(${customerId})`);
-        return true;
+        return success;
     }
 
     // データ統計の取得
@@ -508,4 +599,4 @@ window.UnifiedDataManager = new UnifiedDataManager();
 window.getCustomers = () => window.UnifiedDataManager.getCustomers();
 window.saveCustomers = (customers) => window.UnifiedDataManager.saveCustomers(customers);
 
-console.log('✅ 統一データ管理システム準備完了');
+console.log('✅ 統一データ管理システム準備完了（修正版）');

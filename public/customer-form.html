@@ -7,10 +7,12 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
+
     <div class="form-container">
         <div class="form-header">
-            <h1>🏠 お部屋探しアンケート</h1>
-            <p>より良い物件をご提案させていただくため、以下の情報をご入力ください</p>
+            <h1>🏠 顧客情報登録</h1>
+            <p>詳細な顧客情報を登録します</p>
         </div>
 
         <div class="progress-bar">
@@ -55,8 +57,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="currentAddress">現住所</label>
-                    <input type="text" id="currentAddress" name="currentAddress" placeholder="例: 東京都渋谷区○○ 1-2-3">
+                    <label for="age">年齢</label>
+                    <input type="number" id="age" name="age" placeholder="例: 30" min="18" max="100">
                 </div>
                 
                 <div class="form-group">
@@ -76,9 +78,14 @@
                     </select>
                 </div>
                 
+                <div class="form-group">
+                    <label for="annualIncome">年収（万円）</label>
+                    <input type="number" id="annualIncome" name="annualIncome" placeholder="例: 400" min="0">
+                </div>
+                
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" disabled>戻る</button>
-                    <button type="button" class="btn btn-primary" onclick="nextStep()">次へ</button>
+                    <button type="button" class="btn btn-outline btn-prev" style="display: none;">戻る</button>
+                    <button type="button" class="btn btn-primary btn-next" onclick="nextStep()">次へ</button>
                 </div>
             </div>
 
@@ -87,47 +94,42 @@
                 <h2>ご希望条件</h2>
                 
                 <div class="form-group">
-                    <label for="moveDate">入居希望時期 <span class="required">*</span></label>
-                    <input type="date" id="moveDate" name="moveDate" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="moveReason">お引越し理由</label>
-                    <textarea id="moveReason" name="moveReason" rows="3" 
-                              placeholder="例: 職場が変わったため、家族が増えたため、更新時期のため など"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>ご予算（月額）<span class="required">*</span></label>
+                    <label>ご予算（月額・万円）<span class="required">*</span></label>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="budgetMin" name="budgetMin" placeholder="下限" required style="flex: 1;">
+                        <input type="number" id="budgetMin" name="budgetMin" placeholder="下限" required style="flex: 1;" min="1">
                         <span>〜</span>
-                        <input type="number" id="budgetMax" name="budgetMax" placeholder="上限" required style="flex: 1;">
+                        <input type="number" id="budgetMax" name="budgetMax" placeholder="上限" required style="flex: 1;" min="1">
                         <span>万円</span>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="areas">希望エリア（複数記載可）</label>
-                    <textarea id="areas" name="areas" rows="3" 
-                              placeholder="例: 渋谷区、新宿区、世田谷区&#10;または&#10;渋谷駅周辺、恵比寿エリア など"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="stationDistance">駅徒歩時間の希望</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="stationDistance" name="stationDistance" 
-                               placeholder="例: 10" min="1" max="30" style="width: 100px;">
-                        <span>分以内</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="buildingAge">築年数の希望</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="buildingAge" name="buildingAge" 
-                               placeholder="例: 15" min="0" max="50" style="width: 100px;">
-                        <span>年以内</span>
+                    <label>希望エリア（複数選択可）</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_shibuya" name="areas" value="渋谷区">
+                            <label for="area_shibuya">渋谷区</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_shinjuku" name="areas" value="新宿区">
+                            <label for="area_shinjuku">新宿区</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_minato" name="areas" value="港区">
+                            <label for="area_minato">港区</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_meguro" name="areas" value="目黒区">
+                            <label for="area_meguro">目黒区</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_setagaya" name="areas" value="世田谷区">
+                            <label for="area_setagaya">世田谷区</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_shinagawa" name="areas" value="品川区">
+                            <label for="area_shinagawa">品川区</label>
+                        </div>
                     </div>
                 </div>
                 
@@ -148,8 +150,8 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="previousStep()">戻る</button>
-                    <button type="button" class="btn btn-primary" onclick="nextStep()">次へ</button>
+                    <button type="button" class="btn btn-outline btn-prev" onclick="previousStep()">戻る</button>
+                    <button type="button" class="btn btn-primary btn-next" onclick="nextStep()">次へ</button>
                 </div>
             </div>
 
@@ -169,10 +171,6 @@
                             <label for="req_parking">駐車場付</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="req_bike_parking" name="requirements" value="駐輪場付">
-                            <label for="req_bike_parking">駐輪場付</label>
-                        </div>
-                        <div class="checkbox-item">
                             <input type="checkbox" id="req_autolock" name="requirements" value="オートロック">
                             <label for="req_autolock">オートロック</label>
                         </div>
@@ -188,32 +186,39 @@
                             <input type="checkbox" id="req_sunny" name="requirements" value="南向き">
                             <label for="req_sunny">南向き</label>
                         </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_air_con" name="requirements" value="エアコン付">
-                            <label for="req_air_con">エアコン付</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_barrier_free" name="requirements" value="バリアフリー">
-                            <label for="req_barrier_free">バリアフリー</label>
-                        </div>
                     </div>
                 </div>
                 
-                <div class="form-group" id="petDetails" style="display: none;">
-                    <label for="petInfo">ペットの詳細情報</label>
-                    <textarea id="petInfo" name="petInfo" rows="3" 
-                              placeholder="ペットの種類、数、名前をご記入ください&#10;例: 小型犬1匹（トイプードル、名前：ポチ）&#10;　　猫2匹（アメリカンショートヘア、名前：タマ、ミケ）"></textarea>
+                <div class="form-group">
+                    <label for="contactTime">連絡希望時間</label>
+                    <select id="contactTime" name="contactTime">
+                        <option value="">選択してください</option>
+                        <option value="平日午前">平日午前</option>
+                        <option value="平日午後">平日午後</option>
+                        <option value="平日夜">平日夜</option>
+                        <option value="土日祝日">土日祝日</option>
+                        <option value="いつでも">いつでも</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="urgency">緊急度</label>
+                    <select id="urgency" name="urgency">
+                        <option value="中">普通</option>
+                        <option value="高">急いでいる</option>
+                        <option value="低">じっくり探したい</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="notes">その他ご要望</label>
                     <textarea id="notes" name="notes" rows="4" 
-                              placeholder="その他、ご希望やご要望がございましたらご自由にご記入ください&#10;例: 楽器演奏可、事務所利用可、リノベーション物件希望など"></textarea>
+                              placeholder="その他、ご希望やご要望がございましたらご自由にご記入ください"></textarea>
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="previousStep()">戻る</button>
-                    <button type="button" class="btn btn-primary" onclick="nextStep()">確認へ</button>
+                    <button type="button" class="btn btn-outline btn-prev" onclick="previousStep()">戻る</button>
+                    <button type="button" class="btn btn-primary btn-next" onclick="nextStep()">確認へ</button>
                 </div>
             </div>
 
@@ -225,42 +230,73 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="previousStep()">戻る</button>
-                    <button type="submit" class="btn btn-primary">送信する</button>
+                    <button type="button" class="btn btn-outline btn-prev" onclick="previousStep()">戻る</button>
+                    <button type="button" class="btn btn-primary btn-submit" onclick="submitForm()" style="display: none;">✅ 登録する</button>
                 </div>
             </div>
         </form>
 
         <!-- 送信完了メッセージ -->
-        <div class="success-message" id="successMessage">
-            <div class="success-icon">✅</div>
-            <h2>送信完了しました</h2>
-            <p>お問い合わせありがとうございます。<br>担当者より連絡させていただきます。</p>
-            <button onclick="resetForm()" class="btn btn-primary" style="margin-top: 20px;">新規入力</button>
+        <div class="success-message" id="successMessage" style="display: none;">
+            <!-- 成功メッセージ内容がJSで動的に生成されます -->
         </div>
     </div>
 
+    <!-- 必要なJSファイルを正しい順序で読み込み -->
+    <script src="js/unified-auth.js"></script>
+    <script src="js/unified-data-manager.js"></script>
     <script src="js/navigation.js"></script>
-    <script src="js/firebase-config.js"></script>
     <script src="js/customer-form.js"></script>
     
-    <script>
-        // ペット可チェックボックスの制御
-        document.addEventListener('DOMContentLoaded', function() {
-            const petCheckbox = document.getElementById('req_pet');
-            const petDetails = document.getElementById('petDetails');
-            
-            if (petCheckbox && petDetails) {
-                petCheckbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        petDetails.style.display = 'block';
-                    } else {
-                        petDetails.style.display = 'none';
-                        document.getElementById('petInfo').value = '';
-                    }
-                });
+    <style>
+        .success-content {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .success-content h2 {
+            color: #10b981;
+            margin-bottom: 1rem;
+        }
+        
+        .success-actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .success-actions .btn {
+            padding: 1rem 2rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .success-actions .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .success-actions .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .success-actions {
+                flex-direction: column;
             }
-        });
-    </script>
+        }
+    </style>
 </body>
 </html>
