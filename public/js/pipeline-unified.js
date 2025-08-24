@@ -1,9 +1,10 @@
-// RentPipe パイプライン管理機能（統一データ管理対応版）
+// RentPipe パイプライン管理機能（統一データ管理対応版・修正版）
 class PipelineManager {
     constructor() {
         this.dataManager = null;
         this.draggedCustomer = null;
         this.touchStartTime = 0;
+        this.longPressTimeout = null;
         this.touchThreshold = 500; // 500ms
         this.init();
     }
@@ -108,9 +109,7 @@ class PipelineManager {
         return `
             <div class="pipeline-card" 
                  draggable="true" 
-                 data-customer-id="${customer.id}"
-                 ontouchstart="handleTouchStart(event)"
-                 ontouchend="handleTouchEnd(event)">
+                 data-customer-id="${customer.id}">
                 <div class="card-header">
                     <div class="customer-name">
                         ${urgencyIcons[customer.urgency] || '⚪'} ${customer.name}
@@ -159,6 +158,7 @@ class PipelineManager {
         // カードのドラッグイベント
         const cards = container.querySelectorAll('.pipeline-card');
         cards.forEach(card => {
+            // PC版：ドラッグ&ドロップ
             card.addEventListener('dragstart', (e) => {
                 this.draggedCustomer = {
                     id: card.dataset.customerId,
@@ -172,6 +172,23 @@ class PipelineManager {
                     this.draggedCustomer.element.classList.remove('dragging');
                     this.draggedCustomer = null;
                 }
+            });
+
+            // スマホ版：長押し処理
+            card.addEventListener('touchstart', (e) => {
+                this.handleTouchStart(e, card.dataset.customerId);
+            });
+
+            card.addEventListener('touchend', (e) => {
+                this.handleTouchEnd(e);
+            });
+
+            card.addEventListener('touchcancel', () => {
+                this.clearLongPress();
+            });
+
+            card.addEventListener('touchmove', () => {
+                this.clearLongPress();
             });
         });
 
@@ -199,7 +216,7 @@ class PipelineManager {
         });
     }
 
-    moveCustomer(customerId, newStatus) {
+    async moveCustomer(customerId, newStatus) {
         try {
             const customer = this.dataManager.getCustomerById(customerId);
             if (!customer) {
@@ -209,16 +226,33 @@ class PipelineManager {
 
             const oldStatus = customer.pipelineStatus;
             
-            // ステータス更新
-            if (this.dataManager.updateCustomer(customerId, { pipelineStatus: newStatus })) {
-                console.log(`📈 顧客ステータス更新: ${customer.name} ${oldStatus} → ${newStatus}`);
+            if (oldStatus === newStatus) {
+                console.log('📈 ステータス変更なし');
+                return;
+            }
+            
+            console.log(`📈 顧客ステータス更新開始: ${customer.name} ${oldStatus} → ${newStatus}`);
+            
+            // ステータス更新（統一データ管理システム使用）
+            const updateSuccess = this.dataManager.updateCustomer(customerId, { 
+                pipelineStatus: newStatus,
+                updatedAt: new Date().toISOString()
+            });
+            
+            if (updateSuccess) {
+                console.log(`✅ 顧客ステータス更新成功: ${customer.name}`);
                 
-                // パイプラインを再読み込み
+                // パイプラインを即座に再読み込み
                 this.loadPipeline();
                 
                 // 成功メッセージ
                 this.showMessage(`${customer.name} を ${newStatus} に移動しました`, 'success');
+                
+                // ダッシュボードのリロード通知（他画面との同期）
+                this.notifyDataChange();
+                
             } else {
+                console.error('❌ ステータス更新失敗');
                 this.showMessage('ステータス更新に失敗しました', 'error');
             }
             
@@ -226,6 +260,16 @@ class PipelineManager {
             console.error('❌ 顧客移動エラー:', error);
             this.showMessage('顧客移動中にエラーが発生しました', 'error');
         }
+    }
+
+    // 他画面への変更通知
+    notifyDataChange() {
+        // カスタムイベントを発火して他画面に変更を通知
+        const event = new CustomEvent('dataChanged', {
+            detail: { source: 'pipeline', timestamp: new Date().toISOString() }
+        });
+        window.dispatchEvent(event);
+        console.log('📡 データ変更イベント送信');
     }
 
     updateStats(customers) {
@@ -268,19 +312,30 @@ class PipelineManager {
 
     // タッチイベント処理（スマートフォン対応）
     handleTouchStart(event, customerId) {
-        this.touchStartTime = Date.now();
         this.touchCustomerId = customerId;
+        
+        // 長押し判定用タイマーを開始
+        this.longPressTimeout = setTimeout(() => {
+            // 長押し成功：ハプティクスフィードバック
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            this.showMobileStatusMenu(customerId);
+        }, this.touchThreshold);
+        
+        console.log(`👆 長押し開始: ${customerId}`);
     }
 
     handleTouchEnd(event) {
-        const touchDuration = Date.now() - this.touchStartTime;
-        
-        if (touchDuration >= this.touchThreshold && this.touchCustomerId) {
-            event.preventDefault();
-            this.showMobileStatusMenu(this.touchCustomerId);
+        this.clearLongPress();
+    }
+
+    clearLongPress() {
+        if (this.longPressTimeout) {
+            clearTimeout(this.longPressTimeout);
+            this.longPressTimeout = null;
         }
-        
-        this.touchStartTime = 0;
         this.touchCustomerId = null;
     }
 
@@ -291,41 +346,126 @@ class PipelineManager {
         const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
         const currentStatus = customer.pipelineStatus;
 
-        const options = statuses.map(status => 
-            status === currentStatus ? `${status} (現在)` : status
-        );
+        // モバイル用ステータス選択メニューを作成
+        this.createMobileStatusDialog(customer, statuses, currentStatus);
+    }
 
-        // モバイル用選択ダイアログ
-        const selectedIndex = this.showMobileDialog(
-            `${customer.name} のステータスを選択`,
-            options
-        );
+    createMobileStatusDialog(customer, statuses, currentStatus) {
+        // 既存のダイアログを削除
+        const existingDialog = document.getElementById('mobileStatusDialog');
+        if (existingDialog) {
+            existingDialog.remove();
+        }
 
-        if (selectedIndex !== null && selectedIndex !== -1) {
-            const newStatus = statuses[selectedIndex];
-            if (newStatus !== currentStatus) {
-                this.moveCustomer(customerId, newStatus);
+        // オーバーレイとダイアログを作成
+        const overlay = document.createElement('div');
+        overlay.id = 'mobileStatusDialog';
+        overlay.className = 'mobile-status-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        `;
+
+        const dialog = document.createElement('div');
+        dialog.className = 'mobile-status-dialog';
+        dialog.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 320px;
+            width: 100%;
+            animation: slideUp 0.3s ease;
+        `;
+
+        // ダイアログ内容
+        dialog.innerHTML = `
+            <div class="dialog-header">
+                <h3 style="margin: 0 0 1rem 0; color: #1e3a8a; text-align: center;">
+                    📈 ${customer.name}
+                </h3>
+                <p style="margin: 0 0 1.5rem 0; color: #6b7280; text-align: center; font-size: 0.9rem;">
+                    移動先のステータスを選択してください
+                </p>
+            </div>
+            
+            <div class="status-options">
+                ${statuses.map(status => `
+                    <button class="status-option ${status === currentStatus ? 'current' : ''}" 
+                            onclick="selectMobileStatus('${customer.id}', '${status}')"
+                            style="
+                                display: block;
+                                width: 100%;
+                                padding: 0.75rem;
+                                margin-bottom: 0.5rem;
+                                border: 2px solid ${status === currentStatus ? '#3b82f6' : '#e5e7eb'};
+                                background: ${status === currentStatus ? '#eff6ff' : 'white'};
+                                color: ${status === currentStatus ? '#1e40af' : '#374151'};
+                                border-radius: 8px;
+                                font-weight: ${status === currentStatus ? '600' : '400'};
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            ">
+                        ${status === currentStatus ? '✓ ' : ''}${status}
+                        ${status === currentStatus ? ' (現在)' : ''}
+                    </button>
+                `).join('')}
+            </div>
+            
+            <div class="dialog-footer" style="margin-top: 1rem;">
+                <button onclick="closeMobileStatusDialog()" 
+                        style="
+                            width: 100%;
+                            padding: 0.75rem;
+                            border: 1px solid #d1d5db;
+                            background: white;
+                            color: #374151;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            cursor: pointer;
+                        ">
+                    キャンセル
+                </button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // オーバーレイクリックで閉じる
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.closeMobileStatusDialog();
             }
+        });
+
+        console.log('📱 モバイルステータスメニュー表示');
+    }
+
+    closeMobileStatusDialog() {
+        const dialog = document.getElementById('mobileStatusDialog');
+        if (dialog) {
+            dialog.remove();
         }
     }
 
-    showMobileDialog(title, options) {
-        // 簡易的な選択ダイアログ（実際のプロジェクトではより洗練されたUIを使用）
-        let message = title + '\n\n';
-        options.forEach((option, index) => {
-            message += `${index + 1}. ${option}\n`;
-        });
+    selectMobileStatus(customerId, newStatus) {
+        this.closeMobileStatusDialog();
         
-        const input = prompt(message + '\n番号を選択してください (1-' + options.length + ')');
-        
-        if (input) {
-            const num = parseInt(input) - 1;
-            if (num >= 0 && num < options.length) {
-                return num;
-            }
+        const customer = this.dataManager.getCustomerById(customerId);
+        if (customer && customer.pipelineStatus !== newStatus) {
+            this.moveCustomer(customerId, newStatus);
         }
-        
-        return null;
     }
 
     // メッセージ表示
@@ -342,13 +482,15 @@ class PipelineManager {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 1rem;
+            padding: 1rem 1.5rem;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
             background: ${type === 'success' ? '#d1fae5' : '#fee2e2'};
             border: 1px solid ${type === 'success' ? '#10b981' : '#ef4444'};
             color: ${type === 'success' ? '#065f46' : '#991b1b'};
+            font-weight: 500;
+            animation: slideInRight 0.3s ease;
         `;
         
         document.body.appendChild(messageElement);
@@ -361,26 +503,56 @@ class PipelineManager {
     }
 }
 
-// グローバル関数（HTMLから呼び出される）
-function handleTouchStart(event) {
-    const card = event.currentTarget;
-    const customerId = card.dataset.customerId;
-    if (window.pipelineManager) {
-        window.pipelineManager.handleTouchStart(event, customerId);
-    }
-}
-
-function handleTouchEnd(event) {
-    if (window.pipelineManager) {
-        window.pipelineManager.handleTouchEnd(event);
-    }
-}
-
+// グローバル関数（HTMLとモバイルダイアログから呼び出される）
 function refreshPipeline() {
     if (window.pipelineManager) {
         window.pipelineManager.loadPipeline();
     }
 }
+
+function selectMobileStatus(customerId, newStatus) {
+    if (window.pipelineManager) {
+        window.pipelineManager.selectMobileStatus(customerId, newStatus);
+    }
+}
+
+function closeMobileStatusDialog() {
+    if (window.pipelineManager) {
+        window.pipelineManager.closeMobileStatusDialog();
+    }
+}
+
+// CSS アニメーション追加
+const animationCSS = `
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.status-option:hover {
+    background: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+}
+
+.status-option.current:hover {
+    background: #dbeafe !important;
+    border-color: #2563eb !important;
+}
+</style>
+`;
+
+document.head.insertAdjacentHTML('beforeend', animationCSS);
 
 // パイプライン管理システムのインスタンス作成
 let pipelineManager = null;
@@ -396,4 +568,4 @@ if (document.readyState === 'loading') {
     window.pipelineManager = pipelineManager;
 }
 
-console.log('✅ 統一対応パイプライン管理スクリプト準備完了');
+console.log('✅ 統一対応パイプライン管理スクリプト準備完了（修正版）');

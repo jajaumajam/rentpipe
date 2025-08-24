@@ -1,4 +1,4 @@
-// RentPipe ダッシュボード機能（統一データ管理対応版）
+// RentPipe ダッシュボード機能（統一データ管理対応版・同期修正版）
 class Dashboard {
     constructor() {
         this.dataManager = null;
@@ -14,12 +14,18 @@ class Dashboard {
         // ダッシュボードデータを読み込み・表示
         this.loadDashboardData();
         
+        // 他画面からのデータ変更イベントを監視
+        window.addEventListener('dataChanged', () => {
+            console.log('📡 データ変更イベント受信 - ダッシュボード更新');
+            this.loadDashboardData();
+        });
+        
         // 定期更新を設定（5分ごと）
         setInterval(() => {
             this.loadDashboardData();
         }, 5 * 60 * 1000);
         
-        console.log('✅ ダッシュボード準備完了');
+        console.log('✅ ダッシュボード準備完了（同期対応）');
     }
 
     async waitForDataManager() {
@@ -53,7 +59,7 @@ class Dashboard {
             this.updateStatCard('this-month-completed', stats.thisMonthCompleted, '今月成約');
             this.updateStatCard('conversion-rate', `${stats.conversionRate}%`, '成約率');
             
-            // パイプライン統計の表示
+            // パイプライン統計の表示（リアルタイム同期）
             this.updatePipelineStats(stats.statusCounts);
             
             // 最近の顧客活動を表示
@@ -99,6 +105,8 @@ class Dashboard {
                 ${pipelineHTML}
             </div>
         `;
+        
+        console.log('📊 パイプライン統計更新完了:', statusCounts);
     }
 
     updateRecentActivity() {
@@ -118,8 +126,8 @@ class Dashboard {
                 <div class="activity-item">
                     <div class="activity-icon">📝</div>
                     <div class="activity-content">
-                        <div class="activity-title">アクティビティがありません</div>
-                        <div class="activity-time">顧客データや操作が行われると、ここに表示されます</div>
+                        <div class="activity-title">最近の活動はありません</div>
+                        <div class="activity-time">顧客データの操作が行われると、ここに表示されます</div>
                     </div>
                 </div>
             `;
@@ -145,6 +153,7 @@ class Dashboard {
         }).join('');
 
         activityContainer.innerHTML = activityHTML;
+        console.log('📝 最近の活動更新完了');
     }
 
     getStatusIcon(status) {
@@ -175,6 +184,19 @@ class Dashboard {
         if (diffDays < 30) return `${diffDays}日前`;
         return time.toLocaleDateString();
     }
+
+    // 手動リフレッシュ機能
+    refresh() {
+        console.log('🔄 ダッシュボード手動更新');
+        this.loadDashboardData();
+    }
+}
+
+// グローバル関数
+function refreshDashboard() {
+    if (window.dashboard) {
+        window.dashboard.refresh();
+    }
 }
 
 // ダッシュボードインスタンスを作成
@@ -184,9 +206,11 @@ let dashboard = null;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         dashboard = new Dashboard();
+        window.dashboard = dashboard;
     });
 } else {
     dashboard = new Dashboard();
+    window.dashboard = dashboard;
 }
 
-console.log('✅ 統一対応ダッシュボードスクリプト準備完了');
+console.log('✅ 統一対応ダッシュボードスクリプト準備完了（同期修正版）');
