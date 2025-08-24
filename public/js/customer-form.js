@@ -1,4 +1,4 @@
-// RentPipe 顧客フォーム機能（統一データ管理対応版・デバッグ修正版）
+// RentPipe 顧客フォーム機能（統一データ管理対応版・最終修正版）
 class CustomerFormManager {
     constructor() {
         this.currentStep = 1;
@@ -91,9 +91,9 @@ class CustomerFormManager {
             phone: customer.phone || '',
             age: customer.age || '',
             occupation: customer.occupation || '',
-            annualIncome: customer.annualIncome || '',
-            budgetMin: customer.preferences?.budgetMin || '',
-            budgetMax: customer.preferences?.budgetMax || '',
+            annualIncome: customer.annualIncome ? Math.round(customer.annualIncome / 10000) : '',
+            budgetMin: customer.preferences?.budgetMin ? Math.round(customer.preferences.budgetMin / 10000) : '',
+            budgetMax: customer.preferences?.budgetMax ? Math.round(customer.preferences.budgetMax / 10000) : '',
             areas: customer.preferences?.areas || [],
             roomType: customer.preferences?.roomType || '',
             requirements: customer.preferences?.requirements || [],
@@ -130,7 +130,7 @@ class CustomerFormManager {
             budgetMaxElement.value = this.formData.budgetMax;
         }
 
-        // エリアの設定
+        // エリアの設定（チェックボックス）
         if (this.formData.areas && this.formData.areas.length > 0) {
             this.formData.areas.forEach(area => {
                 const checkbox = document.querySelector(`[name="areas"][value="${area}"]`);
@@ -146,7 +146,7 @@ class CustomerFormManager {
             roomTypeElement.value = this.formData.roomType;
         }
 
-        // こだわり条件の設定
+        // こだわり条件の設定（チェックボックス）
         if (this.formData.requirements && this.formData.requirements.length > 0) {
             this.formData.requirements.forEach(requirement => {
                 const checkbox = document.querySelector(`[name="requirements"][value="${requirement}"]`);
@@ -246,7 +246,7 @@ class CustomerFormManager {
                 break;
             case 3:
                 // ステップ3は任意項目のため、バリデーション無し
-                console.log('✅ ステップ3: バリデーション不要');
+                console.log('✅ ステップ3: バリデーション不要（任意項目）');
                 break;
         }
         
@@ -608,4 +608,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.formManager = formManager;
 });
 
-console.log('✅ 統一対応顧客フォームスクリプト準備完了（デバッグ版）');
+console.log('✅ 統一対応顧客フォームスクリプト準備完了（最終版）');
