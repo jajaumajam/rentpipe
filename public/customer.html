@@ -5,295 +5,350 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
+    <style>
+        .customer-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .customer-title h1 {
+            color: #1e3a8a;
+            margin: 0;
+        }
+        
+        .customer-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .filters-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        .form-group {
+            margin: 0;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .results-count {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .customers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .customer-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .customer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .customer-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .customer-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .customer-details {
+            margin-bottom: 1rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        
+        .detail-icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .customer-notes {
+            background: #f9fafb;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .customer-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        
+        @media (max-width: 768px) {
+            .customer-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .customers-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .customer-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
+
     <div class="customer-container">
         <div class="customer-header">
-            <div>
-                <h1>顧客管理</h1>
-                <p style="color: #64748b; margin-top: 5px;">顧客情報を管理・検索できます</p>
+            <div class="customer-title">
+                <h1>👥 顧客管理</h1>
+                <p>顧客情報を一元管理します</p>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <span id="customerCount" class="info-badge">0件</span>
-            </div>
-        </div>
-
-        <div class="customer-actions">
-            <button id="quickRegisterBtn" class="btn btn-primary">
-                ⚡ クイック登録
-            </button>
-            <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
-                📥 エクスポート
-            </button>
-            <button onclick="showFormURLModal()" class="btn btn-outline" title="顧客用詳細フォーム">
-                📝 顧客用詳細フォーム
-            </button>
-        </div>
-
-        <div class="search-container">
-            <input type="text" 
-                   class="search-input" 
-                   id="searchInput" 
-                   placeholder="🔍 名前・メール・電話番号で検索">
-            
-            <select id="statusFilter" class="search-input" style="max-width: 200px;">
-                <option value="">全てのステータス</option>
-                <option value="初回相談">初回相談</option>
-                <option value="物件紹介">物件紹介</option>
-                <option value="内見">内見</option>
-                <option value="申込">申込</option>
-                <option value="審査">審査</option>
-                <option value="契約">契約</option>
-                <option value="完了">完了</option>
-            </select>
-            
-            <select id="sortOrder" class="search-input" style="max-width: 200px;">
-                <option value="updatedDesc">更新日（新しい順）</option>
-                <option value="updatedAsc">更新日（古い順）</option>
-                <option value="createdDesc">登録日（新しい順）</option>
-                <option value="createdAsc">登録日（古い順）</option>
-                <option value="nameAsc">名前（昇順）</option>
-                <option value="nameDesc">名前（降順）</option>
-            </select>
-            
-            <button onclick="clearFilters()" class="btn btn-outline">
-                クリア
-            </button>
-        </div>
-
-        <div id="customerGrid" class="customer-grid">
-            <!-- 顧客カードがここに表示されます -->
-        </div>
-
-        <div id="noResults" style="display: none; text-align: center; padding: 60px 20px;">
-            <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
-            <h3 style="color: #64748b;">顧客が見つかりません</h3>
-            <p style="color: #94a3b8;">検索条件を変更するか、新しい顧客を登録してください</p>
-        </div>
-    </div>
-
-    <!-- クイック登録モーダル -->
-    <div id="quickRegisterModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>⚡ クイック顧客登録</h2>
-                <button onclick="closeQuickRegisterModal()" class="btn-close" type="button">×</button>
-            </div>
-            <form id="quickRegisterForm" onsubmit="submitQuickRegister(event)">
-                <div class="modal-body">
-                    <p style="color: #64748b; margin-bottom: 20px;">
-                        最小限の情報で素早く顧客を登録できます。詳細は後から編集可能です。
-                    </p>
-                    
-                    <div class="form-group">
-                        <label for="quickName">お名前 <span class="required">*</span></label>
-                        <input type="text" id="quickName" name="name" required 
-                               placeholder="例: 山田 太郎">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="quickPhone">電話番号 <span class="required">*</span></label>
-                        <input type="tel" id="quickPhone" name="phone" required 
-                               placeholder="例: 090-1234-5678">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="quickEmail">メールアドレス</label>
-                        <input type="email" id="quickEmail" name="email" 
-                               placeholder="例: yamada@example.com">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="quickStatus">ステータス</label>
-                        <select id="quickStatus" name="status">
-                            <option value="初回相談">初回相談</option>
-                            <option value="物件紹介">物件紹介</option>
-                            <option value="内見">内見</option>
-                            <option value="申込">申込</option>
-                            <option value="審査">審査</option>
-                            <option value="契約">契約</option>
-                            <option value="完了">完了</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="quickNote">メモ</label>
-                        <textarea id="quickNote" name="note" rows="3" 
-                                  placeholder="例: 3月末までに引っ越し希望"></textarea>
-                    </div>
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" onclick="closeQuickRegisterModal()" class="btn btn-outline">キャンセル</button>
-                    <button type="submit" class="btn btn-primary">⚡ 登録する</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 顧客詳細モーダル -->
-    <div id="customerDetailModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h2 id="detailCustomerName">顧客詳細</h2>
-                <button onclick="closeDetailModal()" class="btn-close">×</button>
-            </div>
-            <div class="modal-body">
-                <div id="customerDetailContent">
-                    <!-- 詳細情報がここに表示されます -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeDetailModal()" class="btn btn-outline">閉じる</button>
-                <button onclick="editCustomer()" class="btn btn-primary">編集</button>
-                <button onclick="deleteCustomer()" class="btn btn-danger">削除</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 顧客編集モーダル -->
-    <div id="customerEditModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h2>顧客情報編集</h2>
-                <button onclick="closeEditModal()" class="btn-close">×</button>
-            </div>
-            <form id="editCustomerForm" onsubmit="saveCustomerEdit(event)">
-                <div class="modal-body">
-                    <!-- 編集フォームがここに表示されます -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="closeEditModal()" class="btn btn-outline">キャンセル</button>
-                    <button type="submit" class="btn btn-primary">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- フォームURL生成モーダル -->
-    <div id="formURLModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>🔗 顧客入力フォームURL</h2>
-                <button onclick="closeFormURLModal()" class="btn-close" type="button">×</button>
-            </div>
-            <div class="modal-body">
-                <p style="color: #64748b; margin-bottom: 20px;">
-                    このURLを顧客に送信することで、顧客自身が情報を入力できます。
-                </p>
-                
-                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">
-                        📋 フォームURL
-                    </label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" 
-                               id="formURLDisplay" 
-                               readonly 
-                               value="https://rentpipe-ab04e.web.app/customer-form.html"
-                               style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white;">
-                        <button onclick="copyFormURL()" style="
-                            padding: 10px 20px;
-                            background: #3b82f6;
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            white-space: nowrap;
-                        ">
-                            📋 コピー
-                        </button>
-                    </div>
-                </div>
-                
-                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                    <h4 style="margin: 0 0 10px 0; color: #92400e;">💡 使い方のヒント</h4>
-                    <ul style="margin: 0; padding-left: 20px; color: #92400e;">
-                        <li>メールやLINEでURLを送信</li>
-                        <li>QRコードを生成して店舗に設置</li>
-                        <li>ウェブサイトにリンクを設置</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeFormURLModal()" class="btn btn-outline">閉じる</button>
-                <a href="https://rentpipe-ab04e.web.app/customer-form.html" target="_blank" class="btn btn-primary" style="text-decoration: none;">
-                    🔗 フォームを開く
+            <div class="customer-actions">
+                <button class="btn btn-secondary" onclick="refreshCustomers()">
+                    🔄 更新
+                </button>
+                <a href="customer-form.html" class="btn btn-primary">
+                    ➕ 新規登録
                 </a>
             </div>
         </div>
-    </div>
-
-    <!-- エクスポートモーダル -->
-    <div id="exportModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2>📥 データエクスポート</h2>
-                <button onclick="dataExporter.closeModal()" class="btn-close">×</button>
+        
+        <!-- 統計カード -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCustomers">-</div>
+                <div class="stat-label">総顧客数</div>
             </div>
-            <div class="modal-body">
-                <p style="color: #64748b; margin-bottom: 20px;">
-                    顧客データをエクスポートする形式を選択してください。
-                </p>
-                
-                <div class="export-options">
-                    <button onclick="dataExporter.exportAsCSV()" class="export-option">
-                        <span class="export-icon">📊</span>
-                        <span class="export-label">CSV形式</span>
-                        <span class="export-desc">Excel等で開けます</span>
-                    </button>
-                    
-                    <button onclick="dataExporter.exportAsJSON()" class="export-option">
-                        <span class="export-icon">💾</span>
-                        <span class="export-label">JSON形式</span>
-                        <span class="export-desc">バックアップ・連携用</span>
-                    </button>
-                </div>
-                
-                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0284c7;">
-                    <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
-                        <strong>💡 ヒント:</strong> エクスポートしたデータは定期的にバックアップとして保存することをお勧めします。
-                    </p>
-                </div>
+            <div class="stat-card">
+                <div class="stat-value" id="thisMonthCustomers">-</div>
+                <div class="stat-label">今月新規</div>
             </div>
-            <div class="modal-footer">
-                <button onclick="dataExporter.closeModal()" class="btn btn-outline">キャンセル</button>
+            <div class="stat-card">
+                <div class="stat-value" id="completedCustomers">-</div>
+                <div class="stat-label">成約済み</div>
             </div>
         </div>
+        
+        <!-- フィルター・検索 -->
+        <div class="filters-container">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="searchInput">🔍 検索</label>
+                    <input type="text" id="searchInput" class="form-input" placeholder="名前、メール、電話番号で検索...">
+                </div>
+                <div class="form-group">
+                    <label for="statusFilter">📋 ステータス</label>
+                    <select id="statusFilter" class="form-select">
+                        <option value="all">すべて</option>
+                        <option value="初回相談">初回相談</option>
+                        <option value="物件紹介">物件紹介</option>
+                        <option value="内見">内見</option>
+                        <option value="申込">申込</option>
+                        <option value="審査">審査</option>
+                        <option value="契約">契約</option>
+                        <option value="完了">完了</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sortSelect">📊 並び順</label>
+                    <select id="sortSelect" class="form-select">
+                        <option value="updatedAt">更新日時順</option>
+                        <option value="createdAt">登録日時順</option>
+                        <option value="name">名前順</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 結果表示 -->
+        <div class="results-header">
+            <div class="results-count" id="resultsCount">-</div>
+        </div>
+        
+        <!-- 顧客リスト -->
+        <div class="customers-grid" id="customersList">
+            <!-- 顧客カードが動的に挿入される -->
+        </div>
     </div>
-
+    
     <script src="js/unified-auth.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/navigation.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/customer.js"></script>
-    <script src="js/quick-register.js"></script>
-    <script src="js/export.js"></script>
-    
-    <script>
-        // フォームURL関数
-        function showFormURLModal() {
-            const modal = document.getElementById('formURLModal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
-        }
-        
-        function closeFormURLModal() {
-            const modal = document.getElementById('formURLModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-        
-        function copyFormURL() {
-            const urlInput = document.getElementById('formURLDisplay');
-            if (urlInput) {
-                urlInput.select();
-                document.execCommand('copy');
-                alert('✅ URLをコピーしました！');
-            }
-        }
-    </script>
+    <script src="js/customer-unified.js"></script>
 </body>
 </html>

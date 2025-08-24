@@ -8,42 +8,47 @@
     <link rel="stylesheet" href="css/pipeline-responsive.css">
 </head>
 <body>
+    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
+
     <div class="pipeline-container">
         <div class="pipeline-header">
-            <div>
-                <h1>パイプライン管理</h1>
-                <p style="color: #64748b; margin-top: 5px;">顧客の進捗状況を可視化・管理</p>
+            <div class="header-left">
+                <h1>📈 パイプライン管理</h1>
+                <p>顧客のステータスを可視化・管理します</p>
             </div>
-            <div class="pipeline-stats">
-                <div class="stat-card">
-                    <h3 id="totalCustomers">0</h3>
-                    <p>総顧客数</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="monthlyContracts">0</h3>
-                    <p>今月成約</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="conversionRate">0%</h3>
-                    <p>成約率</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="averageDays">0日</h3>
-                    <p>平均期間</p>
-                </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="refreshPipeline()" id="refreshPipeline">
+                    🔄 更新
+                </button>
             </div>
         </div>
 
-        <div class="filter-container">
-            <button onclick="refreshPipeline()" class="btn btn-primary">
-                🔄 更新
-            </button>
-            <button onclick="generateDemoData()" class="btn btn-outline">
-                📝 デモデータ生成
-            </button>
+        <!-- 統計ダッシュボード -->
+        <div class="pipeline-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCustomers">-</div>
+                <div class="stat-label">総顧客数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="thisMonthNew">-</div>
+                <div class="stat-label">今月新規</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="thisMonthCompleted">-</div>
+                <div class="stat-label">今月成約</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="conversionRate">-%</div>
+                <div class="stat-label">成約率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgDuration">-</div>
+                <div class="stat-label">平均期間</div>
+            </div>
         </div>
 
-        <div class="pipeline-board" id="pipelineBoard">
+        <!-- パイプラインボード -->
+        <div class="pipeline-board">
             <div class="pipeline-column" data-status="初回相談">
                 <div class="column-header status-initial">
                     <span class="column-title">初回相談</span>
@@ -53,7 +58,7 @@
             </div>
 
             <div class="pipeline-column" data-status="物件紹介">
-                <div class="column-header status-proposal">
+                <div class="column-header status-presentation">
                     <span class="column-title">物件紹介</span>
                     <span class="column-count" data-count="物件紹介">0</span>
                 </div>
@@ -77,7 +82,7 @@
             </div>
 
             <div class="pipeline-column" data-status="審査">
-                <div class="column-header status-review">
+                <div class="column-header status-screening">
                     <span class="column-title">審査</span>
                     <span class="column-count" data-count="審査">0</span>
                 </div>
@@ -106,26 +111,6 @@
     <script src="js/unified-auth.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/navigation.js"></script>
-    <script src="js/pipeline-simple.js"></script>
-    <script src="js/pipeline-touch.js"></script>
-
-    <script>
-        function refreshPipeline() {
-            if (window.pipelineManager) {
-                window.pipelineManager.loadCustomers();
-                window.pipelineManager.renderPipeline();
-                window.pipelineManager.updateStats();
-            }
-        }
-
-        function generateDemoData() {
-            if (window.pipelineManager) {
-                window.pipelineManager.customers = window.pipelineManager.generateDemoData();
-                window.pipelineManager.renderPipeline();
-                window.pipelineManager.updateStats();
-                alert('デモデータを生成しました！');
-            }
-        }
-    </script>
+    <script src="js/pipeline-unified.js"></script>
 </body>
 </html>
