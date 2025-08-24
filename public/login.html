@@ -12,269 +12,343 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            font-family: 'Noto Sans JP', sans-serif;
         }
-
-        .login-container {
-            background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        
+        .auth-container {
             width: 100%;
-            max-width: 450px;
-            position: relative;
-            overflow: hidden;
+            max-width: 400px;
+            padding: 2rem;
         }
-
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        .login-header {
+        
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            margin-bottom: 2.5rem;
         }
-
-        .login-logo {
+        
+        .auth-logo {
+            margin-bottom: 2rem;
+        }
+        
+        .logo-icon {
             font-size: 3rem;
             margin-bottom: 1rem;
+            display: block;
         }
-
-        .login-title {
-            font-size: 2rem;
+        
+        .auth-logo h1 {
             color: #1e3a8a;
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
             font-weight: 700;
-            margin: 0;
         }
-
-        .login-subtitle {
+        
+        .auth-logo p {
             color: #64748b;
-            margin: 0.5rem 0 0 0;
-            font-weight: 400;
+            margin: 0 0 2rem 0;
+            font-size: 0.9rem;
         }
-
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 0.25rem;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .auth-tab.active {
+            background: white;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .auth-form {
+            display: none;
+            text-align: left;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
         .form-group {
             margin-bottom: 1.5rem;
         }
-
+        
         .form-label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
             color: #374151;
         }
-
+        
         .form-input {
             width: 100%;
-            padding: 1rem;
+            padding: 0.75rem;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #f9fafb;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
         }
-
+        
         .form-input:focus {
             outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #3b82f6;
         }
-
-        .btn-login {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 2rem;
+        
+        .form-footer {
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .demo-info {
-            background: #f0f9ff;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #0ea5e9;
-            margin-top: 2rem;
-        }
-
-        .demo-info h3 {
-            margin: 0 0 1rem 0;
-            color: #0c4a6e;
-            font-size: 1.1rem;
-        }
-
-        .demo-info p {
-            margin: 0.5rem 0;
-            color: #0369a1;
+        
+        .form-footer a {
+            color: #3b82f6;
+            text-decoration: none;
             font-size: 0.9rem;
         }
-
-        .message {
-            padding: 1rem;
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-auth {
+            width: 100%;
+            padding: 0.875rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
             border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .btn-auth:hover {
+            background: #2563eb;
+        }
+        
+        .demo-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .demo-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1e3a8a;
+            font-size: 0.9rem;
+        }
+        
+        .demo-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+        
+        .demo-credentials {
+            background: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        
+        .error-message, .success-message {
+            padding: 0.75rem;
+            border-radius: 6px;
             margin-bottom: 1rem;
-            display: none;
+            font-size: 0.9rem;
+            text-align: center;
         }
-
-        .message.success {
-            background: #d1fae5;
-            border: 1px solid #a7f3d0;
-            color: #065f46;
+        
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
         }
-
-        .message.error {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
-        }
-
-        @media (max-width: 480px) {
-            .login-container {
-                margin: 1rem;
-                padding: 2rem;
-            }
-            
-            .login-title {
-                font-size: 1.75rem;
-            }
+        
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="login-logo">🏠</div>
-            <h1 class="login-title">RentPipe</h1>
-            <p class="login-subtitle">賃貸営業を、流れるように</p>
-        </div>
-
-        <div class="message" id="message"></div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="email">メールアドレス</label>
-                <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- ロゴ -->
+            <div class="auth-logo">
+                <div class="logo-icon">🏠</div>
+                <h1>RentPipe</h1>
+                <p>賃貸営業を、流れるように</p>
             </div>
-
-            <div class="form-group">
-                <label class="form-label" for="password">パスワード</label>
-                <input type="password" id="password" class="form-input" placeholder="パスワードを入力" required>
+            
+            <!-- タブ -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">ログイン</button>
+                <button class="auth-tab" onclick="switchTab('register')">新規登録</button>
             </div>
-
-            <button type="submit" class="btn-login">ログイン</button>
-        </form>
-
-        <div class="demo-info">
-            <h3>🎮 デモ環境</h3>
-            <p><strong>メール:</strong> demo@rentpipe.jp</p>
-            <p><strong>パスワード:</strong> demo123</p>
-            <p>または任意の情報でログインできます</p>
+            
+            <!-- メッセージエリア -->
+            <div id="messageArea"></div>
+            
+            <!-- ログインフォーム -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail" class="form-label">メールアドレス</label>
+                    <input type="email" id="loginEmail" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword" class="form-label">パスワード</label>
+                    <input type="password" id="loginPassword" class="form-input" required>
+                </div>
+                
+                <div class="form-footer">
+                    <a href="#" onclick="showResetPassword()">パスワードを忘れた方</a>
+                </div>
+                
+                <button type="submit" class="btn-auth">ログイン</button>
+            </form>
+            
+            <!-- 新規登録フォーム -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="registerName" class="form-label">お名前</label>
+                    <input type="text" id="registerName" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerEmail" class="form-label">メールアドレス</label>
+                    <input type="email" id="registerEmail" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword" class="form-label">パスワード</label>
+                    <input type="password" id="registerPassword" class="form-input" required minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPasswordConfirm" class="form-label">パスワード（確認）</label>
+                    <input type="password" id="registerPasswordConfirm" class="form-input" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn-auth">新規登録</button>
+            </form>
+            
+            <!-- デモアカウント情報 -->
+            <div class="demo-info">
+                <h3>🚀 デモアカウント</h3>
+                <p>すぐにお試しいただけます</p>
+                <div class="demo-credentials">
+                    <div>メール: demo@rentpipe.jp</div>
+                    <div>パスワード: demo123</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="js/unified-auth.js"></script>
     <script>
-        // アカウント削除チェック
-        function checkAccountDeletion() {
-            const accountDeleted = localStorage.getItem('rentpipe_account_deleted');
-            if (accountDeleted === 'true') {
-                // フラグをクリア
-                localStorage.removeItem('rentpipe_account_deleted');
-                showMessage('アカウントが正常に削除されました', 'success');
-                return true;
-            }
-            return false;
-        }
-
-        // メッセージ表示関数
-        function showMessage(text, type = 'error') {
-            const messageElement = document.getElementById('message');
-            messageElement.textContent = text;
-            messageElement.className = `message ${type}`;
-            messageElement.style.display = 'block';
+        // タブ切り替え
+        function switchTab(tab) {
+            // タブボタンの切り替え
+            document.querySelectorAll('.auth-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
             
-            if (type === 'success') {
-                setTimeout(() => {
-                    messageElement.style.display = 'none';
-                }, 5000);
-            }
+            // フォームの切り替え
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            document.getElementById(`${tab}Form`).classList.add('active');
+            
+            // メッセージをクリア
+            clearMessage();
         }
 
-        // メッセージクリア関数
+        // メッセージ表示
+        function showMessage(message, type = 'error') {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="${type}-message">${message}</div>`;
+        }
+
         function clearMessage() {
-            const messageElement = document.getElementById('message');
-            messageElement.style.display = 'none';
+            document.getElementById('messageArea').innerHTML = '';
         }
 
-        // ログインフォーム処理
+        // ログイン処理
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            clearMessage();
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            // バリデーション
-            if (!email || !password) {
-                showMessage('メールアドレスとパスワードを入力してください');
-                return;
-            }
-
-            if (!email.includes('@')) {
-                showMessage('有効なメールアドレスを入力してください');
-                return;
-            }
-
-            if (password.length < 6) {
-                showMessage('パスワードは6文字以上で入力してください');
-                return;
-            }
-
-            // 統一認証システムでログイン
-            const result = window.UnifiedAuth.login(email, password);
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
             
-            if (result.success) {
-                showMessage('ログインに成功しました！', 'success');
-                
-                // ダッシュボードにリダイレクト
+            if (window.UnifiedAuth && window.UnifiedAuth.login(email, password)) {
+                showMessage('ログインに成功しました', 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1000);
             } else {
-                showMessage(result.error || 'ログインに失敗しました');
+                showMessage('メールアドレスまたはパスワードが間違っています');
             }
         });
 
-        // ページ読み込み時の処理
-        document.addEventListener('DOMContentLoaded', function() {
-            // アカウント削除チェック
-            checkAccountDeletion();
+        // 新規登録処理
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            // 既にログイン済みの場合はリダイレクト（削除フラグがない場合のみ）
-            if (!localStorage.getItem('rentpipe_account_deleted')) {
-                setTimeout(() => {
-                    if (window.UnifiedAuth && window.UnifiedAuth.isAuthenticated()) {
-                        console.log('既にログイン済み、ダッシュボードにリダイレクト');
-                        window.location.href = 'index.html';
-                    }
-                }, 500);
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+            
+            if (password !== passwordConfirm) {
+                showMessage('パスワードが一致しません');
+                return;
+            }
+            
+            // デモ環境では新規登録を制限
+            showMessage('デモ環境では新規登録はできません。デモアカウントをご利用ください。');
+        });
+
+        // パスワードリセット
+        function showResetPassword() {
+            showMessage('デモ環境ではパスワードリセット機能は無効です。デモアカウントをご利用ください。');
+        }
+
+        // デモアカウント自動入力（開発用）
+        document.addEventListener('DOMContentLoaded', function() {
+            // URLパラメータで自動ログインを確認
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === 'true') {
+                document.getElementById('loginEmail').value = 'demo@rentpipe.jp';
+                document.getElementById('loginPassword').value = 'demo123';
+                showMessage('デモアカウント情報が入力されました', 'success');
             }
         });
     </script>

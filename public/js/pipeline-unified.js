@@ -1,4 +1,4 @@
-// RentPipe パイプライン管理機能（統一データ管理対応版・修正版）
+// RentPipe パイプライン管理機能（スマホメニュー改良版）
 class PipelineManager {
     constructor() {
         this.dataManager = null;
@@ -21,7 +21,7 @@ class PipelineManager {
         // イベントリスナーの設定
         this.setupEventListeners();
         
-        console.log('✅ 統一対応パイプライン管理システム準備完了');
+        console.log('✅ 統一対応パイプライン管理システム準備完了（スマホメニュー改良版）');
     }
 
     async waitForDataManager() {
@@ -49,7 +49,6 @@ class PipelineManager {
             console.log(`📊 パイプラインデータ読み込み: ${customers.length}件`);
             
             this.renderPipeline(customers);
-            this.updateStats(customers);
             
         } catch (error) {
             console.error('❌ パイプラインデータ読み込みエラー:', error);
@@ -100,50 +99,107 @@ class PipelineManager {
             '低': '🟢'
         };
 
-        const budgetText = customer.preferences?.budgetMin && customer.preferences?.budgetMax ? 
-            `${Math.floor(customer.preferences.budgetMin / 10000)}万〜${Math.floor(customer.preferences.budgetMax / 10000)}万円` : 
-            '予算未設定';
+        const urgencyClasses = {
+            '高': 'urgency-high',
+            '中': 'urgency-medium', 
+            '低': 'urgency-low'
+        };
 
-        const areas = customer.preferences?.areas?.slice(0, 2).join(', ') || 'エリア未設定';
+        // デバイス判定
+        const isMobile = window.innerWidth <= 768;
 
-        return `
-            <div class="pipeline-card" 
-                 draggable="true" 
-                 data-customer-id="${customer.id}">
-                <div class="card-header">
-                    <div class="customer-name">
-                        ${urgencyIcons[customer.urgency] || '⚪'} ${customer.name}
+        // 予算テキスト（モバイルでは短縮表示）
+        let budgetText = '予算未設定';
+        if (customer.preferences?.budgetMin && customer.preferences?.budgetMax) {
+            const minBudget = Math.floor(customer.preferences.budgetMin / 10000);
+            const maxBudget = Math.floor(customer.preferences.budgetMax / 10000);
+            budgetText = isMobile ? 
+                `${minBudget}～${maxBudget}万` : 
+                `${minBudget}万〜${maxBudget}万円`;
+        }
+
+        // エリアテキスト（モバイルでは最初の1つのみ）
+        let areasText = 'エリア未設定';
+        if (customer.preferences?.areas && customer.preferences.areas.length > 0) {
+            areasText = isMobile ? 
+                customer.preferences.areas[0] : 
+                customer.preferences.areas.slice(0, 2).join('、');
+        }
+
+        // 最終更新日
+        const lastUpdated = new Date(customer.updatedAt).toLocaleDateString('ja-JP', 
+            isMobile ? { month: 'numeric', day: 'numeric' } : 
+            { year: 'numeric', month: 'numeric', day: 'numeric' }
+        );
+
+        if (isMobile) {
+            // モバイル用：よりコンパクトなカード
+            return `
+                <div class="pipeline-card" 
+                     draggable="true" 
+                     data-customer-id="${customer.id}">
+                    <div class="card-header">
+                        <div class="customer-name">
+                            ${urgencyIcons[customer.urgency] || '⚪'} ${customer.name}
+                            <span class="urgency-indicator ${urgencyClasses[customer.urgency] || 'urgency-medium'}"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">💰</span>
+                            <span class="detail-text">${budgetText}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-icon">📍</span>
+                            <span class="detail-text">${areasText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <span class="update-time">${lastUpdated}</span>
                     </div>
                 </div>
-                
-                <div class="card-details">
-                    <div class="detail-row">
-                        <span class="detail-icon">💰</span>
-                        <span class="detail-text">${budgetText}</span>
+            `;
+        } else {
+            // デスクトップ用：詳細表示
+            return `
+                <div class="pipeline-card" 
+                     draggable="true" 
+                     data-customer-id="${customer.id}">
+                    <div class="card-header">
+                        <div class="customer-name">
+                            ${urgencyIcons[customer.urgency] || '⚪'} ${customer.name}
+                        </div>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-icon">📍</span>
-                        <span class="detail-text">${areas}</span>
+                    
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <span class="detail-icon">💰</span>
+                            <span class="detail-text">${budgetText}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-icon">📍</span>
+                            <span class="detail-text">${areasText}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-icon">📱</span>
+                            <span class="detail-text">${customer.phone || '未登録'}</span>
+                        </div>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-icon">📱</span>
-                        <span class="detail-text">${customer.phone || '未登録'}</span>
+                    
+                    ${customer.notes ? `
+                        <div class="card-notes">
+                            ${customer.notes.length > 50 ? customer.notes.substring(0, 50) + '...' : customer.notes}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="card-footer">
+                        <span class="update-time">${lastUpdated}</span>
                     </div>
                 </div>
-                
-                ${customer.notes ? `
-                    <div class="card-notes">
-                        ${customer.notes.length > 50 ? customer.notes.substring(0, 50) + '...' : customer.notes}
-                    </div>
-                ` : ''}
-                
-                <div class="card-footer">
-                    <span class="update-time">
-                        ${new Date(customer.updatedAt).toLocaleDateString('ja-JP')}
-                    </span>
-                </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     setupEventListeners() {
@@ -152,6 +208,14 @@ class PipelineManager {
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.loadPipeline());
         }
+
+        // リサイズイベント：画面サイズ変更時にカード再生成
+        window.addEventListener('resize', () => {
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => {
+                this.loadPipeline(); // カードを再生成
+            }, 250);
+        });
     }
 
     setupDragAndDrop(container) {
@@ -176,7 +240,7 @@ class PipelineManager {
 
             // スマホ版：長押し処理
             card.addEventListener('touchstart', (e) => {
-                this.handleTouchStart(e, card.dataset.customerId);
+                this.handleTouchStart(e, card.dataset.customerId, card);
             });
 
             card.addEventListener('touchend', (e) => {
@@ -272,47 +336,10 @@ class PipelineManager {
         console.log('📡 データ変更イベント送信');
     }
 
-    updateStats(customers) {
-        const stats = this.dataManager.getDataStatistics();
-        
-        // 基本統計の更新
-        this.updateStatElement('totalCustomers', stats.totalCustomers);
-        this.updateStatElement('thisMonthNew', stats.thisMonthNew);
-        this.updateStatElement('thisMonthCompleted', stats.thisMonthCompleted);
-        this.updateStatElement('conversionRate', `${stats.conversionRate}%`);
-
-        // 平均滞在期間の計算
-        const avgDuration = this.calculateAverageDuration(customers);
-        this.updateStatElement('avgDuration', avgDuration);
-    }
-
-    updateStatElement(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value;
-        }
-    }
-
-    calculateAverageDuration(customers) {
-        const completedCustomers = customers.filter(c => c.pipelineStatus === '完了');
-        if (completedCustomers.length === 0) return '-';
-
-        let totalDays = 0;
-        completedCustomers.forEach(customer => {
-            const created = new Date(customer.createdAt);
-            const updated = new Date(customer.updatedAt);
-            const diffTime = Math.abs(updated - created);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            totalDays += diffDays;
-        });
-
-        const avgDays = Math.round(totalDays / completedCustomers.length);
-        return `${avgDays}日`;
-    }
-
-    // タッチイベント処理（スマートフォン対応）
-    handleTouchStart(event, customerId) {
+    // タッチイベント処理（スマートフォン対応・改良版）
+    handleTouchStart(event, customerId, cardElement) {
         this.touchCustomerId = customerId;
+        this.touchCardElement = cardElement;
         
         // 長押し判定用タイマーを開始
         this.longPressTimeout = setTimeout(() => {
@@ -321,7 +348,13 @@ class PipelineManager {
                 navigator.vibrate(50);
             }
             
-            this.showMobileStatusMenu(customerId);
+            // 視覚的フィードバック
+            cardElement.classList.add('long-press');
+            setTimeout(() => {
+                cardElement.classList.remove('long-press');
+            }, 300);
+            
+            this.showMobileStatusMenuSide(customerId, cardElement);
         }, this.touchThreshold);
         
         console.log(`👆 長押し開始: ${customerId}`);
@@ -337,130 +370,161 @@ class PipelineManager {
             this.longPressTimeout = null;
         }
         this.touchCustomerId = null;
+        this.touchCardElement = null;
     }
 
-    showMobileStatusMenu(customerId) {
+    showMobileStatusMenuSide(customerId, cardElement) {
         const customer = this.dataManager.getCustomerById(customerId);
         if (!customer) return;
 
         const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
         const currentStatus = customer.pipelineStatus;
 
-        // モバイル用ステータス選択メニューを作成
-        this.createMobileStatusDialog(customer, statuses, currentStatus);
+        // カードの位置を取得
+        const cardRect = cardElement.getBoundingClientRect();
+        
+        // メニューを作成
+        this.createMobileStatusMenuSide(customer, statuses, currentStatus, cardRect);
     }
 
-    createMobileStatusDialog(customer, statuses, currentStatus) {
-        // 既存のダイアログを削除
-        const existingDialog = document.getElementById('mobileStatusDialog');
-        if (existingDialog) {
-            existingDialog.remove();
+    createMobileStatusMenuSide(customer, statuses, currentStatus, cardRect) {
+        // 既存のメニューを削除
+        const existingMenu = document.getElementById('mobileStatusMenuSide');
+        if (existingMenu) {
+            existingMenu.remove();
         }
 
-        // オーバーレイとダイアログを作成
+        // サイドメニューを作成
+        const menu = document.createElement('div');
+        menu.id = 'mobileStatusMenuSide';
+        menu.style.cssText = `
+            position: fixed;
+            left: ${cardRect.right + 10}px;
+            top: ${cardRect.top}px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 140px;
+            max-width: 160px;
+            animation: slideInLeft 0.2s ease;
+            border: 1px solid #e2e8f0;
+        `;
+
+        // 画面端での位置調整
+        if (cardRect.right + 170 > window.innerWidth) {
+            menu.style.left = `${cardRect.left - 170}px`;
+        }
+        if (cardRect.top + 200 > window.innerHeight) {
+            menu.style.top = `${window.innerHeight - 220}px`;
+        }
+
+        // ヘッダー
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 0.75rem;
+            background: #1e3a8a;
+            color: white;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        `;
+        header.textContent = customer.name;
+
+        menu.appendChild(header);
+
+        // ステータスボタン
+        statuses.forEach(status => {
+            const button = document.createElement('button');
+            button.style.cssText = `
+                display: block;
+                width: 100%;
+                padding: 0.5rem;
+                border: none;
+                background: ${status === currentStatus ? '#eff6ff' : 'white'};
+                color: ${status === currentStatus ? '#1e40af' : '#374151'};
+                text-align: left;
+                cursor: pointer;
+                font-size: 0.75rem;
+                font-weight: ${status === currentStatus ? '600' : '400'};
+                border-bottom: 1px solid #f1f5f9;
+                transition: background 0.2s ease;
+            `;
+            
+            button.textContent = status === currentStatus ? `✓ ${status}` : status;
+            
+            button.addEventListener('click', () => {
+                this.selectMobileStatusSide(customer.id, status);
+            });
+            
+            button.addEventListener('mouseover', () => {
+                if (status !== currentStatus) {
+                    button.style.background = '#f9fafb';
+                }
+            });
+            
+            button.addEventListener('mouseout', () => {
+                if (status !== currentStatus) {
+                    button.style.background = 'white';
+                }
+            });
+
+            menu.appendChild(button);
+        });
+
+        // 閉じるボタン
+        const closeButton = document.createElement('button');
+        closeButton.style.cssText = `
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            border: none;
+            background: #f9fafb;
+            color: #6b7280;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            border-radius: 0 0 8px 8px;
+        `;
+        closeButton.textContent = '閉じる';
+        closeButton.addEventListener('click', () => {
+            this.closeMobileStatusMenuSide();
+        });
+
+        menu.appendChild(closeButton);
+
+        // 背景オーバーレイ
         const overlay = document.createElement('div');
-        overlay.id = 'mobileStatusDialog';
-        overlay.className = 'mobile-status-overlay';
         overlay.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease;
+            background: rgba(0, 0, 0, 0.1);
+            z-index: 999;
         `;
-
-        const dialog = document.createElement('div');
-        dialog.className = 'mobile-status-dialog';
-        dialog.style.cssText = `
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            max-width: 320px;
-            width: 100%;
-            animation: slideUp 0.3s ease;
-        `;
-
-        // ダイアログ内容
-        dialog.innerHTML = `
-            <div class="dialog-header">
-                <h3 style="margin: 0 0 1rem 0; color: #1e3a8a; text-align: center;">
-                    📈 ${customer.name}
-                </h3>
-                <p style="margin: 0 0 1.5rem 0; color: #6b7280; text-align: center; font-size: 0.9rem;">
-                    移動先のステータスを選択してください
-                </p>
-            </div>
-            
-            <div class="status-options">
-                ${statuses.map(status => `
-                    <button class="status-option ${status === currentStatus ? 'current' : ''}" 
-                            onclick="selectMobileStatus('${customer.id}', '${status}')"
-                            style="
-                                display: block;
-                                width: 100%;
-                                padding: 0.75rem;
-                                margin-bottom: 0.5rem;
-                                border: 2px solid ${status === currentStatus ? '#3b82f6' : '#e5e7eb'};
-                                background: ${status === currentStatus ? '#eff6ff' : 'white'};
-                                color: ${status === currentStatus ? '#1e40af' : '#374151'};
-                                border-radius: 8px;
-                                font-weight: ${status === currentStatus ? '600' : '400'};
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                            ">
-                        ${status === currentStatus ? '✓ ' : ''}${status}
-                        ${status === currentStatus ? ' (現在)' : ''}
-                    </button>
-                `).join('')}
-            </div>
-            
-            <div class="dialog-footer" style="margin-top: 1rem;">
-                <button onclick="closeMobileStatusDialog()" 
-                        style="
-                            width: 100%;
-                            padding: 0.75rem;
-                            border: 1px solid #d1d5db;
-                            background: white;
-                            color: #374151;
-                            border-radius: 8px;
-                            font-weight: 500;
-                            cursor: pointer;
-                        ">
-                    キャンセル
-                </button>
-            </div>
-        `;
-
-        overlay.appendChild(dialog);
-        document.body.appendChild(overlay);
-
-        // オーバーレイクリックで閉じる
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                this.closeMobileStatusDialog();
-            }
+        overlay.addEventListener('click', () => {
+            this.closeMobileStatusMenuSide();
         });
 
-        console.log('📱 モバイルステータスメニュー表示');
+        document.body.appendChild(overlay);
+        document.body.appendChild(menu);
+
+        console.log('📱 サイドメニュー表示');
     }
 
-    closeMobileStatusDialog() {
-        const dialog = document.getElementById('mobileStatusDialog');
-        if (dialog) {
-            dialog.remove();
-        }
+    closeMobileStatusMenuSide() {
+        const menu = document.getElementById('mobileStatusMenuSide');
+        const overlay = document.querySelector('div[style*="rgba(0, 0, 0, 0.1)"]');
+        
+        if (menu) menu.remove();
+        if (overlay) overlay.remove();
     }
 
-    selectMobileStatus(customerId, newStatus) {
-        this.closeMobileStatusDialog();
+    selectMobileStatusSide(customerId, newStatus) {
+        this.closeMobileStatusMenuSide();
         
         const customer = this.dataManager.getCustomerById(customerId);
         if (customer && customer.pipelineStatus !== newStatus) {
@@ -491,6 +555,8 @@ class PipelineManager {
             color: ${type === 'success' ? '#065f46' : '#991b1b'};
             font-weight: 500;
             animation: slideInRight 0.3s ease;
+            font-size: 0.9rem;
+            max-width: 300px;
         `;
         
         document.body.appendChild(messageElement);
@@ -503,51 +569,24 @@ class PipelineManager {
     }
 }
 
-// グローバル関数（HTMLとモバイルダイアログから呼び出される）
+// グローバル関数（HTMLから呼び出される）
 function refreshPipeline() {
     if (window.pipelineManager) {
         window.pipelineManager.loadPipeline();
     }
 }
 
-function selectMobileStatus(customerId, newStatus) {
-    if (window.pipelineManager) {
-        window.pipelineManager.selectMobileStatus(customerId, newStatus);
-    }
-}
-
-function closeMobileStatusDialog() {
-    if (window.pipelineManager) {
-        window.pipelineManager.closeMobileStatusDialog();
-    }
-}
-
 // CSS アニメーション追加
 const animationCSS = `
 <style>
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+@keyframes slideInLeft {
+    from { transform: translateX(-10px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes slideInRight {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
-}
-
-.status-option:hover {
-    background: #f3f4f6 !important;
-    border-color: #9ca3af !important;
-}
-
-.status-option.current:hover {
-    background: #dbeafe !important;
-    border-color: #2563eb !important;
 }
 </style>
 `;
@@ -568,4 +607,4 @@ if (document.readyState === 'loading') {
     window.pipelineManager = pipelineManager;
 }
 
-console.log('✅ 統一対応パイプライン管理スクリプト準備完了（修正版）');
+console.log('✅ 統一対応パイプライン管理スクリプト準備完了（サイドメニュー版）');
