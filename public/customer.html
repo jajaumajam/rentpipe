@@ -69,32 +69,7 @@
             border-color: #3b82f6;
         }
         
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #1e3a8a;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-label {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
+        /* 統計カードを削除（簡素化） */
         
         .results-header {
             display: flex;
@@ -106,6 +81,7 @@
         .results-count {
             color: #64748b;
             font-size: 0.9rem;
+            font-weight: 500;
         }
         
         .customers-grid {
@@ -255,10 +231,6 @@
                 grid-template-columns: 1fr;
             }
             
-            .stats-row {
-                grid-template-columns: 1fr;
-            }
-            
             .customers-grid {
                 grid-template-columns: 1fr;
             }
@@ -276,7 +248,7 @@
         <div class="customer-header">
             <div class="customer-title">
                 <h1>👥 顧客管理</h1>
-                <p>顧客情報を一元管理します</p>
+                <p>顧客情報を管理します</p>
             </div>
             <div class="customer-actions">
                 <button class="btn btn-secondary" onclick="refreshCustomers()">
@@ -288,23 +260,7 @@
             </div>
         </div>
         
-        <!-- 統計カード -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-value" id="totalCustomers">-</div>
-                <div class="stat-label">総顧客数</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="thisMonthCustomers">-</div>
-                <div class="stat-label">今月新規</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="completedCustomers">-</div>
-                <div class="stat-label">成約済み</div>
-            </div>
-        </div>
-        
-        <!-- フィルター・検索 -->
+        <!-- フィルター・検索のみ（統計カードは削除） -->
         <div class="filters-container">
             <div class="filters-grid">
                 <div class="form-group">
@@ -335,7 +291,7 @@
             </div>
         </div>
         
-        <!-- 結果表示 -->
+        <!-- 結果表示（シンプルに） -->
         <div class="results-header">
             <div class="results-count" id="resultsCount">-</div>
         </div>

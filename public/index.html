@@ -22,9 +22,10 @@
             margin-bottom: 0.5rem;
         }
         
+        /* 簡素化された統計グリッド - 最重要指標のみ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -55,6 +56,7 @@
             font-weight: 500;
         }
         
+        /* 簡略化されたセクション */
         .dashboard-section {
             background: white;
             border-radius: 12px;
@@ -65,7 +67,7 @@
         
         .section-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
         }
@@ -77,9 +79,10 @@
             margin: 0;
         }
         
+        /* パイプライン概要の簡素化 */
         .pipeline-stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 1rem;
         }
         
@@ -90,6 +93,16 @@
             text-align: center;
         }
         
+        .pipeline-stat-item .stat-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .pipeline-stat-item .stat-label {
+            font-size: 0.875rem;
+        }
+        
+        /* 最近の活動 */
         .activity-item {
             display: flex;
             align-items: center;
@@ -125,19 +138,69 @@
             color: #64748b;
         }
         
+        /* クイックアクション */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .action-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .action-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .action-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .action-desc {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
             
             .pipeline-stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
             }
         }
         
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .pipeline-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -151,30 +214,41 @@
             <p>RentPipe - 賃貸営業を、流れるように</p>
         </div>
         
-        <!-- 統計カード -->
+        <!-- 簡素化された重要指標のみ -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="total-customers">-</div>
                 <div class="stat-label">総顧客数</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="this-month-new">-</div>
-                <div class="stat-label">今月新規</div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-value" id="this-month-completed">-</div>
                 <div class="stat-label">今月成約</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="conversion-rate">-%</div>
-                <div class="stat-label">成約率</div>
-            </div>
         </div>
         
-        <!-- パイプライン概要 -->
+        <!-- クイックアクション -->
+        <div class="quick-actions">
+            <a href="customer-form.html" class="action-card">
+                <span class="action-icon">➕</span>
+                <div class="action-title">新規顧客登録</div>
+                <div class="action-desc">新しい顧客を登録</div>
+            </a>
+            <a href="customer.html" class="action-card">
+                <span class="action-icon">👥</span>
+                <div class="action-title">顧客管理</div>
+                <div class="action-desc">顧客情報の管理・編集</div>
+            </a>
+            <a href="pipeline.html" class="action-card">
+                <span class="action-icon">📈</span>
+                <div class="action-title">パイプライン</div>
+                <div class="action-desc">進捗状況の確認・更新</div>
+            </a>
+        </div>
+        
+        <!-- パイプライン概要（簡素化） -->
         <div class="dashboard-section">
             <div class="section-header">
-                <h2 class="section-title">📈 パイプライン概要</h2>
+                <h2 class="section-title">📈 進捗状況</h2>
             </div>
             <div id="pipeline-overview">
                 <div class="pipeline-stats-grid">
