@@ -1,189 +1,334 @@
-// 顧客入力フォーム制御
+// RentPipe 顧客フォーム機能（統一データ管理対応版）
 class CustomerFormManager {
     constructor() {
         this.currentStep = 1;
         this.totalSteps = 4;
         this.formData = {};
+        this.dataManager = null;
+        this.isEditMode = false;
+        this.editCustomerId = null;
+        
         this.init();
     }
 
-    init() {
-        this.updateProgress();
-        this.bindEvents();
-        this.loadAgentInfo();
-    }
-
-    loadAgentInfo() {
-        // URLパラメータからエージェント情報を取得
-        const urlParams = new URLSearchParams(window.location.search);
-        this.agentId = urlParams.get('agent') || 'demo-agent';
-        this.agentName = urlParams.get('name') || 'デモエージェント';
+    async init() {
+        console.log('📝 顧客フォーム管理システム初期化中...');
         
-        console.log(`エージェント: ${this.agentName} (ID: ${this.agentId})`);
+        // 統一データ管理システムの準備を待つ
+        await this.waitForDataManager();
+        
+        // URLパラメータをチェック（編集モード判定）
+        this.checkEditMode();
+        
+        // プログレスバーを初期化
+        this.updateProgress();
+        
+        console.log('✅ 統一対応顧客フォーム準備完了');
     }
 
-    bindEvents() {
-        // フォーム送信
-        const form = document.getElementById('customerForm');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.submitForm();
+    async waitForDataManager() {
+        return new Promise((resolve) => {
+            if (window.UnifiedDataManager) {
+                this.dataManager = window.UnifiedDataManager;
+                resolve();
+            } else {
+                setTimeout(() => {
+                    this.dataManager = window.UnifiedDataManager;
+                    resolve();
+                }, 500);
+            }
+        });
+    }
+
+    checkEditMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit');
+        
+        if (editId) {
+            this.isEditMode = true;
+            this.editCustomerId = editId;
+            this.loadCustomerForEdit(editId);
+            
+            // ページタイトルを更新
+            const header = document.querySelector('.form-header h1');
+            if (header) {
+                header.textContent = '顧客情報編集';
+            }
+            const description = document.querySelector('.form-header p');
+            if (description) {
+                description.textContent = '顧客情報を編集してください';
+            }
+        }
+    }
+
+    loadCustomerForEdit(customerId) {
+        if (!this.dataManager) {
+            console.error('❌ 統一データ管理システムが利用できません');
+            return;
+        }
+
+        const customer = this.dataManager.getCustomerById(customerId);
+        if (!customer) {
+            alert('顧客情報が見つかりません。顧客管理画面に戻ります。');
+            window.location.href = 'customer.html';
+            return;
+        }
+
+        // フォームデータに設定
+        this.formData = {
+            name: customer.name || '',
+            email: customer.email || '',
+            phone: customer.phone || '',
+            age: customer.age || '',
+            occupation: customer.occupation || '',
+            annualIncome: customer.annualIncome || '',
+            budgetMin: customer.preferences?.budgetMin || '',
+            budgetMax: customer.preferences?.budgetMax || '',
+            areas: customer.preferences?.areas || [],
+            roomType: customer.preferences?.roomType || '',
+            requirements: customer.preferences?.requirements || [],
+            notes: customer.notes || '',
+            contactTime: customer.contactTime || '',
+            urgency: customer.urgency || '中'
+        };
+
+        // フォームに値を設定
+        setTimeout(() => {
+            this.populateForm();
+        }, 100);
+    }
+
+    populateForm() {
+        // 基本情報の設定
+        const fields = ['name', 'email', 'phone', 'age', 'occupation', 'annualIncome', 'notes', 'contactTime'];
+        fields.forEach(field => {
+            const element = document.querySelector(`[name="${field}"]`);
+            if (element && this.formData[field]) {
+                element.value = this.formData[field];
+            }
+        });
+
+        // 予算の設定
+        const budgetMinElement = document.querySelector('[name="budgetMin"]');
+        const budgetMaxElement = document.querySelector('[name="budgetMax"]');
+        if (budgetMinElement && this.formData.budgetMin) {
+            budgetMinElement.value = this.formData.budgetMin;
+        }
+        if (budgetMaxElement && this.formData.budgetMax) {
+            budgetMaxElement.value = this.formData.budgetMax;
+        }
+
+        // エリアの設定
+        if (this.formData.areas && this.formData.areas.length > 0) {
+            this.formData.areas.forEach(area => {
+                const checkbox = document.querySelector(`[name="areas"][value="${area}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
             });
+        }
+
+        // 間取りの設定
+        const roomTypeElement = document.querySelector('[name="roomType"]');
+        if (roomTypeElement && this.formData.roomType) {
+            roomTypeElement.value = this.formData.roomType;
+        }
+
+        // こだわり条件の設定
+        if (this.formData.requirements && this.formData.requirements.length > 0) {
+            this.formData.requirements.forEach(requirement => {
+                const checkbox = document.querySelector(`[name="requirements"][value="${requirement}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
+        // 緊急度の設定
+        const urgencyElement = document.querySelector('[name="urgency"]');
+        if (urgencyElement && this.formData.urgency) {
+            urgencyElement.value = this.formData.urgency;
         }
     }
 
     updateProgress() {
         // プログレスバーの更新
-        document.querySelectorAll('.progress-step').forEach((step, index) => {
-            const stepNum = index + 1;
-            const circle = step.querySelector('.step-circle');
+        for (let i = 1; i <= this.totalSteps; i++) {
+            const stepCircle = document.querySelector(`.step-circle[data-step="${i}"]`);
+            const stepElement = document.querySelector(`[data-step="${i}"]`);
             
-            if (stepNum < this.currentStep) {
-                circle.classList.add('completed');
-                circle.classList.remove('active');
-            } else if (stepNum === this.currentStep) {
-                circle.classList.add('active');
-                circle.classList.remove('completed');
-            } else {
-                circle.classList.remove('active', 'completed');
+            if (stepCircle) {
+                stepCircle.classList.remove('active', 'completed');
+                if (i === this.currentStep) {
+                    stepCircle.classList.add('active');
+                } else if (i < this.currentStep) {
+                    stepCircle.classList.add('completed');
+                }
+            }
+        }
+
+        // フォームセクションの表示切り替え
+        document.querySelectorAll('.form-section').forEach((section, index) => {
+            section.classList.remove('active');
+            if (index + 1 === this.currentStep) {
+                section.classList.add('active');
             }
         });
 
-        // フォームセクションの表示/非表示
-        document.querySelectorAll('.form-section').forEach((section) => {
-            const sectionStep = parseInt(section.getAttribute('data-section'));
-            if (sectionStep === this.currentStep) {
-                section.classList.add('active');
-                section.style.display = 'block';
+        // ボタンの表示制御
+        const prevBtn = document.querySelector('.btn-prev');
+        const nextBtn = document.querySelector('.btn-next');
+        const submitBtn = document.querySelector('.btn-submit');
+
+        if (prevBtn) {
+            prevBtn.style.display = this.currentStep === 1 ? 'none' : 'inline-flex';
+        }
+
+        if (nextBtn && submitBtn) {
+            if (this.currentStep === this.totalSteps) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-flex';
+                submitBtn.textContent = this.isEditMode ? '✅ 更新する' : '✅ 登録する';
             } else {
-                section.classList.remove('active');
-                section.style.display = 'none';
+                nextBtn.style.display = 'inline-flex';
+                submitBtn.style.display = 'none';
             }
-        });
+        }
     }
 
     validateStep(step) {
-        let isValid = true;
-        
-        if (step === 1) {
-            // Step 1: 基本情報のバリデーション
-            const name = document.getElementById('name');
-            const email = document.getElementById('email');
-            const phone = document.getElementById('phone');
+        switch (step) {
+            case 1:
+                const name = document.querySelector('[name="name"]')?.value;
+                const email = document.querySelector('[name="email"]')?.value;
+                const phone = document.querySelector('[name="phone"]')?.value;
+                
+                if (!name) {
+                    alert('お名前を入力してください。');
+                    return false;
+                }
+                if (!email) {
+                    alert('メールアドレスを入力してください。');
+                    return false;
+                }
+                if (!phone) {
+                    alert('電話番号を入力してください。');
+                    return false;
+                }
+                break;
+            case 2:
+                // 希望条件は任意項目のため、バリデーション無し
+                break;
+            case 3:
+                // 詳細条件は任意項目のため、バリデーション無し
+                break;
+        }
+        return true;
+    }
+
+    nextStep() {
+        if (this.validateStep(this.currentStep)) {
+            this.collectStepData();
             
-            if (!name.value.trim()) {
-                alert('お名前を入力してください');
-                name.focus();
-                return false;
-            }
-            
-            if (!email.value.trim() || !email.validity.valid) {
-                alert('正しいメールアドレスを入力してください');
-                email.focus();
-                return false;
-            }
-            
-            if (!phone.value.trim()) {
-                alert('電話番号を入力してください');
-                phone.focus();
-                return false;
-            }
-        } else if (step === 2) {
-            // Step 2: 希望条件のバリデーション
-            const moveDate = document.getElementById('moveDate');
-            const budgetMin = document.getElementById('budgetMin');
-            const budgetMax = document.getElementById('budgetMax');
-            
-            if (!moveDate.value) {
-                alert('入居希望時期を選択してください');
-                moveDate.focus();
-                return false;
-            }
-            
-            if (!budgetMin.value || !budgetMax.value) {
-                alert('ご予算を入力してください');
-                budgetMin.focus();
-                return false;
-            }
-            
-            if (parseInt(budgetMin.value) > parseInt(budgetMax.value)) {
-                alert('予算の下限は上限より小さくしてください');
-                budgetMin.focus();
-                return false;
+            if (this.currentStep < this.totalSteps) {
+                this.currentStep++;
+                
+                // 確認画面の場合は概要生成
+                if (this.currentStep === 4) {
+                    this.generateConfirmationSummary();
+                }
+                
+                this.updateProgress();
             }
         }
-        
-        return isValid;
+    }
+
+    previousStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.updateProgress();
+        }
+    }
+
+    collectStepData() {
+        // 現在のステップのデータを収集
+        const currentSection = document.querySelector('.form-section.active');
+        if (!currentSection) return;
+
+        const inputs = currentSection.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                if (input.name === 'areas' || input.name === 'requirements') {
+                    if (!this.formData[input.name]) {
+                        this.formData[input.name] = [];
+                    }
+                    if (input.checked) {
+                        if (!this.formData[input.name].includes(input.value)) {
+                            this.formData[input.name].push(input.value);
+                        }
+                    } else {
+                        const index = this.formData[input.name].indexOf(input.value);
+                        if (index > -1) {
+                            this.formData[input.name].splice(index, 1);
+                        }
+                    }
+                }
+            } else {
+                this.formData[input.name] = input.value;
+            }
+        });
     }
 
     collectFormData() {
-        // 基本情報
-        this.formData.name = document.getElementById('name').value.trim();
-        this.formData.email = document.getElementById('email').value.trim();
-        this.formData.phone = document.getElementById('phone').value.trim();
-        this.formData.currentAddress = document.getElementById('currentAddress')?.value.trim() || '';
-        this.formData.occupation = document.getElementById('occupation')?.value || '';
-
-        // 希望条件
-        this.formData.moveDate = document.getElementById('moveDate').value;
-        this.formData.moveReason = document.getElementById('moveReason')?.value.trim() || '';
-        this.formData.budgetMin = parseInt(document.getElementById('budgetMin').value) || 0;
-        this.formData.budgetMax = parseInt(document.getElementById('budgetMax').value) || 0;
-        this.formData.areas = document.getElementById('areas')?.value.trim() || '';
-        this.formData.stationDistance = document.getElementById('stationDistance')?.value || '';
-        this.formData.buildingAge = document.getElementById('buildingAge')?.value || '';
-        this.formData.roomType = document.getElementById('roomType')?.value || '';
-
-        // 詳細条件
-        const requirements = [];
-        document.querySelectorAll('input[name="requirements"]:checked').forEach(cb => {
-            requirements.push(cb.value);
+        // 全フォームデータの収集
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            if (input.type === 'checkbox') {
+                if (input.name === 'areas' || input.name === 'requirements') {
+                    if (!this.formData[input.name]) {
+                        this.formData[input.name] = [];
+                    }
+                    if (input.checked && !this.formData[input.name].includes(input.value)) {
+                        this.formData[input.name].push(input.value);
+                    }
+                }
+            } else if (input.name) {
+                this.formData[input.name] = input.value;
+            }
         });
-        this.formData.requirements = requirements;
-        
-        // ペット情報
-        const petCheckbox = document.getElementById('req_pet');
-        if (petCheckbox && petCheckbox.checked) {
-            this.formData.petInfo = document.getElementById('petInfo')?.value.trim() || '';
-        }
-        
-        // その他
-        this.formData.notes = document.getElementById('notes')?.value.trim() || '';
     }
 
     generateConfirmationSummary() {
-        this.collectFormData();
-        const content = document.getElementById('confirmationContent');
-        
+        const content = document.querySelector('#confirmationContent');
         if (!content) return;
-        
-        let html = `
-            <div class="confirmation-grid">
+
+        const budgetText = this.formData.budgetMin && this.formData.budgetMax ? 
+            `${parseInt(this.formData.budgetMin).toLocaleString()}円 ～ ${parseInt(this.formData.budgetMax).toLocaleString()}円` : 
+            '未入力';
+
+        const html = `
+            <div class="confirmation-summary">
                 <h3>基本情報</h3>
                 <table class="confirmation-table">
-                    <tr><th>お名前</th><td>${this.formData.name}</td></tr>
-                    <tr><th>メールアドレス</th><td>${this.formData.email}</td></tr>
-                    <tr><th>電話番号</th><td>${this.formData.phone}</td></tr>
-                    <tr><th>現住所</th><td>${this.formData.currentAddress || '未入力'}</td></tr>
-                    <tr><th>ご職業</th><td>${this.formData.occupation || '未入力'}</td></tr>
+                    <tr><th>お名前</th><td>${this.formData.name || '未入力'}</td></tr>
+                    <tr><th>メールアドレス</th><td>${this.formData.email || '未入力'}</td></tr>
+                    <tr><th>電話番号</th><td>${this.formData.phone || '未入力'}</td></tr>
+                    <tr><th>年齢</th><td>${this.formData.age ? this.formData.age + '歳' : '未入力'}</td></tr>
+                    <tr><th>職業</th><td>${this.formData.occupation || '未入力'}</td></tr>
+                    <tr><th>年収</th><td>${this.formData.annualIncome ? parseInt(this.formData.annualIncome).toLocaleString() + '円' : '未入力'}</td></tr>
                 </table>
                 
-                <h3>ご希望条件</h3>
+                <h3>希望条件</h3>
                 <table class="confirmation-table">
-                    <tr><th>入居希望時期</th><td>${this.formData.moveDate}</td></tr>
-                    <tr><th>お引越し理由</th><td>${this.formData.moveReason || '未入力'}</td></tr>
-                    <tr><th>ご予算</th><td>${this.formData.budgetMin}万円 〜 ${this.formData.budgetMax}万円</td></tr>
-                    <tr><th>希望エリア</th><td>${this.formData.areas || '未入力'}</td></tr>
-                    <tr><th>駅徒歩</th><td>${this.formData.stationDistance ? this.formData.stationDistance + '分以内' : '未入力'}</td></tr>
-                    <tr><th>築年数</th><td>${this.formData.buildingAge ? this.formData.buildingAge + '年以内' : '未入力'}</td></tr>
+                    <tr><th>予算</th><td>${budgetText}</td></tr>
+                    <tr><th>希望エリア</th><td>${this.formData.areas && this.formData.areas.length > 0 ? this.formData.areas.join('、') : '未選択'}</td></tr>
                     <tr><th>間取り</th><td>${this.formData.roomType || '未入力'}</td></tr>
                 </table>
                 
                 <h3>詳細条件</h3>
                 <table class="confirmation-table">
-                    <tr><th>こだわり条件</th><td>${this.formData.requirements.length > 0 ? this.formData.requirements.join('、') : '未選択'}</td></tr>
-                    ${this.formData.petInfo ? `<tr><th>ペット情報</th><td>${this.formData.petInfo}</td></tr>` : ''}
+                    <tr><th>こだわり条件</th><td>${this.formData.requirements && this.formData.requirements.length > 0 ? this.formData.requirements.join('、') : '未選択'}</td></tr>
+                    <tr><th>連絡希望時間</th><td>${this.formData.contactTime || '未入力'}</td></tr>
+                    <tr><th>緊急度</th><td>${this.formData.urgency || '中'}</td></tr>
                     <tr><th>その他ご要望</th><td>${this.formData.notes || '未入力'}</td></tr>
                 </table>
             </div>
@@ -193,28 +338,106 @@ class CustomerFormManager {
     }
 
     async submitForm() {
-        // フォームデータを収集
-        this.collectFormData();
-        
-        // データを保存
-        const customerData = {
-            id: `customer_${Date.now()}`,
-            ...this.formData,
-            pipelineStatus: '初回相談',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            source: 'webform'
-        };
-        
-        // ローカルストレージに保存
-        const customers = JSON.parse(localStorage.getItem('rentpipe_demo_customers') || '[]');
-        customers.push(customerData);
-        localStorage.setItem('rentpipe_demo_customers', JSON.stringify(customers));
+        if (!this.dataManager) {
+            alert('システムエラーが発生しました。ページを再読み込みしてください。');
+            return;
+        }
+
+        try {
+            // フォームデータを収集
+            this.collectFormData();
+            
+            if (this.isEditMode) {
+                // 編集モード：既存顧客を更新
+                const updateData = {
+                    name: this.formData.name,
+                    email: this.formData.email,
+                    phone: this.formData.phone,
+                    age: this.formData.age ? parseInt(this.formData.age) : null,
+                    occupation: this.formData.occupation,
+                    annualIncome: this.formData.annualIncome ? parseInt(this.formData.annualIncome) : null,
+                    preferences: {
+                        budgetMin: this.formData.budgetMin ? parseInt(this.formData.budgetMin) : null,
+                        budgetMax: this.formData.budgetMax ? parseInt(this.formData.budgetMax) : null,
+                        areas: this.formData.areas || [],
+                        roomType: this.formData.roomType || '',
+                        requirements: this.formData.requirements || []
+                    },
+                    notes: this.formData.notes || '',
+                    contactTime: this.formData.contactTime || '',
+                    urgency: this.formData.urgency || '中',
+                    updatedAt: new Date().toISOString()
+                };
+
+                const success = this.dataManager.updateCustomer(this.editCustomerId, updateData);
+                
+                if (success) {
+                    this.showSuccessMessage(`${this.formData.name}様の情報を更新しました！`);
+                } else {
+                    throw new Error('顧客情報の更新に失敗しました');
+                }
+                
+            } else {
+                // 新規登録モード：新しい顧客を追加
+                const customerData = {
+                    name: this.formData.name,
+                    email: this.formData.email,
+                    phone: this.formData.phone,
+                    age: this.formData.age ? parseInt(this.formData.age) : null,
+                    occupation: this.formData.occupation,
+                    annualIncome: this.formData.annualIncome ? parseInt(this.formData.annualIncome) : null,
+                    pipelineStatus: '初回相談',
+                    preferences: {
+                        budgetMin: this.formData.budgetMin ? parseInt(this.formData.budgetMin) : null,
+                        budgetMax: this.formData.budgetMax ? parseInt(this.formData.budgetMax) : null,
+                        areas: this.formData.areas || [],
+                        roomType: this.formData.roomType || '',
+                        requirements: this.formData.requirements || []
+                    },
+                    notes: this.formData.notes || '',
+                    contactTime: this.formData.contactTime || '',
+                    urgency: this.formData.urgency || '中',
+                    source: 'webform',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                const newCustomer = this.dataManager.addCustomer(customerData);
+                
+                if (newCustomer) {
+                    this.showSuccessMessage(`${this.formData.name}様を顧客リストに追加しました！`);
+                } else {
+                    throw new Error('顧客登録に失敗しました');
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ 顧客フォーム送信エラー:', error);
+            alert(`${this.isEditMode ? '更新' : '登録'}に失敗しました。もう一度お試しください。`);
+        }
+    }
+
+    showSuccessMessage(message) {
+        // フォームを隠す
+        document.getElementById('customerForm').style.display = 'none';
+        document.querySelector('.progress-bar').style.display = 'none';
         
         // 成功メッセージを表示
-        document.getElementById('customerForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-        document.querySelector('.progress-bar').style.display = 'none';
+        const successDiv = document.getElementById('successMessage');
+        if (successDiv) {
+            successDiv.innerHTML = `
+                <div class="success-content">
+                    <div class="success-icon">✅</div>
+                    <h2>${this.isEditMode ? '更新完了' : '登録完了'}</h2>
+                    <p>${message}</p>
+                    <div class="success-actions">
+                        <a href="customer.html" class="btn btn-primary">顧客管理画面へ</a>
+                        ${this.isEditMode ? '' : '<button onclick="resetForm()" class="btn btn-secondary">続けて登録</button>'}
+                    </div>
+                </div>
+            `;
+            successDiv.style.display = 'block';
+        }
     }
 
     resetForm() {
@@ -227,41 +450,36 @@ class CustomerFormManager {
         // ステップ1に戻る
         this.currentStep = 1;
         this.formData = {};
+        this.isEditMode = false;
+        this.editCustomerId = null;
+        
+        // URLをクリア
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // ページタイトルを復元
+        const header = document.querySelector('.form-header h1');
+        if (header) {
+            header.textContent = '顧客情報登録';
+        }
+        const description = document.querySelector('.form-header p');
+        if (description) {
+            description.textContent = '詳細な顧客情報を登録します';
+        }
+        
         this.updateProgress();
     }
 }
 
 // グローバル関数として定義
 function nextStep() {
-    if (!window.formManager) {
-        console.error('FormManager not initialized');
-        return;
-    }
-    
-    if (formManager.validateStep(formManager.currentStep)) {
-        if (formManager.currentStep < formManager.totalSteps) {
-            formManager.currentStep++;
-            
-            // 確認画面の場合は概要生成
-            if (formManager.currentStep === 4) {
-                formManager.generateConfirmationSummary();
-            }
-            
-            formManager.updateProgress();
-        }
+    if (window.formManager) {
+        window.formManager.nextStep();
     }
 }
 
-// previousStepとprevStepの両方を定義
 function previousStep() {
-    if (!window.formManager) {
-        console.error('FormManager not initialized');
-        return;
-    }
-    
-    if (formManager.currentStep > 1) {
-        formManager.currentStep--;
-        formManager.updateProgress();
+    if (window.formManager) {
+        window.formManager.previousStep();
     }
 }
 
@@ -269,17 +487,23 @@ function prevStep() {
     previousStep();
 }
 
-function resetForm() {
-    if (!window.formManager) {
-        console.error('FormManager not initialized');
-        return;
+function submitForm() {
+    if (window.formManager) {
+        window.formManager.submitForm();
     }
-    formManager.resetForm();
+}
+
+function resetForm() {
+    if (window.formManager) {
+        window.formManager.resetForm();
+    }
 }
 
 // フォーム管理開始
 let formManager;
 document.addEventListener('DOMContentLoaded', () => {
     formManager = new CustomerFormManager();
-    window.formManager = formManager; // グローバルに公開
+    window.formManager = formManager;
 });
+
+console.log('✅ 統一対応顧客フォームスクリプト準備完了');
