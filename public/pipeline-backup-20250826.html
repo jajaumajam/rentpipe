@@ -6,46 +6,11 @@
     <title>パイプライン管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/pipeline-responsive.css">
-    <style>
-        /* Firebase統合用の追加スタイル */
-        .firebase-status {
-            background: #f0f9ff;
-            border: 1px solid #e0f2fe;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .firebase-connected {
-            color: #0369a1;
-        }
-        
-        .firebase-local {
-            color: #7c2d12;
-            background: #fef7ed;
-            border-color: #fed7aa;
-        }
-        
-        .firebase-connecting {
-            color: #f59e0b;
-            background: #fffbeb;
-            border-color: #fcd34d;
-        }
-    </style>
 </head>
 <body>
     <!-- ナビゲーションはnavigation.jsで動的に追加される -->
 
     <div class="pipeline-container">
-        <!-- Firebase接続状況表示（ボタン付き） -->
-        <div id="firebaseStatus" class="firebase-status firebase-local">
-            💾 ローカルストレージモード <button onclick="forceConnectFirebase()" style="margin-left:10px;padding:2px 8px;font-size:11px;border:1px solid #7c2d12;background:white;border-radius:4px;cursor:pointer;">🚀 Firebase接続</button>
-        </div>
-
         <div class="pipeline-header">
             <div class="header-left">
                 <h1>📈 パイプライン管理</h1>
@@ -58,7 +23,9 @@
             </div>
         </div>
 
-        <!-- パイプラインボード（既存デザイン維持） -->
+        <!-- 統計ダッシュボードを完全削除 -->
+
+        <!-- パイプラインボード -->
         <div class="pipeline-board">
             <div class="pipeline-column" data-status="初回相談">
                 <div class="column-header status-initial">
@@ -118,26 +85,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
-
-    <!-- 既存のスクリプト読み込み -->
+    <!-- JavaScript -->
     <script src="js/unified-auth.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/pipeline-unified.js"></script>
-    <!-- Firebase統合アドオン -->
-    <script src="js/pipeline-unified-firebase-addon.js"></script>
-    <!-- Firebase接続強制化（最後に読み込み） -->
-    <script src="js/pipeline-firebase-connector.js"></script>
-</body>
-</html>
-    <!-- データソース診断ツール -->
-    <script src="js/data-source-debugger.js"></script>
-    <script src="js/cross-page-sync.js"></script>
-    <script src="js/data-key-unifier.js"></script>
 </body>
 </html>

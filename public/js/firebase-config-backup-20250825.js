@@ -1,20 +1,16 @@
-// Firebase設定 - 本番モード（Phase2）新APIキー版
+// Firebase設定 - 本番モード（Phase2）
 console.log('🔧 RentPipe Phase2本番モードで起動中...');
 
-// 設定フラグ
+// 本番・デモ切り替えフラグ
 const DEMO_MODE = false; // Phase2: 本番モードに切り替え
-const DEBUG_MODE = true;
+const DEBUG_MODE = true; // デバッグログ有効
 
-// 無限ループ防止
-const urlParams = new URLSearchParams(window.location.search);
-const fallbackRequested = urlParams.has('fallback');
-
-if (!DEMO_MODE && !fallbackRequested) {
+if (!DEMO_MODE) {
     console.log('🔥 本番モード: Firebase接続開始...');
     
-    // Firebase本番設定（制限なし新APIキー）
+    // Firebase本番設定
     const firebaseConfig = {
-        apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+        apiKey: "AIzaSyDB-vj9ykVqsW-Iyh-zjZ_KV3-GMaEm0Ok,
         authDomain: "rentpipe-ab04e.firebaseapp.com",
         projectId: "rentpipe-ab04e",
         storageBucket: "rentpipe-ab04e.firebasestorage.app",
@@ -24,42 +20,34 @@ if (!DEMO_MODE && !fallbackRequested) {
 
     try {
         // Firebase初期化
-        if (typeof firebase !== 'undefined') {
-            const app = firebase.initializeApp(firebaseConfig);
-            window.db = firebase.firestore();
-            window.auth = firebase.auth();
-            
-            console.log('✅ Firebase初期化成功');
-            console.log(`🏢 Project ID: ${firebaseConfig.projectId}`);
-            console.log(`🔑 APIキー: ${firebaseConfig.apiKey.substring(0, 20)}...`);
-            
-            // 接続テスト（非同期・エラーでも続行）
-            window.db.collection('system').doc('connection-test').get()
-                .then((doc) => {
-                    console.log('✅ Firestore接続確認完了');
-                    console.log(`📊 接続テスト結果: exists=${doc.exists}`);
-                })
-                .catch(error => {
-                    console.warn('⚠️ Firestore接続テスト:', error.message);
-                });
-            
-        } else {
-            throw new Error('Firebase SDKが読み込まれていません');
-        }
+        const app = firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
+        window.auth = firebase.auth();
+        
+        console.log('✅ Firebase初期化成功');
+        
+        // Firestore接続テスト
+        window.db.collection('system').doc('test').get()
+            .then(() => {
+                console.log('✅ Firestore接続確認完了');
+            })
+            .catch(error => {
+                console.warn('⚠️ Firestore接続テスト:', error.message);
+            });
         
     } catch (error) {
         console.error('❌ Firebase初期化失敗:', error);
-        console.log('🔄 デモモードで続行します...');
-        initializeDemoMode();
+        
+        // 緊急時：デモモードにフォールバック
+        console.log('🔄 デモモードにフォールバックします...');
+        window.location.href = window.location.href + '?fallback=demo';
     }
     
 } else {
-    console.log('📱 デモモード: ローカルデータで動作します');
-    initializeDemoMode();
-}
-
-// デモモード初期化関数
-function initializeDemoMode() {
+    // デモモード（従来の処理）
+    console.log('📱 デモモード: マルチテナント対応のローカルデータで動作します');
+    
+    // ダミーFirebaseオブジェクト
     window.db = {
         collection: function(name) {
             if (DEBUG_MODE) console.log(`📊 デモ: ${name}コレクションアクセス`);
@@ -67,20 +55,16 @@ function initializeDemoMode() {
                 orderBy: function() { return this; },
                 limit: function() { return this; },
                 get: function() {
-                    if (DEBUG_MODE) console.log('📊 デモ: データ取得（空の結果）');
+                    if (DEBUG_MODE) console.log('📊 デモ: Firestoreデータ取得スキップ');
                     return Promise.resolve({
                         docs: [],
-                        size: 0,
-                        empty: true,
                         map: function() { return []; },
                         forEach: function() {}
                     });
                 },
                 add: function(data) {
                     if (DEBUG_MODE) console.log('📊 デモ: データ追加', data);
-                    return Promise.resolve({ 
-                        id: `demo-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
-                    });
+                    return Promise.resolve({ id: `demo-${Date.now()}` });
                 },
                 doc: function(id) {
                     return {
@@ -114,24 +98,12 @@ function initializeDemoMode() {
             setTimeout(() => callback(null), 100);
         },
         signInAnonymously: function() {
-            return Promise.resolve({ 
-                user: { 
-                    uid: 'demo-user-' + Date.now(),
-                    isAnonymous: true,
-                    metadata: {
-                        creationTime: new Date().toISOString()
-                    },
-                    providerData: []
-                } 
-            });
-        },
-        get currentUser() {
-            return null;
+            return Promise.resolve({ user: { uid: 'demo-user' } });
         }
     };
     
     window.firebase = {
-        initializeApp: function() { return { name: '[DEFAULT]', options: { projectId: 'demo' } }; },
+        initializeApp: function() { return {}; },
         firestore: function() { return window.db; },
         auth: function() { return window.auth; }
     };
@@ -139,30 +111,31 @@ function initializeDemoMode() {
     console.log('✅ デモモード初期化完了');
 }
 
-// マルチテナント対応データマネージャー（Phase2版）
+// マルチテナント対応データマネージャー（Phase2拡張版）
 window.FirebaseDataManager = {
+    
+    // 現在のテナントID取得
     getCurrentTenantId: function() {
-        if (window.auth && window.auth.currentUser) {
-            return window.auth.currentUser.uid;
-        }
+        // Phase2: 認証実装後はauth.currentUser.uidを使用
         return 'demo-tenant-001';
     },
     
+    // テナント別顧客データ取得
     getCustomers: async function() {
-        try {
-            if (DEMO_MODE || fallbackRequested) {
-                // デモモード：ローカルストレージから取得
+        if (DEMO_MODE) {
+            // デモモード：ローカルストレージから取得
+            try {
                 const stored = localStorage.getItem('rentpipe_demo_customers');
                 return stored ? JSON.parse(stored) : [];
-            }
-            
-            // 本番モード：Firestoreから取得
-            const tenantId = this.getCurrentTenantId();
-            if (!tenantId || tenantId === 'demo-tenant-001') {
-                console.warn('有効なテナントIDがありません');
+            } catch (error) {
+                console.error('デモデータ取得エラー:', error);
                 return [];
             }
-            
+        }
+        
+        // 本番モード：Firestoreから取得
+        try {
+            const tenantId = this.getCurrentTenantId();
             const snapshot = await window.db
                 .collection(`tenants/${tenantId}/customers`)
                 .orderBy('updatedAt', 'desc')
@@ -176,19 +149,20 @@ window.FirebaseDataManager = {
                 });
             });
             
-            console.log(`✅ Firestore顧客データ取得: ${customers.length}件`);
+            console.log(`✅ Firestore顧客データ取得完了: ${customers.length}件`);
             return customers;
             
         } catch (error) {
-            console.error('顧客データ取得エラー:', error);
+            console.error('Firestore顧客データ取得エラー:', error);
             return [];
         }
     },
     
+    // テナント別顧客データ保存
     saveCustomer: async function(customerData) {
-        try {
-            if (DEMO_MODE || fallbackRequested) {
-                // デモモード：ローカルストレージに保存
+        if (DEMO_MODE) {
+            // デモモード：ローカルストレージに保存
+            try {
                 const customers = await this.getCustomers();
                 const existingIndex = customers.findIndex(c => c.id === customerData.id);
                 
@@ -199,15 +173,17 @@ window.FirebaseDataManager = {
                 }
                 
                 localStorage.setItem('rentpipe_demo_customers', JSON.stringify(customers));
-                return customerData.id || `customer_${Date.now()}`;
+                return true;
+                
+            } catch (error) {
+                console.error('デモデータ保存エラー:', error);
+                return false;
             }
-            
-            // 本番モード：Firestoreに保存
+        }
+        
+        // 本番モード：Firestoreに保存
+        try {
             const tenantId = this.getCurrentTenantId();
-            if (!tenantId || tenantId === 'demo-tenant-001') {
-                throw new Error('有効なテナントIDがありません');
-            }
-            
             const docRef = customerData.id ? 
                 window.db.collection(`tenants/${tenantId}/customers`).doc(customerData.id) :
                 window.db.collection(`tenants/${tenantId}/customers`).doc();
@@ -223,30 +199,26 @@ window.FirebaseDataManager = {
             };
             
             await docRef.set(saveData, { merge: true });
-            console.log(`✅ Firestore顧客データ保存完了: ${docRef.id}`);
+            console.log('✅ Firestore顧客データ保存完了:', docRef.id);
             return docRef.id;
             
         } catch (error) {
-            console.error('顧客データ保存エラー:', error);
+            console.error('Firestore顧客データ保存エラー:', error);
             return false;
         }
     },
     
+    // 接続テスト
     testConnection: async function() {
+        if (DEMO_MODE) {
+            console.log('📱 デモモード：接続テストをスキップ');
+            return true;
+        }
+        
         try {
-            if (DEMO_MODE || fallbackRequested) {
-                console.log('📱 デモモード：接続テストをスキップ');
-                return true;
-            }
-            
-            if (!window.db) {
-                return false;
-            }
-            
-            await window.db.collection('system').doc('connection-test').get();
+            const testDoc = await window.db.collection('system').doc('connection-test').get();
             console.log('✅ Firebase接続テスト成功');
             return true;
-            
         } catch (error) {
             console.error('❌ Firebase接続テスト失敗:', error);
             return false;
@@ -254,24 +226,16 @@ window.FirebaseDataManager = {
     }
 };
 
-// 安全な初期化
+// 初期化処理
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 RentPipe Phase2 安全初期化開始...');
+    console.log('🚀 RentPipe Phase2 初期化開始...');
     
-    // 遅延実行で安全性を確保
+    // 接続テスト実行
     setTimeout(() => {
-        if (window.FirebaseDataManager) {
-            window.FirebaseDataManager.testConnection()
-                .then(result => {
-                    console.log(`🔗 接続状況: ${result ? 'Firebase成功' : 'デモモード継続'}`);
-                })
-                .catch(error => {
-                    console.warn('接続テスト実行エラー:', error.message);
-                });
-        }
+        window.FirebaseDataManager.testConnection();
     }, 1000);
     
     console.log('✅ RentPipe Phase2 準備完了');
 });
 
-console.log('🎉 Firebase Phase2設定ロード完了（新APIキー版）');
+console.log('🎉 Firebase Phase2設定ロード完了');

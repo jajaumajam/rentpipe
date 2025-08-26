@@ -69,8 +69,6 @@
             border-color: #3b82f6;
         }
         
-        /* 統計カードを削除（簡素化） */
-        
         .results-header {
             display: flex;
             justify-content: space-between;
@@ -220,6 +218,48 @@
             color: #374151;
         }
         
+        /* Firebase統合用の追加スタイル */
+        .firebase-status {
+            background: #f0f9ff;
+            border: 1px solid #e0f2fe;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .firebase-connected {
+            color: #0369a1;
+        }
+        
+        .firebase-local {
+            color: #7c2d12;
+            background: #fef7ed;
+            border-color: #fed7aa;
+        }
+        
+        /* 同期状況表示 */
+        .sync-status {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .sync-status.show {
+            opacity: 1;
+        }
+        
         @media (max-width: 768px) {
             .customer-header {
                 flex-direction: column;
@@ -245,6 +285,16 @@
     <!-- ナビゲーションはnavigation.jsで動的に追加される -->
 
     <div class="customer-container">
+        <!-- Firebase接続状況表示（最小限追加） -->
+        <div id="firebaseStatus" class="firebase-status firebase-local">
+            🔄 データベース接続確認中...
+        </div>
+        
+        <!-- 同期状況表示 -->
+        <div id="syncStatus" class="sync-status">
+            📡 データ同期中...
+        </div>
+
         <div class="customer-header">
             <div class="customer-title">
                 <h1>👥 顧客管理</h1>
@@ -260,7 +310,7 @@
             </div>
         </div>
         
-        <!-- フィルター・検索のみ（統計カードは削除） -->
+        <!-- 既存のフィルター・検索（変更なし） -->
         <div class="filters-container">
             <div class="filters-grid">
                 <div class="form-group">
@@ -291,20 +341,57 @@
             </div>
         </div>
         
-        <!-- 結果表示（シンプルに） -->
+        <!-- 既存の結果表示（変更なし） -->
         <div class="results-header">
             <div class="results-count" id="resultsCount">-</div>
         </div>
         
-        <!-- 顧客リスト -->
+        <!-- 既存の顧客リスト（変更なし） -->
         <div class="customers-grid" id="customersList">
             <!-- 顧客カードが動的に挿入される -->
         </div>
     </div>
     
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    
+    <!-- 既存のスクリプト読み込み（順序重要） -->
     <script src="js/unified-auth.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/customer-unified.js"></script>
+    <!-- Firebase統合アドオン -->
+    <script src="js/customer-unified-firebase-addon.js"></script>
+    <!-- データキー統一 -->
+    <script src="js/data-key-unifier.js"></script>
+    <!-- ページ間同期システム -->
+    <script src="js/cross-page-sync.js"></script>
+    <!-- データソース診断ツール -->
+    <script src="js/data-source-debugger.js"></script>
+    
+    <script>
+        // 同期状況表示
+        window.showSyncStatus = function(message) {
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.textContent = message;
+            syncStatus.classList.add('show');
+            
+            setTimeout(() => {
+                syncStatus.classList.remove('show');
+            }, 2000);
+        };
+        
+        // データ変更通知のテスト
+        window.testDataSync = function() {
+            window.CrossPageSync.notifyDataChange('customer_added', {
+                customerId: 'test-123',
+                customerName: 'テスト顧客'
+            });
+            showSyncStatus('📡 テスト通知送信');
+        };
+    </script>
 </body>
 </html>
