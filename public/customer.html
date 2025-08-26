@@ -370,6 +370,8 @@
     <!-- ページ間同期システム -->
     <script src="js/cross-page-sync.js"></script>
     <!-- データソース診断ツール -->
+    <script src="js/local-first-sync.js"></script>
+    <script src="js/customer-status-editor.js"></script>
     <script src="js/data-source-debugger.js"></script>
     
     <script>
@@ -392,6 +394,18 @@
             });
             showSyncStatus('📡 テスト通知送信');
         };
+    </script>
+</body>
+</html>
+    <script>
+        // 顧客管理システムが初期化された後にステータス変更機能を追加
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (window.addStatusChangeToCustomerCards) {
+                    window.addStatusChangeToCustomerCards();
+                }
+            }, 2000);
+        });
     </script>
 </body>
 </html>
