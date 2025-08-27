@@ -1,5 +1,5 @@
-// RentPipe 料金プラン設定
-console.log('💰 RentPipe料金プラン設定読み込み中...');
+// RentPipe 料金プラン設定 - Stripe統合版
+console.log('料金プラン設定読み込み中...');
 
 window.RentPipePlans = {
     plans: {
@@ -8,6 +8,7 @@ window.RentPipePlans = {
             name: 'フリー',
             price: 0,
             customerLimit: 5,
+            stripePrice: null, // フリープランはStripe不要
             features: {
                 customers: true,
                 pipeline: true,
@@ -28,6 +29,7 @@ window.RentPipePlans = {
             name: 'スタンダード',
             price: 490,
             customerLimit: 30,
+            stripePrice: 'price_1S0lucQMLO8hZlngqqjsx6H4',
             features: {
                 customers: true,
                 pipeline: true,
@@ -49,6 +51,7 @@ window.RentPipePlans = {
             name: 'プロ',
             price: 2980,
             customerLimit: 100,
+            stripePrice: 'price_1S0lv6QMLO8hZlngFyGzDUmg',
             features: {
                 customers: true,
                 pipeline: true,
@@ -71,6 +74,7 @@ window.RentPipePlans = {
             name: 'プレミアム',
             price: 4980,
             customerLimit: 300,
+            stripePrice: 'price_1S0lvoQMLO8hZlngFasgb7At',
             features: {
                 customers: true,
                 pipeline: true,
@@ -111,4 +115,4 @@ window.RentPipePlans = {
     }
 };
 
-console.log('✅ RentPipe料金プラン設定完了');
+console.log('料金プラン設定完了');
