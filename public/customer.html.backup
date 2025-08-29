@@ -5,348 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
-    <style>
-        .customer-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
-        .customer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        
-        .customer-title h1 {
-            color: #1e3a8a;
-            margin: 0;
-        }
-        
-        .customer-actions {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .filters-container {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .filters-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 1rem;
-            align-items: end;
-        }
-        
-        .form-group {
-            margin: 0;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .form-input, .form-select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s ease;
-        }
-        
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-        
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .results-count {
-            color: #64748b;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .customers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .customer-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .customer-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        
-        .customer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .customer-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .customer-status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: white;
-        }
-        
-        .customer-details {
-            margin-bottom: 1rem;
-        }
-        
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #4b5563;
-        }
-        
-        .detail-icon {
-            width: 20px;
-            text-align: center;
-        }
-        
-        .customer-notes {
-            background: #f9fafb;
-            padding: 0.75rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            color: #4b5563;
-            margin-bottom: 1rem;
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .customer-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .btn-sm {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #6b7280;
-        }
-        
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        
-        .empty-state h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #374151;
-        }
-        
-        /* Firebase統合用の追加スタイル */
-        .firebase-status {
-            background: #f0f9ff;
-            border: 1px solid #e0f2fe;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .firebase-connected {
-            color: #0369a1;
-        }
-        
-        .firebase-local {
-            color: #7c2d12;
-            background: #fef7ed;
-            border-color: #fed7aa;
-        }
-        
-        /* 同期状況表示 */
-        .sync-status {
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .sync-status.show {
-            opacity: 1;
-        }
-        
-        @media (max-width: 768px) {
-            .customer-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-            
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .customers-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .customer-actions {
-                flex-direction: column;
-            }
-        }
-    </style>
 </head>
 <body>
-    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
+    <!-- Firebase接続状況表示 -->
+    <div id="firebaseStatus" class="firebase-status firebase-local" style="display: none;">
+        顧客管理 ローカルストレージモード
+    </div>
 
     <div class="customer-container">
-        <!-- Firebase接続状況表示（最小限追加） -->
-        <div id="firebaseStatus" class="firebase-status firebase-local">
-            🔄 データベース接続確認中...
-        </div>
-        
-        <!-- 同期状況表示 -->
-        <div id="syncStatus" class="sync-status">
-            📡 データ同期中...
+        <div class="customer-header">
+            <h1>顧客管理</h1>
+            <div class="header-actions">
+                <button onclick="refreshCustomers()" class="btn btn-primary">
+                    更新
+                </button>
+                <button onclick="openQuickRegister()" class="btn btn-success">
+                    ＋ 新規登録
+                </button>
+            </div>
         </div>
 
-        <div class="customer-header">
-            <div class="customer-title">
-                <h1>👥 顧客管理</h1>
-                <p>顧客情報を管理します</p>
+        <!-- 検索・フィルター機能 -->
+        <div class="search-filters">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="名前・メール・電話番号で検索" onkeyup="filterCustomers()">
             </div>
-            <div class="customer-actions">
-                <button class="btn btn-secondary" onclick="refreshCustomers()">
-                    🔄 更新
-                </button>
-                <a href="customer-form.html" class="btn btn-primary">
-                    ➕ 新規登録
-                </a>
+            
+            <div class="filter-container">
+                <select id="statusFilter" onchange="filterCustomers()">
+                    <option value="">すべてのステータス</option>
+                    <option value="初回相談">初回相談</option>
+                    <option value="物件紹介">物件紹介</option>
+                    <option value="内見">内見</option>
+                    <option value="申込">申込</option>
+                    <option value="審査">審査</option>
+                    <option value="契約">契約</option>
+                    <option value="完了">完了</option>
+                </select>
+                
+                <select id="sortOrder" onchange="filterCustomers()">
+                    <option value="updatedDesc">更新日順（新）</option>
+                    <option value="updatedAsc">更新日順（旧）</option>
+                    <option value="nameAsc">名前順（A-Z）</option>
+                    <option value="createdDesc">登録日順（新）</option>
+                </select>
             </div>
-        </div>
-        
-        <!-- 既存のフィルター・検索（変更なし） -->
-        <div class="filters-container">
-            <div class="filters-grid">
-                <div class="form-group">
-                    <label for="searchInput">🔍 検索</label>
-                    <input type="text" id="searchInput" class="form-input" placeholder="名前、メール、電話番号で検索...">
-                </div>
-                <div class="form-group">
-                    <label for="statusFilter">📋 ステータス</label>
-                    <select id="statusFilter" class="form-select">
-                        <option value="all">すべて</option>
-                        <option value="初回相談">初回相談</option>
-                        <option value="物件紹介">物件紹介</option>
-                        <option value="内見">内見</option>
-                        <option value="申込">申込</option>
-                        <option value="審査">審査</option>
-                        <option value="契約">契約</option>
-                        <option value="完了">完了</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="sortSelect">📊 並び順</label>
-                    <select id="sortSelect" class="form-select">
-                        <option value="updatedAt">更新日時順</option>
-                        <option value="createdAt">登録日時順</option>
-                        <option value="name">名前順</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 既存の結果表示（変更なし） -->
-        <div class="results-header">
+            
             <div class="results-count" id="resultsCount">-</div>
         </div>
         
-        <!-- 既存の顧客リスト（変更なし） -->
+        <!-- 顧客リスト -->
         <div class="customers-grid" id="customersList">
             <!-- 顧客カードが動的に挿入される -->
         </div>
@@ -358,47 +66,34 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     
-    <!-- 既存のスクリプト読み込み（順序重要） -->
+    <!-- 共有デモアカウント設定 -->
+    <script src="js/firebase-shared-demo.js"></script>
+    
+    <!-- 既存のスクリプト読み込み -->
     <script src="js/unified-auth.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/customer-unified.js"></script>
+    
     <!-- Firebase統合アドオン -->
     <script src="js/customer-unified-firebase-addon.js"></script>
+    
     <!-- データキー統一 -->
     <script src="js/data-key-unifier.js"></script>
-    <!-- ページ間同期システム -->
     <script src="js/cross-page-sync.js"></script>
-    <!-- データソース診断ツール -->
     <script src="js/local-first-sync.js"></script>
     <script src="js/customer-status-editor.js"></script>
-    <script src="js/data-source-debugger.js"></script>
+    
+    <!-- 開発環境でのみデバッグツール読み込み -->
+    <script>
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.write('<script src="js/data-source-debugger.js"><\/script>');
+            document.getElementById('firebaseStatus').style.display = 'flex';
+        }
+    </script>
     
     <script>
-        // 同期状況表示
-        window.showSyncStatus = function(message) {
-            const syncStatus = document.getElementById('syncStatus');
-            syncStatus.textContent = message;
-            syncStatus.classList.add('show');
-            
-            setTimeout(() => {
-                syncStatus.classList.remove('show');
-            }, 2000);
-        };
-        
-        // データ変更通知のテスト
-        window.testDataSync = function() {
-            window.CrossPageSync.notifyDataChange('customer_added', {
-                customerId: 'test-123',
-                customerName: 'テスト顧客'
-            });
-            showSyncStatus('📡 テスト通知送信');
-        };
-    </script>
-</body>
-</html>
-    <script>
-        // 顧客管理システムが初期化された後にステータス変更機能を追加
+        // 顧客管理システム初期化
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 if (window.addStatusChangeToCustomerCards) {
