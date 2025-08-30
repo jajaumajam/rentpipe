@@ -1,122 +1,109 @@
-// RentPipe 統一ナビゲーションシステム（エンドユーザー向け最終版）
-function createNavigation() {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+// 顧客詳細ページ専用の強化版ナビゲーション調整
+function enhanceNavigationForCustomerDetail() {
+    const currentPath = window.location.pathname;
     
-    const navHTML = `
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <span class="logo-icon">🏠</span>
-                <span class="logo-text">RentPipe</span>
-            </div>
-            
-            <button class="nav-toggle" id="navToggle" aria-label="メニュー">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link ${currentPage === 'index.html' ? 'active' : ''}">
-                    <span class="nav-icon">📊</span>
-                    <span>ダッシュボード</span>
-                </a>
-                <a href="customer.html" class="nav-link ${currentPage === 'customer.html' ? 'active' : ''}">
-                    <span class="nav-icon">👥</span>
-                    <span>顧客管理</span>
-                </a>
-                <a href="pipeline.html" class="nav-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
-                    <span class="nav-icon">📈</span>
-                    <span>パイプライン</span>
-                </a>
-                <a href="profile.html" class="nav-link ${currentPage === 'profile.html' ? 'active' : ''}">
-                    <span class="nav-icon">👤</span>
-                    <span>プロフィール</span>
-                </a>
-                <button onclick="secureLogout()" class="btn btn-outline nav-logout">ログアウト</button>
-            </div>
-        </div>
-    </nav>`;
-    
-    // ナビゲーションを挿入
-    const navContainer = document.createElement('div');
-    navContainer.innerHTML = navHTML;
-    document.body.insertBefore(navContainer.firstElementChild, document.body.firstChild);
-    
-    // モバイルメニューのトグル機能
-    const navToggle = document.getElementById('navToggle');
-    const navMenu = document.getElementById('navMenu');
-    
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active');
+    // customer-detail.htmlの場合のみ実行
+    if (currentPath.includes('customer-detail.html')) {
+        console.log('🎯 顧客詳細ページ: ナビゲーション強制調整開始...');
+        
+        // MutationObserverでナビゲーション要素の生成を監視
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function(node) {
+                        // ナビゲーションが追加されたかチェック
+                        if (node.nodeType === Node.ELEMENT_NODE && 
+                            (node.classList?.contains('navbar') || node.querySelector?.('.navbar'))) {
+                            console.log('🔍 ナビゲーション要素検出、調整実行...');
+                            setTimeout(forceNavigationHighlight, 100);
+                        }
+                    });
+                }
+            });
         });
         
-        // メニューリンククリック時にモバイルメニューを閉じる
-        const navLinks = navMenu.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
+        // body全体を監視
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // 定期的にもチェック（フォールバック）
+        let attempts = 0;
+        const intervalId = setInterval(() => {
+            attempts++;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            if (navLinks.length > 0) {
+                console.log(`📍 ナビゲーションリンク発見（試行${attempts}回目）`);
+                forceNavigationHighlight();
+                clearInterval(intervalId);
+                observer.disconnect();
+            }
+            
+            // 最大10回試行したら諦める
+            if (attempts >= 10) {
+                console.warn('⚠️ ナビゲーション調整を諦めました');
+                clearInterval(intervalId);
+                observer.disconnect();
+            }
+        }, 200);
+    }
+}
+
+// 強制的にナビゲーションをハイライト
+function forceNavigationHighlight() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    console.log(`🔗 ナビゲーションリンク数: ${navLinks.length}`);
+    
+    let customerLinkFound = false;
+    
+    navLinks.forEach((link, index) => {
+        const linkHref = link.getAttribute('href') || '';
+        const linkText = link.textContent.trim();
+        
+        console.log(`リンク${index + 1}: ${linkText} → ${linkHref}`);
+        
+        // 全てのアクティブ状態をクリア
+        link.classList.remove('active');
+        
+        // customer.htmlまたは顧客管理リンクを見つけたらアクティブにする
+        if (linkHref.includes('customer.html') || linkText.includes('顧客管理')) {
+            link.classList.add('active');
+            customerLinkFound = true;
+            console.log(`✅ 顧客管理リンクをアクティブに設定: ${linkText}`);
+        }
+    });
+    
+    if (!customerLinkFound) {
+        console.warn('⚠️ 顧客管理リンクが見つかりませんでした');
+        // デバッグ用：全リンクの詳細を表示
+        navLinks.forEach((link, index) => {
+            console.log(`詳細${index + 1}:`, {
+                href: link.getAttribute('href'),
+                text: link.textContent,
+                classes: link.className
             });
         });
     }
-
-    // 開発者モード：Shift+Ctrl+D でデータヘルス画面にアクセス
-    document.addEventListener('keydown', (e) => {
-        if (e.shiftKey && e.ctrlKey && e.key === 'D') {
-            console.log('🔧 開発者モード：データヘルス画面へ');
-            window.location.href = 'data-health.html';
-        }
-    });
+    
+    return customerLinkFound;
 }
 
-// セキュアログアウト関数
-function secureLogout() {
-    if (confirm('ログアウトしますか？')) {
-        console.log('🔒 セキュアログアウト開始...');
-        
-        // 統一認証システムを使用してログアウト
-        if (window.UnifiedAuth) {
-            if (window.UnifiedAuth.logout()) {
-                console.log('✅ 統一認証システムでログアウト完了');
-            }
-        }
-        
-        // フォールバック: 手動で全キー削除
-        const allKeys = Object.keys(localStorage);
-        const authKeys = allKeys.filter(key => 
-            key.startsWith('rentpipe_') && 
-            !key.includes('account_deleted') && 
-            !key.includes('user_profile')
-        );
-        
-        authKeys.forEach(key => {
-            localStorage.removeItem(key);
-            console.log(`🗑️ フォールバック削除: ${key}`);
-        });
-        
-        // セッションクリア
-        sessionStorage.clear();
-        
-        // ログイン画面にリダイレクト（replaceを使用して履歴をクリア）
-        console.log('🔄 ログイン画面にリダイレクト...');
-        window.location.replace('login.html');
-    }
-}
-
-// 既存関数との互換性
-if (typeof logout === 'undefined') {
-    window.logout = secureLogout;
-}
-
-// DOMContentLoadedで実行
+// 複数のタイミングで実行を試行
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createNavigation);
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(enhanceNavigationForCustomerDetail, 100);
+    });
 } else {
-    createNavigation();
+    // すでにDOMが読み込まれている場合
+    setTimeout(enhanceNavigationForCustomerDetail, 100);
 }
 
-console.log('✅ エンドユーザー向け最終版ナビゲーションシステム準備完了');
-console.log('💡 開発者向け：Shift+Ctrl+D でデータヘルス画面にアクセス可能');
+// ページ読み込み完了後にも実行
+window.addEventListener('load', () => {
+    setTimeout(enhanceNavigationForCustomerDetail, 200);
+});
+
+console.log('✅ 顧客詳細ページ用強化版ナビゲーション調整を追加しました');

@@ -1,3 +1,143 @@
+/* ===== 統一ナビゲーションスタイル ===== */
+.main-nav {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    padding: 0 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 70px;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-brand a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-logo {
+    font-size: 24px;
+}
+
+.nav-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu li {
+    margin: 0;
+}
+
+.nav-menu a {
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 16px;
+}
+
+.nav-menu a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.nav-menu a.nav-active {
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: bold;
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.nav-toggle span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    margin: 3px 0;
+    transition: 0.3s;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .main-nav {
+        padding: 0 15px;
+        min-height: 60px;
+    }
+    
+    .nav-logo {
+        font-size: 20px;
+    }
+    
+    .nav-title {
+        font-size: 20px;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: 60px;
+        left: -100%;
+        width: 100%;
+        height: calc(100vh - 60px);
+        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 20px 0;
+        transition: left 0.3s ease;
+        gap: 0;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    .nav-menu li {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-menu a {
+        padding: 15px 20px;
+        border-radius: 0;
+        font-size: 18px;
+        justify-content: flex-start;
+    }
+    
+    .nav-toggle {
+        display: flex;
+    }
+}
+
 /* RentPipe メインスタイルシート */
 
 /* ===== ベース設定 ===== */
