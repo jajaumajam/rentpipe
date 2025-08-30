@@ -78,5 +78,3 @@
     <script src="js/customer-status-editor.js"></script>
 </body>
 </html>
-    <!-- 顧客詳細リンク機能 -->
-    <script src="js/customer-detail-links.js"></script>

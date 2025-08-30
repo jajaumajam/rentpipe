@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顧客詳細 - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .customer-detail-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .detail-header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .customer-info h1 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .customer-meta {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .status-初回相談 { background: #6366f1; }
+        .status-物件紹介 { background: #8b5cf6; }
+        .status-内見 { background: #06b6d4; }
+        .status-申込 { background: #10b981; }
+        .status-審査 { background: #f59e0b; }
+        .status-契約 { background: #ef4444; }
+        .status-完了 { background: #22c55e; }
+        
+        .detail-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .detail-card h3 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: #6b7280;
+            flex: 1;
+            text-align: right;
+        }
+        
+        .preferences-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .preference-tag {
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #1e3a8a;
+        }
+        
+        .notes-section {
+            grid-column: 1 / -1;
+        }
+        
+        .notes-content {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            margin-top: 10px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .status-change-section {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .status-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .history-date {
+            font-size: 12px;
+            color: #6b7280;
+            min-width: 140px;
+        }
+        
+        .history-action {
+            flex: 1;
+            color: #374151;
+        }
+        
+        @media (max-width: 768px) {
+            .detail-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-actions {
+                justify-content: stretch;
+            }
+            
+            .detail-actions .btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="main-nav">
+        <div class="nav-brand">
+            <a href="index.html">
+                <span class="nav-logo">🏠</span>
+                <span class="nav-title">RentPipe</span>
+            </a>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html">📊 ダッシュボード</a></li>
+            <li><a href="customer.html" class="nav-active">👥 顧客管理</a></li>
+            <li><a href="pipeline.html">📈 パイプライン</a></li>
+            <li><a href="customer-form.html">📝 フォーム</a></li>
+        </ul>
+    </nav>
+
+    <main class="customer-detail-container">
+        <!-- 戻るボタン -->
+        <div style="margin-bottom: 20px;">
+            <button onclick="goBack()" class="btn btn-outline">
+                ← 戻る
+            </button>
+        </div>
+
+        <!-- 顧客詳細ヘッダー -->
+        <div class="detail-header">
+            <div class="customer-info">
+                <h1 id="customerName">顧客名を読み込み中...</h1>
+                <div class="customer-meta">
+                    <span id="customerEmail">メール</span> • 
+                    <span id="customerPhone">電話番号</span>
+                </div>
+                <div id="statusBadge" class="status-badge">ステータス</div>
+                <div class="customer-meta">
+                    登録日: <span id="createdAt">-</span> • 
+                    最終更新: <span id="updatedAt">-</span>
+                </div>
+            </div>
+            
+            <div class="detail-actions">
+                <button onclick="editCustomer()" class="btn btn-primary">
+                    ✏️ 編集
+                </button>
+                <button onclick="exportCustomer()" class="btn btn-outline">
+                    📥 エクスポート
+                </button>
+                <button onclick="deleteCustomer()" class="btn btn-danger">
+                    🗑️ 削除
+                </button>
+            </div>
+        </div>
+
+        <!-- 詳細情報グリッド -->
+        <div class="detail-grid">
+            <!-- 基本情報 -->
+            <div class="detail-card">
+                <h3>📋 基本情報</h3>
+                <div class="info-row">
+                    <span class="info-label">年齢</span>
+                    <span class="info-value" id="customerAge">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">職業</span>
+                    <span class="info-value" id="customerOccupation">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">年収</span>
+                    <span class="info-value" id="customerIncome">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">緊急度</span>
+                    <span class="info-value" id="customerUrgency">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">連絡希望時間</span>
+                    <span class="info-value" id="customerContactTime">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">流入元</span>
+                    <span class="info-value" id="customerSource">-</span>
+                </div>
+            </div>
+
+            <!-- 希望条件 -->
+            <div class="detail-card">
+                <h3>🏡 希望条件</h3>
+                <div class="info-row">
+                    <span class="info-label">予算</span>
+                    <span class="info-value" id="customerBudget">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">間取り</span>
+                    <span class="info-value" id="customerRoomType">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">希望エリア</span>
+                    <span class="info-value" id="customerAreas">-</span>
+                </div>
+                <div style="margin-top: 15px;">
+                    <div class="info-label" style="margin-bottom: 8px;">特別な要望</div>
+                    <div id="customerRequirements" class="preferences-list">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メモ・履歴セクション -->
+        <div class="detail-grid">
+            <!-- メモ -->
+            <div class="detail-card notes-section">
+                <h3>📝 メモ・特記事項</h3>
+                <div id="customerNotes" class="notes-content">
+                    メモはありません
+                </div>
+            </div>
+
+            <!-- ステータス変更履歴 -->
+            <div class="detail-card">
+                <h3>📈 ステータス変更履歴</h3>
+                <div id="statusHistory">
+                    <!-- 動的に生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- クイックアクション -->
+        <div class="detail-card">
+            <h3>⚡ クイックアクション</h3>
+            <div class="status-change-section">
+                <label for="newStatus"><strong>ステータスを変更する:</strong></label>
+                <select id="newStatus" class="status-select">
+                    <option value="">ステータスを選択</option>
+                    <option value="初回相談">初回相談</option>
+                    <option value="物件紹介">物件紹介</option>
+                    <option value="内見">内見</option>
+                    <option value="申込">申込</option>
+                    <option value="審査">審査</option>
+                    <option value="契約">契約</option>
+                    <option value="完了">完了</option>
+                </select>
+                <button onclick="changeStatus()" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                    ステータス更新
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // グローバル変数
+        let currentCustomer = null;
+        let customerId = null;
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
+
+        // ページ初期化処理
+        function initializePage() {
+            console.log('🔍 顧客詳細ページ初期化中...');
+            
+            // URLパラメータから顧客IDを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            customerId = urlParams.get('id');
+            
+            if (!customerId) {
+                alert('顧客IDが指定されていません。顧客管理画面に戻ります。');
+                window.location.href = 'customer.html';
+                return;
+            }
+            
+            console.log(`📋 顧客ID: ${customerId} の詳細を読み込み中...`);
+            loadCustomerDetail();
+        }
+
+        // 顧客詳細データの読み込み
+        function loadCustomerDetail() {
+            try {
+                // ローカルストレージから顧客データを取得
+                const customersData = localStorage.getItem('rentpipe_demo_customers');
+                if (!customersData) {
+                    throw new Error('顧客データが見つかりません');
+                }
+                
+                const customers = JSON.parse(customersData);
+                currentCustomer = customers.find(customer => customer.id === customerId);
+                
+                if (!currentCustomer) {
+                    throw new Error(`ID: ${customerId} の顧客が見つかりません`);
+                }
+                
+                console.log('✅ 顧客データ読み込み成功:', currentCustomer);
+                displayCustomerDetail();
+                
+            } catch (error) {
+                console.error('❌ 顧客データ読み込みエラー:', error);
+                alert(`顧客データの読み込みに失敗しました: ${error.message}`);
+                window.location.href = 'customer.html';
+            }
+        }
+
+        // 顧客詳細表示
+        function displayCustomerDetail() {
+            if (!currentCustomer) return;
+            
+            // 基本情報表示
+            document.getElementById('customerName').textContent = currentCustomer.name;
+            document.getElementById('customerEmail').textContent = currentCustomer.email || '未設定';
+            document.getElementById('customerPhone').textContent = currentCustomer.phone || '未設定';
+            
+            // ステータスバッジ
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = currentCustomer.pipelineStatus || '未設定';
+            statusBadge.className = `status-badge status-${currentCustomer.pipelineStatus || ''}`;
+            
+            // 日付表示
+            const createdAt = currentCustomer.createdAt ? new Date(currentCustomer.createdAt).toLocaleDateString('ja-JP') : '未設定';
+            const updatedAt = currentCustomer.updatedAt ? new Date(currentCustomer.updatedAt).toLocaleDateString('ja-JP') : '未設定';
+            document.getElementById('createdAt').textContent = createdAt;
+            document.getElementById('updatedAt').textContent = updatedAt;
+            
+            // 詳細情報
+            document.getElementById('customerAge').textContent = currentCustomer.age ? `${currentCustomer.age}歳` : '未設定';
+            document.getElementById('customerOccupation').textContent = currentCustomer.occupation || '未設定';
+            document.getElementById('customerIncome').textContent = currentCustomer.annualIncome ? `${currentCustomer.annualIncome.toLocaleString()}万円` : '未設定';
+            document.getElementById('customerUrgency').textContent = currentCustomer.urgency || '未設定';
+            document.getElementById('customerContactTime').textContent = currentCustomer.contactTime || '未設定';
+            document.getElementById('customerSource').textContent = currentCustomer.source || '未設定';
+            
+            // 希望条件
+            const preferences = currentCustomer.preferences || {};
+            const budgetText = preferences.budgetMin && preferences.budgetMax 
+                ? `${preferences.budgetMin}〜${preferences.budgetMax}万円` 
+                : '未設定';
+            document.getElementById('customerBudget').textContent = budgetText;
+            document.getElementById('customerRoomType').textContent = preferences.roomType || '未設定';
+            document.getElementById('customerAreas').textContent = preferences.areas ? preferences.areas.join(', ') : '未設定';
+            
+            // 特別な要望タグ
+            const requirementsContainer = document.getElementById('customerRequirements');
+            requirementsContainer.innerHTML = '';
+            if (preferences.requirements && preferences.requirements.length > 0) {
+                preferences.requirements.forEach(req => {
+                    const tag = document.createElement('span');
+                    tag.className = 'preference-tag';
+                    tag.textContent = req;
+                    requirementsContainer.appendChild(tag);
+                });
+            } else {
+                requirementsContainer.innerHTML = '<span style="color: #6b7280;">特別な要望はありません</span>';
+            }
+            
+            // メモ表示
+            const notesElement = document.getElementById('customerNotes');
+            notesElement.textContent = currentCustomer.notes || 'メモはありません';
+            
+            // ステータス履歴表示
+            displayStatusHistory();
+            
+            console.log('✅ 顧客詳細画面の表示完了');
+        }
+
+        // ステータス変更履歴の表示
+        function displayStatusHistory() {
+            const historyContainer = document.getElementById('statusHistory');
+            historyContainer.innerHTML = '';
+            
+            // 履歴データの生成（デモ用）
+            const history = [
+                {
+                    date: currentCustomer.createdAt || new Date(),
+                    action: `顧客登録 (${currentCustomer.source || '不明'}から)`
+                }
+            ];
+            
+            // 現在のステータスも履歴に追加
+            if (currentCustomer.pipelineStatus) {
+                history.push({
+                    date: currentCustomer.updatedAt || new Date(),
+                    action: `ステータス: ${currentCustomer.pipelineStatus}`
+                });
+            }
+            
+            // 履歴を新しい順にソート
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // 履歴表示
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const date = new Date(item.date).toLocaleString('ja-JP');
+                historyItem.innerHTML = `
+                    <div class="history-date">${date}</div>
+                    <div class="history-action">${item.action}</div>
+                `;
+                
+                historyContainer.appendChild(historyItem);
+            });
+        }
+
+        // ステータス変更処理
+        function changeStatus() {
+            const newStatus = document.getElementById('newStatus').value;
+            if (!newStatus) {
+                alert('変更するステータスを選択してください');
+                return;
+            }
+            
+            if (!confirm(`ステータスを「${newStatus}」に変更してもよろしいですか？`)) {
+                return;
+            }
+            
+            try {
+                // 顧客データの更新
+                currentCustomer.pipelineStatus = newStatus;
+                currentCustomer.updatedAt = new Date().toISOString();
+                
+                // ローカルストレージの更新
+                const customersData = localStorage.getItem('rentpipe_demo_customers');
+                const customers = JSON.parse(customersData);
+                const customerIndex = customers.findIndex(c => c.id === customerId);
+                
+                if (customerIndex !== -1) {
+                    customers[customerIndex] = currentCustomer;
+                    localStorage.setItem('rentpipe_demo_customers', JSON.stringify(customers));
+                }
+                
+                // 画面の再表示
+                displayCustomerDetail();
+                
+                // セレクトボックスをリセット
+                document.getElementById('newStatus').value = '';
+                
+                alert(`ステータスを「${newStatus}」に更新しました！`);
+                
+            } catch (error) {
+                console.error('❌ ステータス更新エラー:', error);
+                alert('ステータスの更新に失敗しました');
+            }
+        }
+
+        // 顧客編集
+        function editCustomer() {
+            window.location.href = `customer-form.html?edit=${customerId}`;
+        }
+
+        // 顧客エクスポート
+        function exportCustomer() {
+            if (!currentCustomer) return;
+            
+            const customerData = JSON.stringify(currentCustomer, null, 2);
+            const blob = new Blob([customerData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `顧客_${currentCustomer.name}_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`${currentCustomer.name}さんのデータをエクスポートしました`);
+        }
+
+        // 顧客削除
+        function deleteCustomer() {
+            if (!currentCustomer) return;
+            
+            const confirmMessage = `${currentCustomer.name}さんのデータを完全に削除してもよろしいですか？\n\nこの操作は取り消せません。`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            try {
+                const customersData = localStorage.getItem('rentpipe_demo_customers');
+                const customers = JSON.parse(customersData);
+                const updatedCustomers = customers.filter(c => c.id !== customerId);
+                
+                localStorage.setItem('rentpipe_demo_customers', JSON.stringify(updatedCustomers));
+                
+                alert(`${currentCustomer.name}さんのデータを削除しました`);
+                window.location.href = 'customer.html';
+                
+            } catch (error) {
+                console.error('❌ 顧客削除エラー:', error);
+                alert('顧客の削除に失敗しました');
+            }
+        }
+
+        // 戻る処理
+        function goBack() {
+            if (document.referrer.includes('pipeline.html')) {
+                window.location.href = 'pipeline.html';
+            } else {
+                window.location.href = 'customer.html';
+            }
+        }
+    </script>
+</body>
+</html>
