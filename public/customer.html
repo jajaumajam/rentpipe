@@ -328,3 +328,247 @@ console.log('✅ インライン即時デバッグ準備完了');
 console.log('💡 ブラウザコンソールで checkStatus() または forceIntegration() を実行できます');
 </script>
 
+
+<!-- 確実な自動認証修正 -->
+<script>
+// 🎯 確実な自動認証修正（インライン版）
+(function() {
+    console.log('🎯 確実な自動認証修正開始...');
+    
+    // 確実な認証状態修正関数
+    function fixAuthStateNow() {
+        try {
+            console.log('🔧 即座に認証状態修正を実行...');
+            
+            // LocalStorageから認証データを取得
+            const googleIdentityData = localStorage.getItem('google_identity_data');
+            const rentpipeAuth = localStorage.getItem('rentpipe_auth');
+            
+            console.log('📊 認証データ確認:', {
+                hasGoogleIdentityData: !!googleIdentityData,
+                hasRentpipeAuth: !!rentpipeAuth
+            });
+            
+            if (!googleIdentityData && !rentpipeAuth) {
+                console.log('❌ 認証データが見つかりません');
+                return false;
+            }
+            
+            let authData = null;
+            
+            // google_identity_dataを優先
+            if (googleIdentityData) {
+                try {
+                    authData = JSON.parse(googleIdentityData);
+                    console.log('✅ google_identity_dataから取得:', authData.user?.email);
+                } catch (e) {
+                    console.error('❌ google_identity_data解析エラー:', e);
+                }
+            }
+            
+            if (!authData || !authData.user) {
+                console.log('❌ 有効な認証データがありません');
+                return false;
+            }
+            
+            // IntegratedAuthManagerV2の存在確認と待機
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const waitForAuthManager = () => {
+                attempts++;
+                console.log(`🔍 IntegratedAuthManagerV2確認試行 ${attempts}/${maxAttempts}`);
+                
+                if (window.IntegratedAuthManagerV2) {
+                    console.log('✅ IntegratedAuthManagerV2発見 - 認証状態を設定');
+                    
+                    // 認証状態を直接設定
+                    window.IntegratedAuthManagerV2.googleAuth = {
+                        isSignedIn: true,
+                        user: authData.user,
+                        accessToken: authData.accessToken || authData.user.accessToken
+                    };
+                    
+                    window.IntegratedAuthManagerV2.isAuthenticated = true;
+                    window.IntegratedAuthManagerV2.currentUser = {
+                        ...authData.user,
+                        googleAuth: authData.user
+                    };
+                    window.IntegratedAuthManagerV2.authMethod = 'google';
+                    
+                    console.log('✅ 認証状態設定完了');
+                    
+                    // UIを更新
+                    updateUI();
+                    
+                    // 統合機能を実行
+                    setTimeout(() => {
+                        if (window.forceIntegration) {
+                            console.log('🔄 統合機能再実行...');
+                            window.forceIntegration();
+                        }
+                    }, 500);
+                    
+                    // 成功通知
+                    showSuccessNotification(authData.user.email);
+                    
+                    return true;
+                    
+                } else if (attempts < maxAttempts) {
+                    // 再試行
+                    setTimeout(waitForAuthManager, 500);
+                } else {
+                    console.log('❌ IntegratedAuthManagerV2が見つかりませんでした');
+                    return false;
+                }
+            };
+            
+            waitForAuthManager();
+            
+        } catch (error) {
+            console.error('❌ 認証状態修正エラー:', error);
+            return false;
+        }
+    }
+    
+    // UIを更新
+    function updateUI() {
+        try {
+            console.log('🎨 UI更新開始...');
+            
+            const authState = window.IntegratedAuthManagerV2?.getAuthState();
+            if (!authState) {
+                console.log('❌ 認証状態取得失敗');
+                return false;
+            }
+            
+            console.log('📊 認証状態:', authState);
+            
+            // Google Formsセクションの更新
+            let section = document.querySelector('#google-forms-section');
+            
+            if (authState.googleAuth.isSignedIn) {
+                console.log('✅ Google認証済み - UIを更新');
+                
+                // セクションが存在しない場合は作成
+                if (!section) {
+                    section = document.createElement('div');
+                    section.id = 'google-forms-section';
+                    const main = document.querySelector('main, .main-content, .container') || document.body;
+                    const firstChild = main.firstElementChild;
+                    if (firstChild) {
+                        main.insertBefore(section, firstChild);
+                    } else {
+                        main.appendChild(section);
+                    }
+                    console.log('📝 新しいGoogle Formsセクション作成');
+                }
+                
+                // 認証済み表示に更新
+                section.style.cssText = `
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    margin: 1rem 0 2rem 0;
+                    text-align: center;
+                `;
+                section.innerHTML = `
+                    <h3 style="margin: 0 0 0.5rem 0;">✅ Google Forms連携済み</h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">
+                        ログイン中: ${authState.googleAuth.user?.email} | 各顧客カードから専用フォームを作成できます
+                    </p>
+                `;
+                
+                console.log('✅ Google Forms連携済み表示に更新完了');
+                return true;
+                
+            } else {
+                console.log('❌ Google未認証状態');
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('❌ UI更新エラー:', error);
+            return false;
+        }
+    }
+    
+    // 成功通知を表示
+    function showSuccessNotification(email) {
+        try {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-size: 14px;
+                max-width: 350px;
+                border-left: 4px solid #059669;
+            `;
+            notification.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 5px;">✅ Google認証状態を復元しました</div>
+                <div style="opacity: 0.9; font-size: 13px;">${email}</div>
+                <div style="opacity: 0.7; font-size: 12px; margin-top: 5px;">Google Forms機能が利用可能です</div>
+            `;
+            
+            document.body.appendChild(notification);
+            console.log('✅ 成功通知表示');
+            
+            // 5秒後に自動削除
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.transition = 'opacity 0.5s ease';
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        notification.parentNode.removeChild(notification);
+                    }, 500);
+                }
+            }, 5000);
+            
+        } catch (error) {
+            console.error('❌ 成功通知エラー:', error);
+        }
+    }
+    
+    // 複数のタイミングで確実に実行
+    function startAutoFix() {
+        console.log('🚀 自動修正開始...');
+        
+        // 即座に実行
+        fixAuthStateNow();
+        
+        // 2秒後にも実行
+        setTimeout(() => {
+            console.log('🔄 2秒後のバックアップ実行...');
+            fixAuthStateNow();
+        }, 2000);
+        
+        // 4秒後にも実行
+        setTimeout(() => {
+            console.log('🔄 4秒後の最終実行...');
+            fixAuthStateNow();
+        }, 4000);
+    }
+    
+    // グローバル関数として追加
+    window.forceAuthFix = fixAuthStateNow;
+    
+    // DOMContentLoadedで実行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startAutoFix);
+    } else {
+        startAutoFix();
+    }
+    
+    console.log('✅ 確実な自動認証修正準備完了');
+    console.log('💡 手動実行: forceAuthFix()');
+})();
+</script>
+
