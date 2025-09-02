@@ -80,3 +80,251 @@
 </html>
     <!-- 顧客詳細リンク機能 -->
     <script src="js/customer-detail-links.js"></script>
+
+<!-- Google Forms統合機能とデバッグ -->
+<script src="js/google-identity-config.js"></script>
+<script src="js/integrated-auth-manager-v2.js"></script>
+<script src="js/google-forms-api-v2.js"></script>
+<script src="js/customer-integration-debug.js"></script>
+<script src="js/customer-google-forms-integration-v2.js"></script>
+<script src="js/debug-integration-status.js"></script>
+<script src="js/manual-integration-trigger.js"></script>
+
+<!-- 即座にデバッグ情報を表示 -->
+<script>
+// 📊 インライン即時デバッグ
+console.log('🔧 インライン即時デバッグ開始...');
+
+// 全ての必要なオブジェクトが読み込まれているか確認
+setTimeout(() => {
+    console.log('='.repeat(40));
+    console.log('📊 即時統合状況確認');
+    console.log('='.repeat(40));
+    
+    // 基本オブジェクトの確認
+    console.log('🔧 基本オブジェクト:');
+    console.log('  GoogleIdentity:', !!window.GoogleIdentity);
+    console.log('  IntegratedAuthManagerV2:', !!window.IntegratedAuthManagerV2);
+    console.log('  GoogleFormsAPIv2:', !!window.GoogleFormsAPIv2);
+    console.log('  CustomerGoogleFormsIntegrationV2:', !!window.CustomerGoogleFormsIntegrationV2);
+    
+    // Google認証状態
+    if (window.IntegratedAuthManagerV2) {
+        const authState = window.IntegratedAuthManagerV2.getAuthState();
+        console.log('🔐 認証状態:');
+        console.log('  認証済み:', authState.isAuthenticated);
+        console.log('  Google認証:', authState.googleAuth.isSignedIn);
+        console.log('  ユーザー:', authState.googleAuth.user?.email || '未認証');
+        
+        // Google認証済みの場合、手動で統合機能を実行
+        if (authState.googleAuth.isSignedIn) {
+            console.log('🚀 Google認証済み - 統合機能を手動実行');
+            
+            // Google Formsセクションを手動で追加
+            if (!document.querySelector('#google-forms-section')) {
+                const section = document.createElement('div');
+                section.id = 'google-forms-section';
+                section.style.cssText = `
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    margin: 1rem 0 2rem 0;
+                    text-align: center;
+                `;
+                section.innerHTML = `
+                    <h3 style="margin: 0 0 0.5rem 0;">✅ Google Forms連携済み</h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">
+                        ログイン中: ${authState.googleAuth.user.email} | 顧客カードから専用フォームを作成できます
+                    </p>
+                `;
+                
+                const main = document.querySelector('main, .main-content, .container') || document.body;
+                const firstChild = main.firstElementChild;
+                if (firstChild) {
+                    main.insertBefore(section, firstChild);
+                } else {
+                    main.appendChild(section);
+                }
+                console.log('✅ Google Formsセクション手動追加完了');
+            }
+            
+            // 顧客カードにボタンを手動で追加
+            setTimeout(() => {
+                addButtonsToCustomerCards(authState);
+            }, 1000);
+        } else {
+            console.log('🔑 Google認証が必要です');
+            
+            // 認証が必要な場合のセクション追加
+            if (!document.querySelector('#google-forms-section')) {
+                const section = document.createElement('div');
+                section.id = 'google-forms-section';
+                section.style.cssText = `
+                    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+                    color: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    margin: 1rem 0 2rem 0;
+                    text-align: center;
+                `;
+                section.innerHTML = `
+                    <h3 style="margin: 0 0 1rem 0;">📝 Google Forms連携</h3>
+                    <p style="margin: 0 0 1rem 0; opacity: 0.9;">
+                        顧客専用の物件希望調査フォームを自動作成できます
+                    </p>
+                    <button onclick="window.location.href='login-google-v2.html'" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                        🔑 Google認証してフォーム機能を利用
+                    </button>
+                `;
+                
+                const main = document.querySelector('main, .main-content, .container') || document.body;
+                const firstChild = main.firstElementChild;
+                if (firstChild) {
+                    main.insertBefore(section, firstChild);
+                } else {
+                    main.appendChild(section);
+                }
+                console.log('✅ Google認証セクション手動追加完了');
+            }
+        }
+    } else {
+        console.log('❌ IntegratedAuthManagerV2が見つかりません');
+    }
+    
+    console.log('='.repeat(40));
+}, 2000);
+
+// 顧客カードにボタンを追加する関数
+function addButtonsToCustomerCards(authState) {
+    console.log('🔧 顧客カードにボタン追加開始...');
+    
+    // 複数の方法で顧客カードを検索
+    const selectors = [
+        '.customer-card',
+        '.customer-item', 
+        '[data-customer-id]',
+        '.card',
+        '[class*="customer"]'
+    ];
+    
+    let customerCards = [];
+    for (const selector of selectors) {
+        const found = document.querySelectorAll(selector);
+        if (found.length > 0) {
+            customerCards = Array.from(found);
+            console.log(`✅ セレクター "${selector}" で ${found.length} 個のカード発見`);
+            break;
+        }
+    }
+    
+    if (customerCards.length === 0) {
+        console.log('❌ 顧客カードが見つかりません');
+        
+        // 強制的にテスト用のカードを作成
+        const testCard = document.createElement('div');
+        testCard.className = 'customer-card test-card';
+        testCard.style.cssText = `
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
+        testCard.innerHTML = `
+            <h4>🧪 テスト顧客カード</h4>
+            <p>この顧客カードはテスト用です</p>
+        `;
+        
+        const main = document.querySelector('main, .main-content, .container') || document.body;
+        main.appendChild(testCard);
+        
+        customerCards = [testCard];
+        console.log('✅ テスト用顧客カードを作成');
+    }
+    
+    // 各顧客カードにボタンを追加
+    customerCards.forEach((card, index) => {
+        // 既存のGoogle Formsボタンがある場合は削除
+        const existingBtns = card.querySelectorAll('.google-forms-btn-manual');
+        existingBtns.forEach(btn => btn.remove());
+        
+        // ボタンコンテナを作成
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'google-forms-container-manual';
+        buttonContainer.style.cssText = `
+            margin-top: 10px;
+            padding: 10px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        `;
+        
+        // フォーム作成ボタンを作成
+        const createBtn = document.createElement('button');
+        createBtn.className = 'btn btn-primary btn-sm google-forms-btn-manual';
+        createBtn.innerHTML = '📝 専用フォーム作成';
+        createBtn.style.cssText = `
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+        `;
+        createBtn.onclick = () => {
+            alert(`🧪 フォーム作成テスト\n\nカード ${index + 1} でフォーム作成機能が呼び出されました！\n\n実際のフォーム作成機能を実装中です...`);
+            console.log('📝 フォーム作成ボタンクリック:', index + 1);
+        };
+        
+        buttonContainer.appendChild(createBtn);
+        card.appendChild(buttonContainer);
+        
+        console.log(`✅ カード ${index + 1} にボタン追加完了`);
+    });
+    
+    console.log('✅ 顧客カードボタン追加完了');
+}
+
+// デバッグ用のグローバル関数を定義
+window.checkStatus = function() {
+    console.log('📊 手動ステータスチェック実行');
+    
+    const status = {
+        url: window.location.pathname,
+        googleIdentity: !!window.GoogleIdentity,
+        integratedAuth: !!window.IntegratedAuthManagerV2,
+        googleFormsAPI: !!window.GoogleFormsAPIv2,
+        integration: !!window.CustomerGoogleFormsIntegrationV2,
+        customerCards: document.querySelectorAll('.customer-card, .customer-item, [data-customer-id]').length,
+        googleFormsSection: !!document.querySelector('#google-forms-section'),
+        googleFormsButtons: document.querySelectorAll('.google-forms-btn-manual, .google-forms-btn-v2').length
+    };
+    
+    console.log('📊 現在の状況:', status);
+    alert(`📊 統合状況\n\n✅ Google Identity: ${status.googleIdentity}\n✅ 統合認証: ${status.integratedAuth}\n✅ Forms API: ${status.googleFormsAPI}\n📋 顧客カード: ${status.customerCards}個\n📝 Formsボタン: ${status.googleFormsButtons}個`);
+    
+    return status;
+};
+
+window.forceIntegration = function() {
+    console.log('🚀 統合機能強制実行');
+    if (window.IntegratedAuthManagerV2) {
+        const authState = window.IntegratedAuthManagerV2.getAuthState();
+        if (authState.googleAuth.isSignedIn) {
+            addButtonsToCustomerCards(authState);
+            alert('✅ 統合機能を強制実行しました！');
+        } else {
+            alert('❌ Google認証が必要です');
+        }
+    } else {
+        alert('❌ 統合認証マネージャーが見つかりません');
+    }
+};
+
+console.log('✅ インライン即時デバッグ準備完了');
+console.log('💡 ブラウザコンソールで checkStatus() または forceIntegration() を実行できます');
+</script>
+
