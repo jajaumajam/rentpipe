@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google認証テスト - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .test-results {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-warning { background: #f59e0b; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html" class="brand-link">
+                    <span class="brand-icon">🏠</span>
+                    <span class="brand-text">RentPipe</span>
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="login.html" class="nav-link">ログイン</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="test-container">
+            <h1>🔧 Google認証システムテスト</h1>
+            
+            <!-- システム状態 -->
+            <div class="test-section">
+                <h2>📊 システム状態</h2>
+                <div id="system-status"></div>
+            </div>
+            
+            <!-- 認証テスト -->
+            <div class="test-section">
+                <h2>🔑 認証テスト</h2>
+                <div class="btn-group">
+                    <button onclick="testGoogleAuth()" class="btn btn-primary">Google認証テスト</button>
+                    <button onclick="testSignOut()" class="btn btn-secondary">サインアウトテスト</button>
+                    <button onclick="checkAuthStatus()" class="btn btn-outline">認証状態確認</button>
+                </div>
+                <div id="auth-results" class="test-results"></div>
+            </div>
+            
+            <!-- Google Forms APIテスト -->
+            <div class="test-section">
+                <h2>📝 Google Forms APIテスト</h2>
+                <div class="btn-group">
+                    <button onclick="testFormsAPI()" class="btn btn-primary">Forms API初期化</button>
+                    <button onclick="createTestForm()" class="btn btn-success">テストフォーム作成</button>
+                </div>
+                <div id="forms-results" class="test-results"></div>
+            </div>
+            
+            <!-- ログ表示 -->
+            <div class="test-section">
+                <h2>📋 実行ログ</h2>
+                <button onclick="clearLogs()" class="btn btn-outline">ログクリア</button>
+                <div id="log-display" class="test-results"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/google-oauth-config.js"></script>
+    <script src="js/google-forms-manager.js"></script>
+    <script src="js/integrated-auth-manager.js"></script>
+    
+    <script>
+        let logEntries = [];
+        
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Google認証テストページ初期化開始');
+            updateSystemStatus();
+            
+            // 5秒ごとにシステム状態を更新
+            setInterval(updateSystemStatus, 5000);
+        });
+        
+        // システム状態表示
+        function updateSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            let html = '<div style="font-family: monospace; font-size: 0.9rem;">';
+            
+            // Google API Client Library
+            html += getStatusHTML('Google API Client', window.gapi ? 'success' : 'error');
+            
+            // Google OAuth設定
+            html += getStatusHTML('Google OAuth設定', window.GoogleOAuth ? 'success' : 'error');
+            
+            // 統合認証マネージャー
+            html += getStatusHTML('統合認証マネージャー', window.IntegratedAuthManager ? 'success' : 'error');
+            
+            // Google Forms マネージャー
+            html += getStatusHTML('Google Forms マネージャー', window.GoogleFormsManager ? 'success' : 'error');
+            
+            // 認証状態
+            if (window.IntegratedAuthManager) {
+                const authState = window.IntegratedAuthManager.getAuthState();
+                html += getStatusHTML('認証状態', authState.isAuthenticated ? 'success' : 'warning');
+                html += getStatusHTML('Google認証', authState.googleAuth.isSignedIn ? 'success' : 'warning');
+            }
+            
+            html += '</div>';
+            statusDiv.innerHTML = html;
+        }
+        
+        function getStatusHTML(label, status) {
+            const statusClass = `status-${status}`;
+            const statusText = status === 'success' ? 'OK' : status === 'error' ? 'NG' : '未認証';
+            return `<div><span class="status-indicator ${statusClass}"></span>${label}: ${statusText}</div>`;
+        }
+        
+        // Google認証テスト
+        async function testGoogleAuth() {
+            log('🔑 Google認証テスト開始...');
+            
+            try {
+                if (!window.IntegratedAuthManager) {
+                    throw new Error('統合認証マネージャーが見つかりません');
+                }
+                
+                appendToResults('auth-results', '認証処理を開始します...');
+                
+                const result = await window.IntegratedAuthManager.signInWithGoogle();
+                
+                if (result.success) {
+                    log('✅ Google認証成功');
+                    appendToResults('auth-results', `認証成功: ${result.user.email}`);
+                    appendToResults('auth-results', `ユーザー名: ${result.user.displayName}`);
+                    appendToResults('auth-results', `認証方法: ${result.user.googleAuth ? 'Google OAuth' : '通常'}`);
+                } else {
+                    log('❌ Google認証失敗: ' + result.error);
+                    appendToResults('auth-results', '認証失敗: ' + result.error);
+                }
+                
+            } catch (error) {
+                log('❌ Google認証テストエラー: ' + error.message);
+                appendToResults('auth-results', 'エラー: ' + error.message);
+            }
+        }
+        
+        // サインアウトテスト
+        async function testSignOut() {
+            log('👋 サインアウトテスト開始...');
+            
+            try {
+                if (!window.IntegratedAuthManager) {
+                    throw new Error('統合認証マネージャーが見つかりません');
+                }
+                
+                await window.IntegratedAuthManager.signOut();
+                log('✅ サインアウト完了');
+                appendToResults('auth-results', 'サインアウト完了');
+                
+            } catch (error) {
+                log('❌ サインアウトエラー: ' + error.message);
+                appendToResults('auth-results', 'サインアウトエラー: ' + error.message);
+            }
+        }
+        
+        // 認証状態確認
+        function checkAuthStatus() {
+            log('📊 認証状態確認...');
+            
+            try {
+                if (!window.IntegratedAuthManager) {
+                    throw new Error('統合認証マネージャーが見つかりません');
+                }
+                
+                const authState = window.IntegratedAuthManager.getAuthState();
+                
+                appendToResults('auth-results', '=== 認証状態 ===');
+                appendToResults('auth-results', `認証済み: ${authState.isAuthenticated}`);
+                appendToResults('auth-results', `認証方法: ${authState.method || '未認証'}`);
+                appendToResults('auth-results', `ユーザー: ${authState.user?.email || '未認証'}`);
+                appendToResults('auth-results', `Google認証: ${authState.googleAuth.isSignedIn}`);
+                
+                if (authState.googleAuth.isSignedIn) {
+                    appendToResults('auth-results', `Googleユーザー: ${authState.googleAuth.user?.email}`);
+                    appendToResults('auth-results', `アクセストークン: ${authState.googleAuth.accessToken ? '有効' : '無効'}`);
+                }
+                
+            } catch (error) {
+                log('❌ 認証状態確認エラー: ' + error.message);
+                appendToResults('auth-results', 'エラー: ' + error.message);
+            }
+        }
+        
+        // Google Forms APIテスト
+        async function testFormsAPI() {
+            log('📝 Google Forms API初期化テスト...');
+            
+            try {
+                if (!window.GoogleFormsManager) {
+                    throw new Error('Google Forms マネージャーが見つかりません');
+                }
+                
+                appendToResults('forms-results', 'Google Forms API初期化中...');
+                
+                const result = await window.GoogleFormsManager.initialize();
+                
+                if (result) {
+                    log('✅ Google Forms API初期化成功');
+                    appendToResults('forms-results', 'Google Forms API初期化成功');
+                } else {
+                    log('❌ Google Forms API初期化失敗');
+                    appendToResults('forms-results', 'Google Forms API初期化失敗');
+                }
+                
+            } catch (error) {
+                log('❌ Google Forms APIテストエラー: ' + error.message);
+                appendToResults('forms-results', 'エラー: ' + error.message);
+            }
+        }
+        
+        // テストフォーム作成
+        async function createTestForm() {
+            log('📝 テストフォーム作成...');
+            
+            try {
+                if (!window.GoogleFormsManager) {
+                    throw new Error('Google Forms マネージャーが見つかりません');
+                }
+                
+                appendToResults('forms-results', 'テストフォーム作成中...');
+                
+                const testCustomer = {
+                    name: 'テスト太郎',
+                    email: 'test@example.com',
+                    phone: '03-1234-5678'
+                };
+                
+                const result = await window.GoogleFormsManager.createCustomerForm(testCustomer);
+                
+                if (result.success) {
+                    log('✅ テストフォーム作成成功');
+                    appendToResults('forms-results', `テストフォーム作成成功`);
+                    appendToResults('forms-results', `フォームID: ${result.form.id}`);
+                    appendToResults('forms-results', `フォームURL: ${result.form.url}`);
+                } else {
+                    log('❌ テストフォーム作成失敗: ' + result.error);
+                    appendToResults('forms-results', 'テストフォーム作成失敗: ' + result.error);
+                }
+                
+            } catch (error) {
+                log('❌ テストフォーム作成エラー: ' + error.message);
+                appendToResults('forms-results', 'エラー: ' + error.message);
+            }
+        }
+        
+        // ユーティリティ関数
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logEntries.push(logEntry);
+            console.log(message);
+            updateLogDisplay();
+        }
+        
+        function appendToResults(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent += message + '\n';
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function updateLogDisplay() {
+            const logDisplay = document.getElementById('log-display');
+            logDisplay.textContent = logEntries.slice(-50).join('\n'); // 最新50件
+            logDisplay.scrollTop = logDisplay.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logEntries = [];
+            updateLogDisplay();
+            
+            // 結果表示もクリア
+            document.getElementById('auth-results').textContent = '';
+            document.getElementById('forms-results').textContent = '';
+        }
+    </script>
+</body>
+</html>
