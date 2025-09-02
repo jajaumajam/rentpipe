@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルテスト - RentPipe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .debug { background: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 5px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 RentPipe シンプルテスト</h1>
+        
+        <button class="btn-success" onclick="testRedirect()">
+            ダッシュボードに遷移テスト
+        </button>
+        
+        <button class="btn-primary" onclick="testDirectLink()">  
+            直接リンクテスト
+        </button>
+        
+        <div class="debug" id="debugLog">
+            テスト結果がここに表示されます
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const debugDiv = document.getElementById('debugLog');
+            const time = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `${time}: ${message}<br>`;
+            console.log(message);
+        }
+
+        function testRedirect() {
+            log('リダイレクトテスト開始...');
+            
+            try {
+                log('location.href を使用してリダイレクト');
+                window.location.href = 'index.html';
+            } catch (error) {
+                log('リダイレクトエラー: ' + error.message);
+            }
+        }
+        
+        function testDirectLink() {
+            log('直接リンクテスト開始...');
+            
+            const link = document.createElement('a');
+            link.href = 'index.html';
+            link.textContent = 'ダッシュボードに移動';
+            link.style.cssText = 'display: block; margin: 10px; padding: 10px; background: #17a2b8; color: white; text-decoration: none;';
+            
+            document.querySelector('.test-container').appendChild(link);
+            log('リンクを追加しました。クリックして確認してください。');
+        }
+
+        log('シンプルテストページ読み込み完了');
+    </script>
+</body>
+</html>

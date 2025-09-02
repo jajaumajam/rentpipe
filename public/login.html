@@ -7,350 +7,203 @@
     <link rel="stylesheet" href="css/main.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
             min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            font-family: 'Noto Sans JP', sans-serif;
         }
-        
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-        }
-        
-        .auth-card {
+
+        .login-container {
             background: white;
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 20px;
+            padding: 50px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
+            max-width: 400px;
+            width: 90%;
         }
-        
-        .auth-logo {
-            margin-bottom: 2rem;
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
         }
-        
-        .logo-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-        
-        .auth-logo h1 {
+
+        .login-title {
+            font-size: 28px;
+            font-weight: bold;
             color: #1e3a8a;
-            margin: 0 0 0.5rem 0;
-            font-size: 2rem;
-            font-weight: 700;
+            margin-bottom: 8px;
         }
-        
-        .auth-logo p {
+
+        .login-subtitle {
             color: #64748b;
-            margin: 0 0 2rem 0;
-            font-size: 0.9rem;
+            font-size: 16px;
+            margin-bottom: 40px;
         }
-        
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 2rem;
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 0.25rem;
-        }
-        
-        .auth-tab {
-            flex: 1;
-            padding: 0.75rem;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        
-        .auth-tab.active {
-            background: white;
-            color: #1e3a8a;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .auth-form {
-            display: none;
-            text-align: left;
-        }
-        
-        .auth-form.active {
+
+        .login-btn {
             display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .form-input {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s ease;
-            box-sizing: border-box;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-        
-        .form-footer {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-footer a {
-            color: #3b82f6;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
             text-decoration: none;
-            font-size: 0.9rem;
         }
-        
-        .form-footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .btn-auth {
-            width: 100%;
-            padding: 0.875rem;
-            background: #3b82f6;
+
+        .google-btn {
+            background: #4285f4;
             color: white;
-            border: none;
+        }
+
+        .google-btn:hover {
+            background: #357ae8;
+        }
+
+        .demo-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .demo-btn:hover {
+            background: #059669;
+        }
+
+        .message {
+            padding: 12px;
             border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
+            margin-top: 15px;
+            display: none;
         }
-        
-        .btn-auth:hover {
-            background: #2563eb;
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
         }
-        
-        .demo-info {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .demo-info h3 {
-            margin: 0 0 0.5rem 0;
-            color: #1e3a8a;
-            font-size: 0.9rem;
-        }
-        
-        .demo-info p {
-            margin: 0;
-            font-size: 0.8rem;
-            color: #475569;
-        }
-        
-        .demo-credentials {
-            background: #f8fafc;
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-top: 0.5rem;
-            font-family: monospace;
-            font-size: 0.8rem;
-        }
-        
-        .error-message, .success-message {
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-        
-        .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-        }
-        
-        .success-message {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
         }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <!-- ロゴ -->
-            <div class="auth-logo">
-                <div class="logo-icon">🏠</div>
-                <h1>RentPipe</h1>
-                <p>賃貸営業を、流れるように</p>
-            </div>
-            
-            <!-- タブ -->
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchTab('login')">ログイン</button>
-                <button class="auth-tab" onclick="switchTab('register')">新規登録</button>
-            </div>
-            
-            <!-- メッセージエリア -->
-            <div id="messageArea"></div>
-            
-            <!-- ログインフォーム -->
-            <form id="loginForm" class="auth-form active">
-                <div class="form-group">
-                    <label for="loginEmail" class="form-label">メールアドレス</label>
-                    <input type="email" id="loginEmail" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="loginPassword" class="form-label">パスワード</label>
-                    <input type="password" id="loginPassword" class="form-input" required>
-                </div>
-                
-                <div class="form-footer">
-                    <a href="#" onclick="showResetPassword()">パスワードを忘れた方</a>
-                </div>
-                
-                <button type="submit" class="btn-auth">ログイン</button>
-            </form>
-            
-            <!-- 新規登録フォーム -->
-            <form id="registerForm" class="auth-form">
-                <div class="form-group">
-                    <label for="registerName" class="form-label">お名前</label>
-                    <input type="text" id="registerName" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerEmail" class="form-label">メールアドレス</label>
-                    <input type="email" id="registerEmail" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerPassword" class="form-label">パスワード</label>
-                    <input type="password" id="registerPassword" class="form-input" required minlength="6">
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerPasswordConfirm" class="form-label">パスワード（確認）</label>
-                    <input type="password" id="registerPasswordConfirm" class="form-input" required minlength="6">
-                </div>
-                
-                <button type="submit" class="btn-auth">新規登録</button>
-            </form>
-            
-            <!-- デモアカウント情報 -->
-            <div class="demo-info">
-                <h3>🚀 デモアカウント</h3>
-                <p>すぐにお試しいただけます</p>
-                <div class="demo-credentials">
-                    <div>メール: demo@rentpipe.jp</div>
-                    <div>パスワード: demo123</div>
-                </div>
-            </div>
-        </div>
+    <div class="login-container">
+        <div class="logo">🏠</div>
+        <h1 class="login-title">RentPipe</h1>
+        <p class="login-subtitle">賃貸営業を、流れるように</p>
+
+        <button class="login-btn google-btn" onclick="handleGoogleLogin()">
+            G Googleでログイン
+        </button>
+
+        <button class="login-btn demo-btn" onclick="handleDemoLogin()">
+            🔧 デモログイン
+        </button>
+
+        <div id="message" class="message"></div>
     </div>
 
-    <script src="js/unified-auth.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
     <script>
-        // タブ切り替え
-        function switchTab(tab) {
-            // タブボタンの切り替え
-            document.querySelectorAll('.auth-tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-            
-            // フォームの切り替え
-            document.querySelectorAll('.auth-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            document.getElementById(`${tab}Form`).classList.add('active');
-            
-            // メッセージをクリア
-            clearMessage();
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+            authDomain: "rentpipe-ab04e.firebaseapp.com",
+            projectId: "rentpipe-ab04e",
+            storageBucket: "rentpipe-ab04e.firebasestorage.app",
+            messagingSenderId: "586040985916",
+            appId: "1:586040985916:web:3cdb5db072f1a6569fb639"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        function showMessage(text, type = 'error') {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = text;
+            msgDiv.className = `message ${type}`;
+            msgDiv.style.display = 'block';
         }
 
-        // メッセージ表示
-        function showMessage(message, type = 'error') {
-            const messageArea = document.getElementById('messageArea');
-            messageArea.innerHTML = `<div class="${type}-message">${message}</div>`;
+        function saveAuthAndRedirect(userData) {
+            // シンプル認証システムに保存
+            localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+            localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
+            
+            console.log('✅ 認証保存完了:', userData.email);
+            showMessage('ログイン成功！ダッシュボードに移動します', 'success');
+            
+            // 確実なリダイレクト
+            setTimeout(() => {
+                console.log('🔄 ダッシュボードにリダイレクト');
+                window.location.href = 'index.html';
+            }, 1000);
         }
 
-        function clearMessage() {
-            document.getElementById('messageArea').innerHTML = '';
+        async function handleGoogleLogin() {
+            console.log('🔐 Googleログイン開始');
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'ログイン中...';
+            
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await firebase.auth().signInWithPopup(provider);
+                
+                const userData = {
+                    uid: result.user.uid,
+                    email: result.user.email,
+                    displayName: result.user.displayName,
+                    photoURL: result.user.photoURL
+                };
+                
+                saveAuthAndRedirect(userData);
+                
+            } catch (error) {
+                console.error('Googleログインエラー:', error);
+                showMessage('ログインに失敗しました: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = 'G Googleでログイン';
+            }
         }
 
-        // ログイン処理
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function handleDemoLogin() {
+            console.log('🔧 デモログイン実行');
             
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+            const userData = {
+                uid: 'demo-user-123',
+                email: 'demo@rentpipe.com',
+                displayName: 'デモユーザー',
+                photoURL: null
+            };
             
-            if (window.UnifiedAuth && window.UnifiedAuth.login(email, password)) {
-                showMessage('ログインに成功しました', 'success');
+            saveAuthAndRedirect(userData);
+        }
+
+        // ページロード時：既にログイン済みかチェック
+        window.addEventListener('load', () => {
+            const authStatus = localStorage.getItem('rentpipe_auth_simple');
+            if (authStatus === 'logged_in') {
+                console.log('✅ 既にログイン済み');
+                showMessage('既にログイン済みです。ダッシュボードに移動します', 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1000);
-            } else {
-                showMessage('メールアドレスまたはパスワードが間違っています');
             }
         });
 
-        // 新規登録処理
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-            
-            if (password !== passwordConfirm) {
-                showMessage('パスワードが一致しません');
-                return;
-            }
-            
-            // デモ環境では新規登録を制限
-            showMessage('デモ環境では新規登録はできません。デモアカウントをご利用ください。');
-        });
-
-        // パスワードリセット
-        function showResetPassword() {
-            showMessage('デモ環境ではパスワードリセット機能は無効です。デモアカウントをご利用ください。');
-        }
-
-        // デモアカウント自動入力（開発用）
-        document.addEventListener('DOMContentLoaded', function() {
-            // URLパラメータで自動ログインを確認
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('demo') === 'true') {
-                document.getElementById('loginEmail').value = 'demo@rentpipe.jp';
-                document.getElementById('loginPassword').value = 'demo123';
-                showMessage('デモアカウント情報が入力されました', 'success');
-            }
-        });
+        console.log('✅ ログインページ準備完了');
     </script>
 </body>
 </html>

@@ -3,246 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プロフィール管理 - RentPipe</title>
+    <title>プロフィール - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <style>
         .profile-container {
-            max-width: 600px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
         }
         
         .profile-card {
             background: white;
-            border-radius: 8px;
-            padding: 2rem;
+            border-radius: 12px;
+            padding: 30px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
         
         .profile-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 30px;
         }
         
-        .profile-header h1 {
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            font-size: 32px;
+        }
+        
+        .profile-name {
+            font-size: 24px;
+            font-weight: bold;
             color: #1e3a8a;
-            margin-bottom: 0.5rem;
+            margin-bottom: 5px;
         }
         
-        .form-group {
-            margin-bottom: 1.5rem;
+        .profile-email {
+            color: #6b7280;
+            font-size: 16px;
         }
         
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .info-label {
             font-weight: 600;
             color: #374151;
         }
         
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-            margin-right: 1rem;
-        }
-        
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1e3a8a;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .danger-zone {
-            border: 1px solid #fca5a5;
-            border-radius: 8px;
-            padding: 1.5rem;
-            background: #fef2f2;
-        }
-        
-        .danger-zone h3 {
-            color: #dc2626;
-            margin-bottom: 1rem;
-        }
-        
-        .success-message, .error-message {
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-        
-        .success-message {
-            background: #d1fae5;
-            border: 1px solid #a7f3d0;
-            color: #065f46;
-        }
-        
-        .error-message {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
-        }
-        
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-        
-        @media (max-width: 768px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-            
-            .profile-container {
-                margin: 1rem auto;
-                padding: 0 0.5rem;
-            }
-            
-            .profile-card {
-                padding: 1.5rem;
-            }
+        .info-value {
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
-    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
-
-    <div class="profile-container">
-        <!-- プロフィール編集 -->
+    <main class="profile-container">
         <div class="profile-card">
             <div class="profile-header">
-                <h1>プロフィール管理</h1>
-                <p>あなたのアカウント情報を管理します</p>
+                <div id="profileAvatar" class="profile-avatar">
+                    👤
+                </div>
+                <div id="profileName" class="profile-name">
+                    ユーザー名
+                </div>
+                <div id="profileEmail" class="profile-email">
+                    メールアドレス
+                </div>
             </div>
             
-            <div class="success-message" id="successMessage"></div>
-            <div class="error-message" id="errorMessage"></div>
+            <div id="profileInfo">
+                <div class="info-row">
+                    <span class="info-label">ユーザーID</span>
+                    <span class="info-value" id="userId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ログイン方法</span>
+                    <span class="info-value" id="loginMethod">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">最終ログイン</span>
+                    <span class="info-value" id="lastLogin">-</span>
+                </div>
+            </div>
             
-            <form id="profileForm">
-                <div class="section-title">基本情報</div>
-                
-                <div class="two-column">
-                    <div class="form-group">
-                        <label for="agentName">エージェント名 *</label>
-                        <input type="text" id="agentName" name="agentName" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">メールアドレス *</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                </div>
-                
-                <div class="two-column">
-                    <div class="form-group">
-                        <label for="phone">電話番号</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="company">会社名</label>
-                        <input type="text" id="company" name="company">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="businessAreas">営業エリア</label>
-                    <textarea id="businessAreas" name="businessAreas" rows="3" placeholder="例：渋谷区、港区、目黒区"></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">プロフィールを更新</button>
-            </form>
-        </div>
-        
-        <!-- パスワード変更 -->
-        <div class="profile-card">
-            <div class="section-title">パスワード変更</div>
-            
-            <form id="passwordForm">
-                <div class="form-group">
-                    <label for="currentPassword">現在のパスワード *</label>
-                    <input type="password" id="currentPassword" name="currentPassword" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="newPassword">新しいパスワード *</label>
-                    <input type="password" id="newPassword" name="newPassword" required>
-                    <small style="color: #6b7280;">8文字以上で設定してください</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirmPassword">新しいパスワード（確認） *</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">パスワードを変更</button>
-            </form>
-        </div>
-        
-        <!-- 危険ゾーン -->
-        <div class="profile-card danger-zone">
-            <h3>危険ゾーン</h3>
-            <p>以下の操作は元に戻すことができません。慎重に実行してください。</p>
-            
-            <div style="margin-top: 1.5rem;">
-                <button class="btn btn-danger" onclick="confirmAccountDeletion()">アカウントを削除する</button>
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="goBack()" class="btn btn-outline" style="margin-right: 10px;">
+                    ← 戻る
+                </button>
+                <button onclick="handleLogout()" class="btn btn-danger">
+                    ログアウト
+                </button>
             </div>
         </div>
-    </div>
-    
-    <script src="js/unified-auth.js"></script>
-    <script src="js/unified-data-manager.js"></script>
+    </main>
+
+    <!-- navigation.js を読み込んでナビゲーション生成 -->
     <script src="js/navigation.js"></script>
-    <script src="js/profile.js"></script>
+    <!-- シンプル認証システム -->
+    <script src="js/simple-reliable-auth.js"></script>
+
+    <script>
+        console.log('👤 プロフィールページ初期化中...');
+        
+        // プロフィール情報表示
+        function displayProfile() {
+            const user = getUser();
+            
+            if (!user) {
+                console.error('❌ ユーザー情報が取得できません');
+                return;
+            }
+            
+            console.log('👤 プロフィール表示:', user.email);
+            
+            // プロフィール情報更新
+            document.getElementById('profileName').textContent = user.displayName || 'ユーザー';
+            document.getElementById('profileEmail').textContent = user.email || 'メールアドレス未設定';
+            document.getElementById('userId').textContent = user.uid?.substring(0, 8) + '...' || '不明';
+            document.getElementById('loginMethod').textContent = user.uid?.startsWith('demo') ? 'デモログイン' : 'Google認証';
+            document.getElementById('lastLogin').textContent = new Date().toLocaleString('ja-JP');
+            
+            // プロフィール画像
+            const avatarElement = document.getElementById('profileAvatar');
+            if (user.photoURL) {
+                avatarElement.innerHTML = `<img src="${user.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;" alt="Profile">`;
+            } else {
+                avatarElement.innerHTML = '👤';
+            }
+        }
+        
+        // 戻るボタン
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        // ログアウト処理
+        function handleLogout() {
+            if (confirm('ログアウトしますか？')) {
+                logout();
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // ページ読み込み完了後にプロフィール表示
+        setTimeout(() => {
+            displayProfile();
+        }, 500);
+        
+        console.log('✅ プロフィールページ準備完了');
+    </script>
 </body>
 </html>
