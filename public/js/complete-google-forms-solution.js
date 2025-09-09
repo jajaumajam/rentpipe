@@ -1,19 +1,38 @@
-// 🎯 RentPipe Google Forms 完全統合ソリューション
-console.log('🚀 RentPipe Google Forms 完全統合ソリューション初期化中...');
+// 🎯 RentPipe Google Forms 完全統合ソリューション（改良版）
+console.log('🚀 RentPipe Google Forms 完全統合ソリューション（改良版）初期化中...');
+
+// 重複する統合機能を無効化
+window.forceIntegration = function() { 
+    console.log('🔇 重複統合機能は無効化されています'); 
+    return false; 
+};
 
 window.RentPipeCompleteFormsSystem = {
     // 初期化状態
     isInitialized: false,
     isGoogleAPIReady: false,
     isFormsAPIReady: false,
+    initializationAttempted: false,
     
     // 初期化プロセス
     initialize: async function() {
+        if (this.initializationAttempted) {
+            console.log('🔄 初期化は既に試行済み');
+            return this.isInitialized;
+        }
+        
+        this.initializationAttempted = true;
+        
         try {
             console.log('🔧 完全統合システム初期化開始...');
             
             // 1. 認証状態復元
-            await this.restoreAuthState();
+            const authSuccess = await this.restoreAuthState();
+            if (!authSuccess) {
+                console.log('❌ 認証状態復元失敗 - Google認証が必要');
+                this.showAuthRequiredUI();
+                return false;
+            }
             
             // 2. Google APIライブラリの確実な読み込み
             await this.ensureGoogleAPIs();
@@ -30,8 +49,8 @@ window.RentPipeCompleteFormsSystem = {
             this.isInitialized = true;
             console.log('✅ 完全統合システム初期化完了');
             
-            // 成功通知
-            this.showNotification('✅ Google Forms連携システム準備完了', 'success');
+            // 成功通知（控えめに）
+            this.showNotification('✅ Google Forms連携準備完了', 'success', 3000);
             
             return true;
             
@@ -47,12 +66,19 @@ window.RentPipeCompleteFormsSystem = {
         console.log('🔄 認証状態復元開始...');
         
         try {
+            // 既に認証済みの場合はスキップ
+            if (window.IntegratedAuthManagerV2?.getAuthState()?.googleAuth?.isSignedIn) {
+                console.log('✅ 既に認証済み');
+                return true;
+            }
+            
             // LocalStorageから認証データを取得
             const googleIdentityData = localStorage.getItem('google_identity_data');
             const rentpipeAuth = localStorage.getItem('rentpipe_auth');
             
             if (!googleIdentityData && !rentpipeAuth) {
-                throw new Error('認証データが見つかりません');
+                console.log('❌ 認証データが見つかりません');
+                return false;
             }
             
             let authData = null;
@@ -70,12 +96,14 @@ window.RentPipeCompleteFormsSystem = {
             }
             
             if (!authData || !authData.user) {
-                throw new Error('有効な認証データが見つかりません');
+                console.log('❌ 有効な認証データが見つかりません');
+                return false;
             }
             
             // 有効期限チェック
             if (authData.user.expiresAt && new Date(authData.user.expiresAt) <= new Date()) {
-                throw new Error('認証トークンの有効期限切れ');
+                console.log('❌ 認証トークンの有効期限切れ');
+                return false;
             }
             
             // IntegratedAuthManagerV2の状態を設定
@@ -97,10 +125,86 @@ window.RentPipeCompleteFormsSystem = {
                 return true;
             }
             
+            return false;
+            
         } catch (error) {
             console.log('❌ 認証状態復元失敗:', error.message);
             return false;
         }
+    },
+    
+    // 認証が必要な場合のUI表示
+    showAuthRequiredUI: function() {
+        console.log('🔑 Google認証が必要なUI表示');
+        
+        // Google Forms統合セクションを作成
+        let section = document.querySelector('#google-forms-section');
+        if (!section) {
+            section = document.createElement('div');
+            section.id = 'google-forms-section';
+            const main = document.querySelector('main, .main-content, .container') || document.body;
+            const firstChild = main.firstElementChild;
+            if (firstChild) {
+                main.insertBefore(section, firstChild);
+            } else {
+                main.appendChild(section);
+            }
+        }
+        
+        // 未認証表示
+        section.style.cssText = `
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0 2rem 0;
+            text-align: center;
+        `;
+        
+        section.innerHTML = `
+            <h3 style="margin: 0 0 1rem 0;">📝 Google Forms連携</h3>
+            <p style="margin: 0 0 1rem 0; opacity: 0.9;">
+                顧客専用の物件希望調査フォームを自動作成できます
+            </p>
+            <button onclick="window.location.href='login-google-v2.html'" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                🔑 Google認証してフォーム機能を利用
+            </button>
+        `;
+        
+        // 顧客カードにも認証が必要なボタンを設置
+        const customerCards = document.querySelectorAll('.customer-card, .customer-item, [data-customer-id]');
+        customerCards.forEach((card) => {
+            let buttonContainer = card.querySelector('.google-forms-final-container');
+            if (!buttonContainer) {
+                buttonContainer = document.createElement('div');
+                buttonContainer.className = 'google-forms-final-container';
+                buttonContainer.style.cssText = `
+                    margin-top: 15px;
+                    padding: 15px;
+                    border-top: 1px solid #e5e7eb;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    text-align: center;
+                `;
+                card.appendChild(buttonContainer);
+            }
+            
+            buttonContainer.innerHTML = `
+                <div style="margin-bottom: 8px; color: #6b7280; font-size: 0.9rem;">
+                    🔑 Google認証が必要
+                </div>
+                <button 
+                    onclick="window.location.href='login-google-v2.html'"
+                    style="
+                        background: #f59e0b; color: white; border: none;
+                        padding: 10px 20px; border-radius: 6px;
+                        font-size: 14px; font-weight: 600; cursor: pointer;
+                    "
+                >
+                    Google認証してフォーム機能を利用
+                </button>
+            `;
+        });
     },
     
     // Google APIライブラリの確実な読み込み
@@ -152,7 +256,8 @@ window.RentPipeCompleteFormsSystem = {
             // 既存のスクリプトをチェック
             const existing = document.querySelector(`script[src="${src}"]`);
             if (existing) {
-                existing.remove();
+                resolve();
+                return;
             }
             
             const script = document.createElement('script');
@@ -397,9 +502,6 @@ window.RentPipeCompleteFormsSystem = {
             const form = createResponse.result;
             console.log('✅ フォーム作成成功:', form.formId);
             
-            // 詳細項目を追加
-            await this.addFormQuestions(form.formId, customer);
-            
             // ローディング非表示
             this.hideLoading();
             
@@ -425,100 +527,6 @@ window.RentPipeCompleteFormsSystem = {
             this.showNotification(`❌ フォーム作成エラー: ${error.message}`, 'error');
             return { success: false, error: error.message };
         }
-    },
-    
-    // フォームに質問項目を追加
-    addFormQuestions: async function(formId, customer) {
-        console.log('📝 フォーム詳細項目追加中...');
-        
-        const questions = [
-            {
-                title: "お名前の確認",
-                type: "textQuestion",
-                required: true
-            },
-            {
-                title: "メールアドレス",
-                type: "textQuestion", 
-                required: true
-            },
-            {
-                title: "電話番号",
-                type: "textQuestion",
-                required: true
-            },
-            {
-                title: "希望予算（月額家賃）",
-                type: "choiceQuestion",
-                required: true,
-                choices: ["5万円以下", "5-8万円", "8-12万円", "12-15万円", "15-20万円", "20万円以上"]
-            },
-            {
-                title: "希望エリア（3つまで選択可）",
-                type: "choiceQuestion",
-                required: true,
-                choices: ["渋谷区", "新宿区", "港区", "品川区", "目黒区", "世田谷区", "中野区", "杉並区", "練馬区", "その他"]
-            },
-            {
-                title: "希望間取り",
-                type: "choiceQuestion", 
-                required: true,
-                choices: ["ワンルーム", "1K", "1DK", "1LDK", "2K", "2DK", "2LDK", "3LDK以上"]
-            },
-            {
-                title: "駅からの徒歩時間",
-                type: "choiceQuestion",
-                required: true,
-                choices: ["5分以内", "10分以内", "15分以内", "20分以内", "時間は気にしない"]
-            },
-            {
-                title: "重視する設備・条件（複数選択可）",
-                type: "choiceQuestion",
-                required: false,
-                choices: ["オートロック", "バス・トイレ別", "エアコン付き", "駐車場付き", "ペット可", "楽器可", "インターネット無料", "宅配ボックス"]
-            },
-            {
-                title: "入居希望時期",
-                type: "choiceQuestion",
-                required: true,
-                choices: ["すぐに", "1ヶ月以内", "2-3ヶ月以内", "半年以内", "時期は決まっていない"]
-            },
-            {
-                title: "その他のご希望・ご質問",
-                type: "textQuestion",
-                required: false
-            }
-        ];
-        
-        // 質問項目を一括で追加
-        const requests = questions.map((question, index) => ({
-            createItem: {
-                item: {
-                    title: question.title,
-                    questionItem: {
-                        question: {
-                            required: question.required,
-                            [question.type]: question.type === "choiceQuestion" && question.choices ? {
-                                type: "CHECKBOX",
-                                options: question.choices.map(choice => ({ value: choice }))
-                            } : {}
-                        }
-                    }
-                },
-                location: {
-                    index: index
-                }
-            }
-        }));
-        
-        await window.gapi.client.forms.forms.batchUpdate({
-            formId: formId,
-            resource: {
-                requests: requests
-            }
-        });
-        
-        console.log('✅ フォーム詳細項目追加完了');
     },
     
     // ローディング表示
@@ -567,7 +575,7 @@ ${form.editUrl}
 📊 回答確認URL:
 ${form.responsesUrl}
 
-10項目の詳細な物件希望調査フォームが作成されました。
+Google Formsが正常に作成されました。
 フォームを確認しますか？`;
         
         alert(message);
@@ -578,7 +586,7 @@ ${form.responsesUrl}
     },
     
     // 通知表示
-    showNotification: function(message, type = 'info') {
+    showNotification: function(message, type = 'info', duration = 5000) {
         const notification = document.createElement('div');
         const bgColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
         
@@ -598,37 +606,36 @@ ${form.responsesUrl}
                 notification.style.transition = 'opacity 0.5s ease';
                 notification.style.opacity = '0';
                 setTimeout(() => {
-                    notification.parentNode.removeChild(notification);
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
                 }, 500);
             }
-        }, 5000);
+        }, duration);
     }
 };
 
-// DOMContentLoadedで自動初期化
+// DOMContentLoadedで自動初期化（1回のみ）
+let initializationStarted = false;
+
 document.addEventListener('DOMContentLoaded', function() {
-    // 2秒後に初期化開始（他のスクリプトの読み込み完了を待つ）
+    if (initializationStarted) return;
+    initializationStarted = true;
+    
+    // 3秒後に初期化開始（他のスクリプトの読み込み完了を待つ）
     setTimeout(() => {
         console.log('🚀 完全統合システム自動初期化開始...');
         window.RentPipeCompleteFormsSystem.initialize().then(success => {
             if (success) {
                 console.log('✅ 完全統合システム自動初期化成功');
             } else {
-                console.log('❌ 完全統合システム自動初期化失敗');
+                console.log('❌ 完全統合システム自動初期化失敗 - 再認証が必要');
             }
         });
-    }, 2000);
+    }, 3000);
 });
-
-// バックアップとして5秒後にも実行
-setTimeout(() => {
-    if (!window.RentPipeCompleteFormsSystem.isInitialized) {
-        console.log('🔄 バックアップ初期化実行...');
-        window.RentPipeCompleteFormsSystem.initialize();
-    }
-}, 5000);
 
 // グローバル関数として追加
 window.createCustomerForm = (index) => window.RentPipeCompleteFormsSystem.createCustomerForm(index);
 
-console.log('✅ RentPipe Google Forms 完全統合ソリューション準備完了');
+console.log('✅ RentPipe Google Forms 完全統合ソリューション（改良版）準備完了');
