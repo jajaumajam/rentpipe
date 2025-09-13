@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顧客管理（最小版） - RentPipe</title>
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/responsive.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                🏠 RentPipe
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">📊 ダッシュボード</a>
+                </li>
+                <li class="nav-item">
+                    <a href="customer.html" class="nav-link active">👥 顧客管理</a>
+                </li>
+                <li class="nav-item">
+                    <a href="pipeline.html" class="nav-link">📋 パイプライン</a>
+                </li>
+                <li class="nav-item">
+                    <a href="customer-form.html" class="nav-link">➕ 顧客登録</a>
+                </li>
+            </ul>
+            <div class="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>👥 顧客管理（最小版）</h1>
+            <p>リダイレクト問題の調査中...</p>
+        </div>
+
+        <!-- 認証状態表示 -->
+        <div id="auth-status" style="margin: 20px 0; padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <h3>🔍 認証状態確認</h3>
+            <div id="auth-details">認証データ読み込み中...</div>
+        </div>
+
+        <!-- 顧客一覧表示テスト -->
+        <div class="customers-stats" id="customersStats">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3>📊 顧客データテスト</h3>
+                <div id="customer-test">顧客データ読み込み中...</div>
+            </div>
+        </div>
+
+        <!-- 元々の表示先ID -->
+        <div class="customers-grid" id="customersList">
+            <!-- 顧客カードがここに表示される予定 -->
+        </div>
+    </main>
+
+    <script>
+        // 最小限の機能で動作確認
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 最小版顧客管理ページ読み込み完了');
+            
+            // 認証状態確認
+            checkAllAuthSystems();
+            
+            // 顧客データ確認
+            checkCustomerData();
+            
+            // 10秒後に正常版customer.htmlにリダイレクト（問題がなければ）
+            setTimeout(() => {
+                if (confirm('10秒経過しました。問題なく表示されていますか？\n\n「OK」で元のcustomer.htmlに移動します。\n「キャンセル」でこのまま調査を続けます。')) {
+                    window.location.href = 'customer.html';
+                }
+            }, 10000);
+        });
+
+        // 全認証システムの状態確認
+        function checkAllAuthSystems() {
+            const authDetails = document.getElementById('auth-details');
+            let html = '<div style="font-family: monospace; font-size: 12px; line-height: 1.5;">';
+            
+            const authKeys = [
+                'google_auth_simple',
+                'rentpipe_authenticated', 
+                'rentpipe_user',
+                'rentpipe_auth_simple',
+                'rentpipe_user_simple',
+                'rentpipe_unified_auth'
+            ];
+            
+            let hasValidAuth = false;
+            
+            authKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                const sessionData = sessionStorage.getItem(key);
+                
+                if (data || sessionData) {
+                    html += `<div style="color: #059669;">✅ ${key}: 存在</div>`;
+                    
+                    try {
+                        const parsed = JSON.parse(data || sessionData);
+                        if (parsed && (parsed.email || parsed.displayName || parsed.name)) {
+                            hasValidAuth = true;
+                            html += `<div style="margin-left: 20px; color: #6b7280;">ユーザー: ${parsed.email || parsed.displayName || parsed.name}</div>`;
+                        }
+                    } catch (e) {
+                        if (key === 'rentpipe_authenticated' && (data === 'true' || sessionData === 'true')) {
+                            hasValidAuth = true;
+                        }
+                        if (key === 'rentpipe_auth_simple' && (data === 'logged_in' || sessionData === 'logged_in')) {
+                            hasValidAuth = true;
+                        }
+                    }
+                } else {
+                    html += `<div style="color: #ef4444;">❌ ${key}: 未設定</div>`;
+                }
+            });
+            
+            html += '</div>';
+            html += `<div style="margin-top: 15px; padding: 10px; background: ${hasValidAuth ? '#dcfce7' : '#fee2e2'}; border-radius: 6px; font-weight: bold;">`;
+            html += hasValidAuth ? '✅ 有効な認証データが見つかりました' : '❌ 有効な認証データがありません';
+            html += '</div>';
+            
+            authDetails.innerHTML = html;
+            
+            console.log('🔍 認証状態確認結果:', hasValidAuth);
+        }
+
+        // 顧客データ確認
+        function checkCustomerData() {
+            const customerTest = document.getElementById('customer-test');
+            
+            try {
+                const customerData = localStorage.getItem('rentpipe_demo_customers');
+                if (customerData) {
+                    const customers = JSON.parse(customerData);
+                    customerTest.innerHTML = `
+                        <div style="color: #059669;">✅ 顧客データ発見: ${customers.length}件</div>
+                        <div style="margin-top: 10px; font-size: 12px;">
+                            ${customers.slice(0, 3).map(c => `<div>- ${c.name} (${c.email})</div>`).join('')}
+                            ${customers.length > 3 ? `<div>... 他${customers.length - 3}件</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    customerTest.innerHTML = '<div style="color: #ef4444;">❌ 顧客データが見つかりません</div>';
+                }
+            } catch (error) {
+                customerTest.innerHTML = `<div style="color: #ef4444;">❌ 顧客データ読み込みエラー: ${error.message}</div>`;
+            }
+        }
+
+        // デバッグ用グローバル関数
+        window.testRedirect = function() {
+            console.log('🔄 customer.htmlへのリダイレクトテスト');
+            window.location.href = 'customer.html';
+        };
+
+        window.showAllData = function() {
+            const authKeys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+            console.log('📊 全認証データ:');
+            authKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                console.log(`${key}:`, data);
+            });
+            
+            const customerData = localStorage.getItem('rentpipe_demo_customers');
+            console.log('顧客データ:', customerData ? JSON.parse(customerData).length + '件' : 'なし');
+        };
+
+        window.clearAllAndReload = function() {
+            if (confirm('全ての認証データをクリアしてリロードしますか？')) {
+                const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+                keys.forEach(key => {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                });
+                location.reload();
+            }
+        };
+    </script>
+
+    <style>
+        .page-header p {
+            color: #f59e0b;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        #auth-status h3 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</body>
+</html>
