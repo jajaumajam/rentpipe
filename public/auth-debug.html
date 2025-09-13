@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>認証デバッグツール - RentPipe</title>
+    <link href="css/main.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">🏠 RentPipe</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div style="max-width: 800px; margin: 20px auto;">
+            <h1>🔧 認証デバッグツール</h1>
+            
+            <!-- 現在の認証状態 -->
+            <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2>🔍 現在の認証状態</h2>
+                <div id="current-auth-status">読み込み中...</div>
+                <button onclick="refreshAuthStatus()" style="margin-top: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    🔄 認証状態を更新
+                </button>
+            </div>
+            
+            <!-- Google認証データの手動保存 -->
+            <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2>💾 Google認証データの手動変換</h2>
+                <p>Google認証データが存在する場合、他の形式に手動で変換します。</p>
+                <button onclick="convertGoogleAuthData()" style="padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                    🔄 Google認証データを変換
+                </button>
+                <button onclick="createDemoData()" style="padding: 10px 20px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    📊 デモデータを作成
+                </button>
+                <div id="conversion-status" style="margin-top: 15px;"></div>
+            </div>
+            
+            <!-- 認証データ詳細表示 -->
+            <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2>📋 認証データ詳細</h2>
+                <button onclick="showDetailedAuthData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">
+                    📊 詳細データ表示
+                </button>
+                <div id="detailed-auth-data" style="font-family: monospace; font-size: 12px; white-space: pre-wrap; background: #f8f9fa; padding: 15px; border-radius: 6px; max-height: 400px; overflow-y: auto;"></div>
+            </div>
+            
+            <!-- テスト機能 -->
+            <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2>🧪 テスト機能</h2>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="testCustomerPageAccess()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        📄 customer.html アクセステスト
+                    </button>
+                    <button onclick="clearAllAuthData()" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🗑️ 全認証データクリア
+                    </button>
+                    <button onclick="exportAuthData()" style="padding: 8px 16px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        📤 認証データエクスポート
+                    </button>
+                </div>
+                <div id="test-results" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 認証状態を確認
+        function refreshAuthStatus() {
+            const statusDiv = document.getElementById('current-auth-status');
+            const authKeys = [
+                'google_auth_simple',
+                'rentpipe_authenticated',
+                'rentpipe_user',
+                'rentpipe_auth_simple',
+                'rentpipe_user_simple',
+                'rentpipe_unified_auth',
+                'rentpipe_demo_customers'
+            ];
+            
+            let html = '<div style="font-family: monospace; line-height: 1.6;">';
+            let hasValidAuth = false;
+            let googleAuthData = null;
+            
+            authKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    html += `<div style="color: #059669;">✅ ${key}: 存在</div>`;
+                    
+                    if (key === 'google_auth_simple') {
+                        try {
+                            googleAuthData = JSON.parse(data);
+                            html += `<div style="margin-left: 20px; color: #6b7280;">ユーザー: ${googleAuthData.email}</div>`;
+                            html += `<div style="margin-left: 20px; color: #6b7280;">有効期限: ${new Date(googleAuthData.expires).toLocaleString()}</div>`;
+                            hasValidAuth = true;
+                        } catch (e) {
+                            html += `<div style="margin-left: 20px; color: #ef4444;">解析エラー</div>`;
+                        }
+                    } else if (key === 'rentpipe_demo_customers') {
+                        try {
+                            const customers = JSON.parse(data);
+                            html += `<div style="margin-left: 20px; color: #6b7280;">顧客数: ${customers.length}件</div>`;
+                        } catch (e) {
+                            html += `<div style="margin-left: 20px; color: #ef4444;">解析エラー</div>`;
+                        }
+                    } else {
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.email || parsed.displayName || parsed.name) {
+                                html += `<div style="margin-left: 20px; color: #6b7280;">ユーザー: ${parsed.email || parsed.displayName || parsed.name}</div>`;
+                            }
+                        } catch (e) {
+                            if (key === 'rentpipe_authenticated' && data === 'true') {
+                                hasValidAuth = true;
+                                html += `<div style="margin-left: 20px; color: #6b7280;">値: ${data}</div>`;
+                            } else if (key === 'rentpipe_auth_simple' && data === 'logged_in') {
+                                hasValidAuth = true;
+                                html += `<div style="margin-left: 20px; color: #6b7280;">値: ${data}</div>`;
+                            }
+                        }
+                    }
+                } else {
+                    html += `<div style="color: #ef4444;">❌ ${key}: 未設定</div>`;
+                }
+            });
+            
+            html += '</div>';
+            html += `<div style="margin-top: 15px; padding: 10px; border-radius: 6px; font-weight: bold; ${hasValidAuth ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'}">`;
+            html += hasValidAuth ? '✅ 有効な認証データが見つかりました' : '❌ 有効な認証データがありません';
+            html += '</div>';
+            
+            statusDiv.innerHTML = html;
+            
+            return { hasValidAuth, googleAuthData };
+        }
+
+        // Google認証データを他の形式に変換
+        function convertGoogleAuthData() {
+            const statusDiv = document.getElementById('conversion-status');
+            statusDiv.innerHTML = '<div style="color: #3b82f6;">🔄 変換処理中...</div>';
+            
+            try {
+                const googleAuthRaw = localStorage.getItem('google_auth_simple');
+                if (!googleAuthRaw) {
+                    statusDiv.innerHTML = '<div style="color: #ef4444;">❌ Google認証データが見つかりません</div>';
+                    return;
+                }
+                
+                const googleAuth = JSON.parse(googleAuthRaw);
+                const now = Date.now();
+                
+                if (googleAuth.expires && now > googleAuth.expires) {
+                    statusDiv.innerHTML = '<div style="color: #f59e0b;">⚠️ Google認証データが期限切れです</div>';
+                    return;
+                }
+                
+                const userData = {
+                    id: googleAuth.id,
+                    email: googleAuth.email,
+                    name: googleAuth.name,
+                    picture: googleAuth.picture
+                };
+                
+                const sessionId = 'session-' + now + '-' + Math.random().toString(36).substr(2, 9);
+                
+                // 1. rentpipe_authenticated + rentpipe_user
+                localStorage.setItem('rentpipe_authenticated', 'true');
+                localStorage.setItem('rentpipe_user', JSON.stringify({
+                    uid: userData.id,
+                    email: userData.email,
+                    displayName: userData.name,
+                    photoURL: userData.picture
+                }));
+                
+                // 2. rentpipe_auth_simple + rentpipe_user_simple  
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify({
+                    id: userData.id,
+                    email: userData.email,
+                    name: userData.name,
+                    picture: userData.picture
+                }));
+                
+                // 3. rentpipe_unified_auth
+                localStorage.setItem('rentpipe_unified_auth', JSON.stringify({
+                    isAuthenticated: true,
+                    user: {
+                        id: userData.id,
+                        email: userData.email,
+                        displayName: userData.name,
+                        photoURL: userData.picture
+                    },
+                    sessionId: sessionId,
+                    loginTime: now,
+                    authMethod: 'google'
+                }));
+                localStorage.setItem('rentpipe_session', sessionId);
+                
+                // セッションストレージにも保存
+                sessionStorage.setItem('rentpipe_authenticated', 'true');
+                sessionStorage.setItem('rentpipe_user', JSON.stringify({
+                    uid: userData.id,
+                    email: userData.email,
+                    displayName: userData.name,
+                    photoURL: userData.picture
+                }));
+                
+                statusDiv.innerHTML = '<div style="color: #059669;">✅ 認証データ変換完了！</div>';
+                
+                // 認証状態を更新
+                setTimeout(refreshAuthStatus, 500);
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div style="color: #ef4444;">❌ 変換エラー: ${error.message}</div>`;
+            }
+        }
+
+        // デモデータ作成
+        function createDemoData() {
+            const demoCustomers = [
+                {
+                    id: 'cust_demo_1_' + Date.now(),
+                    name: '田中太郎',
+                    email: 'tanaka@example.com',
+                    phone: '090-1234-5678',
+                    age: 28,
+                    occupation: 'エンジニア',
+                    annualIncome: 5000000,
+                    pipelineStatus: '初回相談',
+                    preferences: {
+                        budgetMin: 8,
+                        budgetMax: 12,
+                        areas: ['渋谷区', '新宿区'],
+                        roomType: '1K',
+                        requirements: ['駅徒歩10分以内', 'インターネット完備']
+                    },
+                    notes: '平日夜の連絡希望',
+                    urgency: '普通',
+                    contactTime: '平日19:00-21:00',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'ウェブサイト'
+                },
+                {
+                    id: 'cust_demo_2_' + Date.now(),
+                    name: '佐藤花子',
+                    email: 'sato@example.com',
+                    phone: '090-8765-4321',
+                    age: 25,
+                    occupation: '会社員',
+                    annualIncome: 4000000,
+                    pipelineStatus: '物件紹介',
+                    preferences: {
+                        budgetMin: 6,
+                        budgetMax: 9,
+                        areas: ['世田谷区'],
+                        roomType: '1DK',
+                        requirements: ['ペット可', '南向き']
+                    },
+                    notes: '猫を飼っています',
+                    urgency: '急ぎ',
+                    contactTime: '平日12:00-13:00',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: '紹介'
+                },
+                {
+                    id: 'cust_demo_3_' + Date.now(),
+                    name: '高橋一郎',
+                    email: 'takahashi@example.com',
+                    phone: '090-1111-2222',
+                    age: 32,
+                    occupation: 'デザイナー',
+                    annualIncome: 4500000,
+                    pipelineStatus: '内見',
+                    preferences: {
+                        budgetMin: 10,
+                        budgetMax: 15,
+                        areas: ['港区', '品川区'],
+                        roomType: '1LDK',
+                        requirements: ['デザイナーズ', '築浅']
+                    },
+                    notes: 'クリエイティブな空間希望',
+                    urgency: '普通',
+                    contactTime: 'いつでも',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'Instagram'
+                }
+            ];
+            
+            localStorage.setItem('rentpipe_demo_customers', JSON.stringify(demoCustomers));
+            
+            const statusDiv = document.getElementById('conversion-status');
+            statusDiv.innerHTML = '<div style="color: #059669;">✅ デモデータ作成完了！（3件）</div>';
+            
+            setTimeout(refreshAuthStatus, 500);
+        }
+
+        // 詳細な認証データ表示
+        function showDetailedAuthData() {
+            const detailDiv = document.getElementById('detailed-auth-data');
+            const authKeys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth', 'rentpipe_session', 'rentpipe_demo_customers'];
+            
+            let output = '=== 認証データ詳細 ===\n\n';
+            
+            authKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                const sessionData = sessionStorage.getItem(key);
+                
+                output += `◆ ${key}\n`;
+                output += `  LocalStorage: ${data ? (data.length > 100 ? data.substring(0, 100) + '...' : data) : '未設定'}\n`;
+                output += `  SessionStorage: ${sessionData ? (sessionData.length > 100 ? sessionData.substring(0, 100) + '...' : sessionData) : '未設定'}\n`;
+                
+                if (data && key !== 'rentpipe_authenticated' && key !== 'rentpipe_auth_simple') {
+                    try {
+                        const parsed = JSON.parse(data);
+                        output += `  解析結果: ${JSON.stringify(parsed, null, 2)}\n`;
+                    } catch (e) {
+                        output += `  解析エラー: ${e.message}\n`;
+                    }
+                }
+                output += '\n';
+            });
+            
+            detailDiv.textContent = output;
+        }
+
+        // customer.htmlアクセステスト
+        function testCustomerPageAccess() {
+            const testDiv = document.getElementById('test-results');
+            testDiv.innerHTML = '<div style="color: #3b82f6;">🔄 customer.htmlアクセステスト中...</div>';
+            
+            setTimeout(() => {
+                window.open('customer.html', '_blank');
+                testDiv.innerHTML = '<div style="color: #059669;">✅ customer.htmlを新しいタブで開きました。正常に表示されるか確認してください。</div>';
+            }, 500);
+        }
+
+        // 全認証データクリア
+        function clearAllAuthData() {
+            if (confirm('全ての認証データをクリアしますか？')) {
+                const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth', 'rentpipe_session', 'rentpipe_demo_customers'];
+                
+                keys.forEach(key => {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                });
+                
+                const testDiv = document.getElementById('test-results');
+                testDiv.innerHTML = '<div style="color: #059669;">✅ 全認証データをクリアしました。</div>';
+                
+                setTimeout(() => {
+                    refreshAuthStatus();
+                    location.reload();
+                }, 1000);
+            }
+        }
+
+        // 認証データエクスポート
+        function exportAuthData() {
+            const authKeys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth', 'rentpipe_session', 'rentpipe_demo_customers'];
+            const authData = {};
+            
+            authKeys.forEach(key => {
+                const localStorage_data = localStorage.getItem(key);
+                const sessionStorage_data = sessionStorage.getItem(key);
+                authData[key] = {
+                    localStorage: localStorage_data,
+                    sessionStorage: sessionStorage_data
+                };
+            });
+            
+            const dataStr = JSON.stringify(authData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'auth-data-export.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            const testDiv = document.getElementById('test-results');
+            testDiv.innerHTML = '<div style="color: #059669;">✅ 認証データをexportしました。</div>';
+        }
+
+        // ページ読み込み時に認証状態を表示
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAuthStatus();
+        });
+    </script>
+</body>
+</html>
