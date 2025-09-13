@@ -32,6 +32,12 @@
                     🔑 Googleアカウントでログイン
                 </button>
 
+                <!-- デモデータ初期化ボタン -->
+                <button onclick="initializeDemoData()" 
+                        style="background: #16a34a; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px;">
+                    📊 デモデータを初期化
+                </button>
+
                 <!-- 戻るリンク -->
                 <div style="margin-top: 20px;">
                     <a href="index.html" style="color: #6b7280; text-decoration: none;">← ホームに戻る</a>
@@ -114,12 +120,96 @@
             }
         }
 
-        // 既存システム用に認証データを保存
+        // デモ顧客データを初期化
+        function initializeDemoData() {
+            debugLog('📊 デモデータ初期化開始...');
+            
+            const demoCustomers = [
+                {
+                    id: 'cust_' + Date.now() + '_1',
+                    name: '田中太郎',
+                    email: 'tanaka@example.com',
+                    phone: '090-1234-5678',
+                    age: 28,
+                    occupation: 'エンジニア',
+                    annualIncome: 5000000,
+                    pipelineStatus: '初回相談',
+                    preferences: {
+                        budgetMin: 8,
+                        budgetMax: 12,
+                        areas: ['渋谷区', '新宿区'],
+                        roomType: '1K',
+                        requirements: ['駅徒歩10分以内', 'インターネット完備']
+                    },
+                    notes: '平日夜の連絡希望',
+                    urgency: '普通',
+                    contactTime: '平日19:00-21:00',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'ウェブサイト'
+                },
+                {
+                    id: 'cust_' + Date.now() + '_2',
+                    name: '佐藤花子',
+                    email: 'sato@example.com',
+                    phone: '090-8765-4321',
+                    age: 25,
+                    occupation: '会社員',
+                    annualIncome: 4000000,
+                    pipelineStatus: '物件紹介',
+                    preferences: {
+                        budgetMin: 6,
+                        budgetMax: 9,
+                        areas: ['世田谷区'],
+                        roomType: '1DK',
+                        requirements: ['ペット可', '南向き']
+                    },
+                    notes: '猫を飼っています',
+                    urgency: '急ぎ',
+                    contactTime: '平日12:00-13:00',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: '紹介'
+                },
+                {
+                    id: 'cust_' + Date.now() + '_3',
+                    name: '高橋一郎',
+                    email: 'takahashi@example.com',
+                    phone: '090-1111-2222',
+                    age: 32,
+                    occupation: 'デザイナー',
+                    annualIncome: 4500000,
+                    pipelineStatus: '内見',
+                    preferences: {
+                        budgetMin: 10,
+                        budgetMax: 15,
+                        areas: ['港区', '品川区'],
+                        roomType: '1LDK',
+                        requirements: ['デザイナーズ', '築浅']
+                    },
+                    notes: 'クリエイティブな空間希望',
+                    urgency: '普通',
+                    contactTime: 'いつでも',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'Instagram'
+                }
+            ];
+            
+            localStorage.setItem('rentpipe_demo_customers', JSON.stringify(demoCustomers));
+            debugLog('✅ デモデータ初期化完了: ' + demoCustomers.length + '件');
+            showLoginStatus('success', `✅ デモデータ初期化完了: ${demoCustomers.length}件の顧客データを作成しました`);
+        }
+
+        // 既存システム用に認証データを保存（完全版）
         function saveAuthForLegacySystems(userData) {
             debugLog('💾 既存システム用認証データ保存開始...');
             
             try {
-                // 1. unified-auth.js用の認証データ
+                const now = Date.now();
+                const sessionId = 'session-' + now + '-' + Math.random().toString(36).substr(2, 9);
+                
+                // 1. rentpipe_authenticated + rentpipe_user（最重要）
                 localStorage.setItem('rentpipe_authenticated', 'true');
                 localStorage.setItem('rentpipe_user', JSON.stringify({
                     uid: userData.id,
@@ -128,16 +218,7 @@
                     photoURL: userData.picture
                 }));
                 
-                // 2. simple-reliable-auth.js用の認証データ
-                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
-                localStorage.setItem('rentpipe_user_simple', JSON.stringify({
-                    id: userData.id,
-                    email: userData.email,
-                    name: userData.name,
-                    picture: userData.picture
-                }));
-                
-                // 3. セッションストレージにも保存
+                // セッションストレージにも保存
                 sessionStorage.setItem('rentpipe_authenticated', 'true');
                 sessionStorage.setItem('rentpipe_user', JSON.stringify({
                     uid: userData.id,
@@ -146,8 +227,17 @@
                     photoURL: userData.picture
                 }));
                 
-                // 4. 統合認証マネージャー用データ
-                const authData = {
+                // 2. rentpipe_auth_simple + rentpipe_user_simple
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify({
+                    id: userData.id,
+                    email: userData.email,
+                    name: userData.name,
+                    picture: userData.picture
+                }));
+                
+                // 3. rentpipe_unified_auth
+                const unifiedAuthData = {
                     isAuthenticated: true,
                     user: {
                         id: userData.id,
@@ -155,14 +245,22 @@
                         displayName: userData.name,
                         photoURL: userData.picture
                     },
-                    sessionId: 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                    loginTime: Date.now(),
+                    sessionId: sessionId,
+                    loginTime: now,
                     authMethod: 'google'
                 };
-                localStorage.setItem('rentpipe_unified_auth', JSON.stringify(authData));
+                localStorage.setItem('rentpipe_unified_auth', JSON.stringify(unifiedAuthData));
+                localStorage.setItem('rentpipe_session', sessionId);
                 
                 debugLog('✅ 既存システム用認証データ保存完了');
-                debugLog('📊 保存されたキー: rentpipe_authenticated, rentpipe_user, rentpipe_auth_simple, rentpipe_user_simple, rentpipe_unified_auth');
+                debugLog('📊 保存されたキー:');
+                debugLog('  - rentpipe_authenticated: true');
+                debugLog('  - rentpipe_user: ' + userData.email);
+                debugLog('  - rentpipe_auth_simple: logged_in');
+                debugLog('  - rentpipe_user_simple: ' + userData.name);
+                debugLog('  - rentpipe_unified_auth: ' + userData.email);
+                
+                return true;
                 
             } catch (error) {
                 debugLog('❌ 既存システム用認証データ保存エラー: ' + error.message);
@@ -258,9 +356,22 @@
                     expires: tokenPayload.exp * 1000 // JWT expiry to milliseconds
                 };
                 localStorage.setItem('google_auth_simple', JSON.stringify(authData));
+                debugLog('📱 Google認証データ保存完了');
                 
                 // 既存システム用認証データも保存
-                saveAuthForLegacySystems(userData);
+                const saveResult = saveAuthForLegacySystems(userData);
+                if (saveResult) {
+                    debugLog('📋 レガシー認証データ保存完了');
+                } else {
+                    throw new Error('レガシー認証データ保存に失敗');
+                }
+                
+                // デモデータが存在しない場合は自動作成
+                const existingCustomers = localStorage.getItem('rentpipe_demo_customers');
+                if (!existingCustomers) {
+                    debugLog('📊 顧客データが存在しないため自動作成');
+                    initializeDemoData();
+                }
                 
                 debugLog('💾 全認証データ保存完了');
 
@@ -337,47 +448,46 @@
             try {
                 // 複数の認証キーをチェック
                 const authKeys = [
-                    'google_auth_simple',
-                    'rentpipe_authenticated',
-                    'rentpipe_auth_simple'
+                    { key: 'google_auth_simple', type: 'json' },
+                    { key: 'rentpipe_authenticated', type: 'string', pair: 'rentpipe_user' },
+                    { key: 'rentpipe_auth_simple', type: 'string', pair: 'rentpipe_user_simple' }
                 ];
                 
                 let isAuthenticated = false;
                 let userName = '';
                 
-                for (const key of authKeys) {
-                    const authData = localStorage.getItem(key);
+                for (const auth of authKeys) {
+                    const authData = localStorage.getItem(auth.key);
                     if (authData) {
-                        debugLog(`🔍 既存認証データ発見: ${key}`);
+                        debugLog(`🔍 既存認証データ発見: ${auth.key}`);
                         
-                        if (key === 'rentpipe_authenticated' && authData === 'true') {
-                            isAuthenticated = true;
-                            const userData = localStorage.getItem('rentpipe_user');
-                            if (userData) {
-                                const user = JSON.parse(userData);
-                                userName = user.displayName || user.email;
+                        if (auth.type === 'string') {
+                            if ((auth.key === 'rentpipe_authenticated' && authData === 'true') ||
+                                (auth.key === 'rentpipe_auth_simple' && authData === 'logged_in')) {
+                                
+                                const userData = localStorage.getItem(auth.pair);
+                                if (userData) {
+                                    try {
+                                        const user = JSON.parse(userData);
+                                        isAuthenticated = true;
+                                        userName = user.displayName || user.name || user.email;
+                                        break;
+                                    } catch (e) {
+                                        debugLog('❌ ユーザーデータ解析エラー: ' + e.message);
+                                    }
+                                }
                             }
-                            break;
-                        } else if (key === 'rentpipe_auth_simple' && authData === 'logged_in') {
-                            isAuthenticated = true;
-                            const userData = localStorage.getItem('rentpipe_user_simple');
-                            if (userData) {
-                                const user = JSON.parse(userData);
-                                userName = user.name || user.email;
-                            }
-                            break;
-                        } else if (key === 'google_auth_simple') {
+                        } else if (auth.type === 'json') {
                             try {
                                 const parsed = JSON.parse(authData);
-                                // トークンの有効性チェック
                                 const now = Date.now();
-                                if (parsed.expires && now < parsed.expires) {
+                                if (!parsed.expires || now < parsed.expires) {
                                     isAuthenticated = true;
                                     userName = parsed.name;
                                     break;
                                 }
                             } catch (e) {
-                                debugLog('❌ Google認証データ解析エラー: ' + e.message);
+                                debugLog('❌ JSON認証データ解析エラー: ' + e.message);
                             }
                         }
                     }
@@ -410,7 +520,7 @@
 
         // デバッグ用グローバル関数
         window.clearAllAuth = function() {
-            const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+            const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth', 'rentpipe_session'];
             keys.forEach(key => {
                 localStorage.removeItem(key);
                 sessionStorage.removeItem(key);
@@ -420,11 +530,23 @@
         };
 
         window.showAllAuthData = function() {
-            const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+            const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth', 'rentpipe_demo_customers'];
             keys.forEach(key => {
                 const data = localStorage.getItem(key);
-                console.log(`${key}:`, data ? JSON.parse(data) : null);
+                console.log(`${key}:`, data);
+                if (data && key !== 'rentpipe_demo_customers') {
+                    try {
+                        console.log(`  parsed:`, JSON.parse(data));
+                    } catch (e) {
+                        // 文字列データの場合はそのまま
+                    }
+                }
             });
+        };
+
+        window.testAuthStatus = function() {
+            debugLog('🧪 認証状態テスト開始');
+            checkExistingAuth();
         };
     </script>
 </body>
