@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>400エラー詳細調査 - RentPipe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .btn-danger { background: #ea4335; }
+        .btn-success { background: #34a853; }
+        .btn-warning { background: #fbbc04; color: #333; }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .debug-output {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 400エラー詳細調査ツール</h1>
+    
+    <!-- 現在の状況確認 -->
+    <div class="section">
+        <h2>📊 現在の状況確認</h2>
+        <button onclick="checkCurrentStatus()" class="btn">現在の状況を確認</button>
+        <div id="current-status" class="status status-info">
+            「現在の状況を確認」ボタンをクリックしてください
+        </div>
+    </div>
+    
+    <!-- 読み込まれているスクリプト確認 -->
+    <div class="section">
+        <h2>📜 読み込まれているスクリプト確認</h2>
+        <button onclick="checkLoadedScripts()" class="btn">スクリプト確認</button>
+        <div id="loaded-scripts" class="debug-output">
+            スクリプト一覧が表示されます
+        </div>
+    </div>
+    
+    <!-- 関数の存在確認 -->
+    <div class="section">
+        <h2>🔧 関数の存在確認</h2>
+        <button onclick="checkFunctions()" class="btn">関数確認</button>
+        <div id="function-check" class="debug-output">
+            関数の存在状況が表示されます
+        </div>
+    </div>
+    
+    <!-- エラー再現テスト -->
+    <div class="section">
+        <h2>🧪 エラー再現テスト</h2>
+        <p>テスト用顧客データでエラーを再現します：</p>
+        <button onclick="reproduceError()" class="btn btn-warning">エラー再現テスト</button>
+        <div id="error-reproduction" class="debug-output">
+            エラー再現結果が表示されます
+        </div>
+    </div>
+    
+    <!-- Google Apps Script単体テスト -->
+    <div class="section">
+        <h2>✅ Google Apps Script単体テスト</h2>
+        <p>Google Apps Scriptが正しく動作するかテストします：</p>
+        <input type="text" id="gas-url-input" placeholder="Google Apps ScriptのURL" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <div>
+            <button onclick="testGASOnly()" class="btn btn-success">Apps Script単体テスト</button>
+        </div>
+        <div id="gas-test-result" class="debug-output">
+            Google Apps Scriptテスト結果が表示されます
+        </div>
+    </div>
+    
+    <!-- ネットワーク通信確認 -->
+    <div class="section">
+        <h2>🌐 ネットワーク通信確認</h2>
+        <button onclick="checkNetworkRequests()" class="btn">通信ログ確認</button>
+        <div id="network-logs" class="debug-output">
+            F12 Network タブで通信を確認してください
+        </div>
+    </div>
+
+    <!-- スクリプト読み込み（デバッグ用に最小限） -->
+    <script src="js/create-test-customers.js"></script>
+    <script src="js/google-apps-script-forms.js"></script>
+    
+    <script>
+        let debugLogs = [];
+        
+        // デバッグログ関数
+        function debugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugLogs.push(logEntry);
+            console.log(logEntry);
+        }
+        
+        // 現在の状況確認
+        function checkCurrentStatus() {
+            debugLog('現在の状況確認開始');
+            
+            const status = {
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                
+                // JavaScript オブジェクトの存在確認
+                googleIdentity: !!window.GoogleIdentity,
+                integratedAuth: !!window.IntegratedAuthManagerV2,
+                googleFormsAPI: !!window.GoogleFormsAPIv2,
+                simpleGoogleForms: !!window.SimpleGoogleForms,
+                minimalGoogleForms: !!window.MinimalGoogleForms,
+                googleAppsScriptForms: !!window.GoogleAppsScriptForms,
+                
+                // ライブラリの存在確認
+                gapi: !!window.gapi,
+                google: !!window.google,
+                
+                // 関数の存在確認
+                createGoogleForm: typeof window.createGoogleForm,
+                createGoogleFormGAS: typeof window.createGoogleFormGAS,
+                
+                // LocalStorageの内容
+                localStorage: {
+                    customers: !!localStorage.getItem('customers'),
+                    googleAuth: !!localStorage.getItem('google_auth_data'),
+                    rentpipeAuth: !!localStorage.getItem('rentpipe_auth')
+                }
+            };
+            
+            document.getElementById('current-status').textContent = JSON.stringify(status, null, 2);
+            debugLog('現在の状況確認完了: ' + JSON.stringify(status, null, 2));
+        }
+        
+        // 読み込まれているスクリプト確認
+        function checkLoadedScripts() {
+            debugLog('読み込まれているスクリプト確認開始');
+            
+            const scripts = Array.from(document.querySelectorAll('script')).map(script => ({
+                src: script.src,
+                inline: !script.src ? script.textContent.substring(0, 100) + '...' : null,
+                async: script.async,
+                defer: script.defer
+            }));
+            
+            document.getElementById('loaded-scripts').textContent = JSON.stringify(scripts, null, 2);
+            debugLog('スクリプト確認完了: ' + scripts.length + '個のスクリプト');
+        }
+        
+        // 関数の存在確認
+        function checkFunctions() {
+            debugLog('関数の存在確認開始');
+            
+            const functions = {
+                // 古いGoogle Forms API関連
+                'window.GoogleIdentity': typeof window.GoogleIdentity,
+                'window.IntegratedAuthManagerV2': typeof window.IntegratedAuthManagerV2,
+                'window.GoogleFormsAPIv2': typeof window.GoogleFormsAPIv2,
+                'window.SimpleGoogleForms': typeof window.SimpleGoogleForms,
+                'window.MinimalGoogleForms': typeof window.MinimalGoogleForms,
+                
+                // Google Apps Script関連
+                'window.GoogleAppsScriptForms': typeof window.GoogleAppsScriptForms,
+                
+                // 関数
+                'window.createGoogleForm': typeof window.createGoogleForm,
+                'window.createGoogleFormGAS': typeof window.createGoogleFormGAS,
+                
+                // ライブラリ
+                'window.gapi': typeof window.gapi,
+                'window.google': typeof window.google
+            };
+            
+            // Google Apps Script Forms の詳細情報
+            if (window.GoogleAppsScriptForms) {
+                functions['GoogleAppsScriptForms.scriptUrl'] = window.GoogleAppsScriptForms.scriptUrl;
+                functions['GoogleAppsScriptForms.isInitialized'] = window.GoogleAppsScriptForms.isInitialized;
+                
+                if (window.GoogleAppsScriptForms.getDebugInfo) {
+                    functions['GoogleAppsScriptForms.debugInfo'] = window.GoogleAppsScriptForms.getDebugInfo();
+                }
+            }
+            
+            document.getElementById('function-check').textContent = JSON.stringify(functions, null, 2);
+            debugLog('関数確認完了');
+        }
+        
+        // エラー再現テスト
+        async function reproduceError() {
+            debugLog('エラー再現テスト開始');
+            
+            try {
+                const testCustomer = {
+                    id: 'debug-test-customer',
+                    name: 'デバッグテスト太郎',
+                    email: 'debug@example.com',
+                    phone: '03-0000-0000'
+                };
+                
+                debugLog('テスト顧客データ: ' + JSON.stringify(testCustomer));
+                
+                // どの関数が呼び出されるか確認
+                if (window.createGoogleForm) {
+                    debugLog('createGoogleForm 関数が存在します');
+                    debugLog('createGoogleForm の定義: ' + window.createGoogleForm.toString().substring(0, 200));
+                }
+                
+                if (window.createGoogleFormGAS) {
+                    debugLog('createGoogleFormGAS 関数が存在します');
+                }
+                
+                // 実際にエラーを再現
+                document.getElementById('error-reproduction').textContent = '🔄 エラー再現中...';
+                
+                if (window.createGoogleForm) {
+                    debugLog('createGoogleForm を呼び出します');
+                    const result = await window.createGoogleForm(testCustomer.id);
+                    debugLog('結果: ' + JSON.stringify(result));
+                }
+                
+            } catch (error) {
+                debugLog('❌ エラー再現成功（これが原因です）: ' + error.message);
+                document.getElementById('error-reproduction').textContent = 
+                    '❌ エラー再現成功:\n' + 
+                    'エラーメッセージ: ' + error.message + '\n' +
+                    'スタックトレース:\n' + error.stack;
+            }
+        }
+        
+        // Google Apps Script単体テスト
+        async function testGASOnly() {
+            debugLog('Google Apps Script単体テスト開始');
+            
+            const gasUrl = document.getElementById('gas-url-input').value;
+            
+            if (!gasUrl) {
+                document.getElementById('gas-test-result').textContent = '❌ Google Apps ScriptのURLを入力してください';
+                return;
+            }
+            
+            try {
+                const testData = {
+                    customerData: {
+                        id: 'gas-only-test',
+                        name: 'GAS単体テスト太郎',
+                        email: 'gastest@example.com',
+                        phone: '03-0000-0000'
+                    }
+                };
+                
+                debugLog('Google Apps Scriptに直接リクエスト送信: ' + gasUrl);
+                document.getElementById('gas-test-result').textContent = '🔄 Google Apps Scriptテスト中...';
+                
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                    mode: 'cors'
+                });
+                
+                debugLog('レスポンス状態: ' + response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                debugLog('成功: ' + JSON.stringify(result));
+                
+                document.getElementById('gas-test-result').textContent = 
+                    '✅ Google Apps Script単体テスト成功!\n' +
+                    JSON.stringify(result, null, 2);
+                
+            } catch (error) {
+                debugLog('❌ Google Apps Script単体テスト失敗: ' + error.message);
+                document.getElementById('gas-test-result').textContent = 
+                    '❌ Google Apps Script単体テスト失敗:\n' +
+                    'エラー: ' + error.message;
+            }
+        }
+        
+        // ネットワーク通信確認
+        function checkNetworkRequests() {
+            const networkInfo = `
+🌐 ネットワーク通信確認方法:
+
+1. F12 を押してデベロッパーツールを開く
+2. Network タブをクリック
+3. 「Preserve log」にチェックを入れる
+4. 「Clear」ボタンでログをクリア
+5. フォーム作成ボタンをクリック
+6. 送信されるリクエストを確認
+
+確認項目:
+- どのURLにリクエストが送信されているか
+- レスポンスの内容（400エラーの詳細）
+- リクエストヘッダーとボディの内容
+
+特に重要:
+- forms.googleapis.com へのリクエストが送信されている場合
+  → 古いGoogle Forms APIが呼び出されています
+- script.google.com へのリクエストが送信されている場合  
+  → Google Apps Scriptが正しく呼び出されています
+            `;
+            
+            document.getElementById('network-logs').textContent = networkInfo;
+            debugLog('ネットワーク確認方法を表示');
+        }
+        
+        // ページ読み込み時の自動チェック
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('エラーデバッグページ読み込み完了');
+            setTimeout(checkCurrentStatus, 1000);
+        });
+    </script>
+</body>
+</html>

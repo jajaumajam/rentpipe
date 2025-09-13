@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顧客管理（Google Apps Script専用版） - RentPipe</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Google Apps Script専用スタイル */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .gas-status {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .customer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .customer-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .customer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .customer-info h3 {
+            margin: 0 0 8px 0;
+            color: #1f2937;
+            font-size: 1.2em;
+        }
+        
+        .customer-meta {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .customer-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-outline { background: transparent; color: #6b7280; border: 1px solid #d1d5db; }
+        
+        .form-status-indicator {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        .status-not-created {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .status-gas-created {
+            background: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>🏠 RentPipe</h1>
+            <nav>
+                <a href="index.html">ホーム</a>
+                <a href="customer-gas-only.html" class="active">顧客管理（GAS専用）</a>
+                <a href="pipeline.html">パイプライン</a>
+                <a href="analytics.html">分析</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h2>👥 顧客管理</h2>
+            <p>Google Apps Script専用版 - 確実なフォーム作成</p>
+        </div>
+
+        <!-- Google Apps Script設定 -->
+        <div class="gas-status">
+            <h3>🚀 Google Apps Script設定</h3>
+            <input type="text" id="gas-url-input" placeholder="Google Apps Script URL" 
+                   style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
+            <div style="margin: 10px 0;">
+                <button onclick="setGASUrl()" class="btn btn-success">URL設定</button>
+                <button onclick="testGASConnection()" class="btn btn-primary">接続テスト</button>
+                <button onclick="createTestData()" class="btn btn-warning">テストデータ作成</button>
+                <a href="function-debug.html" class="btn btn-outline">🔧 デバッグツール</a>
+            </div>
+            <div id="gas-status-display" style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                Google Apps Script URLを設定してください
+            </div>
+        </div>
+
+        <!-- 顧客リスト -->
+        <div id="customer-list" class="customer-grid">
+            <div style="text-align: center; padding: 40px; color: #6b7280; grid-column: 1 / -1;">
+                <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
+                <h3>顧客データを読み込み中...</h3>
+                <p>「テストデータ作成」ボタンでサンプル顧客を作成してください</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Google Apps Script専用スクリプト（古いファイルは一切読み込まない） -->
+    <script src="js/create-test-customers.js"></script>
+    <script src="js/google-apps-script-forms.js"></script>
+    
+    <script>
+        console.log('🚀 Google Apps Script専用顧客管理ページ開始');
+        
+        // Google Apps Script URL設定
+        function setGASUrl() {
+            const url = document.getElementById('gas-url-input').value.trim();
+            if (!url) {
+                alert('URLを入力してください');
+                return;
+            }
+            
+            if (!url.includes('script.google.com')) {
+                alert('正しいGoogle Apps ScriptのURLを入力してください');
+                return;
+            }
+            
+            if (window.GoogleAppsScriptForms) {
+                window.GoogleAppsScriptForms.setScriptUrl(url);
+                updateGASStatus('✅ Google Apps Script URL設定完了');
+                console.log('✅ Google Apps Script URL設定:', url);
+            } else {
+                alert('❌ GoogleAppsScriptFormsが読み込まれていません');
+            }
+        }
+        
+        // 接続テスト
+        async function testGASConnection() {
+            try {
+                updateGASStatus('🔄 接続テスト中...');
+                
+                if (!window.GoogleAppsScriptForms) {
+                    throw new Error('GoogleAppsScriptFormsが読み込まれていません');
+                }
+                
+                const result = await window.GoogleAppsScriptForms.testConnection();
+                
+                if (result.success) {
+                    updateGASStatus('✅ 接続テスト成功！Google Apps Scriptが正常に動作しています。');
+                    alert('✅ 接続テスト成功！フォーム作成機能が利用できます。');
+                } else {
+                    throw new Error(result.error);
+                }
+                
+            } catch (error) {
+                updateGASStatus('❌ 接続テスト失敗: ' + error.message);
+                alert('❌ 接続テスト失敗: ' + error.message);
+                console.error('接続テストエラー:', error);
+            }
+        }
+        
+        // テストデータ作成
+        function createTestData() {
+            if (window.createTestCustomers) {
+                window.createTestCustomers();
+                updateCustomerList();
+                alert('✅ テスト用顧客データを作成しました');
+            } else {
+                alert('❌ createTestCustomers関数が見つかりません');
+            }
+        }
+        
+        // GAS状態表示更新
+        function updateGASStatus(message) {
+            document.getElementById('gas-status-display').textContent = message;
+        }
+        
+        // 顧客リスト更新
+        function updateCustomerList() {
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                const customerList = document.getElementById('customer-list');
+                
+                if (customers.length === 0) {
+                    customerList.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6b7280; grid-column: 1 / -1;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
+                            <h3>まだ顧客が登録されていません</h3>
+                            <p>「テストデータ作成」ボタンでサンプル顧客を作成してください</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                customerList.innerHTML = customers.map(customer => {
+                    const formInfo = customer.googleForm;
+                    let statusText, statusClass, actionButtons;
+                    
+                    if (formInfo && formInfo.method === 'google_apps_script') {
+                        statusText = '✅ フォーム作成済み（Apps Script）';
+                        statusClass = 'status-gas-created';
+                        actionButtons = `
+                            <a href="${formInfo.url}" target="_blank" class="btn btn-primary">📝 フォーム確認</a>
+                            <a href="${formInfo.responsesUrl}" target="_blank" class="btn btn-success">📊 回答確認</a>
+                        `;
+                    } else {
+                        statusText = 'フォーム未作成';
+                        statusClass = 'status-not-created';
+                        actionButtons = `<button onclick="createFormDirectGAS('${customer.id}')" class="btn btn-success">📝 フォーム作成（GAS専用）</button>`;
+                    }
+                    
+                    return `
+                        <div class="customer-card" data-customer-id="${customer.id}">
+                            <div class="customer-info">
+                                <h3>${customer.name || '名前未設定'}</h3>
+                                <div class="customer-meta">
+                                    ${customer.email || 'メール未設定'} • ${customer.phone || '電話未設定'}
+                                </div>
+                                <div class="form-status-indicator ${statusClass}">
+                                    ${statusText}
+                                </div>
+                            </div>
+                            <div class="customer-actions">
+                                ${actionButtons}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                console.log('✅ 顧客リスト更新完了:', customers.length + '件');
+                
+            } catch (error) {
+                console.error('❌ 顧客リスト更新エラー:', error);
+            }
+        }
+        
+        // Google Apps Script専用フォーム作成（古いAPIは一切使用しない）
+        async function createFormDirectGAS(customerId) {
+            try {
+                console.log('🚀 Google Apps Script専用フォーム作成開始:', customerId);
+                
+                // 顧客データ取得
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                const customer = customers.find(c => c.id === customerId);
+                
+                if (!customer) {
+                    alert('❌ 顧客データが見つかりません');
+                    return;
+                }
+                
+                // Google Apps Script確認
+                if (!window.GoogleAppsScriptForms) {
+                    alert('❌ GoogleAppsScriptFormsが読み込まれていません');
+                    return;
+                }
+                
+                // URL設定確認
+                const debugInfo = window.GoogleAppsScriptForms.getDebugInfo();
+                if (!debugInfo.hasValidUrl) {
+                    alert('❌ Google Apps Script URLが設定されていません\n「URL設定」ボタンでURLを設定してください');
+                    return;
+                }
+                
+                // 直接Google Apps Script経由でフォーム作成
+                console.log('📝 Google Apps Script経由でフォーム作成中...');
+                const result = await window.GoogleAppsScriptForms.createCustomerForm(customer);
+                
+                if (result.success) {
+                    console.log('✅ フォーム作成成功:', result.form.id);
+                    
+                    alert(`✅ ${customer.name}様専用フォームが作成されました！
+
+📝 フォームタイトル: ${result.form.title}
+🆔 フォームID: ${result.form.id}
+🔗 フォームURL: ${result.form.url}
+
+🎉 8つの質問項目が自動で追加されています！
+フォームは既に顧客が回答可能な状態です。`);
+                    
+                    // 顧客リストを更新
+                    updateCustomerList();
+                    
+                    // フォームを確認するか尋ねる
+                    if (confirm('作成されたフォームを確認しますか？')) {
+                        window.open(result.form.url, '_blank');
+                    }
+                } else {
+                    throw new Error(result.error);
+                }
+                
+            } catch (error) {
+                console.error('❌ フォーム作成エラー:', error);
+                alert(`❌ フォーム作成に失敗しました: ${error.message}
+
+💡 確認事項:
+• Google Apps Script URLが正しく設定されているか
+• Google Apps Scriptが「全員」でデプロイされているか
+• インターネット接続が正常か`);
+            }
+        }
+        
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Google Apps Script専用ページ初期化完了');
+            updateCustomerList();
+        });
+    </script>
+</body>
+</html>

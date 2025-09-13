@@ -1,231 +1,138 @@
-// 🔐 統合認証マネージャー v2 (Google Identity Services対応)
+// 🔐 統合認証マネージャー v2（修正版）
 console.log('🔐 統合認証マネージャー v2 初期化中...');
 
 window.IntegratedAuthManagerV2 = {
     // 認証状態
-    isAuthenticated: false,
-    currentUser: null,
-    authMethod: null, // 'demo', 'firebase', 'google'
-    
-    // Google認証状態
-    googleAuth: {
-        isSignedIn: false,
-        user: null,
-        accessToken: null
+    authState: {
+        isAuthenticated: false,
+        rentpipeAuth: {
+            isLoggedIn: false,
+            user: null
+        },
+        googleAuth: {
+            isSignedIn: false,
+            user: null,
+            accessToken: null,
+            tokenExpiry: null
+        }
     },
+    
+    // 初期化状態
+    isInitialized: false,
     
     // 初期化
     initialize: async function() {
         try {
-            console.log('🔐 統合認証システム v2 初期化開始...');
+            console.log('🔧 統合認証マネージャー初期化開始...');
             
-            // 既存認証システムの初期化
-            if (window.AuthManager && window.AuthManager.initialize) {
-                await window.AuthManager.initialize();
-            }
+            // 保存された認証情報を復元
+            await this.restoreAuthState();
             
             // Google Identity Services初期化
-            if (window.GoogleIdentity) {
+            if (window.GoogleIdentity && !window.GoogleIdentity.isInitialized) {
                 await window.GoogleIdentity.initialize();
             }
             
-            // セッション復旧の確認
-            this.checkExistingSession();
+            this.isInitialized = true;
+            console.log('✅ 統合認証マネージャー初期化完了');
             
-            console.log('✅ 統合認証システム v2 初期化完了');
             return true;
             
         } catch (error) {
-            console.error('❌ 統合認証システム v2 初期化エラー:', error);
+            console.error('❌ 統合認証マネージャー初期化エラー:', error);
+            this.isInitialized = false;
             return false;
         }
     },
     
-    // 既存セッションの確認
-    checkExistingSession: function() {
+    // 認証状態復元
+    restoreAuthState: async function() {
         try {
-            // 既存の認証システムからの状態確認
-            if (window.AuthManager) {
-                const authState = window.AuthManager.getAuthState();
-                if (authState.isAuthenticated) {
-                    this.isAuthenticated = true;
-                    this.currentUser = authState.user;
-                    this.authMethod = authState.isDemoMode ? 'demo' : 'firebase';
-                    console.log(`✅ 既存セッション発見: ${this.authMethod}モード`);
-                }
+            console.log('🔄 認証状態復元中...');
+            
+            // RentPipe認証状態復元
+            const rentpipeAuth = localStorage.getItem('rentpipe_auth');
+            if (rentpipeAuth) {
+                const authData = JSON.parse(rentpipeAuth);
+                this.authState.rentpipeAuth = {
+                    isLoggedIn: true,
+                    user: authData.user || { email: 'user@example.com', name: 'ユーザー' }
+                };
+                this.authState.isAuthenticated = true;
+                console.log('✅ RentPipe認証状態復元完了');
             }
             
-            // Google認証セッションの確認
-            const googleAuthData = localStorage.getItem('google_identity_data');
-            if (googleAuthData) {
-                try {
-                    const data = JSON.parse(googleAuthData);
-                    if (data.accessToken && new Date(data.expiresAt) > new Date()) {
-                        this.googleAuth.isSignedIn = true;
-                        this.googleAuth.user = data.user;
-                        this.googleAuth.accessToken = data.accessToken;
-                        console.log('✅ 有効なGoogle認証セッション発見');
-                    } else {
-                        console.log('⏰ Google認証セッション期限切れ');
-                        localStorage.removeItem('google_identity_data');
-                    }
-                } catch (error) {
-                    console.error('❌ Google認証データ解析エラー:', error);
-                    localStorage.removeItem('google_identity_data');
+            // Google認証状態復元
+            const googleAuth = localStorage.getItem('google_auth_data');
+            if (googleAuth) {
+                const authData = JSON.parse(googleAuth);
+                
+                // トークンの有効期限確認
+                const now = new Date().getTime();
+                const expiry = authData.tokenExpiry;
+                
+                if (expiry && now < expiry) {
+                    this.authState.googleAuth = {
+                        isSignedIn: true,
+                        user: authData.user,
+                        accessToken: authData.accessToken,
+                        tokenExpiry: authData.tokenExpiry
+                    };
+                    console.log('✅ Google認証状態復元完了:', authData.user.email);
+                } else {
+                    console.log('⚠️ Googleアクセストークンが期限切れです');
+                    this.clearGoogleAuth();
                 }
             }
             
         } catch (error) {
-            console.error('❌ セッション確認エラー:', error);
+            console.error('❌ 認証状態復元エラー:', error);
         }
     },
     
-    // Google認証の開始
+    // Google認証（サインイン）
     signInWithGoogle: async function() {
         try {
-            console.log('🔑 Google認証 v2 を開始...');
+            console.log('🚀 Google認証開始...');
             
-            // Google Identity Services確認
-            if (!window.GoogleIdentity) {
-                throw new Error('Google Identity Services設定が読み込まれていません');
+            // Google Identity Services初期化確認
+            if (!window.GoogleIdentity || !window.GoogleIdentity.isInitialized) {
+                throw new Error('Google Identity Servicesが初期化されていません');
             }
             
-            // Google Identity Services初期化
-            if (!window.GoogleIdentity.isInitialized) {
-                const initResult = await window.GoogleIdentity.initialize();
-                if (!initResult) {
-                    throw new Error('Google Identity Services初期化に失敗しました');
-                }
-            }
+            // Google認証実行
+            const authResult = await window.GoogleIdentity.signIn();
             
-            // OAuth認証実行
-            const result = await window.GoogleIdentity.requestAccessToken();
-            
-            if (result.success) {
-                // Google認証成功
-                this.googleAuth.isSignedIn = true;
-                this.googleAuth.user = result.user;
-                this.googleAuth.accessToken = result.accessToken;
+            if (authResult.success) {
+                // 認証状態更新
+                const tokenExpiry = new Date().getTime() + (authResult.expiresIn * 1000);
                 
-                // Google認証データを保存
-                localStorage.setItem('google_identity_data', JSON.stringify({
-                    user: result.user,
-                    accessToken: result.accessToken,
-                    expiresAt: result.user.expiresAt,
-                    signedInAt: new Date().toISOString()
-                }));
+                this.authState.googleAuth = {
+                    isSignedIn: true,
+                    user: authResult.user,
+                    accessToken: authResult.accessToken,
+                    tokenExpiry: tokenExpiry
+                };
                 
-                // RentPipe認証と統合
-                await this.integrateGoogleAuth(result.user);
+                // ローカルストレージに保存
+                this.saveGoogleAuth();
                 
-                console.log('✅ Google認証 v2 統合完了');
+                console.log('✅ Google認証成功:', authResult.user.email);
                 
                 return {
                     success: true,
-                    user: this.currentUser,
-                    message: 'Google認証が完了しました'
+                    user: authResult.user
                 };
                 
             } else {
-                throw new Error(result.error);
+                throw new Error('Google認証に失敗しました');
             }
             
         } catch (error) {
-            console.error('❌ Google認証 v2 エラー:', error);
+            console.error('❌ Google認証エラー:', error);
             return {
                 success: false,
-                error: 'Google認証に失敗しました: ' + error.message
-            };
-        }
-    },
-    
-    // Google認証をRentPipeシステムと統合
-    integrateGoogleAuth: async function(googleUser) {
-        try {
-            console.log('🔗 Google認証をRentPipeシステムと統合中...', googleUser.email);
-            
-            // RentPipeユーザーとしてサインイン/登録
-            if (window.AuthManager) {
-                // 既存のRentPipeアカウントがあるかチェック
-                const existingAuth = localStorage.getItem(`rentpipe_user_${googleUser.email}`);
-                
-                if (existingAuth) {
-                    // 既存アカウントでログイン
-                    console.log('👤 既存のRentPipeアカウント発見');
-                    const loginResult = await window.AuthManager.demoLogin(googleUser.email, 'google_identity_user');
-                    
-                    if (loginResult.success) {
-                        this.isAuthenticated = true;
-                        this.currentUser = {
-                            ...loginResult.user,
-                            googleAuth: googleUser
-                        };
-                        this.authMethod = 'google';
-                    }
-                } else {
-                    // 新規アカウント作成
-                    console.log('📝 新規RentPipeアカウント作成');
-                    const registerResult = await window.AuthManager.demoRegister(
-                        googleUser.email, 
-                        'google_identity_user',
-                        googleUser.name
-                    );
-                    
-                    if (registerResult.success) {
-                        this.isAuthenticated = true;
-                        this.currentUser = {
-                            ...registerResult.user,
-                            googleAuth: googleUser
-                        };
-                        this.authMethod = 'google';
-                        
-                        // Google認証フラグを追加
-                        const userData = JSON.parse(localStorage.getItem(`rentpipe_user_${googleUser.email}`));
-                        userData.isGoogleUser = true;
-                        userData.googleAuthData = googleUser;
-                        localStorage.setItem(`rentpipe_user_${googleUser.email}`, JSON.stringify(userData));
-                    }
-                }
-                
-                // 認証状態を保存
-                const authData = {
-                    user: this.currentUser,
-                    method: 'google',
-                    signedInAt: new Date().toISOString(),
-                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24時間
-                };
-                
-                localStorage.setItem('rentpipe_auth', JSON.stringify(authData));
-            }
-            
-        } catch (error) {
-            console.error('❌ Google認証統合エラー:', error);
-            throw error;
-        }
-    },
-    
-    // 通常ログイン（既存システム）
-    signIn: async function(email, password) {
-        try {
-            if (!window.AuthManager) {
-                throw new Error('既存認証システムが見つかりません');
-            }
-            
-            const result = await window.AuthManager.login(email, password);
-            
-            if (result.success) {
-                this.isAuthenticated = true;
-                this.currentUser = result.user;
-                this.authMethod = window.AuthManager.isDemoMode ? 'demo' : 'firebase';
-            }
-            
-            return result;
-            
-        } catch (error) {
-            console.error('❌ 通常ログインエラー:', error);
-            return {
-                success: false,
-                error: 'ログインに失敗しました: ' + error.message
+                error: error.message
             };
         }
     },
@@ -233,65 +140,103 @@ window.IntegratedAuthManagerV2 = {
     // サインアウト
     signOut: async function() {
         try {
-            console.log('👋 統合認証 v2 サインアウト開始...');
+            console.log('👋 サインアウト処理中...');
             
-            // Google認証サインアウト
-            if (this.googleAuth.isSignedIn && window.GoogleIdentity) {
-                window.GoogleIdentity.signOut();
-                localStorage.removeItem('google_identity_data');
-                console.log('✅ Google認証 v2 サインアウト完了');
+            // Google認証クリア
+            if (this.authState.googleAuth.isSignedIn) {
+                await window.GoogleIdentity.signOut();
+                this.clearGoogleAuth();
             }
             
-            // 既存システムサインアウト
-            if (window.AuthManager) {
-                window.AuthManager.logout();
-                console.log('✅ RentPipe認証サインアウト完了');
-            }
+            // RentPipe認証クリア（オプション）
+            // this.clearRentPipeAuth();
             
-            // 認証状態リセット
-            this.isAuthenticated = false;
-            this.currentUser = null;
-            this.authMethod = null;
-            this.googleAuth = {
-                isSignedIn: false,
-                user: null,
-                accessToken: null
-            };
+            console.log('✅ サインアウト完了');
             
-            console.log('✅ 統合認証 v2 サインアウト完了');
-            
-            // ログインページにリダイレクト
-            window.location.href = 'login.html';
+            return true;
             
         } catch (error) {
             console.error('❌ サインアウトエラー:', error);
+            return false;
         }
+    },
+    
+    // Google認証情報保存
+    saveGoogleAuth: function() {
+        try {
+            const authData = {
+                user: this.authState.googleAuth.user,
+                accessToken: this.authState.googleAuth.accessToken,
+                tokenExpiry: this.authState.googleAuth.tokenExpiry
+            };
+            
+            localStorage.setItem('google_auth_data', JSON.stringify(authData));
+            console.log('💾 Google認証情報保存完了');
+            
+        } catch (error) {
+            console.error('❌ Google認証情報保存エラー:', error);
+        }
+    },
+    
+    // Google認証情報クリア
+    clearGoogleAuth: function() {
+        this.authState.googleAuth = {
+            isSignedIn: false,
+            user: null,
+            accessToken: null,
+            tokenExpiry: null
+        };
+        
+        localStorage.removeItem('google_auth_data');
+        console.log('🗑️ Google認証情報クリア完了');
+    },
+    
+    // RentPipe認証情報クリア
+    clearRentPipeAuth: function() {
+        this.authState.rentpipeAuth = {
+            isLoggedIn: false,
+            user: null
+        };
+        this.authState.isAuthenticated = false;
+        
+        localStorage.removeItem('rentpipe_auth');
+        console.log('🗑️ RentPipe認証情報クリア完了');
     },
     
     // 認証状態取得
     getAuthState: function() {
-        return {
-            isAuthenticated: this.isAuthenticated,
-            user: this.currentUser,
-            method: this.authMethod,
-            googleAuth: this.googleAuth
-        };
+        return { ...this.authState };
     },
     
-    // Google Forms機能が利用可能かチェック
+    // Google Forms使用可能性確認
     canUseGoogleForms: function() {
-        return this.googleAuth.isSignedIn && this.googleAuth.accessToken;
+        return this.authState.googleAuth.isSignedIn && 
+               this.authState.googleAuth.accessToken &&
+               this.authState.googleAuth.tokenExpiry > new Date().getTime();
     },
     
-    // 認証が必要なページの保護
-    requireAuth: function() {
-        if (!this.isAuthenticated) {
-            console.log('🔒 認証が必要です');
-            window.location.href = 'login.html';
-            return false;
-        }
-        return true;
+    // 認証状態確認
+    isFullyAuthenticated: function() {
+        return this.authState.isAuthenticated && this.authState.googleAuth.isSignedIn;
+    },
+    
+    // デバッグ情報取得
+    getDebugInfo: function() {
+        return {
+            isInitialized: this.isInitialized,
+            authState: this.authState,
+            localStorage: {
+                rentpipeAuth: !!localStorage.getItem('rentpipe_auth'),
+                googleAuth: !!localStorage.getItem('google_auth_data')
+            },
+            canUseGoogleForms: this.canUseGoogleForms()
+        };
     }
 };
+
+// 自動初期化
+document.addEventListener('DOMContentLoaded', async function() {
+    await window.IntegratedAuthManagerV2.initialize();
+});
 
 console.log('✅ 統合認証マネージャー v2 準備完了');

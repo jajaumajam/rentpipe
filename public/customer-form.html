@@ -3,266 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>顧客情報入力フォーム - RentPipe</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>新規顧客登録 - RentPipe</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #10b981;
+        }
+    </style>
 </head>
 <body>
-    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
+    <header>
+        <div class="header-content">
+            <h1>🏠 RentPipe</h1>
+            <nav>
+                <a href="index.html">ホーム</a>
+                <a href="customer.html">顧客管理</a>
+                <a href="pipeline.html">パイプライン</a>
+                <a href="analytics.html">分析</a>
+            </nav>
+        </div>
+    </header>
 
-    <div class="form-container">
-        <div class="form-header">
-            <h1>🏠 顧客情報登録</h1>
-            <p>詳細な顧客情報を登録します</p>
+    <main class="main-content">
+        <div class="page-header">
+            <h2>📝 新規顧客登録</h2>
+            <p>新しい顧客情報を登録します</p>
         </div>
 
-        <div class="progress-bar">
-            <div class="progress-steps">
-                <div class="progress-step">
-                    <div class="step-circle active" data-step="1">1</div>
-                    <div class="step-label">基本情報</div>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle" data-step="2">2</div>
-                    <div class="step-label">ご希望条件</div>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle" data-step="3">3</div>
-                    <div class="step-label">詳細条件</div>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle" data-step="4">4</div>
-                    <div class="step-label">確認</div>
-                </div>
-            </div>
-        </div>
-
-        <form id="customerForm">
-            <!-- Step 1: 基本情報 -->
-            <div class="form-section active" data-section="1">
-                <h2>基本情報</h2>
-                
-                <div class="form-group">
-                    <label for="name">お名前 <span class="required">*</span></label>
-                    <input type="text" id="name" name="name" required placeholder="例: 山田 太郎">
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">メールアドレス <span class="required">*</span></label>
-                    <input type="email" id="email" name="email" required placeholder="例: yamada@example.com">
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">電話番号 <span class="required">*</span></label>
-                    <input type="tel" id="phone" name="phone" required placeholder="例: 090-1234-5678">
-                </div>
-                
-                <div class="form-group">
-                    <label for="currentAddress">現住所</label>
-                    <input type="text" id="currentAddress" name="currentAddress" placeholder="例: 東京都渋谷区○○ 1-2-3">
-                </div>
-                
-                <div class="form-group">
-                    <label for="occupation">ご職業</label>
-                    <select id="occupation" name="occupation">
-                        <option value="">選択してください</option>
-                        <option value="会社員">会社員</option>
-                        <option value="公務員">公務員</option>
-                        <option value="自営業">自営業</option>
-                        <option value="フリーランス">フリーランス</option>
-                        <option value="パート・アルバイト">パート・アルバイト</option>
-                        <option value="学生">学生</option>
-                        <option value="主婦・主夫">主婦・主夫</option>
-                        <option value="年金受給者">年金受給者</option>
-                        <option value="無職">無職</option>
-                        <option value="その他">その他</option>
-                    </select>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline btn-prev" style="display: none;">戻る</button>
-                    <button type="button" class="btn btn-primary btn-next" onclick="nextStep()">次へ</button>
-                </div>
+        <div class="form-container">
+            <div id="success-message" class="success-message" style="display: none;">
+                ✅ 顧客を正常に登録しました！
             </div>
 
-            <!-- Step 2: ご希望条件 -->
-            <div class="form-section" data-section="2">
-                <h2>ご希望条件</h2>
+            <form id="customer-form">
+                <!-- 基本情報 -->
+                <h3>👤 基本情報</h3>
                 
                 <div class="form-group">
-                    <label for="moveDate">入居希望時期 <span class="required">*</span></label>
-                    <input type="date" id="moveDate" name="moveDate" required>
+                    <label for="name">氏名 *</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="moveReason">お引越し理由</label>
-                    <textarea id="moveReason" name="moveReason" rows="3" 
-                              placeholder="例: 職場が変わったため、家族が増えたため、更新時期のため など"></textarea>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">メールアドレス *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">電話番号 *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>ご予算（月額）<span class="required">*</span></label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="budgetMin" name="budgetMin" placeholder="下限" required style="flex: 1;">
-                        <span>〜</span>
-                        <input type="number" id="budgetMax" name="budgetMax" placeholder="上限" required style="flex: 1;">
-                        <span>万円</span>
+                <!-- 希望条件 -->
+                <h3>🏠 希望条件</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="budget-min">予算下限（万円）</label>
+                        <input type="number" id="budget-min" name="budgetMin" min="0" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="budget-max">予算上限（万円）</label>
+                        <input type="number" id="budget-max" name="budgetMax" min="0" step="0.5">
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="areas">希望エリア（複数記載可）</label>
-                    <textarea id="areas" name="areas" rows="3" 
-                              placeholder="例: 渋谷区、新宿区、世田谷区&#10;または&#10;渋谷駅周辺、恵比寿エリア など"></textarea>
+                    <label for="areas">希望エリア</label>
+                    <input type="text" id="areas" name="areas" placeholder="例：新宿, 渋谷, 池袋">
                 </div>
                 
                 <div class="form-group">
-                    <label for="stationDistance">駅徒歩時間の希望</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="stationDistance" name="stationDistance" 
-                               placeholder="例: 10" min="1" max="30" style="width: 100px;">
-                        <span>分以内</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="buildingAge">築年数の希望</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="number" id="buildingAge" name="buildingAge" 
-                               placeholder="例: 15" min="0" max="50" style="width: 100px;">
-                        <span>年以内</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="roomType">間取り</label>
-                    <select id="roomType" name="roomType">
+                    <label for="room-type">間取り</label>
+                    <select id="room-type" name="roomType">
                         <option value="">選択してください</option>
-                        <option value="1R">1R</option>
+                        <option value="ワンルーム">ワンルーム</option>
                         <option value="1K">1K</option>
                         <option value="1DK">1DK</option>
                         <option value="1LDK">1LDK</option>
                         <option value="2K">2K</option>
                         <option value="2DK">2DK</option>
                         <option value="2LDK">2LDK</option>
+                        <option value="3K">3K</option>
+                        <option value="3DK">3DK</option>
                         <option value="3LDK">3LDK</option>
                         <option value="4LDK以上">4LDK以上</option>
                     </select>
                 </div>
                 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline btn-prev" onclick="previousStep()">戻る</button>
-                    <button type="button" class="btn btn-primary btn-next" onclick="nextStep()">次へ</button>
-                </div>
-            </div>
-
-            <!-- Step 3: 詳細条件 -->
-            <div class="form-section" data-section="3">
-                <h2>詳細条件</h2>
-                
                 <div class="form-group">
-                    <label>こだわり条件（複数選択可）</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_pet" name="requirements" value="ペット可">
-                            <label for="req_pet">ペット可</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_parking" name="requirements" value="駐車場付">
-                            <label for="req_parking">駐車場付</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_bike_parking" name="requirements" value="駐輪場付">
-                            <label for="req_bike_parking">駐輪場付</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_autolock" name="requirements" value="オートロック">
-                            <label for="req_autolock">オートロック</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_bath_toilet" name="requirements" value="バストイレ別">
-                            <label for="req_bath_toilet">バストイレ別</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_2nd_floor" name="requirements" value="2階以上">
-                            <label for="req_2nd_floor">2階以上</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_sunny" name="requirements" value="南向き">
-                            <label for="req_sunny">南向き</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_air_con" name="requirements" value="エアコン付">
-                            <label for="req_air_con">エアコン付</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="req_barrier_free" name="requirements" value="バリアフリー">
-                            <label for="req_barrier_free">バリアフリー</label>
-                        </div>
+                    <label for="requirements">特別な要望</label>
+                    <input type="text" id="requirements" name="requirements" placeholder="例：ペット可, 楽器可, 駐車場">
+                </div>
+                
+                <!-- 営業情報 -->
+                <h3>📋 営業情報</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="urgency">緊急度</label>
+                        <select id="urgency" name="urgency">
+                            <option value="low">低（3ヶ月以上）</option>
+                            <option value="medium" selected>中（1-3ヶ月）</option>
+                            <option value="high">高（1ヶ月以内）</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-time">連絡希望時間</label>
+                        <select id="contact-time" name="contactTime">
+                            <option value="anytime">いつでも</option>
+                            <option value="daytime" selected>日中（9-17時）</option>
+                            <option value="evening">夕方以降（17時以降）</option>
+                            <option value="weekend">土日のみ</option>
+                        </select>
                     </div>
                 </div>
                 
-                <div class="form-group" id="petDetails" style="display: none;">
-                    <label for="petInfo">ペットの詳細情報</label>
-                    <textarea id="petInfo" name="petInfo" rows="3" 
-                              placeholder="ペットの種類、数、名前をご記入ください&#10;例: 小型犬1匹（トイプードル、名前：ポチ）&#10;　　猫2匹（アメリカンショートヘア、名前：タマ、ミケ）"></textarea>
-                </div>
-                
                 <div class="form-group">
-                    <label for="notes">その他ご要望</label>
-                    <textarea id="notes" name="notes" rows="4" 
-                              placeholder="その他、ご希望やご要望がございましたらご自由にご記入ください&#10;例: 楽器演奏可、事務所利用可、リノベーション物件希望など"></textarea>
+                    <label for="notes">メモ・備考</label>
+                    <textarea id="notes" name="notes" placeholder="顧客の特徴、要注意事項などを記載"></textarea>
                 </div>
                 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline btn-prev" onclick="previousStep()">戻る</button>
-                    <button type="button" class="btn btn-primary btn-next" onclick="nextStep()">確認へ</button>
+                <!-- ボタン -->
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">📝 顧客を登録</button>
+                    <a href="customer.html" class="btn btn-outline">← 戻る</a>
                 </div>
-            </div>
-
-            <!-- Step 4: 確認 -->
-            <div class="form-section" data-section="4">
-                <h2>入力内容の確認</h2>
-                <div id="confirmationContent">
-                    <!-- 確認内容がここに表示されます -->
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline btn-prev" onclick="previousStep()">戻る</button>
-                    <button type="button" class="btn btn-primary btn-submit" onclick="submitForm()" style="display: none;">✅ 登録する</button>
-                </div>
-            </div>
-        </form>
-
-        <!-- 送信完了メッセージ -->
-        <div class="success-message" id="successMessage" style="display: none;">
-            <!-- 成功メッセージ内容がJSで動的に生成されます -->
+            </form>
         </div>
-    </div>
+    </main>
 
-    <!-- 必要なJSファイルを正しい順序で読み込み -->
-    <script src="js/unified-auth.js"></script>
-    <script src="js/unified-data-manager.js"></script>
-    <script src="js/navigation.js"></script>
-    <script src="js/customer-form.js"></script>
-    
     <script>
-        // ペット可チェックボックスの制御
-        document.addEventListener('DOMContentLoaded', function() {
-            const petCheckbox = document.getElementById('req_pet');
-            const petDetails = document.getElementById('petDetails');
+        // フォーム送信処理
+        document.getElementById('customer-form').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            if (petCheckbox && petDetails) {
-                petCheckbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        petDetails.style.display = 'block';
-                    } else {
-                        petDetails.style.display = 'none';
-                        document.getElementById('petInfo').value = '';
-                    }
-                });
+            try {
+                // フォームデータ取得
+                const formData = new FormData(this);
+                const customerData = {
+                    id: 'customer-' + Date.now(),
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    pipelineStatus: 'lead',
+                    preferences: {
+                        budgetMin: parseFloat(formData.get('budgetMin')) || null,
+                        budgetMax: parseFloat(formData.get('budgetMax')) || null,
+                        areas: formData.get('areas') ? formData.get('areas').split(',').map(area => area.trim()) : [],
+                        roomType: formData.get('roomType') || '',
+                        requirements: formData.get('requirements') ? formData.get('requirements').split(',').map(req => req.trim()) : []
+                    },
+                    notes: formData.get('notes') || '',
+                    urgency: formData.get('urgency') || 'medium',
+                    contactTime: formData.get('contactTime') || 'daytime',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'manual_entry'
+                };
+                
+                // 既存の顧客データ取得
+                const existingCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
+                
+                // 新しい顧客を追加
+                existingCustomers.push(customerData);
+                
+                // ローカルストレージに保存
+                localStorage.setItem('customers', JSON.stringify(existingCustomers));
+                
+                // 成功メッセージ表示
+                document.getElementById('success-message').style.display = 'block';
+                
+                // フォームリセット
+                this.reset();
+                
+                // 3秒後に顧客管理ページに戻る
+                setTimeout(() => {
+                    window.location.href = 'customer.html';
+                }, 2000);
+                
+                console.log('✅ 顧客登録完了:', customerData);
+                
+            } catch (error) {
+                console.error('❌ 顧客登録エラー:', error);
+                alert('顧客登録に失敗しました: ' + error.message);
             }
         });
     </script>
-    <script src="js/customer-form-status-fix.js"></script>
 </body>
 </html>

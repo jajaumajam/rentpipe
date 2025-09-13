@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>顧客データテスト</title>
+</head>
+<body>
+    <h1>顧客データテスト</h1>
+    <button onclick="testCreateCustomers()">テストデータ作成</button>
+    <button onclick="testDisplayData()">データ表示</button>
+    <button onclick="testClearData()">データクリア</button>
+    
+    <div id="result"></div>
+    
+    <script src="public/js/create-test-customers.js"></script>
+    <script>
+        function testCreateCustomers() {
+            try {
+                const customers = window.createTestCustomers();
+                document.getElementById('result').innerHTML = 
+                    '<h3>✅ テストデータ作成成功</h3><pre>' + JSON.stringify(customers, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<h3>❌ エラー</h3><p>' + error.message + '</p>';
+            }
+        }
+        
+        function testDisplayData() {
+            const data = localStorage.getItem('customers');
+            if (data) {
+                const customers = JSON.parse(data);
+                document.getElementById('result').innerHTML = 
+                    '<h3>📊 現在の顧客データ (' + customers.length + '件)</h3><pre>' + JSON.stringify(customers, null, 2) + '</pre>';
+            } else {
+                document.getElementById('result').innerHTML = '<h3>⚠️ 顧客データがありません</h3>';
+            }
+        }
+        
+        function testClearData() {
+            localStorage.removeItem('customers');
+            document.getElementById('result').innerHTML = '<h3>🗑️ データをクリアしました</h3>';
+        }
+    </script>
+</body>
+</html>
