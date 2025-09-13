@@ -1,4 +1,4 @@
-// 📝 シンプル Google Forms アドオン（認証連携修正版）
+// 📝 シンプル Google Forms アドオン（マルチAuth対応版）
 // 既存のシステムを壊さず、最小限でGoogleForms機能を追加
 console.log('📝 シンプル Google Forms アドオン 読み込み中...');
 
@@ -12,7 +12,7 @@ window.SimpleGoogleFormsAddon = {
         
         console.log('🚀 Google Forms アドオン 初期化開始...');
         
-        // Google認証状態をチェック
+        // 認証状態をチェック（複数の認証システム対応）
         this.checkAuthStatus();
         
         // 既存の顧客カードにボタンを追加
@@ -28,25 +28,80 @@ window.SimpleGoogleFormsAddon = {
         console.log('✅ Google Forms アドオン 初期化完了');
     },
     
-    // Google認証状態をチェック
+    // 認証状態をチェック（マルチAuth対応）
     checkAuthStatus: function() {
         try {
-            const authDataRaw = localStorage.getItem('google_auth_simple');
-            if (authDataRaw) {
-                this.authData = JSON.parse(authDataRaw);
-                
-                // トークンの有効性チェック
-                const now = Date.now();
-                if (this.authData.expires && now > this.authData.expires) {
-                    console.warn('⚠️ Google認証トークンが期限切れです');
-                    this.authData = null;
-                    localStorage.removeItem('google_auth_simple');
-                } else {
-                    console.log('✅ Google認証状態確認: ' + this.authData.email);
+            console.log('🔍 マルチ認証システムチェック開始...');
+            
+            // 1. Google認証データをチェック
+            const googleAuthData = localStorage.getItem('google_auth_simple');
+            if (googleAuthData) {
+                try {
+                    const googleAuth = JSON.parse(googleAuthData);
+                    const now = Date.now();
+                    
+                    if (!googleAuth.expires || now < googleAuth.expires) {
+                        this.authData = {
+                            email: googleAuth.email,
+                            name: googleAuth.name,
+                            picture: googleAuth.picture,
+                            source: 'google',
+                            isValid: true
+                        };
+                        console.log('✅ Google認証データ有効: ' + this.authData.email);
+                        return;
+                    } else {
+                        console.warn('⚠️ Google認証トークンが期限切れ');
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Google認証データ解析エラー:', error);
                 }
-            } else {
-                console.log('📝 Google未認証状態');
             }
+            
+            // 2. 統一認証システムをチェック
+            const unifiedAuth = localStorage.getItem('rentpipe_authenticated');
+            const unifiedUser = localStorage.getItem('rentpipe_user');
+            if (unifiedAuth === 'true' && unifiedUser) {
+                try {
+                    const user = JSON.parse(unifiedUser);
+                    this.authData = {
+                        email: user.email,
+                        name: user.displayName || user.email,
+                        picture: user.photoURL,
+                        source: 'unified',
+                        isValid: true
+                    };
+                    console.log('✅ 統一認証データ有効: ' + this.authData.email);
+                    return;
+                } catch (error) {
+                    console.warn('⚠️ 統一認証データ解析エラー:', error);
+                }
+            }
+            
+            // 3. シンプル認証システムをチェック
+            const simpleAuth = localStorage.getItem('rentpipe_auth_simple');
+            const simpleUser = localStorage.getItem('rentpipe_user_simple');
+            if (simpleAuth === 'logged_in' && simpleUser) {
+                try {
+                    const user = JSON.parse(simpleUser);
+                    this.authData = {
+                        email: user.email,
+                        name: user.name,
+                        picture: user.picture,
+                        source: 'simple',
+                        isValid: true
+                    };
+                    console.log('✅ シンプル認証データ有効: ' + this.authData.email);
+                    return;
+                } catch (error) {
+                    console.warn('⚠️ シンプル認証データ解析エラー:', error);
+                }
+            }
+            
+            // 4. すべての認証データが無効
+            console.log('📝 全認証システムで未認証状態');
+            this.authData = null;
+            
         } catch (error) {
             console.error('❌ 認証状態確認エラー:', error);
             this.authData = null;
@@ -55,6 +110,12 @@ window.SimpleGoogleFormsAddon = {
     
     // 認証状態インジケーターを追加
     addAuthStatusIndicator: function() {
+        // 既存のインジケーターを削除
+        const existingIndicator = document.getElementById('google-auth-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
         // ページ上部に認証状態を表示
         const pageHeader = document.querySelector('.page-header, h1, main');
         if (pageHeader) {
@@ -86,9 +147,16 @@ window.SimpleGoogleFormsAddon = {
         }
         if (!indicator) return;
         
-        if (this.authData) {
+        if (this.authData && this.authData.isValid) {
+            const sourceText = {
+                'google': 'Google認証',
+                'unified': '統一認証',
+                'simple': 'シンプル認証'
+            }[this.authData.source] || '認証済み';
+            
             indicator.innerHTML = `
-                ✅ <strong>Google Forms連携済み</strong> - ${this.authData.name} (${this.authData.email})
+                ✅ <strong>Google Forms連携対応</strong> - ${this.authData.name} (${this.authData.email}) 
+                <span style="font-size: 12px; opacity: 0.8;">[${sourceText}]</span>
                 <button onclick="SimpleGoogleFormsAddon.signOut()" style="
                     margin-left: 10px; padding: 4px 8px; background: #ef4444; color: white; 
                     border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
@@ -113,8 +181,22 @@ window.SimpleGoogleFormsAddon = {
     
     // ログアウト処理
     signOut: function() {
-        if (confirm('Google認証からログアウトしますか？')) {
-            localStorage.removeItem('google_auth_simple');
+        if (confirm('ログアウトしますか？（全ての認証データがクリアされます）')) {
+            // 全ての認証データをクリア
+            const authKeys = [
+                'google_auth_simple',
+                'rentpipe_authenticated',
+                'rentpipe_user', 
+                'rentpipe_auth_simple',
+                'rentpipe_user_simple',
+                'rentpipe_unified_auth'
+            ];
+            
+            authKeys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            
             this.authData = null;
             this.updateAuthIndicator();
             
@@ -122,10 +204,15 @@ window.SimpleGoogleFormsAddon = {
             const formButtons = document.querySelectorAll('.google-forms-btn');
             formButtons.forEach(btn => {
                 btn.style.opacity = '0.5';
-                btn.title = 'Google認証が必要です';
+                btn.title = '認証が必要です';
             });
             
-            console.log('✅ Google認証ログアウト完了');
+            console.log('✅ 全認証データ ログアウト完了');
+            
+            // ログインページにリダイレクト
+            setTimeout(() => {
+                window.location.href = 'login-google-simple.html';
+            }, 1000);
         }
     },
     
@@ -148,7 +235,7 @@ window.SimpleGoogleFormsAddon = {
     observeNewCards: function() {
         const targetNode = document.getElementById('customersList') || document.querySelector('.customers-grid');
         if (!targetNode) {
-            console.warn('⚠️ 顧客リストコンテナが見つかりません');
+            console.warn('⚠️ 顧客リストコンテナが見つかりません (customersList または .customers-grid)');
             return;
         }
         
@@ -198,7 +285,7 @@ window.SimpleGoogleFormsAddon = {
             const formsBtn = document.createElement('button');
             formsBtn.className = 'btn btn-sm btn-success google-forms-btn';
             formsBtn.innerHTML = '📝 フォーム';
-            formsBtn.title = this.authData ? 'Google Forms連携' : 'Google認証が必要です';
+            formsBtn.title = this.authData ? 'Google Forms連携' : '認証が必要です';
             formsBtn.style.cssText = `
                 font-size: 11px;
                 padding: 4px 8px;
@@ -228,12 +315,12 @@ window.SimpleGoogleFormsAddon = {
     handleFormsClick: function(customerId) {
         console.log(`📝 顧客 ${customerId} のフォームボタンクリック`);
         
-        // 認証チェック
+        // 認証チェック（最新状態を確認）
         this.checkAuthStatus();
         
-        if (!this.authData) {
+        if (!this.authData || !this.authData.isValid) {
             // 未認証の場合
-            const confirmLogin = confirm('Google Forms機能を使用するには、Googleアカウントでのログインが必要です。\n\nログインページに移動しますか？');
+            const confirmLogin = confirm('Google Forms機能を使用するには、ログインが必要です。\n\nログインページに移動しますか？');
             if (confirmLogin) {
                 window.location.href = 'login-google-simple.html';
             }
@@ -241,6 +328,12 @@ window.SimpleGoogleFormsAddon = {
         }
         
         // 認証済みの場合、メニューを表示
+        const sourceText = {
+            'google': 'Google認証',
+            'unified': '統一認証', 
+            'simple': 'シンプル認証'
+        }[this.authData.source] || '認証済み';
+        
         const menu = `
             <div class="simple-forms-menu" onclick="this.remove()" style="
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -256,7 +349,7 @@ window.SimpleGoogleFormsAddon = {
                         顧客専用のフォームを作成・管理します
                     </p>
                     <p style="margin: 0 0 15px 0; color: #059669; font-size: 12px;">
-                        ✅ ${this.authData.name} でログイン中
+                        ✅ ${this.authData.name} でログイン中 <span style="opacity: 0.7;">[${sourceText}]</span>
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <button onclick="SimpleGoogleFormsAddon.createForm('${customerId}')" 
@@ -439,15 +532,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2000);
 });
 
-// 認証状態の定期チェック（5秒ごと）
+// 認証状態の定期チェック（10秒ごと）
 setInterval(() => {
     if (window.SimpleGoogleFormsAddon.isInitialized) {
         window.SimpleGoogleFormsAddon.checkAuthStatus();
         window.SimpleGoogleFormsAddon.updateAuthIndicator();
     }
-}, 5000);
+}, 10000);
 
 // グローバル公開
 window.SimpleGoogleFormsAddon = SimpleGoogleFormsAddon;
 
-console.log('✅ シンプル Google Forms アドオン 準備完了');
+console.log('✅ シンプル Google Forms アドオン（マルチAuth対応版）準備完了');

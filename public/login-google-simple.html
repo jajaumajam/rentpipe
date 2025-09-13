@@ -34,7 +34,7 @@
 
                 <!-- 戻るリンク -->
                 <div style="margin-top: 20px;">
-                    <a href="customer.html" style="color: #6b7280; text-decoration: none;">← 顧客管理に戻る</a>
+                    <a href="index.html" style="color: #6b7280; text-decoration: none;">← ホームに戻る</a>
                 </div>
 
                 <!-- 状態表示 -->
@@ -110,6 +110,62 @@
                 };
             } catch (error) {
                 debugLog('❌ JWTデコードエラー: ' + error.message);
+                throw error;
+            }
+        }
+
+        // 既存システム用に認証データを保存
+        function saveAuthForLegacySystems(userData) {
+            debugLog('💾 既存システム用認証データ保存開始...');
+            
+            try {
+                // 1. unified-auth.js用の認証データ
+                localStorage.setItem('rentpipe_authenticated', 'true');
+                localStorage.setItem('rentpipe_user', JSON.stringify({
+                    uid: userData.id,
+                    email: userData.email,
+                    displayName: userData.name,
+                    photoURL: userData.picture
+                }));
+                
+                // 2. simple-reliable-auth.js用の認証データ
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify({
+                    id: userData.id,
+                    email: userData.email,
+                    name: userData.name,
+                    picture: userData.picture
+                }));
+                
+                // 3. セッションストレージにも保存
+                sessionStorage.setItem('rentpipe_authenticated', 'true');
+                sessionStorage.setItem('rentpipe_user', JSON.stringify({
+                    uid: userData.id,
+                    email: userData.email,
+                    displayName: userData.name,
+                    photoURL: userData.picture
+                }));
+                
+                // 4. 統合認証マネージャー用データ
+                const authData = {
+                    isAuthenticated: true,
+                    user: {
+                        id: userData.id,
+                        email: userData.email,
+                        displayName: userData.name,
+                        photoURL: userData.picture
+                    },
+                    sessionId: 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    loginTime: Date.now(),
+                    authMethod: 'google'
+                };
+                localStorage.setItem('rentpipe_unified_auth', JSON.stringify(authData));
+                
+                debugLog('✅ 既存システム用認証データ保存完了');
+                debugLog('📊 保存されたキー: rentpipe_authenticated, rentpipe_user, rentpipe_auth_simple, rentpipe_user_simple, rentpipe_unified_auth');
+                
+            } catch (error) {
+                debugLog('❌ 既存システム用認証データ保存エラー: ' + error.message);
                 throw error;
             }
         }
@@ -192,16 +248,21 @@
                     id: tokenPayload.sub
                 };
 
-                // ローカルストレージに保存
+                debugLog('🔄 認証データ保存開始...');
+
+                // Google認証用データ保存
                 const authData = {
                     ...userData,
                     credential: response.credential,
                     loginTime: Date.now(),
                     expires: tokenPayload.exp * 1000 // JWT expiry to milliseconds
                 };
-
                 localStorage.setItem('google_auth_simple', JSON.stringify(authData));
-                debugLog('💾 認証データ保存完了');
+                
+                // 既存システム用認証データも保存
+                saveAuthForLegacySystems(userData);
+                
+                debugLog('💾 全認証データ保存完了');
 
                 showLoginStatus('success', `✅ ログイン成功: ${userData.name}`);
 
@@ -274,34 +335,70 @@
         // 既存の認証状態チェック
         function checkExistingAuth() {
             try {
-                const authData = localStorage.getItem('google_auth_simple');
-                if (authData) {
-                    const parsed = JSON.parse(authData);
-                    debugLog('🔍 既存認証データ確認: ' + parsed.email);
-                    
-                    // トークンの有効性チェック
-                    const now = Date.now();
-                    if (parsed.expires && now > parsed.expires) {
-                        debugLog('⚠️ 認証トークンの有効期限切れ');
-                        localStorage.removeItem('google_auth_simple');
-                        return;
-                    }
-                    
-                    const hoursSinceLogin = (now - parsed.loginTime) / (1000 * 60 * 60);
-                    if (hoursSinceLogin < 24) { // 24時間以内なら有効
-                        debugLog('✅ 有効な既存認証を発見 - 自動リダイレクト');
-                        showLoginStatus('success', `既にログイン済み: ${parsed.name}`);
-                        setTimeout(() => {
-                            window.location.href = 'customer.html';
-                        }, 1000);
-                    } else {
-                        debugLog('⚠️ 認証データが古いため削除');
-                        localStorage.removeItem('google_auth_simple');
+                // 複数の認証キーをチェック
+                const authKeys = [
+                    'google_auth_simple',
+                    'rentpipe_authenticated',
+                    'rentpipe_auth_simple'
+                ];
+                
+                let isAuthenticated = false;
+                let userName = '';
+                
+                for (const key of authKeys) {
+                    const authData = localStorage.getItem(key);
+                    if (authData) {
+                        debugLog(`🔍 既存認証データ発見: ${key}`);
+                        
+                        if (key === 'rentpipe_authenticated' && authData === 'true') {
+                            isAuthenticated = true;
+                            const userData = localStorage.getItem('rentpipe_user');
+                            if (userData) {
+                                const user = JSON.parse(userData);
+                                userName = user.displayName || user.email;
+                            }
+                            break;
+                        } else if (key === 'rentpipe_auth_simple' && authData === 'logged_in') {
+                            isAuthenticated = true;
+                            const userData = localStorage.getItem('rentpipe_user_simple');
+                            if (userData) {
+                                const user = JSON.parse(userData);
+                                userName = user.name || user.email;
+                            }
+                            break;
+                        } else if (key === 'google_auth_simple') {
+                            try {
+                                const parsed = JSON.parse(authData);
+                                // トークンの有効性チェック
+                                const now = Date.now();
+                                if (parsed.expires && now < parsed.expires) {
+                                    isAuthenticated = true;
+                                    userName = parsed.name;
+                                    break;
+                                }
+                            } catch (e) {
+                                debugLog('❌ Google認証データ解析エラー: ' + e.message);
+                            }
+                        }
                     }
                 }
+                
+                if (isAuthenticated) {
+                    debugLog('✅ 有効な既存認証を発見 - 自動リダイレクト');
+                    showLoginStatus('success', `既にログイン済み: ${userName}`);
+                    setTimeout(() => {
+                        window.location.href = 'customer.html';
+                    }, 1000);
+                } else {
+                    debugLog('📝 既存認証なし - ログイン待機');
+                }
+                
             } catch (error) {
                 debugLog('❌ 既存認証確認エラー: ' + error.message);
-                localStorage.removeItem('google_auth_simple'); // 破損したデータを削除
+                // 破損したデータを削除
+                ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple'].forEach(key => {
+                    localStorage.removeItem(key);
+                });
             }
         }
 
@@ -312,19 +409,22 @@
         }, 500);
 
         // デバッグ用グローバル関数
-        window.clearAuth = function() {
-            localStorage.removeItem('google_auth_simple');
-            debugLog('🗑️ 認証データクリア完了');
+        window.clearAllAuth = function() {
+            const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+            keys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            debugLog('🗑️ 全認証データクリア完了');
             location.reload();
         };
 
-        window.showAuthData = function() {
-            const authData = localStorage.getItem('google_auth_simple');
-            if (authData) {
-                console.log('認証データ:', JSON.parse(authData));
-            } else {
-                console.log('認証データなし');
-            }
+        window.showAllAuthData = function() {
+            const keys = ['google_auth_simple', 'rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+            keys.forEach(key => {
+                const data = localStorage.getItem(key);
+                console.log(`${key}:`, data ? JSON.parse(data) : null);
+            });
         };
     </script>
 </body>
