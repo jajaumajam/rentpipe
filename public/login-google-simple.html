@@ -32,12 +32,6 @@
                     🔑 Googleアカウントでログイン
                 </button>
 
-                <!-- デモデータ初期化ボタン -->
-                <button onclick="initializeDemoData()" 
-                        style="background: #16a34a; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px;">
-                    📊 デモデータを初期化
-                </button>
-
                 <!-- 戻るリンク -->
                 <div style="margin-top: 20px;">
                     <a href="index.html" style="color: #6b7280; text-decoration: none;">← ホームに戻る</a>
@@ -120,13 +114,19 @@
             }
         }
 
-        // デモ顧客データを初期化
-        function initializeDemoData() {
-            debugLog('📊 デモデータ初期化開始...');
+        // デモ顧客データを作成（デバッグツールと同じロジック）
+        function createDemoCustomersIfNeeded() {
+            const existingCustomers = localStorage.getItem('rentpipe_demo_customers');
+            if (existingCustomers) {
+                debugLog('📊 既存の顧客データを発見 - 作成をスキップ');
+                return;
+            }
+            
+            debugLog('📊 顧客データが存在しないため自動作成');
             
             const demoCustomers = [
                 {
-                    id: 'cust_' + Date.now() + '_1',
+                    id: 'cust_demo_1_' + Date.now(),
                     name: '田中太郎',
                     email: 'tanaka@example.com',
                     phone: '090-1234-5678',
@@ -149,7 +149,7 @@
                     source: 'ウェブサイト'
                 },
                 {
-                    id: 'cust_' + Date.now() + '_2',
+                    id: 'cust_demo_2_' + Date.now(),
                     name: '佐藤花子',
                     email: 'sato@example.com',
                     phone: '090-8765-4321',
@@ -172,7 +172,7 @@
                     source: '紹介'
                 },
                 {
-                    id: 'cust_' + Date.now() + '_3',
+                    id: 'cust_demo_3_' + Date.now(),
                     name: '高橋一郎',
                     email: 'takahashi@example.com',
                     phone: '090-1111-2222',
@@ -197,19 +197,21 @@
             ];
             
             localStorage.setItem('rentpipe_demo_customers', JSON.stringify(demoCustomers));
-            debugLog('✅ デモデータ初期化完了: ' + demoCustomers.length + '件');
-            showLoginStatus('success', `✅ デモデータ初期化完了: ${demoCustomers.length}件の顧客データを作成しました`);
+            debugLog('✅ デモデータ自動作成完了: ' + demoCustomers.length + '件');
         }
 
-        // 既存システム用に認証データを保存（完全版）
-        function saveAuthForLegacySystems(userData) {
-            debugLog('💾 既存システム用認証データ保存開始...');
+        // 既存システム用に認証データを保存（デバッグツール成功版を使用）
+        function saveAuthForAllSystems(userData) {
+            debugLog('💾 全システム用認証データ保存開始...');
             
             try {
                 const now = Date.now();
                 const sessionId = 'session-' + now + '-' + Math.random().toString(36).substr(2, 9);
                 
+                debugLog('📝 保存するユーザーデータ: ' + JSON.stringify(userData));
+                
                 // 1. rentpipe_authenticated + rentpipe_user（最重要）
+                debugLog('💾 Step 1: rentpipe_authenticated + rentpipe_user 保存中...');
                 localStorage.setItem('rentpipe_authenticated', 'true');
                 localStorage.setItem('rentpipe_user', JSON.stringify({
                     uid: userData.id,
@@ -226,8 +228,10 @@
                     displayName: userData.name,
                     photoURL: userData.picture
                 }));
+                debugLog('✅ Step 1 完了');
                 
                 // 2. rentpipe_auth_simple + rentpipe_user_simple
+                debugLog('💾 Step 2: rentpipe_auth_simple + rentpipe_user_simple 保存中...');
                 localStorage.setItem('rentpipe_auth_simple', 'logged_in');
                 localStorage.setItem('rentpipe_user_simple', JSON.stringify({
                     id: userData.id,
@@ -235,9 +239,11 @@
                     name: userData.name,
                     picture: userData.picture
                 }));
+                debugLog('✅ Step 2 完了');
                 
-                // 3. rentpipe_unified_auth
-                const unifiedAuthData = {
+                // 3. rentpipe_unified_auth + rentpipe_session
+                debugLog('💾 Step 3: rentpipe_unified_auth + rentpipe_session 保存中...');
+                localStorage.setItem('rentpipe_unified_auth', JSON.stringify({
                     isAuthenticated: true,
                     user: {
                         id: userData.id,
@@ -248,24 +254,69 @@
                     sessionId: sessionId,
                     loginTime: now,
                     authMethod: 'google'
-                };
-                localStorage.setItem('rentpipe_unified_auth', JSON.stringify(unifiedAuthData));
+                }));
                 localStorage.setItem('rentpipe_session', sessionId);
+                debugLog('✅ Step 3 完了');
                 
-                debugLog('✅ 既存システム用認証データ保存完了');
-                debugLog('📊 保存されたキー:');
-                debugLog('  - rentpipe_authenticated: true');
-                debugLog('  - rentpipe_user: ' + userData.email);
-                debugLog('  - rentpipe_auth_simple: logged_in');
-                debugLog('  - rentpipe_user_simple: ' + userData.name);
-                debugLog('  - rentpipe_unified_auth: ' + userData.email);
+                // 4. 保存確認
+                debugLog('🔍 保存確認中...');
+                const checkKeys = ['rentpipe_authenticated', 'rentpipe_user', 'rentpipe_auth_simple', 'rentpipe_user_simple', 'rentpipe_unified_auth'];
+                let allSaved = true;
                 
-                return true;
+                checkKeys.forEach(key => {
+                    const saved = localStorage.getItem(key);
+                    if (saved) {
+                        debugLog('✅ ' + key + ': 保存確認');
+                    } else {
+                        debugLog('❌ ' + key + ': 保存失敗');
+                        allSaved = false;
+                    }
+                });
+                
+                if (allSaved) {
+                    debugLog('🎉 全システム用認証データ保存完了！');
+                    return true;
+                } else {
+                    throw new Error('一部の認証データ保存に失敗');
+                }
                 
             } catch (error) {
-                debugLog('❌ 既存システム用認証データ保存エラー: ' + error.message);
+                debugLog('❌ 認証データ保存エラー: ' + error.message);
+                debugLog('📊 エラー詳細: ' + error.stack);
                 throw error;
             }
+        }
+
+        // 保存された認証データの検証
+        function validateSavedAuthData() {
+            debugLog('🔍 保存された認証データの検証開始...');
+            
+            const requiredKeys = [
+                'google_auth_simple',
+                'rentpipe_authenticated', 
+                'rentpipe_user',
+                'rentpipe_auth_simple',
+                'rentpipe_user_simple',
+                'rentpipe_unified_auth'
+            ];
+            
+            let validationResults = {};
+            let allValid = true;
+            
+            requiredKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    validationResults[key] = 'OK';
+                    debugLog('✅ ' + key + ': 存在確認');
+                } else {
+                    validationResults[key] = 'NG';
+                    debugLog('❌ ' + key + ': 未保存');
+                    allValid = false;
+                }
+            });
+            
+            debugLog('📊 検証結果: ' + JSON.stringify(validationResults));
+            return allValid;
         }
 
         // Google Identity Services初期化
@@ -319,7 +370,7 @@
             }
         }
 
-        // Google認証コールバック
+        // Google認証コールバック（修正版）
         function handleGoogleSignInCallback(response) {
             try {
                 debugLog('🔑 Google認証レスポンス受信');
@@ -332,7 +383,7 @@
                     throw new Error('認証情報が取得できませんでした');
                 }
 
-                // JWTトークンをデコード（修正版）
+                // JWTトークンをデコード
                 const decodedToken = decodeJWT(response.credential);
                 const tokenPayload = decodedToken.payload;
                 
@@ -346,41 +397,45 @@
                     id: tokenPayload.sub
                 };
 
-                debugLog('🔄 認証データ保存開始...');
+                debugLog('🔄 認証データ保存処理開始...');
 
-                // Google認証用データ保存
-                const authData = {
+                // 1. Google認証用データ保存
+                const googleAuthData = {
                     ...userData,
                     credential: response.credential,
                     loginTime: Date.now(),
-                    expires: tokenPayload.exp * 1000 // JWT expiry to milliseconds
+                    expires: tokenPayload.exp * 1000
                 };
-                localStorage.setItem('google_auth_simple', JSON.stringify(authData));
-                debugLog('📱 Google認証データ保存完了');
+                localStorage.setItem('google_auth_simple', JSON.stringify(googleAuthData));
+                debugLog('✅ Google認証データ保存完了');
                 
-                // 既存システム用認証データも保存
-                const saveResult = saveAuthForLegacySystems(userData);
+                // 2. 全システム用認証データ保存
+                const saveResult = saveAuthForAllSystems(userData);
                 if (saveResult) {
-                    debugLog('📋 レガシー認証データ保存完了');
+                    debugLog('✅ 全システム認証データ保存完了');
                 } else {
-                    throw new Error('レガシー認証データ保存に失敗');
+                    throw new Error('認証データ保存に失敗');
                 }
                 
-                // デモデータが存在しない場合は自動作成
-                const existingCustomers = localStorage.getItem('rentpipe_demo_customers');
-                if (!existingCustomers) {
-                    debugLog('📊 顧客データが存在しないため自動作成');
-                    initializeDemoData();
+                // 3. 保存データの検証
+                const validationResult = validateSavedAuthData();
+                if (validationResult) {
+                    debugLog('✅ 保存データ検証OK');
+                } else {
+                    throw new Error('保存データ検証に失敗');
                 }
                 
-                debugLog('💾 全認証データ保存完了');
+                // 4. デモデータ作成
+                createDemoCustomersIfNeeded();
+                
+                debugLog('🎉 全処理完了！');
 
                 showLoginStatus('success', `✅ ログイン成功: ${userData.name}`);
 
-                // 2秒後に顧客管理画面に遷移
+                // 2秒後に顧客管理画面に遷移（修正）
                 setTimeout(() => {
-                    debugLog('🔄 顧客管理画面に遷移中...');
-                    window.location.href = 'customer.html';
+                    debugLog('🔄 customer.html に遷移中...');
+                    window.location.href = 'customer.html';  // index.html ではなく customer.html に修正
                 }, 2000);
 
             } catch (error) {
@@ -446,6 +501,8 @@
         // 既存の認証状態チェック
         function checkExistingAuth() {
             try {
+                debugLog('🔍 既存認証状態確認開始');
+                
                 // 複数の認証キーをチェック
                 const authKeys = [
                     { key: 'google_auth_simple', type: 'json' },
@@ -497,7 +554,7 @@
                     debugLog('✅ 有効な既存認証を発見 - 自動リダイレクト');
                     showLoginStatus('success', `既にログイン済み: ${userName}`);
                     setTimeout(() => {
-                        window.location.href = 'customer.html';
+                        window.location.href = 'customer.html';  // customer.html に修正
                     }, 1000);
                 } else {
                     debugLog('📝 既存認証なし - ログイン待機');
@@ -534,19 +591,12 @@
             keys.forEach(key => {
                 const data = localStorage.getItem(key);
                 console.log(`${key}:`, data);
-                if (data && key !== 'rentpipe_demo_customers') {
-                    try {
-                        console.log(`  parsed:`, JSON.parse(data));
-                    } catch (e) {
-                        // 文字列データの場合はそのまま
-                    }
-                }
             });
         };
 
-        window.testAuthStatus = function() {
-            debugLog('🧪 認証状態テスト開始');
-            checkExistingAuth();
+        window.testValidation = function() {
+            const result = validateSavedAuthData();
+            console.log('認証データ検証結果:', result);
         };
     </script>
 </body>
