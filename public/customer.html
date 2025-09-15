@@ -4,99 +4,286 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 - RentPipe</title>
-    <link href="css/main.css" rel="stylesheet">
-    <link href="css/responsive.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-brand">
-                🏠 RentPipe
-            </a>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="index.html" class="nav-link">📊 ダッシュボード</a>
-                </li>
-                <li class="nav-item">
-                    <a href="customer.html" class="nav-link active">👥 顧客管理</a>
-                </li>
-                <li class="nav-item">
-                    <a href="pipeline.html" class="nav-link">📋 パイプライン</a>
-                </li>
-                <li class="nav-item">
-                    <a href="customer-form.html" class="nav-link">➕ 顧客登録</a>
-                </li>
-            </ul>
-            <div class="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
+    <header>
+        <div class="header-content">
+            <h1>🏠 RentPipe</h1>
+            <nav class="nav-container">
+                <a href="index.html">ホーム</a>
+                <a href="customer.html" class="active">顧客管理</a>
+                <a href="customer-minimal.html">簡易版</a>
+                <a href="pipeline.html">パイプライン</a>
+                <!-- ユーザー情報表示エリア（一意ID） -->
+                <div id="unique-nav-user-info" class="nav-user-info"></div>
+                <button onclick="handleLogout()" class="btn btn-outline nav-logout">ログアウト</button>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <main class="container">
+    <main class="main-content">
         <div class="page-header">
-            <h1>👥 顧客管理</h1>
+            <h2>👥 顧客管理</h2>
+            <p>顧客情報の管理と営業進捗の追跡</p>
         </div>
 
-        <div class="customers-stats" id="customersStats">
-            <!-- 統計情報がここに表示される -->
+        <!-- Google Forms連携状況表示 -->
+        <div id="google-forms-status" style="margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #f3f4f6;">
+            <h3>📝 Google Forms連携状況</h3>
+            <p id="forms-status-text">連携状況を確認中...</p>
         </div>
 
-        <div class="search-filter-bar">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="顧客名・メール・電話番号で検索...">
-            </div>
-            <div class="filter-controls">
-                <select id="statusFilter">
-                    <option value="">全てのステータス</option>
-                    <option value="初回相談">初回相談</option>
-                    <option value="物件紹介">物件紹介</option>
-                    <option value="内見">内見</option>
-                    <option value="申込">申込</option>
-                    <option value="審査">審査</option>
-                    <option value="契約">契約</option>
-                    <option value="完了">完了</option>
-                </select>
-                <button id="exportBtn" class="btn btn-outline">📥 エクスポート</button>
-                <button onclick="refreshCustomers()" class="btn btn-primary">🔄 更新</button>
-            </div>
-        </div>
-        
-        <!-- 元々の表示先IDを使用 -->
-        <div class="customers-grid" id="customersList">
-            <!-- 顧客カードが動的に挿入される -->
+        <!-- 顧客リスト -->
+        <div id="customer-list" class="customer-grid">
+            <!-- 顧客カードがここに動的に追加されます -->
         </div>
     </main>
-    
-    <!-- Firebase SDKs (デモモード) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
-    
-    <!-- プラン管理システム -->
-    <script src="js/pricing-plans.js"></script>
-    <script src="js/plan-manager.js"></script>
-    <script src="js/customer-limit-checker.js"></script>
-    
-    <!-- 既存のスクリプト読み込み（元の構成通り） -->
-    <script src="js/unified-auth.js"></script>
-    <script src="js/unified-data-manager.js"></script>
-    <script src="js/navigation.js"></script>
-    <script src="js/customer-unified.js"></script>
-    <script src="js/customer-unified-firebase-addon.js"></script>
-    <script src="js/data-key-unifier.js"></script>
-    <script src="js/cross-page-sync.js"></script>
-    <script src="js/local-first-sync.js"></script>
-    <script src="js/customer-status-editor.js"></script>
-    <script src="js/debug-customer-detail.js"></script>
-    <script src="js/customer-detail-links.js"></script>
-    <script src="js/export.js"></script>
 
-    <!-- GoogleForms連携（最小限追加） -->
-    <script src="js/simple-google-forms-addon.js"></script>
+    <!-- 必要最小限のスクリプトのみ（重複排除） -->
+    <script src="js/simple-reliable-auth.js"></script>
+    <script src="js/local-first-sync.js"></script>
+    <script src="js/customer-limit-checker.js"></script>
+    <script src="js/customer-unified.js"></script>
+    
+    <!-- Google Identity（必要な場合のみ） -->
+    <script src="js/google-identity-config.js"></script>
+    <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/google-forms-api-v2.js"></script>
+    <script src="js/complete-google-forms-solution.js"></script>
+    
+    <script>
+        // 🔧 customer.html 専用の統合スクリプト（重複排除版）
+        console.log('🚀 Customer 管理画面初期化開始');
+        
+        let isNavUpdated = false; // ナビゲーション更新の重複防止フラグ
+        
+        // DOM読み込み完了時の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM読み込み完了');
+            
+            // 1. 認証チェック
+            performAuthCheck();
+            
+            // 2. ナビゲーション更新（1回のみ）
+            setTimeout(updateNavigationOnce, 500);
+            
+            // 3. Google Forms連携状況確認
+            setTimeout(checkGoogleFormsStatus, 1000);
+            
+            // 4. 顧客データ読み込み
+            setTimeout(loadCustomerDataSafely, 1500);
+        });
+        
+        // 認証チェック
+        function performAuthCheck() {
+            console.log('🔐 認証チェック実行');
+            checkPageAccess();
+        }
+        
+        // ナビゲーション更新（1回のみ実行）
+        function updateNavigationOnce() {
+            if (isNavUpdated) {
+                console.log('⚠️ ナビゲーション更新スキップ（既に更新済み）');
+                return;
+            }
+            
+            console.log('🎨 ナビゲーション更新開始');
+            
+            const user = getUser();
+            if (!user) {
+                console.log('❌ ユーザー情報なし');
+                return;
+            }
+            
+            const navUserInfo = document.getElementById('unique-nav-user-info');
+            if (!navUserInfo) {
+                console.log('❌ ナビゲーション要素が見つかりません');
+                return;
+            }
+            
+            // 既存のコンテンツをクリア
+            navUserInfo.innerHTML = '';
+            
+            // ユーザー情報を安全に表示（文字化け対策）
+            try {
+                const displayName = user.displayName || user.email.split('@')[0];
+                const safeDisplayName = displayName.replace(/[^\w\s@.-]/g, ''); // 安全な文字のみ
+                
+                navUserInfo.innerHTML = `
+                    <div style="color: white; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                        ${user.photoURL ? `<img src="${user.photoURL}" style="width: 24px; height: 24px; border-radius: 50%;" alt="User">` : '👤'}
+                        <span>${safeDisplayName}</span>
+                    </div>
+                `;
+                
+                console.log('✅ ナビゲーション更新完了:', safeDisplayName);
+                isNavUpdated = true;
+                
+            } catch (error) {
+                console.error('❌ ナビゲーション更新エラー:', error);
+                navUserInfo.innerHTML = '<div style="color: white; font-size: 14px;">ログイン中</div>';
+                isNavUpdated = true;
+            }
+        }
+        
+        // Google Forms連携状況確認
+        function checkGoogleFormsStatus() {
+            console.log('📝 Google Forms連携状況確認');
+            
+            const statusText = document.getElementById('forms-status-text');
+            const statusContainer = document.getElementById('google-forms-status');
+            
+            try {
+                // 統合認証マネージャの状態確認
+                if (window.IntegratedAuthManagerV2) {
+                    const authState = window.IntegratedAuthManagerV2.getAuthState();
+                    
+                    if (authState.isAuthenticated && authState.googleAuth.isSignedIn) {
+                        statusText.innerHTML = `
+                            ✅ Google認証済み: ${authState.googleAuth.user.email}<br>
+                            <small>顧客カードからGoogle Forms機能を利用できます</small>
+                        `;
+                        statusContainer.style.background = '#d1fae5';
+                    } else {
+                        statusText.innerHTML = `
+                            ❌ Google認証が必要です<br>
+                            <button onclick="window.location.href='login-google-simple.html'" class="btn btn-primary" style="margin-top: 8px;">Google認証</button>
+                        `;
+                        statusContainer.style.background = '#fef3c7';
+                    }
+                } else {
+                    statusText.innerHTML = '⚠️ Google Forms機能を初期化中...';
+                    statusContainer.style.background = '#f3f4f6';
+                }
+                
+            } catch (error) {
+                console.error('❌ Google Forms状況確認エラー:', error);
+                statusText.innerHTML = '❌ Google Forms機能の確認に失敗しました';
+                statusContainer.style.background = '#fee2e2';
+            }
+        }
+        
+        // 顧客データ安全読み込み
+        function loadCustomerDataSafely() {
+            console.log('📊 顧客データ読み込み開始');
+            
+            try {
+                // customer-unified.jsが読み込まれているか確認
+                if (typeof displayCustomers === 'function') {
+                    console.log('✅ customer-unified.js使用');
+                    // 既存の関数を使用
+                } else {
+                    console.log('⚠️ customer-unified.js未読み込み - 独自実装');
+                    loadCustomersDirectly();
+                }
+                
+            } catch (error) {
+                console.error('❌ 顧客データ読み込みエラー:', error);
+                loadCustomersDirectly();
+            }
+        }
+        
+        // 直接的な顧客データ読み込み
+        function loadCustomersDirectly() {
+            const possibleKeys = [
+                'rentpipe_demo_customers',
+                'rentpipe_customers',
+                'customers',
+                'rentpipe_unified_customers'
+            ];
+            
+            let customers = [];
+            
+            for (const key of possibleKeys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            customers = parsed;
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn(`データパースエラー: ${key}`, e);
+                    }
+                }
+            }
+            
+            const customerList = document.getElementById('customer-list');
+            
+            if (customers.length > 0) {
+                console.log(`✅ 顧客データ読み込み成功: ${customers.length}件`);
+                displayCustomersSimple(customers);
+            } else {
+                console.log('❌ 顧客データなし - プレースホルダー表示');
+                customerList.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                        <h3>👥 顧客データがありません</h3>
+                        <p>新しい顧客を追加するか、他のページで顧客データを確認してください</p>
+                        <button onclick="window.location.href='customer-minimal.html'" class="btn btn-outline">簡易版で確認</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // シンプルな顧客表示
+        function displayCustomersSimple(customers) {
+            const container = document.getElementById('customer-list');
+            container.innerHTML = '';
+            
+            customers.forEach((customer, index) => {
+                const customerCard = document.createElement('div');
+                customerCard.className = 'customer-card';
+                customerCard.innerHTML = `
+                    <div class="customer-header">
+                        <h3>${customer.name || '名前なし'}</h3>
+                        <span class="status-badge">${customer.pipelineStatus || customer.status || '未設定'}</span>
+                    </div>
+                    <div class="customer-info">
+                        <p>📞 ${customer.phone || '電話番号なし'}</p>
+                        <p>📧 ${customer.email || 'メールなし'}</p>
+                        <p>💰 予算: ${customer.preferences?.budget || customer.budget || '未設定'}</p>
+                    </div>
+                    <div class="customer-actions">
+                        <button onclick="showCustomerDetail('${customer.id}')" class="btn btn-outline">詳細</button>
+                        ${window.IntegratedAuthManagerV2?.getAuthState().isAuthenticated ? 
+                            '<button onclick="createGoogleForm(\'' + customer.id + '\')" class="btn btn-primary">📝 フォーム作成</button>' : 
+                            ''
+                        }
+                    </div>
+                `;
+                container.appendChild(customerCard);
+            });
+        }
+        
+        // 顧客詳細表示
+        function showCustomerDetail(customerId) {
+            if (customerId) {
+                window.location.href = `customer-detail.html?id=${customerId}`;
+            } else {
+                alert('顧客IDが見つかりません');
+            }
+        }
+        
+        // Google Form作成
+        function createGoogleForm(customerId) {
+            if (window.CustomerGoogleFormsIntegrationV2) {
+                window.CustomerGoogleFormsIntegrationV2.createForm(customerId);
+            } else {
+                alert('Google Forms機能が利用できません。ページを再読み込みしてください。');
+            }
+        }
+        
+        // ログアウト処理
+        function handleLogout() {
+            if (confirm('ログアウトしますか？')) {
+                logout();
+                window.location.href = 'login.html';
+            }
+        }
+
+        console.log('✅ Customer 管理画面スクリプト準備完了（重複排除版）');
+    </script>
 </body>
 </html>
