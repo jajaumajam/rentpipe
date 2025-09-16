@@ -43,6 +43,24 @@
             margin: 0 5px;
             font-size: 14px;
         }
+        
+        .form-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .form-status.created {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .form-status.not-created {
+            background: #fef3c7;
+            color: #92400e;
+        }
     </style>
 </head>
 <body>
@@ -101,9 +119,12 @@
     <script src="js/local-first-sync.js"></script>
     <script src="js/create-test-customers.js"></script>
     
+    <!-- Google Forms連携（新実装） -->
+    <script src="js/google-forms-simple.js"></script>
+    
     <script>
-        // 🔧 customer.html 統合版（キー名修正版）
-        console.log('🚀 Customer 管理画面初期化開始（統合版・修正）');
+        // 🔧 customer.html 統合版（Google Forms API直接使用版）
+        console.log('🚀 Customer 管理画面初期化開始（Google Forms API直接使用版）');
 
         // Firebase設定
         const firebaseConfig = {
@@ -121,11 +142,7 @@
             photoStatus: new Map(),
             
             createSafePhotoElement: function(photoURL, size = 'normal', fallbackText = '👤', trackingId = null) {
-                console.log('🖼️ 写真要素作成:', { photoURL, size, trackingId });
-                
                 if (!photoURL) {
-                    console.log('📷 写真URL なし - プレースホルダー表示');
-                    this.photoStatus.set(trackingId || 'default', { status: 'no-url', element: 'placeholder' });
                     return this.createPlaceholder(size, fallbackText);
                 }
                 
@@ -133,18 +150,12 @@
                 const className = size === 'small' ? 'user-photo-small' : 'user-photo-normal';
                 img.className = className;
                 
-                // 読み込み状態追跡
-                const status = { status: 'loading', url: photoURL };
-                this.photoStatus.set(trackingId || 'default', status);
-                
                 img.onload = () => {
                     console.log('✅ 写真読み込み成功:', trackingId);
-                    status.status = 'loaded';
                 };
                 
                 img.onerror = () => {
                     console.log('❌ 写真読み込み失敗 - プレースホルダーに変更:', trackingId);
-                    status.status = 'error';
                     img.style.display = 'none';
                     const placeholder = this.createPlaceholder(size, fallbackText);
                     img.parentNode.insertBefore(placeholder, img);
@@ -247,6 +258,9 @@
                         <p style="margin: 0.5rem 0; opacity: 0.9; font-size: 0.9rem;">
                             各顧客カードの「📝 フォーム作成」ボタンから専用フォームを作成できます
                         </p>
+                        <button onclick="testGoogleFormsAPI()" class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; font-size: 12px; margin-top: 0.5rem;">
+                            🧪 API接続テスト
+                        </button>
                     `;
                 } else {
                     // Google認証未完了
@@ -368,7 +382,7 @@
             }
         }
 
-        // 顧客データ読み込み（修正版 - 複数のキーをチェック）
+        // 顧客データ読み込み（修正版）
         function loadCustomerData() {
             console.log('📊 顧客データ読み込み開始');
             
@@ -470,14 +484,33 @@
                 
                 // Google認証状態に基づくボタン表示
                 const isGoogleAuth = IntegratedAuth.isGoogleAuthenticated();
-                const formsButtonHTML = isGoogleAuth ? 
-                    `<div class="google-forms-buttons">
-                        <button onclick="createCustomerForm('${customer.id}', ${index})" class="btn btn-primary btn-sm">📝 フォーム作成</button>
-                        <button onclick="viewCustomerForms('${customer.id}')" class="btn btn-info btn-sm">📊 フォーム管理</button>
-                    </div>` : 
-                    `<div class="google-forms-buttons">
+                const hasGoogleForm = customer.googleForm && customer.googleForm.formId;
+                
+                let formsButtonHTML = '';
+                
+                if (!isGoogleAuth) {
+                    formsButtonHTML = `<div class="google-forms-buttons">
                         <p style="font-size: 14px; color: #666; margin: 5px 0;">Google認証後にフォーム機能をご利用いただけます</p>
                     </div>`;
+                } else if (hasGoogleForm) {
+                    // フォーム作成済み
+                    formsButtonHTML = `<div class="google-forms-buttons">
+                        <span class="form-status created">✅ フォーム作成済み</span>
+                        <div style="margin-top: 8px;">
+                            <button onclick="window.open('${customer.googleForm.formUrl}', '_blank')" class="btn btn-success btn-sm">🔗 フォーム確認</button>
+                            <button onclick="window.open('${customer.googleForm.editUrl}', '_blank')" class="btn btn-info btn-sm">⚙️ 編集</button>
+                            <button onclick="viewFormResponses('${customer.id}')" class="btn btn-warning btn-sm">📊 回答確認</button>
+                        </div>
+                    </div>`;
+                } else {
+                    // フォーム未作成
+                    formsButtonHTML = `<div class="google-forms-buttons">
+                        <span class="form-status not-created">📝 フォーム未作成</span>
+                        <div style="margin-top: 8px;">
+                            <button onclick="createCustomerForm('${customer.id}', ${index})" class="btn btn-primary btn-sm">📝 専用フォーム作成</button>
+                        </div>
+                    </div>`;
+                }
                 
                 customerCard.innerHTML = `
                     <div style="display: flex; justify-content: between; align-items: flex-start;">
@@ -499,16 +532,27 @@
             });
         }
 
-        // 顧客専用フォーム作成（プレースホルダー）
-        function createCustomerForm(customerId, customerIndex) {
-            console.log('📝 顧客フォーム作成:', customerId);
-            alert(`顧客ID: ${customerId} の専用フォームを作成します。\n\n（Google Apps Script連携を次ステップで実装予定）`);
+        // フォーム回答確認（プレースホルダー）
+        function viewFormResponses(customerId) {
+            console.log('📊 フォーム回答確認:', customerId);
+            alert(`顧客ID: ${customerId} のフォーム回答確認機能を次ステップで実装予定です。`);
         }
 
-        // 顧客フォーム管理（プレースホルダー）
-        function viewCustomerForms(customerId) {
-            console.log('📊 顧客フォーム管理:', customerId);
-            alert(`顧客ID: ${customerId} のフォーム管理画面です。\n\n（詳細機能を次ステップで実装予定）`);
+        // Google Forms API テスト機能
+        function testGoogleFormsAPI() {
+            console.log('🧪 Google Forms API接続テスト開始');
+            
+            if (window.GoogleFormsSimple) {
+                window.GoogleFormsSimple.initialize().then(result => {
+                    if (result) {
+                        alert('✅ Google Forms API接続テスト成功！\n\nフォーム作成機能が利用可能です。');
+                    } else {
+                        alert('❌ Google Forms API接続テスト失敗\n\nコンソールでエラー詳細をご確認ください。');
+                    }
+                });
+            } else {
+                alert('❌ GoogleFormsSimpleが読み込まれていません');
+            }
         }
 
         // 顧客詳細表示
@@ -525,6 +569,7 @@
                 localStorage.removeItem('rentpipe_user_simple');
                 localStorage.removeItem('rentpipe_temp_auth');
                 localStorage.removeItem('google_user_temp');
+                localStorage.removeItem('google_access_token');
                 
                 // Firebaseからもログアウト
                 firebase.auth().signOut().then(() => {
@@ -534,7 +579,7 @@
             }
         }
 
-        console.log('✅ Customer 管理画面（統合版・修正）スクリプト準備完了');
+        console.log('✅ Customer 管理画面（Google Forms API直接使用版）スクリプト準備完了');
     </script>
 </body>
 </html>
