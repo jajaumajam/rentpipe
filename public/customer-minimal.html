@@ -43,17 +43,126 @@
         </div>
     </main>
 
-    <!-- 必要最小限のスクリプトのみ -->
-    <script src="js/simple-reliable-auth.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <script>
-        // 🔧 customer-minimal.html 専用のシンプルスクリプト
-        console.log('🚀 Customer Minimal 初期化開始');
+        // 🔧 customer-minimal.html 統合認証システム
+        console.log('🚀 Customer Minimal 統合認証版 初期化開始');
+
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+            authDomain: "rentpipe-ab04e.firebaseapp.com",
+            projectId: "rentpipe-ab04e",
+            storageBucket: "rentpipe-ab04e.firebasestorage.app",
+            messagingSenderId: "586040985916",
+            appId: "1:586040985916:web:3cdb5db072f1a6569fb639"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // 統合認証システム
+        const IntegratedAuth = {
+            // 複数の認証方式から統一されたユーザー情報を取得
+            getAuthenticatedUser: function() {
+                console.log('🔍 統合認証チェック開始...');
+                
+                // 方法1: simple-reliable-auth方式
+                const authSimple = localStorage.getItem('rentpipe_auth_simple');
+                const userSimple = localStorage.getItem('rentpipe_user_simple');
+                
+                if (authSimple === 'logged_in' && userSimple) {
+                    try {
+                        const user = JSON.parse(userSimple);
+                        console.log('✅ simple-reliable-auth方式で認証確認:', user.email);
+                        return { method: 'simple-reliable-auth', user: user };
+                    } catch (e) {
+                        console.warn('simple-reliable-auth データパースエラー:', e);
+                    }
+                }
+                
+                // 方法2: Google認証フラグ方式
+                const tempAuth = localStorage.getItem('rentpipe_temp_auth');
+                const userInfo = localStorage.getItem('rentpipe_user_info');
+                
+                if (tempAuth === 'google_authenticated' && userInfo) {
+                    try {
+                        const user = JSON.parse(userInfo);
+                        console.log('✅ Google認証フラグ方式で認証確認:', user.email);
+                        
+                        // 認証データを simple-reliable-auth 形式に統一
+                        this.unifyAuthData(user);
+                        
+                        return { method: 'google-auth-flag', user: user };
+                    } catch (e) {
+                        console.warn('Google認証データパースエラー:', e);
+                    }
+                }
+                
+                // 方法3: Firebase認証（非同期）
+                return new Promise((resolve) => {
+                    firebase.auth().onAuthStateChanged((user) => {
+                        if (user) {
+                            console.log('✅ Firebase認証で認証確認:', user.email);
+                            
+                            const userData = {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL
+                            };
+                            
+                            // 認証データを統一
+                            this.unifyAuthData(userData);
+                            
+                            resolve({ method: 'firebase-auth', user: userData });
+                        } else {
+                            console.log('❌ 全ての認証方式で未認証');
+                            resolve(null);
+                        }
+                    });
+                });
+            },
+            
+            // 認証データを統一フォーマットに変換
+            unifyAuthData: function(user) {
+                console.log('🔧 認証データを統一フォーマットに変換:', user.email);
+                
+                // simple-reliable-auth 形式で保存
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify(user));
+                
+                // Google認証フラグも保存（互換性）
+                localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
+                localStorage.setItem('rentpipe_user_info', JSON.stringify(user));
+                
+                console.log('✅ 認証データ統一完了');
+            },
+            
+            // 認証状態確認（同期・非同期両対応）
+            isAuthenticated: function() {
+                const syncResult = this.getAuthenticatedUser();
+                
+                if (syncResult && typeof syncResult === 'object' && !syncResult.then) {
+                    // 同期的に認証確認済み
+                    return true;
+                } else if (syncResult && syncResult.then) {
+                    // 非同期（Firebase認証）
+                    return syncResult.then(result => !!result);
+                } else {
+                    // 未認証
+                    return false;
+                }
+            }
+        };
 
         // DOM読み込み完了時の処理
-        document.addEventListener('DOMContentLoaded', function() {
-            // 認証チェック
-            checkPageAccess();
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('📄 DOM読み込み完了');
+            
+            // 統合認証チェック
+            await performIntegratedAuthCheck();
             
             // ユーザー情報表示
             displayAuthStatus();
@@ -62,23 +171,92 @@
             loadCustomerData();
         });
 
+        // 統合認証チェック
+        async function performIntegratedAuthCheck() {
+            console.log('🔐 統合認証チェック実行');
+            
+            try {
+                const authResult = IntegratedAuth.getAuthenticatedUser();
+                
+                if (authResult && authResult.then) {
+                    // 非同期（Firebase認証）
+                    const result = await authResult;
+                    if (!result) {
+                        console.log('🔒 未認証 - ログインページにリダイレクト');
+                        window.location.href = 'login-google-simple.html';
+                        return;
+                    }
+                    window.currentUser = result.user;
+                    console.log('✅ Firebase認証経由で認証確認:', result.user.email);
+                    
+                } else if (authResult) {
+                    // 同期的に認証確認済み
+                    window.currentUser = authResult.user;
+                    console.log('✅ 同期認証で認証確認:', authResult.user.email);
+                    
+                } else {
+                    // 未認証
+                    console.log('🔒 統合認証チェック結果: 未認証');
+                    window.location.href = 'login-google-simple.html';
+                    return;
+                }
+                
+            } catch (error) {
+                console.error('❌ 統合認証チェックエラー:', error);
+                window.location.href = 'login-google-simple.html';
+            }
+        }
+
         // 認証状態表示
         function displayAuthStatus() {
             const authDiv = document.getElementById('auth-status');
-            const user = getUser();
             
-            if (isLoggedIn() && user) {
+            if (window.currentUser) {
                 authDiv.innerHTML = `
-                    <h3 style="color: #059669; margin: 0 0 0.5rem 0;">✅ ログイン状態</h3>
-                    <p style="margin: 0;">ログイン中: <strong>${user.displayName || user.email}</strong></p>
+                    <h3 style="color: #059669; margin: 0 0 0.5rem 0;">✅ 認証状態: ログイン済み</h3>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        ${window.currentUser.photoURL ? 
+                            `<img src="${window.currentUser.photoURL}" style="width: 40px; height: 40px; border-radius: 50%;" alt="User">` : 
+                            '<div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 18px;">👤</div>'
+                        }
+                        <div>
+                            <div style="font-weight: bold;">${window.currentUser.displayName || 'ユーザー'}</div>
+                            <div style="font-size: 0.9rem; color: #6b7280;">${window.currentUser.email}</div>
+                        </div>
+                    </div>
                 `;
                 authDiv.style.background = '#d1fae5';
+                
+                // ナビゲーションにもユーザー情報表示
+                updateNavigation();
+                
             } else {
                 authDiv.innerHTML = `
-                    <h3 style="color: #dc2626; margin: 0 0 0.5rem 0;">❌ 未ログイン</h3>
+                    <h3 style="color: #dc2626; margin: 0 0 0.5rem 0;">❌ 認証状態: 未ログイン</h3>
                     <p style="margin: 0;">ログインが必要です</p>
+                    <button onclick="window.location.href='login-google-simple.html'" style="margin-top: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Googleログイン
+                    </button>
                 `;
                 authDiv.style.background = '#fee2e2';
+            }
+        }
+
+        // ナビゲーション更新
+        function updateNavigation() {
+            if (!window.currentUser) return;
+            
+            const navUserInfo = document.querySelector('.nav-user-info');
+            if (navUserInfo && !navUserInfo.hasChildNodes()) {
+                navUserInfo.innerHTML = `
+                    <div style="color: white; font-size: 14px; display: flex; align-items: center; gap: 8px; margin-right: 15px;">
+                        ${window.currentUser.photoURL ? 
+                            `<img src="${window.currentUser.photoURL}" style="width: 24px; height: 24px; border-radius: 50%;" alt="User">` : 
+                            '👤'
+                        }
+                        <span>${window.currentUser.displayName || window.currentUser.email.split('@')[0]}</span>
+                    </div>
+                `;
             }
         }
 
@@ -160,7 +338,7 @@
                         <p>💰 予算: ${customer.preferences?.budget || customer.budget || '未設定'}</p>
                     </div>
                     <div class="customer-actions">
-                        <button onclick="showCustomerDetail(${index})" class="btn btn-outline">詳細</button>
+                        <button onclick="showCustomerDetail('${customer.id}')" class="btn btn-outline">詳細</button>
                     </div>
                 `;
                 container.appendChild(customerCard);
@@ -168,8 +346,12 @@
         }
 
         // 顧客詳細表示
-        function showCustomerDetail(index) {
-            alert('顧客詳細機能は customer.html で利用できます');
+        function showCustomerDetail(customerId) {
+            if (customerId) {
+                window.location.href = `customer-detail.html?id=${customerId}`;
+            } else {
+                alert('顧客IDが見つかりません');
+            }
         }
 
         // デモデータ作成
@@ -192,6 +374,15 @@
                     pipelineStatus: '物件紹介',
                     preferences: { budget: '8-12万円' },
                     createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'demo3',
+                    name: '鈴木一郎',
+                    phone: '070-1111-2222',
+                    email: 'suzuki@example.com',
+                    pipelineStatus: '内見',
+                    preferences: { budget: '12-18万円' },
+                    createdAt: new Date().toISOString()
                 }
             ];
             
@@ -205,12 +396,27 @@
         // ログアウト処理
         function handleLogout() {
             if (confirm('ログアウトしますか？')) {
-                logout();
-                window.location.href = 'login.html';
+                // 全ての認証データをクリア
+                const authKeys = [
+                    'rentpipe_auth_simple',
+                    'rentpipe_user_simple',
+                    'rentpipe_temp_auth',
+                    'rentpipe_user_info'
+                ];
+                
+                authKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                // Firebase認証もサインアウト
+                firebase.auth().signOut();
+                
+                console.log('🔒 ログアウト完了');
+                window.location.href = 'login-google-simple.html';
             }
         }
 
-        console.log('✅ Customer Minimal スクリプト準備完了');
+        console.log('✅ Customer Minimal 統合認証版スクリプト準備完了');
     </script>
 </body>
 </html>

@@ -102,6 +102,15 @@
             background: #d1fae5;
             color: #059669;
         }
+        
+        .debug-info {
+            margin-top: 1rem;
+            padding: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +130,7 @@
             </button>
             
             <div id="statusMessage"></div>
+            <div id="debugInfo" class="debug-info" style="display: none;"></div>
             
             <div class="features">
                 <div class="feature-item">
@@ -140,6 +150,10 @@
                     <span>モバイル対応</span>
                 </div>
             </div>
+            
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: #6b7280;">
+                <a href="auth-debug.html" target="_blank">🔍 認証状態診断</a>
+            </div>
         </div>
     </div>
 
@@ -148,9 +162,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <script>
-        // Firebase設定
+        // 🔧 強化版 Firebase設定（認証データ保存確実版）
         const firebaseConfig = {
-            apiKey: "AIzaSyC-_CdxdF-dDrGFntE0K0Q8Q3K1J8UeXDo",
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
             authDomain: "rentpipe-ab04e.firebaseapp.com",
             projectId: "rentpipe-ab04e",
             storageBucket: "rentpipe-ab04e.firebasestorage.app",
@@ -158,6 +172,13 @@
             appId: "1:586040985916:web:3cdb5db072f1a6569fb639"
         };
 
+        console.log('🔥 Firebase設定確認:', {
+            projectId: firebaseConfig.projectId,
+            authDomain: firebaseConfig.authDomain,
+            apiKeyPrefix: firebaseConfig.apiKey.substring(0, 20) + '...'
+        });
+
+        // Firebase初期化
         firebase.initializeApp(firebaseConfig);
 
         // ステータス表示
@@ -166,6 +187,55 @@
             statusDiv.textContent = message;
             statusDiv.className = `status-message status-${type}`;
             statusDiv.style.display = 'block';
+        }
+
+        // デバッグ情報表示
+        function showDebugInfo(info) {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.innerHTML = `<strong>🔍 デバッグ情報:</strong><br>${info}`;
+            debugDiv.style.display = 'block';
+        }
+
+        // 統合認証データ保存
+        function saveIntegratedAuthData(userData) {
+            console.log('💾 統合認証データ保存開始:', userData.email);
+            
+            try {
+                // 1. simple-reliable-auth 形式で保存
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
+                console.log('✅ simple-reliable-auth 形式保存完了');
+                
+                // 2. Google認証フラグも保存（互換性のため）
+                localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
+                localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
+                console.log('✅ Google認証フラグ形式保存完了');
+                
+                // 3. 保存確認
+                const verification = {
+                    'rentpipe_auth_simple': localStorage.getItem('rentpipe_auth_simple'),
+                    'rentpipe_user_simple': !!localStorage.getItem('rentpipe_user_simple'),
+                    'rentpipe_temp_auth': localStorage.getItem('rentpipe_temp_auth'),
+                    'rentpipe_user_info': !!localStorage.getItem('rentpipe_user_info')
+                };
+                
+                console.log('🔍 保存確認:', verification);
+                
+                const debugInfo = `
+                    ユーザー: ${userData.email}<br>
+                    simple-reliable-auth: ${verification.rentpipe_auth_simple}<br>
+                    Google認証フラグ: ${verification.rentpipe_temp_auth}<br>
+                    ユーザーデータ: 保存済み
+                `;
+                showDebugInfo(debugInfo);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ 認証データ保存エラー:', error);
+                showDebugInfo(`保存エラー: ${error.message}`);
+                return false;
+            }
         }
 
         // Googleログイン処理
@@ -180,71 +250,125 @@
             showStatus('Googleアカウントでログイン中...', 'loading');
             
             try {
+                // Google認証プロバイダーの設定
                 const provider = new firebase.auth.GoogleAuthProvider();
+                
+                // 必要なスコープを追加
                 provider.addScope('https://www.googleapis.com/auth/forms');
                 provider.addScope('https://www.googleapis.com/auth/drive.file');
+                provider.addScope('email');
+                provider.addScope('profile');
                 
+                // 強制的にアカウント選択画面を表示
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+                
+                console.log('🔑 ポップアップ認証を開始...');
                 const result = await firebase.auth().signInWithPopup(provider);
+                
                 const user = result.user;
                 const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
                 
-                console.log('✅ ログイン成功:', user.email);
+                console.log('✅ Firebase認証成功:', user.email);
+                console.log('🔑 アクセストークン取得:', !!credential.accessToken);
                 
-                // ユーザーデータを統合認証システムに保存
+                // 統合ユーザーデータを作成
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: user.displayName,
                     photoURL: user.photoURL,
-                    accessToken: credential.accessToken
+                    accessToken: credential.accessToken,
+                    emailVerified: user.emailVerified,
+                    loginMethod: 'google',
+                    loginTime: new Date().toISOString()
                 };
                 
-                // シンプル認証システムに保存
-                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
-                localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
+                console.log('👤 ユーザーデータ作成完了:', userData);
                 
-                // Google認証フラグも保存（互換性のため）
-                localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
-                localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
+                // 統合認証データ保存
+                const saveSuccess = saveIntegratedAuthData(userData);
                 
-                showStatus('ログイン成功！ダッシュボードに移動します', 'success');
-                
-                setTimeout(() => {
-                    console.log('🔄 ダッシュボードにリダイレクト');
-                    window.location.href = 'index.html';
-                }, 1500);
+                if (saveSuccess) {
+                    console.log('💾 認証データ保存完了');
+                    showStatus('ログイン成功！ダッシュボードに移動します', 'success');
+                    
+                    // リダイレクト先を選択
+                    const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || 'customer-minimal.html';
+                    
+                    setTimeout(() => {
+                        console.log(`🔄 ${redirectTarget} にリダイレクト`);
+                        window.location.href = redirectTarget;
+                    }, 2000);
+                    
+                } else {
+                    throw new Error('認証データの保存に失敗しました');
+                }
                 
             } catch (error) {
                 console.error('❌ ログインエラー:', error);
                 
                 let errorMessage = 'ログインに失敗しました';
+                
                 if (error.code === 'auth/popup-closed-by-user') {
                     errorMessage = 'ログインがキャンセルされました';
                 } else if (error.code === 'auth/popup-blocked') {
-                    errorMessage = 'ポップアップがブロックされました';
+                    errorMessage = 'ポップアップがブロックされました。ポップアップブロッカーを無効にしてください';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage = 'ネットワークエラーが発生しました。接続を確認してください';
+                } else if (error.code === 'auth/api-key-not-valid') {
+                    errorMessage = 'Firebase APIキーエラーです。管理者にお問い合わせください';
+                } else {
+                    errorMessage = `エラー: ${error.message}`;
                 }
                 
                 showStatus(errorMessage, 'error');
+                showDebugInfo(`エラー詳細: ${error.code} - ${error.message}`);
                 
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
         }
 
-        // 初期化
+        // 初期化処理
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Simple Google Login 初期化完了');
+            console.log('🚀 Simple Google Login 強化版 初期化完了');
             
-            // 既にログイン済みの場合はリダイレクト
+            // 既存の認証状態確認
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     console.log('✅ 既にログイン済み:', user.email);
+                    
+                    // 認証データが不完全な場合は補完
+                    const authSimple = localStorage.getItem('rentpipe_auth_simple');
+                    if (authSimple !== 'logged_in') {
+                        console.log('🔧 認証データを補完中...');
+                        const userData = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                            emailVerified: user.emailVerified,
+                            loginMethod: 'google',
+                            loginTime: new Date().toISOString()
+                        };
+                        saveIntegratedAuthData(userData);
+                    }
+                    
                     showStatus('既にログイン済みです。ダッシュボードに移動します', 'success');
                     setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
+                        window.location.href = 'customer-minimal.html';
+                    }, 1500);
+                } else {
+                    console.log('👤 未ログイン状態');
                 }
             });
+            
+            // 接続テスト（デバッグ用）
+            console.log('🔍 Firebase接続テスト開始...');
+            firebase.auth().languageCode = 'ja';
+            console.log('✅ Firebase認証オブジェクト確認完了');
         });
     </script>
 </body>
