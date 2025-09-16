@@ -83,6 +83,7 @@
             <p id="data-loading-info">データを読み込み中...</p>
             <button onclick="createTestCustomers()" class="btn btn-success">🧪 テストデータ作成</button>
             <button onclick="loadCustomerData()" class="btn btn-info">🔄 リスト更新</button>
+            <button onclick="checkAllStorageKeys()" class="btn btn-warning">🔍 ストレージ確認</button>
         </div>
 
         <!-- 顧客リスト -->
@@ -101,8 +102,8 @@
     <script src="js/create-test-customers.js"></script>
     
     <script>
-        // 🔧 customer.html 統合版（customer-minimal.htmlベース + Google Forms連携）
-        console.log('🚀 Customer 管理画面初期化開始（統合版）');
+        // 🔧 customer.html 統合版（キー名修正版）
+        console.log('🚀 Customer 管理画面初期化開始（統合版・修正）');
 
         // Firebase設定
         const firebaseConfig = {
@@ -164,7 +165,7 @@
             }
         };
 
-        // 統合認証システム（customer-minimal.htmlと同じ）
+        // 統合認証システム
         const IntegratedAuth = {
             getAuthenticatedUser: function() {
                 console.log('🔍 統合認証チェック開始...');
@@ -282,7 +283,7 @@
             }
         });
 
-        // 統合認証チェック（customer-minimal.htmlと同じ）
+        // 統合認証チェック
         async function performIntegratedAuthCheck() {
             console.log('🔐 統合認証チェック実行');
             
@@ -318,7 +319,7 @@
             }
         }
 
-        // 認証状態表示（customer-minimal.htmlと同じ）
+        // 認証状態表示
         async function displayAuthStatus() {
             const authDiv = document.getElementById('auth-status');
             const navUserInfo = document.getElementById('nav-user-display');
@@ -367,7 +368,7 @@
             }
         }
 
-        // 顧客データ読み込み（enhanced版）
+        // 顧客データ読み込み（修正版 - 複数のキーをチェック）
         function loadCustomerData() {
             console.log('📊 顧客データ読み込み開始');
             
@@ -375,14 +376,36 @@
             const customerList = document.getElementById('customer-simple-list');
             
             try {
-                // LocalStorageから顧客データを取得
-                const storedData = localStorage.getItem('rentpipe_demo_customers');
+                // 複数の可能なキーをチェック
+                const possibleKeys = [
+                    'customers',               // create-test-customers.jsが使用
+                    'rentpipe_demo_customers', // 以前のバージョンで使用
+                    'rentpipe_customers',      // 別バージョンで使用
+                    'demo_customers'           // テスト用
+                ];
                 
-                if (storedData) {
-                    const customers = JSON.parse(storedData);
-                    console.log(`✅ 顧客データ読み込み成功: ${customers.length}件`);
-                    
-                    dataStatus.textContent = `顧客データ: ${customers.length}件読み込み完了`;
+                let customers = null;
+                let usedKey = null;
+                
+                for (const key of possibleKeys) {
+                    const storedData = localStorage.getItem(key);
+                    if (storedData) {
+                        try {
+                            const parsedData = JSON.parse(storedData);
+                            if (Array.isArray(parsedData) && parsedData.length > 0) {
+                                customers = parsedData;
+                                usedKey = key;
+                                break;
+                            }
+                        } catch (parseError) {
+                            console.warn(`キー ${key} のパースエラー:`, parseError);
+                        }
+                    }
+                }
+                
+                if (customers) {
+                    console.log(`✅ 顧客データ読み込み成功: ${customers.length}件（キー: ${usedKey}）`);
+                    dataStatus.textContent = `顧客データ: ${customers.length}件読み込み完了（キー: ${usedKey}）`;
                     displayCustomers(customers);
                 } else {
                     console.log('⚠️ 顧客データなし');
@@ -394,6 +417,45 @@
                 dataStatus.textContent = 'データ読み込みエラーが発生しました';
                 customerList.innerHTML = '<p style="text-align: center; color: #dc2626;">データ読み込みに失敗しました</p>';
             }
+        }
+
+        // 全ストレージキー確認（デバッグ用）
+        function checkAllStorageKeys() {
+            console.log('🔍 全ストレージキー確認');
+            
+            const allKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                allKeys.push(localStorage.key(i));
+            }
+            
+            console.log('📋 全ローカルストレージキー:', allKeys);
+            
+            // 顧客データ関連のキーのみチェック
+            const customerRelatedKeys = allKeys.filter(key => 
+                key.includes('customer') || key.includes('demo') || key === 'customers'
+            );
+            
+            console.log('👥 顧客関連キー:', customerRelatedKeys);
+            
+            // 結果を画面表示
+            const dataStatus = document.getElementById('data-loading-info');
+            dataStatus.innerHTML = `
+                <strong>🔍 ストレージキー確認結果:</strong><br>
+                全キー数: ${allKeys.length}<br>
+                顧客関連キー: ${customerRelatedKeys.join(', ') || 'なし'}<br>
+                <small>詳細はコンソールをご確認ください</small>
+            `;
+            
+            // 各顧客関連キーの内容も確認
+            customerRelatedKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                try {
+                    const parsed = JSON.parse(data);
+                    console.log(`📊 ${key}:`, parsed);
+                } catch (e) {
+                    console.log(`📊 ${key} (文字列):`, data);
+                }
+            });
         }
 
         // 顧客表示（Google Forms連携ボタン付き）
@@ -423,8 +485,8 @@
                             <h4 style="margin: 0 0 8px 0; color: #1f2937;">${customer.name}</h4>
                             <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">📧 ${customer.email}</p>
                             <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">📞 ${customer.phone}</p>
-                            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">💰 予算: ${customer.budget}</p>
-                            <p style="margin: 0; font-size: 14px; color: #6b7280;">🏠 希望エリア: ${customer.preferredArea}</p>
+                            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">💰 予算: ${customer.preferences ? customer.preferences.budgetMin + '-' + customer.preferences.budgetMax + '万円' : '未設定'}</p>
+                            <p style="margin: 0; font-size: 14px; color: #6b7280;">🏠 希望エリア: ${customer.preferences ? customer.preferences.areas.join(', ') : '未設定'}</p>
                         </div>
                         <div style="margin-left: 15px;">
                             <button onclick="showCustomerDetail('${customer.id}')" class="btn btn-outline btn-sm">詳細</button>
@@ -440,8 +502,6 @@
         // 顧客専用フォーム作成（プレースホルダー）
         function createCustomerForm(customerId, customerIndex) {
             console.log('📝 顧客フォーム作成:', customerId);
-            
-            // 今後Google Apps Script連携を追加
             alert(`顧客ID: ${customerId} の専用フォームを作成します。\n\n（Google Apps Script連携を次ステップで実装予定）`);
         }
 
@@ -474,7 +534,7 @@
             }
         }
 
-        console.log('✅ Customer 管理画面（統合版）スクリプト準備完了');
+        console.log('✅ Customer 管理画面（統合版・修正）スクリプト準備完了');
     </script>
 </body>
 </html>
