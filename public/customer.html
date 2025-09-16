@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 - RentPipe</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .nav-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+            margin-right: 15px;
+        }
+        
+        .google-forms-section {
+            margin: 1rem 0 2rem 0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .forms-auth-required {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+        }
+        
+        .forms-auth-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .google-forms-buttons {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .google-forms-buttons .btn {
+            margin: 0 5px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -15,8 +54,8 @@
                 <a href="customer.html" class="active">顧客管理</a>
                 <a href="customer-minimal.html">簡易版</a>
                 <a href="pipeline.html">パイプライン</a>
-                <!-- ユーザー情報表示エリア（一意ID） -->
-                <div id="unique-nav-user-info" class="nav-user-info"></div>
+                <!-- ユーザー情報表示エリア -->
+                <div class="nav-user-info" id="nav-user-display"></div>
                 <button onclick="handleLogout()" class="btn btn-outline nav-logout">ログアウト</button>
             </nav>
         </div>
@@ -25,265 +64,417 @@
     <main class="main-content">
         <div class="page-header">
             <h2>👥 顧客管理</h2>
-            <p>顧客情報の管理と営業進捗の追跡</p>
+            <p>顧客情報の管理とGoogle Forms連携</p>
         </div>
 
-        <!-- Google Forms連携状況表示 -->
-        <div id="google-forms-status" style="margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #f3f4f6;">
-            <h3>📝 Google Forms連携状況</h3>
+        <!-- Google Forms連携セクション -->
+        <div id="google-forms-section" class="google-forms-section">
+            <h3>📝 Google Forms連携</h3>
             <p id="forms-status-text">連携状況を確認中...</p>
+            <div id="forms-action-area"></div>
+        </div>
+
+        <!-- 認証状態表示 -->
+        <div id="auth-status" style="margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #f3f4f6;"></div>
+
+        <!-- 顧客データ表示エリア -->
+        <div id="customer-data-status" style="margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #e5f3ff;">
+            <h3>📊 データ読み込み状況</h3>
+            <p id="data-loading-info">データを読み込み中...</p>
+            <button onclick="createTestCustomers()" class="btn btn-success">🧪 テストデータ作成</button>
+            <button onclick="loadCustomerData()" class="btn btn-info">🔄 リスト更新</button>
         </div>
 
         <!-- 顧客リスト -->
-        <div id="customer-list" class="customer-grid">
+        <div id="customer-simple-list" class="customer-grid">
             <!-- 顧客カードがここに動的に追加されます -->
         </div>
     </main>
 
-    <!-- 必要最小限のスクリプトのみ（重複排除） -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- 必要最小限のスクリプト -->
     <script src="js/simple-reliable-auth.js"></script>
     <script src="js/local-first-sync.js"></script>
-    <script src="js/customer-limit-checker.js"></script>
-    <script src="js/customer-unified.js"></script>
-    
-    <!-- Google Identity（必要な場合のみ） -->
-    <script src="js/google-identity-config.js"></script>
-    <script src="js/integrated-auth-manager-v2.js"></script>
-    <script src="js/google-forms-api-v2.js"></script>
-    <script src="js/complete-google-forms-solution.js"></script>
+    <script src="js/create-test-customers.js"></script>
     
     <script>
-        // 🔧 customer.html 専用の統合スクリプト（重複排除版）
-        console.log('🚀 Customer 管理画面初期化開始');
-        
-        let isNavUpdated = false; // ナビゲーション更新の重複防止フラグ
-        
+        // 🔧 customer.html 統合版（customer-minimal.htmlベース + Google Forms連携）
+        console.log('🚀 Customer 管理画面初期化開始（統合版）');
+
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+            authDomain: "rentpipe-ab04e.firebaseapp.com",
+            projectId: "rentpipe-ab04e",
+            storageBucket: "rentpipe-ab04e.firebasestorage.app",
+            messagingSenderId: "586040985916",
+            appId: "1:586040985916:web:3cdb5db072f1a6569fb639"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // 写真表示ユーティリティ
+        const PhotoUtils = {
+            photoStatus: new Map(),
+            
+            createSafePhotoElement: function(photoURL, size = 'normal', fallbackText = '👤', trackingId = null) {
+                console.log('🖼️ 写真要素作成:', { photoURL, size, trackingId });
+                
+                if (!photoURL) {
+                    console.log('📷 写真URL なし - プレースホルダー表示');
+                    this.photoStatus.set(trackingId || 'default', { status: 'no-url', element: 'placeholder' });
+                    return this.createPlaceholder(size, fallbackText);
+                }
+                
+                const img = document.createElement('img');
+                const className = size === 'small' ? 'user-photo-small' : 'user-photo-normal';
+                img.className = className;
+                
+                // 読み込み状態追跡
+                const status = { status: 'loading', url: photoURL };
+                this.photoStatus.set(trackingId || 'default', status);
+                
+                img.onload = () => {
+                    console.log('✅ 写真読み込み成功:', trackingId);
+                    status.status = 'loaded';
+                };
+                
+                img.onerror = () => {
+                    console.log('❌ 写真読み込み失敗 - プレースホルダーに変更:', trackingId);
+                    status.status = 'error';
+                    img.style.display = 'none';
+                    const placeholder = this.createPlaceholder(size, fallbackText);
+                    img.parentNode.insertBefore(placeholder, img);
+                };
+                
+                img.src = photoURL;
+                return img;
+            },
+            
+            createPlaceholder: function(size, text) {
+                const span = document.createElement('span');
+                span.className = size === 'small' ? 'user-photo-placeholder-small' : 'user-photo-placeholder';
+                span.textContent = text;
+                span.style.cssText = size === 'small' ? 
+                    'display: inline-block; width: 24px; height: 24px; background: #6b7280; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; color: white;' :
+                    'display: inline-block; width: 32px; height: 32px; background: #6b7280; border-radius: 50%; text-align: center; line-height: 32px; font-size: 16px; color: white;';
+                return span;
+            }
+        };
+
+        // 統合認証システム（customer-minimal.htmlと同じ）
+        const IntegratedAuth = {
+            getAuthenticatedUser: function() {
+                console.log('🔍 統合認証チェック開始...');
+                
+                // 方法1: simple-reliable-auth方式
+                const authSimple = localStorage.getItem('rentpipe_auth_simple');
+                const userSimple = localStorage.getItem('rentpipe_user_simple');
+                
+                if (authSimple === 'logged_in' && userSimple) {
+                    try {
+                        const user = JSON.parse(userSimple);
+                        console.log('✅ simple-reliable-auth認証確認:', user.email);
+                        return { authenticated: true, user: user, method: 'simple-reliable-auth' };
+                    } catch (error) {
+                        console.log('❌ simple-reliable-authユーザーデータ解析失敗:', error);
+                    }
+                }
+                
+                // 方法2: Google認証フラグ方式
+                const googleAuth = localStorage.getItem('rentpipe_temp_auth');
+                const googleUser = localStorage.getItem('google_user_temp');
+                
+                if (googleAuth === 'google_authenticated' && googleUser) {
+                    try {
+                        const user = JSON.parse(googleUser);
+                        console.log('✅ Google認証フラグで認証確認:', user.email);
+                        return { authenticated: true, user: user, method: 'google-flag' };
+                    } catch (error) {
+                        console.log('❌ Google認証ユーザーデータ解析失敗:', error);
+                    }
+                }
+                
+                // 方法3: Firebase認証（非同期）
+                return new Promise((resolve) => {
+                    firebase.auth().onAuthStateChanged((user) => {
+                        if (user) {
+                            console.log('✅ Firebase認証で認証確認:', user.email);
+                            resolve({
+                                authenticated: true,
+                                user: {
+                                    uid: user.uid,
+                                    email: user.email,
+                                    displayName: user.displayName,
+                                    photoURL: user.photoURL,
+                                    emailVerified: user.emailVerified
+                                },
+                                method: 'firebase'
+                            });
+                        } else {
+                            console.log('❌ Firebase認証: 未認証');
+                            resolve(null);
+                        }
+                    });
+                });
+            },
+            
+            // Google認証状態チェック
+            isGoogleAuthenticated: function() {
+                const googleAuth = localStorage.getItem('rentpipe_temp_auth');
+                const result = (googleAuth === 'google_authenticated');
+                console.log('🔍 Google認証状態チェック:', result);
+                return result;
+            }
+        };
+
+        // Google Forms連携機能
+        const GoogleFormsIntegration = {
+            // Google認証状態に基づくUI更新
+            updateFormsSection: function() {
+                const section = document.getElementById('google-forms-section');
+                const statusText = document.getElementById('forms-status-text');
+                const actionArea = document.getElementById('forms-action-area');
+                
+                if (IntegratedAuth.isGoogleAuthenticated()) {
+                    // Google認証済み
+                    section.className = 'google-forms-section forms-auth-success';
+                    statusText.textContent = 'Google認証が完了しています。顧客専用フォームを作成できます。';
+                    actionArea.innerHTML = `
+                        <p style="margin: 0.5rem 0; opacity: 0.9; font-size: 0.9rem;">
+                            各顧客カードの「📝 フォーム作成」ボタンから専用フォームを作成できます
+                        </p>
+                    `;
+                } else {
+                    // Google認証未完了
+                    section.className = 'google-forms-section forms-auth-required';
+                    statusText.textContent = '顧客専用の物件希望調査フォームを自動作成するにはGoogle認証が必要です';
+                    actionArea.innerHTML = `
+                        <button onclick="window.location.href='login-google-simple.html'" class="btn" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
+                            🔑 Google認証してフォーム機能を利用
+                        </button>
+                    `;
+                }
+            }
+        };
+
         // DOM読み込み完了時の処理
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 DOM読み込み完了');
             
-            // 1. 認証チェック
-            performAuthCheck();
-            
-            // 2. ナビゲーション更新（1回のみ）
-            setTimeout(updateNavigationOnce, 500);
-            
-            // 3. Google Forms連携状況確認
-            setTimeout(checkGoogleFormsStatus, 1000);
-            
-            // 4. 顧客データ読み込み
-            setTimeout(loadCustomerDataSafely, 1500);
-        });
-        
-        // 認証チェック
-        function performAuthCheck() {
-            console.log('🔐 認証チェック実行');
-            checkPageAccess();
-        }
-        
-        // ナビゲーション更新（1回のみ実行）
-        function updateNavigationOnce() {
-            if (isNavUpdated) {
-                console.log('⚠️ ナビゲーション更新スキップ（既に更新済み）');
-                return;
-            }
-            
-            console.log('🎨 ナビゲーション更新開始');
-            
-            const user = getUser();
-            if (!user) {
-                console.log('❌ ユーザー情報なし');
-                return;
-            }
-            
-            const navUserInfo = document.getElementById('unique-nav-user-info');
-            if (!navUserInfo) {
-                console.log('❌ ナビゲーション要素が見つかりません');
-                return;
-            }
-            
-            // 既存のコンテンツをクリア
-            navUserInfo.innerHTML = '';
-            
-            // ユーザー情報を安全に表示（文字化け対策）
             try {
-                const displayName = user.displayName || user.email.split('@')[0];
-                const safeDisplayName = displayName.replace(/[^\w\s@.-]/g, ''); // 安全な文字のみ
+                // 統合認証チェック
+                await performIntegratedAuthCheck();
+                
+                // ユーザー情報表示
+                await displayAuthStatus();
+                
+                // Google Forms連携状況更新
+                GoogleFormsIntegration.updateFormsSection();
+                
+                // 顧客データ読み込み
+                loadCustomerData();
+                
+            } catch (error) {
+                console.error('❌ 初期化エラー:', error);
+            }
+        });
+
+        // 統合認証チェック（customer-minimal.htmlと同じ）
+        async function performIntegratedAuthCheck() {
+            console.log('🔐 統合認証チェック実行');
+            
+            try {
+                const authResult = IntegratedAuth.getAuthenticatedUser();
+                
+                if (authResult && authResult.then) {
+                    // 非同期（Firebase認証）
+                    const result = await authResult;
+                    if (!result) {
+                        console.log('🔒 未認証 - ログインページにリダイレクト');
+                        window.location.href = 'login-google-simple.html';
+                        return;
+                    }
+                    window.currentUser = result.user;
+                    console.log('✅ Firebase認証経由で認証確認:', result.user.email);
+                    
+                } else if (authResult) {
+                    // 同期的に認証確認済み
+                    window.currentUser = authResult.user;
+                    console.log('✅ 同期認証で認証確認:', authResult.user.email);
+                    
+                } else {
+                    // 未認証
+                    console.log('🔒 統合認証チェック結果: 未認証');
+                    window.location.href = 'login-google-simple.html';
+                    return;
+                }
+                
+            } catch (error) {
+                console.error('❌ 統合認証チェックエラー:', error);
+                window.location.href = 'login-google-simple.html';
+            }
+        }
+
+        // 認証状態表示（customer-minimal.htmlと同じ）
+        async function displayAuthStatus() {
+            const authDiv = document.getElementById('auth-status');
+            const navUserInfo = document.getElementById('nav-user-display');
+            
+            if (window.currentUser) {
+                console.log('👤 ユーザー情報表示開始:', window.currentUser);
+                
+                // 写真要素作成
+                const trackingId = 'main-user-photo';
+                const photoElement = PhotoUtils.createSafePhotoElement(
+                    window.currentUser.photoURL,
+                    'normal',
+                    window.currentUser.displayName ? window.currentUser.displayName[0].toUpperCase() : '👤',
+                    trackingId
+                );
+                
+                // 認証状態セクション
+                authDiv.className = 'section success';
+                authDiv.innerHTML = `
+                    <h3>✅ 認証済み</h3>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
+                        ${photoElement.outerHTML}
+                        <div>
+                            <div><strong>${window.currentUser.displayName || '名前未設定'}</strong></div>
+                            <div style="color: #666; font-size: 14px;">${window.currentUser.email}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // ナビゲーション表示
+                const navPhotoElement = PhotoUtils.createSafePhotoElement(
+                    window.currentUser.photoURL,
+                    'small',
+                    window.currentUser.displayName ? window.currentUser.displayName[0].toUpperCase() : '👤',
+                    'nav-user-photo'
+                );
                 
                 navUserInfo.innerHTML = `
-                    <div style="color: white; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                        ${user.photoURL ? `<img src="${user.photoURL}" style="width: 24px; height: 24px; border-radius: 50%;" alt="User">` : '👤'}
-                        <span>${safeDisplayName}</span>
-                    </div>
+                    ${navPhotoElement.outerHTML}
+                    <span>${window.currentUser.displayName || window.currentUser.email.split('@')[0]}</span>
                 `;
                 
-                console.log('✅ ナビゲーション更新完了:', safeDisplayName);
-                isNavUpdated = true;
-                
-            } catch (error) {
-                console.error('❌ ナビゲーション更新エラー:', error);
-                navUserInfo.innerHTML = '<div style="color: white; font-size: 14px;">ログイン中</div>';
-                isNavUpdated = true;
+            } else {
+                authDiv.className = 'section error';
+                authDiv.innerHTML = '<h3>❌ 未認証</h3><p>ログインページにリダイレクト中...</p>';
             }
         }
-        
-        // Google Forms連携状況確認
-        function checkGoogleFormsStatus() {
-            console.log('📝 Google Forms連携状況確認');
-            
-            const statusText = document.getElementById('forms-status-text');
-            const statusContainer = document.getElementById('google-forms-status');
-            
-            try {
-                // 統合認証マネージャの状態確認
-                if (window.IntegratedAuthManagerV2) {
-                    const authState = window.IntegratedAuthManagerV2.getAuthState();
-                    
-                    if (authState.isAuthenticated && authState.googleAuth.isSignedIn) {
-                        statusText.innerHTML = `
-                            ✅ Google認証済み: ${authState.googleAuth.user.email}<br>
-                            <small>顧客カードからGoogle Forms機能を利用できます</small>
-                        `;
-                        statusContainer.style.background = '#d1fae5';
-                    } else {
-                        statusText.innerHTML = `
-                            ❌ Google認証が必要です<br>
-                            <button onclick="window.location.href='login-google-simple.html'" class="btn btn-primary" style="margin-top: 8px;">Google認証</button>
-                        `;
-                        statusContainer.style.background = '#fef3c7';
-                    }
-                } else {
-                    statusText.innerHTML = '⚠️ Google Forms機能を初期化中...';
-                    statusContainer.style.background = '#f3f4f6';
-                }
-                
-            } catch (error) {
-                console.error('❌ Google Forms状況確認エラー:', error);
-                statusText.innerHTML = '❌ Google Forms機能の確認に失敗しました';
-                statusContainer.style.background = '#fee2e2';
-            }
-        }
-        
-        // 顧客データ安全読み込み
-        function loadCustomerDataSafely() {
+
+        // 顧客データ読み込み（enhanced版）
+        function loadCustomerData() {
             console.log('📊 顧客データ読み込み開始');
             
+            const dataStatus = document.getElementById('data-loading-info');
+            const customerList = document.getElementById('customer-simple-list');
+            
             try {
-                // customer-unified.jsが読み込まれているか確認
-                if (typeof displayCustomers === 'function') {
-                    console.log('✅ customer-unified.js使用');
-                    // 既存の関数を使用
-                } else {
-                    console.log('⚠️ customer-unified.js未読み込み - 独自実装');
-                    loadCustomersDirectly();
-                }
+                // LocalStorageから顧客データを取得
+                const storedData = localStorage.getItem('rentpipe_demo_customers');
                 
+                if (storedData) {
+                    const customers = JSON.parse(storedData);
+                    console.log(`✅ 顧客データ読み込み成功: ${customers.length}件`);
+                    
+                    dataStatus.textContent = `顧客データ: ${customers.length}件読み込み完了`;
+                    displayCustomers(customers);
+                } else {
+                    console.log('⚠️ 顧客データなし');
+                    dataStatus.textContent = 'まだ顧客データがありません。「🧪 テストデータ作成」ボタンをお試しください。';
+                    customerList.innerHTML = '<p style="text-align: center; color: #666;">顧客データがありません</p>';
+                }
             } catch (error) {
                 console.error('❌ 顧客データ読み込みエラー:', error);
-                loadCustomersDirectly();
+                dataStatus.textContent = 'データ読み込みエラーが発生しました';
+                customerList.innerHTML = '<p style="text-align: center; color: #dc2626;">データ読み込みに失敗しました</p>';
             }
         }
-        
-        // 直接的な顧客データ読み込み
-        function loadCustomersDirectly() {
-            const possibleKeys = [
-                'rentpipe_demo_customers',
-                'rentpipe_customers',
-                'customers',
-                'rentpipe_unified_customers'
-            ];
-            
-            let customers = [];
-            
-            for (const key of possibleKeys) {
-                const data = localStorage.getItem(key);
-                if (data) {
-                    try {
-                        const parsed = JSON.parse(data);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            customers = parsed;
-                            break;
-                        }
-                    } catch (e) {
-                        console.warn(`データパースエラー: ${key}`, e);
-                    }
-                }
-            }
-            
-            const customerList = document.getElementById('customer-list');
-            
-            if (customers.length > 0) {
-                console.log(`✅ 顧客データ読み込み成功: ${customers.length}件`);
-                displayCustomersSimple(customers);
-            } else {
-                console.log('❌ 顧客データなし - プレースホルダー表示');
-                customerList.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                        <h3>👥 顧客データがありません</h3>
-                        <p>新しい顧客を追加するか、他のページで顧客データを確認してください</p>
-                        <button onclick="window.location.href='customer-minimal.html'" class="btn btn-outline">簡易版で確認</button>
-                    </div>
-                `;
-            }
-        }
-        
-        // シンプルな顧客表示
-        function displayCustomersSimple(customers) {
-            const container = document.getElementById('customer-list');
+
+        // 顧客表示（Google Forms連携ボタン付き）
+        function displayCustomers(customers) {
+            const container = document.getElementById('customer-simple-list');
             container.innerHTML = '';
             
             customers.forEach((customer, index) => {
                 const customerCard = document.createElement('div');
                 customerCard.className = 'customer-card';
+                customerCard.style.cssText = 'border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 0.5rem; background: white;';
+                
+                // Google認証状態に基づくボタン表示
+                const isGoogleAuth = IntegratedAuth.isGoogleAuthenticated();
+                const formsButtonHTML = isGoogleAuth ? 
+                    `<div class="google-forms-buttons">
+                        <button onclick="createCustomerForm('${customer.id}', ${index})" class="btn btn-primary btn-sm">📝 フォーム作成</button>
+                        <button onclick="viewCustomerForms('${customer.id}')" class="btn btn-info btn-sm">📊 フォーム管理</button>
+                    </div>` : 
+                    `<div class="google-forms-buttons">
+                        <p style="font-size: 14px; color: #666; margin: 5px 0;">Google認証後にフォーム機能をご利用いただけます</p>
+                    </div>`;
+                
                 customerCard.innerHTML = `
-                    <div class="customer-header">
-                        <h3>${customer.name || '名前なし'}</h3>
-                        <span class="status-badge">${customer.pipelineStatus || customer.status || '未設定'}</span>
+                    <div style="display: flex; justify-content: between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 8px 0; color: #1f2937;">${customer.name}</h4>
+                            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">📧 ${customer.email}</p>
+                            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">📞 ${customer.phone}</p>
+                            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">💰 予算: ${customer.budget}</p>
+                            <p style="margin: 0; font-size: 14px; color: #6b7280;">🏠 希望エリア: ${customer.preferredArea}</p>
+                        </div>
+                        <div style="margin-left: 15px;">
+                            <button onclick="showCustomerDetail('${customer.id}')" class="btn btn-outline btn-sm">詳細</button>
+                        </div>
                     </div>
-                    <div class="customer-info">
-                        <p>📞 ${customer.phone || '電話番号なし'}</p>
-                        <p>📧 ${customer.email || 'メールなし'}</p>
-                        <p>💰 予算: ${customer.preferences?.budget || customer.budget || '未設定'}</p>
-                    </div>
-                    <div class="customer-actions">
-                        <button onclick="showCustomerDetail('${customer.id}')" class="btn btn-outline">詳細</button>
-                        ${window.IntegratedAuthManagerV2?.getAuthState().isAuthenticated ? 
-                            '<button onclick="createGoogleForm(\'' + customer.id + '\')" class="btn btn-primary">📝 フォーム作成</button>' : 
-                            ''
-                        }
-                    </div>
+                    ${formsButtonHTML}
                 `;
+                
                 container.appendChild(customerCard);
             });
         }
-        
+
+        // 顧客専用フォーム作成（プレースホルダー）
+        function createCustomerForm(customerId, customerIndex) {
+            console.log('📝 顧客フォーム作成:', customerId);
+            
+            // 今後Google Apps Script連携を追加
+            alert(`顧客ID: ${customerId} の専用フォームを作成します。\n\n（Google Apps Script連携を次ステップで実装予定）`);
+        }
+
+        // 顧客フォーム管理（プレースホルダー）
+        function viewCustomerForms(customerId) {
+            console.log('📊 顧客フォーム管理:', customerId);
+            alert(`顧客ID: ${customerId} のフォーム管理画面です。\n\n（詳細機能を次ステップで実装予定）`);
+        }
+
         // 顧客詳細表示
         function showCustomerDetail(customerId) {
-            if (customerId) {
-                window.location.href = `customer-detail.html?id=${customerId}`;
-            } else {
-                alert('顧客IDが見つかりません');
-            }
+            console.log('👤 顧客詳細表示:', customerId);
+            window.location.href = `customer-detail.html?id=${customerId}`;
         }
-        
-        // Google Form作成
-        function createGoogleForm(customerId) {
-            if (window.CustomerGoogleFormsIntegrationV2) {
-                window.CustomerGoogleFormsIntegrationV2.createForm(customerId);
-            } else {
-                alert('Google Forms機能が利用できません。ページを再読み込みしてください。');
-            }
-        }
-        
+
         // ログアウト処理
         function handleLogout() {
             if (confirm('ログアウトしますか？')) {
-                logout();
-                window.location.href = 'login.html';
+                // 各認証方式をクリア
+                localStorage.removeItem('rentpipe_auth_simple');
+                localStorage.removeItem('rentpipe_user_simple');
+                localStorage.removeItem('rentpipe_temp_auth');
+                localStorage.removeItem('google_user_temp');
+                
+                // Firebaseからもログアウト
+                firebase.auth().signOut().then(() => {
+                    console.log('✅ 全認証からログアウト完了');
+                    window.location.href = 'login-google-simple.html';
+                });
             }
         }
 
-        console.log('✅ Customer 管理画面スクリプト準備完了（重複排除版）');
+        console.log('✅ Customer 管理画面（統合版）スクリプト準備完了');
     </script>
 </body>
 </html>
