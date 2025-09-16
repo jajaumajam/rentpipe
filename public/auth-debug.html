@@ -11,6 +11,7 @@
         .error { background: #fee2e2; border-color: #dc2626; }
         .warning { background: #fef3c7; border-color: #f59e0b; }
         .info { background: #dbeafe; border-color: #3b82f6; }
+        .neutral { background: #f3f4f6; border-color: #9ca3af; }
         pre { background: #f3f4f6; padding: 1rem; overflow-x: auto; font-size: 12px; }
         button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 4px; }
         .btn-primary { background: #3b82f6; color: white; }
@@ -23,7 +24,7 @@
     
     <div class="section info">
         <h3>📋 診断目的</h3>
-        <p>Google認証は成功するが、customer-minimal.htmlで「未ログイン」と表示される問題を診断します。</p>
+        <p>Google認証とcustomer-minimal.htmlの認証状態統合を診断します。</p>
     </div>
     
     <div class="section">
@@ -67,8 +68,8 @@
         
         function log(message, type = 'info') {
             const resultDiv = document.getElementById('diagnosticResults');
-            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
-            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'neutral' ? 'neutral' : 'info';
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'neutral' ? 'ℹ️' : 'ℹ️';
             
             resultDiv.innerHTML += `<div class="section ${className}">${icon} ${message}</div>`;
             console.log(message);
@@ -78,32 +79,62 @@
             document.getElementById('diagnosticResults').innerHTML = '';
             log('🔍 認証状態の完全診断を開始します...', 'info');
             
-            // 1. ローカルストレージの認証データ確認
+            // 1. ローカルストレージの認証データ確認（改善版）
             const authKeys = [
-                'rentpipe_auth_simple',
-                'rentpipe_user_simple', 
-                'rentpipe_temp_auth',
-                'rentpipe_user_info',
-                'rentpipe_auth',
-                'rentpipe_demo_auth'
+                { key: 'rentpipe_auth_simple', name: 'Simple認証フラグ', required: true },
+                { key: 'rentpipe_user_simple', name: 'Simple認証ユーザーデータ', required: true },
+                { key: 'rentpipe_temp_auth', name: 'Google認証フラグ', required: true },
+                { key: 'rentpipe_user_info', name: 'Google認証ユーザーデータ', required: true },
+                { key: 'rentpipe_auth', name: '追加認証情報', required: false },
+                { key: 'rentpipe_demo_auth', name: 'デモ認証（Google認証時は不要）', required: false }
             ];
             
-            log('📊 ローカルストレージの認証データ:', 'info');
-            authKeys.forEach(key => {
+            log('📊 ローカルストレージの認証データ確認:', 'info');
+            
+            let coreAuthCount = 0;
+            let totalRequiredCount = 0;
+            
+            authKeys.forEach(({ key, name, required }) => {
                 const data = localStorage.getItem(key);
+                totalRequiredCount += required ? 1 : 0;
+                
                 if (data) {
                     try {
                         const parsed = JSON.parse(data);
-                        log(`✅ ${key}: ${JSON.stringify(parsed, null, 2)}`, 'success');
+                        log(`✅ ${name}: データあり`, 'success');
+                        if (required) coreAuthCount++;
+                        
+                        // 詳細情報（ユーザーデータの場合）
+                        if (key.includes('user') && parsed.email) {
+                            log(`   └ ユーザー: ${parsed.email}${parsed.displayName ? ` (${parsed.displayName})` : ''}`, 'info');
+                            if (parsed.photoURL) {
+                                log(`   └ 写真URL: あり (${parsed.photoURL.substring(0, 50)}...)`, 'info');
+                            }
+                        }
+                        
                     } catch (e) {
-                        log(`✅ ${key}: ${data}`, 'success');
+                        log(`✅ ${name}: ${data}`, 'success');
+                        if (required) coreAuthCount++;
                     }
                 } else {
-                    log(`❌ ${key}: データなし`, 'error');
+                    if (required) {
+                        log(`❌ ${name}: データなし`, 'error');
+                    } else {
+                        log(`ℹ️ ${name}: データなし（正常）`, 'neutral');
+                    }
                 }
             });
             
-            // 2. simple-reliable-auth.js の関数テスト
+            // 2. 認証状態サマリー
+            log('📊 認証状態サマリー:', 'info');
+            
+            if (coreAuthCount === totalRequiredCount) {
+                log(`✅ コア認証データ: ${coreAuthCount}/${totalRequiredCount}件 - 完全`, 'success');
+            } else {
+                log(`⚠️ コア認証データ: ${coreAuthCount}/${totalRequiredCount}件 - 不完全`, 'warning');
+            }
+            
+            // 3. simple-reliable-auth.js の関数テスト
             log('🔧 simple-reliable-auth.js 関数テスト:', 'info');
             
             if (typeof isLoggedIn === 'function') {
@@ -116,7 +147,7 @@
             if (typeof getUser === 'function') {
                 const user = getUser();
                 if (user) {
-                    log(`getUser(): ${JSON.stringify(user, null, 2)}`, 'success');
+                    log(`getUser(): ${user.email} (${user.displayName || '名前なし'})`, 'success');
                 } else {
                     log('getUser(): null', 'error');
                 }
@@ -124,22 +155,23 @@
                 log('getUser() 関数が見つかりません', 'error');
             }
             
-            // 3. Firebase認証状態確認
+            // 4. Firebase認証状態確認
             log('🔥 Firebase認証状態確認:', 'info');
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     log(`Firebase認証済み: ${user.email}`, 'success');
                     log(`Firebase UID: ${user.uid}`, 'success');
+                    log(`Firebase 写真URL: ${user.photoURL ? 'あり' : 'なし'}`, user.photoURL ? 'success' : 'neutral');
                 } else {
                     log('Firebase未認証', 'error');
                 }
             });
             
-            // 4. customer-minimal.html の認証チェック方式を診断
+            // 5. customer-minimal.html の認証チェック方式を診断
             log('📱 customer-minimal.html 認証チェック診断:', 'info');
             
             // customer-minimal.htmlと同じロジックをテスト
-            const possibleAuthMethods = [
+            const authMethods = [
                 {
                     name: 'simple-reliable-auth方式',
                     check: () => localStorage.getItem('rentpipe_auth_simple') === 'logged_in'
@@ -158,25 +190,28 @@
                 }
             ];
             
-            possibleAuthMethods.forEach(method => {
+            authMethods.forEach(method => {
                 const result = method.check();
                 log(`${method.name}: ${result}`, result ? 'success' : 'error');
             });
             
-            // 5. 推奨解決策
+            // 6. 推奨解決策（改善版）
             setTimeout(() => {
                 log('💡 診断結果に基づく推奨解決策:', 'warning');
                 
                 const hasSimpleAuth = localStorage.getItem('rentpipe_auth_simple') === 'logged_in';
                 const hasGoogleAuth = localStorage.getItem('rentpipe_temp_auth') === 'google_authenticated';
-                const hasUserData = localStorage.getItem('rentpipe_user_simple') || localStorage.getItem('rentpipe_user_info');
+                const hasUserData = localStorage.getItem('rentpipe_user_simple') && localStorage.getItem('rentpipe_user_info');
                 
-                if (!hasSimpleAuth && hasGoogleAuth && hasUserData) {
+                if (hasSimpleAuth && hasGoogleAuth && hasUserData) {
+                    log('🎉 全認証システムが正常に動作しています！', 'success');
+                    log('customer-minimal.htmlで認証状態が正しく表示されるはずです', 'success');
+                } else if (!hasSimpleAuth && hasGoogleAuth && hasUserData) {
                     log('🔧 「認証問題を自動修正」ボタンをクリックして認証データを統一してください', 'warning');
                 } else if (!hasUserData) {
                     log('🔧 ユーザーデータが不足しています。再度Googleログインを実行してください', 'warning');
-                } else if (hasSimpleAuth) {
-                    log('✅ 認証データは正常です。customer-minimal.htmlの問題の可能性があります', 'success');
+                } else if (!hasGoogleAuth) {
+                    log('🔧 Google認証フラグが不足しています。再度Googleログインを実行してください', 'warning');
                 }
             }, 1000);
         }
@@ -184,32 +219,47 @@
         function fixAuthIssues() {
             log('🔧 認証問題の自動修正を開始...', 'info');
             
-            // Google認証データから simple-reliable-auth データを生成
-            const tempAuth = localStorage.getItem('rentpipe_temp_auth');
-            const userInfo = localStorage.getItem('rentpipe_user_info');
+            // 最も完全なユーザーデータを取得
+            let userData = null;
             
-            if (tempAuth === 'google_authenticated' && userInfo) {
+            // 方法1: simple-reliable-auth から取得
+            const userSimple = localStorage.getItem('rentpipe_user_simple');
+            if (userSimple) {
                 try {
-                    const user = JSON.parse(userInfo);
-                    
-                    // simple-reliable-auth 形式で保存
-                    localStorage.setItem('rentpipe_auth_simple', 'logged_in');
-                    localStorage.setItem('rentpipe_user_simple', JSON.stringify(user));
-                    
-                    log('✅ Google認証データを simple-reliable-auth 形式に統一しました', 'success');
-                    log(`統一されたユーザー: ${user.email}`, 'success');
-                    
-                    // 修正後の確認
-                    setTimeout(() => {
-                        log('🔍 修正後の確認:', 'info');
-                        runFullDiagnosis();
-                    }, 500);
-                    
-                } catch (error) {
-                    log(`❌ 認証データの修正に失敗: ${error.message}`, 'error');
+                    userData = JSON.parse(userSimple);
+                    log('📊 simple-reliable-auth からユーザーデータ取得', 'info');
+                } catch (e) {}
+            }
+            
+            // 方法2: Google認証データから取得
+            if (!userData) {
+                const userInfo = localStorage.getItem('rentpipe_user_info');
+                if (userInfo) {
+                    try {
+                        userData = JSON.parse(userInfo);
+                        log('📊 Google認証データからユーザーデータ取得', 'info');
+                    } catch (e) {}
                 }
+            }
+            
+            if (userData && userData.email) {
+                // 全形式で保存
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
+                localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
+                localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
+                
+                log('✅ 認証データを全形式で統一しました', 'success');
+                log(`統一されたユーザー: ${userData.email}`, 'success');
+                
+                // 修正後の確認
+                setTimeout(() => {
+                    log('🔍 修正後の確認:', 'info');
+                    runFullDiagnosis();
+                }, 500);
+                
             } else {
-                log('❌ Google認証データが見つかりません。先にGoogleログインを実行してください', 'error');
+                log('❌ 修正可能なユーザーデータが見つかりません。先にGoogleログインを実行してください', 'error');
             }
         }
         

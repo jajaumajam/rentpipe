@@ -5,6 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理（簡易版） - RentPipe</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ユーザー写真表示用のCSS */
+        .user-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+            background: #f3f4f6;
+        }
+        
+        .user-photo-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-photo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .user-photo-placeholder-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .nav-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+            margin-right: 15px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -16,7 +70,7 @@
                 <a href="customer-minimal.html" class="active">簡易版</a>
                 <a href="pipeline.html">パイプライン</a>
                 <!-- ユーザー情報表示エリア -->
-                <div class="nav-user-info"></div>
+                <div class="nav-user-info" id="nav-user-display"></div>
                 <button onclick="handleLogout()" class="btn btn-outline nav-logout">ログアウト</button>
             </nav>
         </div>
@@ -48,8 +102,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <script>
-        // 🔧 customer-minimal.html 統合認証システム
-        console.log('🚀 Customer Minimal 統合認証版 初期化開始');
+        // 🔧 customer-minimal.html 写真テスト修正版
+        console.log('🚀 Customer Minimal 写真テスト修正版 初期化開始');
 
         // Firebase設定
         const firebaseConfig = {
@@ -61,6 +115,151 @@
             appId: "1:586040985916:web:3cdb5db072f1a6569fb639"
         };
         firebase.initializeApp(firebaseConfig);
+
+        // 写真表示ユーティリティ（修正版）
+        const PhotoUtils = {
+            // 写真状況の追跡
+            photoStatus: new Map(),
+            
+            // 安全な写真表示（修正版）
+            createSafePhotoElement: function(photoURL, size = 'normal', fallbackText = '👤', trackingId = null) {
+                console.log('🖼️ 写真要素作成:', { photoURL, size, trackingId });
+                
+                if (!photoURL) {
+                    console.log('📷 写真URL なし - プレースホルダー表示');
+                    this.photoStatus.set(trackingId || 'default', { status: 'no-url', element: 'placeholder' });
+                    return this.createPlaceholder(size, fallbackText);
+                }
+                
+                const img = document.createElement('img');
+                const className = size === 'small' ? 'user-photo-small' : 'user-photo';
+                img.className = className;
+                img.alt = 'ユーザー写真';
+                
+                // CORS対応 - referrerPolicy を設定
+                img.referrerPolicy = 'no-referrer';
+                img.crossOrigin = 'anonymous';
+                
+                // 成功時のハンドリング
+                img.onload = () => {
+                    console.log('✅ 写真読み込み成功:', photoURL);
+                    this.photoStatus.set(trackingId || 'default', { 
+                        status: 'loaded', 
+                        element: 'image',
+                        url: photoURL,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // 表示ステータスを更新
+                    this.updatePhotoStatusDisplay(trackingId);
+                };
+                
+                // エラー時のハンドリング
+                img.onerror = (error) => {
+                    console.warn('📷 写真読み込み失敗 - プレースホルダーに切り替え:', photoURL);
+                    this.photoStatus.set(trackingId || 'default', { 
+                        status: 'error', 
+                        element: 'placeholder',
+                        url: photoURL,
+                        error: error.toString(),
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    const placeholder = this.createPlaceholder(size, fallbackText);
+                    img.parentNode.replaceChild(placeholder, img);
+                    
+                    // 表示ステータスを更新
+                    this.updatePhotoStatusDisplay(trackingId);
+                };
+                
+                // 読み込み開始を記録
+                this.photoStatus.set(trackingId || 'default', { 
+                    status: 'loading', 
+                    element: 'image',
+                    url: photoURL,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // 写真URLを設定
+                img.src = photoURL;
+                
+                return img;
+            },
+            
+            // プレースホルダー作成
+            createPlaceholder: function(size = 'normal', fallbackText = '👤') {
+                const div = document.createElement('div');
+                const className = size === 'small' ? 'user-photo-placeholder-small' : 'user-photo-placeholder';
+                div.className = className;
+                div.textContent = fallbackText;
+                
+                console.log('🎭 プレースホルダー作成:', { size, fallbackText });
+                return div;
+            },
+            
+            // 写真ステータス表示更新
+            updatePhotoStatusDisplay: function(trackingId) {
+                if (!trackingId) return;
+                
+                const status = this.photoStatus.get(trackingId);
+                const displayElement = document.getElementById('photo-status-display');
+                
+                if (displayElement && status) {
+                    let statusText = '';
+                    let statusIcon = '';
+                    
+                    switch (status.status) {
+                        case 'loaded':
+                            statusText = '✅ 正常表示';
+                            statusIcon = '✅';
+                            break;
+                        case 'error':
+                            statusText = '🔄 代替表示（プレースホルダー）';
+                            statusIcon = '🔄';
+                            break;
+                        case 'loading':
+                            statusText = '⏳ 読み込み中';
+                            statusIcon = '⏳';
+                            break;
+                        case 'no-url':
+                            statusText = '🎭 プレースホルダー（写真URLなし）';
+                            statusIcon = '🎭';
+                            break;
+                        default:
+                            statusText = '❓ 不明';
+                            statusIcon = '❓';
+                    }
+                    
+                    displayElement.innerHTML = `写真表示: ${statusText}`;
+                }
+            },
+            
+            // 写真状況の詳細取得
+            getPhotoStatusDetails: function(trackingId) {
+                return this.photoStatus.get(trackingId || 'default');
+            },
+            
+            // 写真URLのテスト（改善版 - 実際の表示結果を使用）
+            getPhotoDisplayStatus: function(trackingId) {
+                const status = this.photoStatus.get(trackingId || 'default');
+                if (!status) {
+                    return { working: false, reason: 'ステータス未記録' };
+                }
+                
+                switch (status.status) {
+                    case 'loaded':
+                        return { working: true, reason: '正常に読み込み・表示済み' };
+                    case 'error':
+                        return { working: false, reason: '読み込み失敗（代替表示中）' };
+                    case 'loading':
+                        return { working: null, reason: '読み込み中' };
+                    case 'no-url':
+                        return { working: false, reason: '写真URLが提供されていません' };
+                    default:
+                        return { working: false, reason: '不明な状態' };
+                }
+            }
+        };
 
         // 統合認証システム
         const IntegratedAuth = {
@@ -76,6 +275,7 @@
                     try {
                         const user = JSON.parse(userSimple);
                         console.log('✅ simple-reliable-auth方式で認証確認:', user.email);
+                        console.log('🖼️ 写真URL確認:', user.photoURL);
                         return { method: 'simple-reliable-auth', user: user };
                     } catch (e) {
                         console.warn('simple-reliable-auth データパースエラー:', e);
@@ -90,6 +290,7 @@
                     try {
                         const user = JSON.parse(userInfo);
                         console.log('✅ Google認証フラグ方式で認証確認:', user.email);
+                        console.log('🖼️ 写真URL確認:', user.photoURL);
                         
                         // 認証データを simple-reliable-auth 形式に統一
                         this.unifyAuthData(user);
@@ -105,6 +306,7 @@
                     firebase.auth().onAuthStateChanged((user) => {
                         if (user) {
                             console.log('✅ Firebase認証で認証確認:', user.email);
+                            console.log('🖼️ Firebase写真URL:', user.photoURL);
                             
                             const userData = {
                                 uid: user.uid,
@@ -165,7 +367,7 @@
             await performIntegratedAuthCheck();
             
             // ユーザー情報表示
-            displayAuthStatus();
+            await displayAuthStatus();
             
             // 顧客データ読み込み
             loadCustomerData();
@@ -207,25 +409,60 @@
             }
         }
 
-        // 認証状態表示
-        function displayAuthStatus() {
+        // 認証状態表示（修正版）
+        async function displayAuthStatus() {
             const authDiv = document.getElementById('auth-status');
             
             if (window.currentUser) {
+                console.log('👤 ユーザー情報表示開始:', window.currentUser);
+                console.log('🖼️ 写真URL:', window.currentUser.photoURL);
+                
+                // 写真要素作成（追跡ID付き）
+                const trackingId = 'main-user-photo';
+                const photoElement = PhotoUtils.createSafePhotoElement(
+                    window.currentUser.photoURL,
+                    'normal',
+                    window.currentUser.displayName ? window.currentUser.displayName.charAt(0) : '👤',
+                    trackingId
+                );
+                
+                // 認証状態表示（修正版）
                 authDiv.innerHTML = `
                     <h3 style="color: #059669; margin: 0 0 0.5rem 0;">✅ 認証状態: ログイン済み</h3>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        ${window.currentUser.photoURL ? 
-                            `<img src="${window.currentUser.photoURL}" style="width: 40px; height: 40px; border-radius: 50%;" alt="User">` : 
-                            '<div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 18px;">👤</div>'
-                        }
+                        <div id="user-photo-container"></div>
                         <div>
                             <div style="font-weight: bold;">${window.currentUser.displayName || 'ユーザー'}</div>
                             <div style="font-size: 0.9rem; color: #6b7280;">${window.currentUser.email}</div>
+                            <div style="font-size: 0.8rem; color: #9ca3af;" id="photo-status-display">写真: 読み込み中...</div>
                         </div>
                     </div>
                 `;
                 authDiv.style.background = '#d1fae5';
+                
+                // 写真要素を追加
+                document.getElementById('user-photo-container').appendChild(photoElement);
+                
+                // 写真読み込み完了を待って最終ステータス表示（修正版）
+                setTimeout(() => {
+                    const photoStatus = PhotoUtils.getPhotoDisplayStatus(trackingId);
+                    const statusDisplay = document.getElementById('photo-status-display');
+                    
+                    if (statusDisplay) {
+                        if (photoStatus.working === true) {
+                            statusDisplay.innerHTML = '写真: ✅ 正常表示';
+                            statusDisplay.style.color = '#059669';
+                        } else if (photoStatus.working === false) {
+                            statusDisplay.innerHTML = '写真: 🎭 代替表示';
+                            statusDisplay.style.color = '#f59e0b';
+                        } else {
+                            statusDisplay.innerHTML = '写真: ⏳ 読み込み中';
+                            statusDisplay.style.color = '#6b7280';
+                        }
+                    }
+                    
+                    console.log('📸 最終写真ステータス:', photoStatus);
+                }, 2000);
                 
                 // ナビゲーションにもユーザー情報表示
                 updateNavigation();
@@ -242,25 +479,33 @@
             }
         }
 
-        // ナビゲーション更新
+        // ナビゲーション更新（修正版）
         function updateNavigation() {
             if (!window.currentUser) return;
             
-            const navUserInfo = document.querySelector('.nav-user-info');
+            const navUserInfo = document.getElementById('nav-user-display');
             if (navUserInfo && !navUserInfo.hasChildNodes()) {
-                navUserInfo.innerHTML = `
-                    <div style="color: white; font-size: 14px; display: flex; align-items: center; gap: 8px; margin-right: 15px;">
-                        ${window.currentUser.photoURL ? 
-                            `<img src="${window.currentUser.photoURL}" style="width: 24px; height: 24px; border-radius: 50%;" alt="User">` : 
-                            '👤'
-                        }
-                        <span>${window.currentUser.displayName || window.currentUser.email.split('@')[0]}</span>
-                    </div>
-                `;
+                console.log('🎨 ナビゲーション写真表示:', window.currentUser.photoURL);
+                
+                // 小さい写真要素作成（追跡ID付き）
+                const smallPhotoElement = PhotoUtils.createSafePhotoElement(
+                    window.currentUser.photoURL,
+                    'small',
+                    window.currentUser.displayName ? window.currentUser.displayName.charAt(0) : '👤',
+                    'nav-user-photo'
+                );
+                
+                // テキスト要素作成
+                const textSpan = document.createElement('span');
+                textSpan.textContent = window.currentUser.displayName || window.currentUser.email.split('@')[0];
+                
+                // ナビゲーションに追加
+                navUserInfo.appendChild(smallPhotoElement);
+                navUserInfo.appendChild(textSpan);
             }
         }
 
-        // 顧客データ読み込み
+        // 顧客データ読み込み（変更なし）
         function loadCustomerData() {
             console.log('📊 顧客データ読み込み開始');
             
@@ -401,7 +646,8 @@
                     'rentpipe_auth_simple',
                     'rentpipe_user_simple',
                     'rentpipe_temp_auth',
-                    'rentpipe_user_info'
+                    'rentpipe_user_info',
+                    'rentpipe_auth'
                 ];
                 
                 authKeys.forEach(key => {
@@ -416,7 +662,7 @@
             }
         }
 
-        console.log('✅ Customer Minimal 統合認証版スクリプト準備完了');
+        console.log('✅ Customer Minimal 写真テスト修正版スクリプト準備完了');
     </script>
 </body>
 </html>
