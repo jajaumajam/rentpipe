@@ -82,12 +82,12 @@
     <main class="main-content">
         <div class="page-header">
             <h2>👥 顧客管理</h2>
-            <p>顧客情報の管理とGoogle Forms連携</p>
+            <p>顧客情報の管理とGoogle Forms連携（モック版）</p>
         </div>
 
         <!-- Google Forms連携セクション -->
         <div id="google-forms-section" class="google-forms-section">
-            <h3>📝 Google Forms連携</h3>
+            <h3>📝 Google Forms連携（モック版）</h3>
             <p id="forms-status-text">連携状況を確認中...</p>
             <div id="forms-action-area"></div>
         </div>
@@ -119,12 +119,12 @@
     <script src="js/local-first-sync.js"></script>
     <script src="js/create-test-customers.js"></script>
     
-    <!-- Google Forms連携（新実装） -->
-    <script src="js/google-forms-simple.js"></script>
+    <!-- Google Forms連携（モック版・デバッグ強化） -->
+    <script src="js/google-forms-mock-debug.js"></script>
     
     <script>
-        // 🔧 customer.html 統合版（Google Forms API直接使用版）
-        console.log('🚀 Customer 管理画面初期化開始（Google Forms API直接使用版）');
+        // 🔧 customer.html 統合版（Google Forms APIモック版）
+        console.log('🚀 Customer 管理画面初期化開始（Google Forms APIモック版）');
 
         // Firebase設定
         const firebaseConfig = {
@@ -253,19 +253,19 @@
                 if (IntegratedAuth.isGoogleAuthenticated()) {
                     // Google認証済み
                     section.className = 'google-forms-section forms-auth-success';
-                    statusText.textContent = 'Google認証が完了しています。顧客専用フォームを作成できます。';
+                    statusText.textContent = 'Google認証が完了しています。顧客専用フォームを作成できます（モック版）。';
                     actionArea.innerHTML = `
                         <p style="margin: 0.5rem 0; opacity: 0.9; font-size: 0.9rem;">
-                            各顧客カードの「📝 フォーム作成」ボタンから専用フォームを作成できます
+                            各顧客カードの「📝 フォーム作成」ボタンから専用フォームを作成できます（モック版）
                         </p>
                         <button onclick="testGoogleFormsAPI()" class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; font-size: 12px; margin-top: 0.5rem;">
-                            🧪 API接続テスト
+                            🎭 モック版API接続テスト
                         </button>
                     `;
                 } else {
                     // Google認証未完了
                     section.className = 'google-forms-section forms-auth-required';
-                    statusText.textContent = '顧客専用の物件希望調査フォームを自動作成するにはGoogle認証が必要です';
+                    statusText.textContent = '顧客専用の物件希望調査フォームを自動作成するにはGoogle認証が必要です（モック版）';
                     actionArea.innerHTML = `
                         <button onclick="window.location.href='login-google-simple.html'" class="btn" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
                             🔑 Google認証してフォーム機能を利用
@@ -353,7 +353,7 @@
                 // 認証状態セクション
                 authDiv.className = 'section success';
                 authDiv.innerHTML = `
-                    <h3>✅ 認証済み</h3>
+                    <h3>✅ 認証済み（モック版対応）</h3>
                     <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
                         ${photoElement.outerHTML}
                         <div>
@@ -382,7 +382,7 @@
             }
         }
 
-        // 顧客データ読み込み（修正版）
+        // 顧客データ読み込み
         function loadCustomerData() {
             console.log('📊 顧客データ読み込み開始');
             
@@ -490,16 +490,17 @@
                 
                 if (!isGoogleAuth) {
                     formsButtonHTML = `<div class="google-forms-buttons">
-                        <p style="font-size: 14px; color: #666; margin: 5px 0;">Google認証後にフォーム機能をご利用いただけます</p>
+                        <p style="font-size: 14px; color: #666; margin: 5px 0;">Google認証後にフォーム機能をご利用いただけます（モック版）</p>
                     </div>`;
                 } else if (hasGoogleForm) {
                     // フォーム作成済み
+                    const mockBadge = customer.googleForm.isMock ? ' 🎭' : '';
                     formsButtonHTML = `<div class="google-forms-buttons">
-                        <span class="form-status created">✅ フォーム作成済み</span>
+                        <span class="form-status created">✅ フォーム作成済み${mockBadge}</span>
                         <div style="margin-top: 8px;">
-                            <button onclick="window.open('${customer.googleForm.formUrl}', '_blank')" class="btn btn-success btn-sm">🔗 フォーム確認</button>
-                            <button onclick="window.open('${customer.googleForm.editUrl}', '_blank')" class="btn btn-info btn-sm">⚙️ 編集</button>
-                            <button onclick="viewFormResponses('${customer.id}')" class="btn btn-warning btn-sm">📊 回答確認</button>
+                            <button onclick="alert('モック版フォームです。実際のフォームは作成されていません。')" class="btn btn-success btn-sm">🔗 フォーム確認${mockBadge}</button>
+                            <button onclick="alert('モック版です。編集機能は実装予定です。')" class="btn btn-info btn-sm">⚙️ 編集${mockBadge}</button>
+                            <button onclick="viewFormResponses('${customer.id}')" class="btn btn-warning btn-sm">📊 回答確認${mockBadge}</button>
                         </div>
                     </div>`;
                 } else {
@@ -507,7 +508,7 @@
                     formsButtonHTML = `<div class="google-forms-buttons">
                         <span class="form-status not-created">📝 フォーム未作成</span>
                         <div style="margin-top: 8px;">
-                            <button onclick="createCustomerForm('${customer.id}', ${index})" class="btn btn-primary btn-sm">📝 専用フォーム作成</button>
+                            <button onclick="createCustomerForm('${customer.id}', ${index})" class="btn btn-primary btn-sm">🎭 専用フォーム作成（モック版）</button>
                         </div>
                     </div>`;
                 }
@@ -535,23 +536,23 @@
         // フォーム回答確認（プレースホルダー）
         function viewFormResponses(customerId) {
             console.log('📊 フォーム回答確認:', customerId);
-            alert(`顧客ID: ${customerId} のフォーム回答確認機能を次ステップで実装予定です。`);
+            alert(`🎭 モック版: 顧客ID ${customerId} のフォーム回答確認機能\n\n実装予定の機能です。`);
         }
 
-        // Google Forms API テスト機能
+        // Google Forms API テスト機能（モック版）
         function testGoogleFormsAPI() {
-            console.log('🧪 Google Forms API接続テスト開始');
+            console.log('🎭 Google Forms API接続テスト開始（モック版）');
             
             if (window.GoogleFormsSimple) {
                 window.GoogleFormsSimple.initialize().then(result => {
                     if (result) {
-                        alert('✅ Google Forms API接続テスト成功！\n\nフォーム作成機能が利用可能です。');
+                        alert('✅ Google Forms API接続テスト成功！（モック版）\n\nフォーム作成機能が利用可能です。');
                     } else {
-                        alert('❌ Google Forms API接続テスト失敗\n\nコンソールでエラー詳細をご確認ください。');
+                        alert('❌ Google Forms API接続テスト失敗（モック版）\n\nコンソールでエラー詳細をご確認ください。');
                     }
                 });
             } else {
-                alert('❌ GoogleFormsSimpleが読み込まれていません');
+                alert('❌ GoogleFormsSimple（モック版）が読み込まれていません');
             }
         }
 
@@ -579,7 +580,7 @@
             }
         }
 
-        console.log('✅ Customer 管理画面（Google Forms API直接使用版）スクリプト準備完了');
+        console.log('✅ Customer 管理画面（Google Forms APIモック版）スクリプト準備完了');
     </script>
 </body>
 </html>
