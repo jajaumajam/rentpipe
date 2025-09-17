@@ -5,112 +5,393 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Drive API テスト - RentPipe</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
-        .success { background: #d4edda; border-color: #c3e6cb; }
-        .error { background: #f8d7da; border-color: #f5c6cb; }
-        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        body { 
+            font-family: sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            background: white;
+        }
+        .success { 
+            background: #d4edda; 
+            border-color: #c3e6cb; 
+        }
+        .error { 
+            background: #f8d7da; 
+            border-color: #f5c6cb; 
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        button:hover { 
+            background: #0056b3; 
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+        }
+        .auth-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .auth-success { background: #d4edda; color: #155724; }
+        .auth-error { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
     <h1>🧪 Google Drive API テスト</h1>
+    <p><strong>新機能:</strong> 統合認証システム + Google Drive API連携</p>
     
     <div class="test-section">
-        <h2>1. 認証状態確認</h2>
-        <button onclick="checkAuth()">認証状態チェック</button>
+        <h2>📊 認証状態確認</h2>
+        <div id="auth-status-display"></div>
+        <button onclick="checkAuthStatus()" id="checkAuthBtn">認証状態チェック</button>
         <div id="auth-result"></div>
     </div>
     
     <div class="test-section">
-        <h2>2. Google Drive API初期化</h2>
-        <button onclick="initializeDriveAPI()">Drive API初期化</button>
+        <h2>🔧 Google Drive API初期化</h2>
+        <button onclick="initializeDriveAPI()" id="driveInitBtn" disabled>Drive API初期化</button>
         <div id="drive-init-result"></div>
     </div>
     
     <div class="test-section">
-        <h2>3. RentPipeフォルダー作成</h2>
-        <button onclick="createRentPipeFolder()">フォルダー作成</button>
+        <h2>📁 RentPipeフォルダー作成</h2>
+        <button onclick="createRentPipeFolder()" id="folderBtn" disabled>フォルダー作成</button>
         <div id="folder-result"></div>
     </div>
     
     <div class="test-section">
-        <h2>4. CSV変換テスト</h2>
-        <button onclick="testCSVConversion()">CSV変換テスト</button>
+        <h2>📊 CSV変換テスト</h2>
+        <button onclick="testCSVConversion()" id="csvBtn">CSV変換テスト</button>
         <div id="csv-result"></div>
     </div>
 
-    <!-- Firebase設定（既存） -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    
-    <!-- 既存システム -->
-    <script src="js/firebase-config-google.js"></script>
-    <script src="js/unified-data-manager.js"></script>
-    
-    <!-- 新規機能 -->
+    <div class="test-section warning">
+        <h3>⚠️ 未認証の場合</h3>
+        <p>Google Drive API機能を使用するには、Google認証が必要です。</p>
+        <a href="login.html" class="button" style="background: #28a745; text-decoration: none; color: white; display: inline-block; padding: 10px 20px; border-radius: 5px;">ログイン画面へ</a>
+    </div>
+
+    <!-- Google Drive API SDK -->
     <script src="https://apis.google.com/js/api.js"></script>
-    <script src="js/google-drive-api.js"></script>
-    <script src="js/csv-data-manager.js"></script>
     
     <script>
-        // テスト関数群
+        // 認証状態管理
+        let isAuthenticated = false;
+        let currentUser = null;
+        let driveAPIReady = false;
+        
+        // 結果表示用関数
         function log(elementId, message, type = 'info') {
             const element = document.getElementById(elementId);
-            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
             element.innerHTML = `<div class="${className}"><pre>${message}</pre></div>`;
         }
         
-        async function checkAuth() {
+        // 認証状態確認
+        function checkAuthStatus() {
+            console.log('🔍 認証状態確認開始');
+            
             try {
-                log('auth-result', '認証状態確認中...');
+                // LocalStorage認証データ確認
+                const authSimple = localStorage.getItem('rentpipe_auth_simple');
+                const userSimple = localStorage.getItem('rentpipe_user_simple');
+                const tempAuth = localStorage.getItem('rentpipe_temp_auth');
+                const userInfo = localStorage.getItem('rentpipe_user_info');
                 
-                if (window.auth && window.auth.currentUser) {
-                    const user = window.auth.currentUser;
-                    log('auth-result', `✅ 認証済み\nUID: ${user.uid}\nEmail: ${user.email || 'なし'}`, 'success');
+                console.log('🔍 認証データ確認:', {
+                    authSimple, tempAuth,
+                    hasUserSimple: !!userSimple,
+                    hasUserInfo: !!userInfo
+                });
+                
+                if (authSimple === 'logged_in' && userSimple) {
+                    try {
+                        currentUser = JSON.parse(userSimple);
+                        isAuthenticated = true;
+                        
+                        const statusHtml = `✅ 認証済み
+ユーザー: ${currentUser.email}
+名前: ${currentUser.name || '未設定'}
+認証方式: simple-reliable-auth`;
+                        
+                        log('auth-result', statusHtml, 'success');
+                        
+                        // 認証状態表示更新
+                        updateAuthStatusDisplay(true);
+                        
+                        // ボタンを有効化
+                        document.getElementById('driveInitBtn').disabled = false;
+                        
+                        console.log('✅ 認証確認完了:', currentUser.email);
+                        
+                    } catch (parseError) {
+                        console.error('❌ ユーザーデータパースエラー:', parseError);
+                        log('auth-result', '❌ 認証データの解析に失敗しました', 'error');
+                        updateAuthStatusDisplay(false);
+                    }
+                    
+                } else if (tempAuth === 'google_authenticated' && userInfo) {
+                    try {
+                        const fullUserData = JSON.parse(userInfo);
+                        currentUser = {
+                            email: fullUserData.email,
+                            name: fullUserData.displayName,
+                            picture: fullUserData.photoURL
+                        };
+                        isAuthenticated = true;
+                        
+                        const statusHtml = `✅ 認証済み（Google）
+ユーザー: ${currentUser.email}
+名前: ${currentUser.name || '未設定'}
+認証方式: google-integrated-auth`;
+                        
+                        log('auth-result', statusHtml, 'success');
+                        updateAuthStatusDisplay(true);
+                        document.getElementById('driveInitBtn').disabled = false;
+                        
+                        console.log('✅ Google認証確認完了:', currentUser.email);
+                        
+                    } catch (parseError) {
+                        console.error('❌ Google認証データパースエラー:', parseError);
+                        log('auth-result', '❌ Google認証データの解析に失敗しました', 'error');
+                        updateAuthStatusDisplay(false);
+                    }
+                    
                 } else {
-                    log('auth-result', '❌ 未認証です。Googleログインが必要です。', 'error');
+                    // 未認証状態
+                    isAuthenticated = false;
+                    currentUser = null;
+                    
+                    log('auth-result', `❌ 未認証状態
+
+Google Drive API機能を使用するには、ログインが必要です。
+下記のボタンからログインしてください。`, 'error');
+                    
+                    updateAuthStatusDisplay(false);
+                    
+                    // ボタンを無効化
+                    document.getElementById('driveInitBtn').disabled = true;
+                    document.getElementById('folderBtn').disabled = true;
+                    
+                    console.log('❌ 未認証状態');
                 }
+                
             } catch (error) {
-                log('auth-result', `❌ エラー: ${error.message}`, 'error');
+                console.error('❌ 認証状態確認エラー:', error);
+                log('auth-result', `❌ 認証状態確認エラー: ${error.message}`, 'error');
+                updateAuthStatusDisplay(false);
             }
         }
         
+        // 認証状態表示更新
+        function updateAuthStatusDisplay(authenticated) {
+            const statusDisplay = document.getElementById('auth-status-display');
+            
+            if (authenticated && currentUser) {
+                statusDisplay.innerHTML = `
+                    <span class="auth-status auth-success">✅ 認証済み</span>
+                    <strong>${currentUser.email}</strong>
+                `;
+            } else {
+                statusDisplay.innerHTML = `
+                    <span class="auth-status auth-error">❌ 未認証</span>
+                    <strong>ログインが必要です</strong>
+                `;
+            }
+        }
+        
+        // Google Drive API初期化
         async function initializeDriveAPI() {
+            if (!isAuthenticated) {
+                log('drive-init-result', '❌ 認証されていません。先に認証状態を確認してください。', 'error');
+                return;
+            }
+            
+            console.log('🔧 Google Drive API初期化開始');
+            log('drive-init-result', '🔧 Google Drive API初期化中...', 'info');
+            
             try {
-                log('drive-init-result', 'Google Drive API初期化中...');
-                
-                const result = await window.GoogleDriveAPI.initialize();
-                if (result) {
-                    log('drive-init-result', '✅ Google Drive API初期化成功', 'success');
-                } else {
-                    log('drive-init-result', '❌ Google Drive API初期化失敗', 'error');
+                // Google API Client Library が読み込まれているか確認
+                if (!window.gapi) {
+                    throw new Error('Google API Client Library が読み込まれていません');
                 }
+                
+                // gapi client 初期化
+                await new Promise((resolve, reject) => {
+                    window.gapi.load('client', {
+                        callback: resolve,
+                        onerror: reject
+                    });
+                });
+                
+                // Google Drive API Discovery Document 読み込み
+                await window.gapi.client.init({
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+                });
+                
+                // アクセストークンを設定（LocalStorageから取得）
+                const userInfo = localStorage.getItem('rentpipe_user_info');
+                if (userInfo) {
+                    const userData = JSON.parse(userInfo);
+                    if (userData.accessToken) {
+                        window.gapi.client.setToken({
+                            access_token: userData.accessToken
+                        });
+                        console.log('✅ アクセストークン設定完了');
+                    } else {
+                        console.warn('⚠️ アクセストークンがありません（一部機能制限の可能性）');
+                    }
+                }
+                
+                driveAPIReady = true;
+                
+                log('drive-init-result', `✅ Google Drive API初期化完了
+
+使用可能機能:
+- ファイル一覧取得
+- ファイル作成・更新  
+- フォルダー管理
+- ファイルメタデータ操作`, 'success');
+                
+                // フォルダー作成ボタンを有効化
+                document.getElementById('folderBtn').disabled = false;
+                
+                console.log('✅ Google Drive API初期化完了');
+                
             } catch (error) {
-                log('drive-init-result', `❌ エラー: ${error.message}`, 'error');
+                console.error('❌ Google Drive API初期化エラー:', error);
+                log('drive-init-result', `❌ Google Drive API初期化失敗
+
+エラー: ${error.message}
+
+対処方法:
+1. ログイン状態を確認
+2. Google Drive API権限を確認  
+3. ネットワーク接続を確認`, 'error');
+                
+                driveAPIReady = false;
             }
         }
         
+        // RentPipeフォルダー作成
         async function createRentPipeFolder() {
+            if (!driveAPIReady) {
+                log('folder-result', '❌ Google Drive APIが初期化されていません。', 'error');
+                return;
+            }
+            
+            console.log('📁 RentPipeフォルダー作成開始');
+            log('folder-result', '📁 RentPipeフォルダー作成中...', 'info');
+            
             try {
-                log('folder-result', 'RentPipeフォルダー作成中...');
+                // 既存フォルダー検索
+                console.log('🔍 既存RentPipeフォルダー検索中...');
+                const searchResponse = await window.gapi.client.drive.files.list({
+                    q: "name='RentPipe' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+                    spaces: 'drive'
+                });
                 
-                const folderId = await window.GoogleDriveAPI.ensureRentPipeFolder();
-                if (folderId) {
-                    log('folder-result', `✅ RentPipeフォルダー準備完了\nフォルダーID: ${folderId}`, 'success');
+                let folderId;
+                
+                if (searchResponse.result.files.length > 0) {
+                    // 既存フォルダーが見つかった
+                    folderId = searchResponse.result.files[0].id;
+                    console.log('📁 既存RentPipeフォルダー発見:', folderId);
+                    
+                    log('folder-result', `✅ 既存RentPipeフォルダーを使用
+
+フォルダーID: ${folderId}
+フォルダー名: RentPipe
+状態: 既に存在
+
+このフォルダーに顧客データ（CSV）を保存します。`, 'success');
+                    
                 } else {
-                    log('folder-result', '❌ フォルダー作成失敗', 'error');
+                    // 新規フォルダー作成
+                    console.log('📁 新規RentPipeフォルダー作成中...');
+                    const createResponse = await window.gapi.client.drive.files.create({
+                        resource: {
+                            name: 'RentPipe',
+                            mimeType: 'application/vnd.google-apps.folder'
+                        }
+                    });
+                    
+                    folderId = createResponse.result.id;
+                    console.log('✅ 新規RentPipeフォルダー作成完了:', folderId);
+                    
+                    log('folder-result', `✅ 新規RentPipeフォルダー作成完了
+
+フォルダーID: ${folderId}
+フォルダー名: RentPipe
+作成日時: ${new Date().toLocaleString()}
+
+このフォルダーに顧客データ（CSV）を保存します。
+Google Driveで確認できます。`, 'success');
                 }
+                
+                // フォルダーIDをlocalStorageに保存（後で使用）
+                localStorage.setItem('rentpipe_drive_folder_id', folderId);
+                
             } catch (error) {
-                log('folder-result', `❌ エラー: ${error.message}`, 'error');
+                console.error('❌ RentPipeフォルダー作成エラー:', error);
+                
+                let errorMessage = `❌ RentPipeフォルダー作成失敗
+
+エラー: ${error.message}`;
+                
+                if (error.status === 403) {
+                    errorMessage += `
+
+原因: Google Drive API権限不足
+対処方法: 
+1. ログアウトして再ログイン
+2. Google Drive権限を許可`;
+                } else if (error.status === 401) {
+                    errorMessage += `
+
+原因: アクセストークン無効
+対処方法:
+1. ログアウトして再ログイン`;
+                }
+                
+                log('folder-result', errorMessage, 'error');
             }
         }
         
+        // CSV変換テスト
         function testCSVConversion() {
+            console.log('📊 CSV変換テスト開始');
+            log('csv-result', '📊 CSV変換テスト実行中...', 'info');
+            
             try {
-                log('csv-result', 'CSV変換テスト実行中...');
-                
                 // テスト用顧客データ
                 const testCustomers = [
                     {
@@ -118,53 +399,95 @@
                         name: 'テスト太郎',
                         email: 'test@example.com',
                         phone: '090-1234-5678',
+                        age: 30,
+                        occupation: 'エンジニア',
+                        annualIncome: 5000000,
                         pipelineStatus: '初回相談',
                         preferences: {
-                            budgetMin: 50000,
-                            budgetMax: 100000,
+                            budgetMin: 80000,
+                            budgetMax: 120000,
                             areas: ['渋谷', '新宿'],
                             roomType: '1K',
                             requirements: ['駅近', 'ペット可']
                         },
+                        notes: 'テスト用顧客データ',
+                        urgency: '中',
                         createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
+                        updatedAt: new Date().toISOString(),
+                        source: 'drive_api_test'
                     }
                 ];
                 
-                // CSV変換テスト
-                const csvContent = window.CSVDataManager.customersToCSV(testCustomers);
+                // CSVヘッダー
+                const headers = [
+                    'id', 'name', 'email', 'phone', 'age', 'occupation',
+                    'annualIncome', 'pipelineStatus', 'budgetMin', 'budgetMax',
+                    'areas', 'roomType', 'requirements', 'notes', 'urgency',
+                    'createdAt', 'updatedAt', 'source'
+                ];
                 
-                // CSV → 顧客データ変換テスト
-                const convertedCustomers = window.CSVDataManager.csvToCustomers(csvContent);
+                // CSV生成
+                const csvRows = [headers.join(',')]; // ヘッダー行
                 
+                testCustomers.forEach(customer => {
+                    const row = headers.map(header => {
+                        let value = customer[header] || '';
+                        
+                        // 特別な処理
+                        if (header === 'areas' && customer.preferences?.areas) {
+                            value = customer.preferences.areas.join(';');
+                        } else if (header === 'requirements' && customer.preferences?.requirements) {
+                            value = customer.preferences.requirements.join(';');
+                        } else if (header === 'budgetMin') {
+                            value = customer.preferences?.budgetMin || '';
+                        } else if (header === 'budgetMax') {
+                            value = customer.preferences?.budgetMax || '';
+                        } else if (header === 'roomType') {
+                            value = customer.preferences?.roomType || '';
+                        }
+                        
+                        // CSV形式にエスケープ
+                        return `"${String(value).replace(/"/g, '""')}"`;
+                    });
+                    
+                    csvRows.push(row.join(','));
+                });
+                
+                const csvContent = csvRows.join('\n');
+                
+                // 結果表示
                 const result = `✅ CSV変換テスト成功
-                
-元データ: ${testCustomers.length}件
-CSV変換後:
-${csvContent.split('\n').slice(0, 3).join('\n')}
-...
 
-逆変換後: ${convertedCustomers.length}件
-顧客名: ${convertedCustomers[0]?.name}
-予算: ${convertedCustomers[0]?.preferences?.budgetMin}〜${convertedCustomers[0]?.preferences?.budgetMax}円`;
+元データ: ${testCustomers.length}件の顧客データ
+
+生成されたCSV:
+${csvContent}
+
+CSV特徴:
+- エンコーディング: UTF-8
+- 区切り文字: カンマ（,）
+- エスケープ: ダブルクォート
+- 配列データ: セミコロン（;）区切り
+
+次のステップ: このCSVをGoogle Driveに保存`;
                 
                 log('csv-result', result, 'success');
+                console.log('✅ CSV変換テスト完了');
                 
             } catch (error) {
-                log('csv-result', `❌ エラー: ${error.message}`, 'error');
+                console.error('❌ CSV変換テストエラー:', error);
+                log('csv-result', `❌ CSV変換テスト失敗: ${error.message}`, 'error');
             }
         }
         
         // ページ読み込み時の初期化
         document.addEventListener('DOMContentLoaded', function() {
-            // Firebase認証の初期化を待つ
+            console.log('🚀 Google Drive APIテストページ初期化');
+            
+            // 初期認証状態確認
             setTimeout(() => {
-                if (window.auth) {
-                    window.auth.onAuthStateChanged(function(user) {
-                        console.log('認証状態変更:', user ? '認証済み' : '未認証');
-                    });
-                }
-            }, 1000);
+                checkAuthStatus();
+            }, 500);
         });
     </script>
 </body>

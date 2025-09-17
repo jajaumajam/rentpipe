@@ -223,7 +223,9 @@
                 
                 // スコープは必要最小限に制限（アクセストークン取得エラーを回避）
                 provider.addScope('email');
-                provider.addScope('profile');
+                // Google Drive API権限を追加（Phase 2実装）
+                provider.addScope("https://www.googleapis.com/auth/drive.file");
+                provider.addScope("https://www.googleapis.com/auth/drive.metadata.readonly");                provider.addScope('profile');
                 
                 // アカウント選択を強制
                 provider.setCustomParameters({

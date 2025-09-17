@@ -4,352 +4,399 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン - RentPipe</title>
-    <link rel="stylesheet" href="css/main.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        .simple-login-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-        }
-        
-        .auth-card {
+        .login-card {
             background: white;
+            padding: 3rem;
             border-radius: 16px;
-            padding: 2rem;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
+            max-width: 400px;
+            width: 90%;
         }
         
-        .auth-logo {
-            margin-bottom: 2rem;
-        }
-        
-        .logo-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-        
-        .auth-logo h1 {
-            color: #1e3a8a;
-            margin: 0 0 0.5rem 0;
+        .login-title {
             font-size: 2rem;
-            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
         }
         
-        .auth-logo p {
-            color: #64748b;
-            margin: 0 0 2rem 0;
-            font-size: 0.9rem;
-        }
-        
-        .auth-tabs {
-            display: flex;
+        .login-subtitle {
+            color: #6b7280;
             margin-bottom: 2rem;
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 0.25rem;
         }
         
-        .auth-tab {
-            flex: 1;
-            padding: 0.75rem;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        
-        .auth-tab.active {
+        .google-login-btn {
             background: white;
-            color: #1e3a8a;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
         }
         
-        .auth-form {
-            display: none;
+        .google-login-btn:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+        }
+        
+        .google-login-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .features {
+            margin-top: 2rem;
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: #f9fafb;
             text-align: left;
         }
         
-        .auth-form.active {
-            display: block;
+        .feature-item span:first-child {
+            font-size: 1.25rem;
         }
         
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
+        .status-message {
+            margin-top: 1rem;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s ease;
-            box-sizing: border-box;
+            font-weight: 500;
         }
         
-        .form-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-        
-        .form-footer {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-footer a {
-            color: #3b82f6;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        
-        .form-footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .btn-auth {
-            width: 100%;
-            padding: 0.875rem;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-        
-        .btn-auth:hover {
-            background: #2563eb;
-        }
-        
-        .demo-info {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .demo-info h3 {
-            margin: 0 0 0.5rem 0;
-            color: #1e3a8a;
-            font-size: 0.9rem;
-        }
-        
-        .demo-info p {
-            margin: 0;
-            font-size: 0.8rem;
-            color: #475569;
-        }
-        
-        .demo-credentials {
-            background: #f8fafc;
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-top: 0.5rem;
-            font-family: monospace;
-            font-size: 0.8rem;
-        }
-        
-        .error-message, .success-message {
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-        
-        .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-        }
-        
-        .success-message {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
-        }
+        .status-success { background: #d1fae5; color: #065f46; }
+        .status-error { background: #fee2e2; color: #991b1b; }
+        .status-loading { background: #dbeafe; color: #1e40af; }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <!-- ロゴ -->
-            <div class="auth-logo">
-                <div class="logo-icon">🏠</div>
-                <h1>RentPipe</h1>
-                <p>賃貸営業を、流れるように</p>
-            </div>
+    <div class="simple-login-container">
+        <div class="login-card">
+            <div class="login-title">🏠 RentPipe</div>
+            <p class="login-subtitle">不動産エージェント向け顧客管理システム</p>
             
-            <!-- タブ -->
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchTab('login')">ログイン</button>
-                <button class="auth-tab" onclick="switchTab('register')">新規登録</button>
-            </div>
+            <button id="googleLoginBtn" onclick="handleGoogleLogin()" class="google-login-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Googleアカウントでログイン
+            </button>
             
-            <!-- メッセージエリア -->
-            <div id="messageArea"></div>
+            <div id="statusMessage"></div>
             
-            <!-- ログインフォーム -->
-            <form id="loginForm" class="auth-form active">
-                <div class="form-group">
-                    <label for="loginEmail" class="form-label">メールアドレス</label>
-                    <input type="email" id="loginEmail" class="form-input" required>
+            <div class="features">
+                <div class="feature-item">
+                    <span>👥</span>
+                    <span>顧客情報の一元管理</span>
                 </div>
-                
-                <div class="form-group">
-                    <label for="loginPassword" class="form-label">パスワード</label>
-                    <input type="password" id="loginPassword" class="form-input" required>
+                <div class="feature-item">
+                    <span>📊</span>
+                    <span>営業進捗の可視化</span>
                 </div>
-                
-                <div class="form-footer">
-                    <a href="#" onclick="showResetPassword()">パスワードを忘れた方</a>
+                <div class="feature-item">
+                    <span>🔒</span>
+                    <span>Googleアカウントで安全ログイン</span>
                 </div>
-                
-                <button type="submit" class="btn-auth">ログイン</button>
-            </form>
-            
-            <!-- 新規登録フォーム -->
-            <form id="registerForm" class="auth-form">
-                <div class="form-group">
-                    <label for="registerName" class="form-label">お名前</label>
-                    <input type="text" id="registerName" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerEmail" class="form-label">メールアドレス</label>
-                    <input type="email" id="registerEmail" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerPassword" class="form-label">パスワード</label>
-                    <input type="password" id="registerPassword" class="form-input" required minlength="6">
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerPasswordConfirm" class="form-label">パスワード（確認）</label>
-                    <input type="password" id="registerPasswordConfirm" class="form-input" required minlength="6">
-                </div>
-                
-                <button type="submit" class="btn-auth">新規登録</button>
-            </form>
-            
-            <!-- デモアカウント情報 -->
-            <div class="demo-info">
-                <h3>🚀 デモアカウント</h3>
-                <p>すぐにお試しいただけます</p>
-                <div class="demo-credentials">
-                    <div>メール: demo@rentpipe.jp</div>
-                    <div>パスワード: demo123</div>
+                <div class="feature-item">
+                    <span>📱</span>
+                    <span>全デバイス対応</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="js/unified-auth.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
     <script>
-        // タブ切り替え
-        function switchTab(tab) {
-            // タブボタンの切り替え
-            document.querySelectorAll('.auth-tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-            
-            // フォームの切り替え
-            document.querySelectorAll('.auth-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            document.getElementById(`${tab}Form`).classList.add('active');
-            
-            // メッセージをクリア
-            clearMessage();
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+            authDomain: "rentpipe-ab04e.firebaseapp.com",
+            projectId: "rentpipe-ab04e",
+            storageBucket: "rentpipe-ab04e.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456ghi789"
+        };
+
+        // Firebase初期化
+        firebase.initializeApp(firebaseConfig);
+
+        // ステータス表示関数
+        function showStatus(message, type = 'loading') {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.className = `status-message status-${type}`;
+            statusElement.innerHTML = message;
         }
 
-        // メッセージ表示
-        function showMessage(message, type = 'error') {
-            const messageArea = document.getElementById('messageArea');
-            messageArea.innerHTML = `<div class="${type}-message">${message}</div>`;
-        }
-
-        function clearMessage() {
-            document.getElementById('messageArea').innerHTML = '';
-        }
-
-        // ログイン処理
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // 認証状態の完全チェック関数
+        function isCompletelyLoggedOut() {
+            const authKeys = [
+                'rentpipe_auth_simple',
+                'rentpipe_user_simple', 
+                'rentpipe_temp_auth',
+                'rentpipe_user_info',
+                'rentpipe_authenticated',
+                'rentpipe_user'
+            ];
             
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+            const hasAuthData = authKeys.some(key => localStorage.getItem(key));
             
-            if (window.UnifiedAuth && window.UnifiedAuth.login(email, password)) {
-                showMessage('ログインに成功しました', 'success');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-            } else {
-                showMessage('メールアドレスまたはパスワードが間違っています');
-            }
-        });
-
-        // 新規登録処理
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-            
-            if (password !== passwordConfirm) {
-                showMessage('パスワードが一致しません');
-                return;
+            if (hasAuthData) {
+                console.log('🔍 LocalStorage認証データが存在');
+                return false;
             }
             
-            // デモ環境では新規登録を制限
-            showMessage('デモ環境では新規登録はできません。デモアカウントをご利用ください。');
-        });
-
-        // パスワードリセット
-        function showResetPassword() {
-            showMessage('デモ環境ではパスワードリセット機能は無効です。デモアカウントをご利用ください。');
+            console.log('✅ LocalStorage認証データなし');
+            return true;
         }
 
-        // デモアカウント自動入力（開発用）
+        // 統合認証データ保存関数
+        function saveIntegratedAuthData(userData) {
+            try {
+                // 複数の認証システムに対応したデータ保存
+                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
+                localStorage.setItem('rentpipe_user_simple', JSON.stringify({
+                    email: userData.email,
+                    name: userData.displayName,
+                    picture: userData.photoURL
+                }));
+                localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
+                localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
+                
+                console.log('💾 認証データ保存完了:', userData.email);
+                return true;
+                
+            } catch (error) {
+                console.error('❌ 認証データ保存エラー:', error);
+                return false;
+            }
+        }
+
+        // Googleログイン処理（修正版 - アクセストークンエラー対応）
+        async function handleGoogleLogin() {
+            console.log('🔐 Googleログイン開始');
+            
+            const btn = document.getElementById('googleLoginBtn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'ログイン中...';
+            
+            showStatus('Googleアカウントでログイン中...', 'loading');
+            
+            try {
+                // Google認証プロバイダーの設定
+                const provider = new firebase.auth.GoogleAuthProvider();
+                
+                // スコープは必要最小限に制限（アクセストークン取得エラーを回避）
+                provider.addScope('email');
+                provider.addScope('profile');
+                
+                // アカウント選択を強制
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+                
+                console.log('🔑 Google認証実行中...');
+                const result = await firebase.auth().signInWithPopup(provider);
+                
+                const user = result.user;
+                console.log('✅ Firebase認証成功:', user.email);
+                
+                // アクセストークン取得（安全な方法）
+                let accessToken = null;
+                let credential = null;
+                
+                try {
+                    credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+                    if (credential) {
+                        accessToken = credential.accessToken;
+                        console.log('✅ アクセストークン取得:', accessToken ? '成功' : '取得できませんでした');
+                    } else {
+                        console.warn('⚠️ Credential取得できませんでした');
+                    }
+                } catch (credentialError) {
+                    console.warn('⚠️ Credential取得エラー:', credentialError.message);
+                }
+                
+                // 代替手段でアクセストークンを取得
+                if (!accessToken) {
+                    try {
+                        accessToken = await user.getIdToken();
+                        console.log('✅ IDトークンを代替アクセストークンとして使用');
+                    } catch (tokenError) {
+                        console.warn('⚠️ IDトークン取得エラー:', tokenError.message);
+                    }
+                }
+                
+                // 統合ユーザーデータを作成（安全な方法）
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    accessToken: accessToken, // null でも大丈夫
+                    emailVerified: user.emailVerified,
+                    loginMethod: 'google',
+                    loginTime: new Date().toISOString()
+                };
+                
+                console.log('👤 ユーザーデータ作成完了:', {
+                    email: userData.email,
+                    displayName: userData.displayName,
+                    hasAccessToken: !!userData.accessToken
+                });
+                
+                // 統合認証データ保存
+                const saveSuccess = saveIntegratedAuthData(userData);
+                
+                if (saveSuccess) {
+                    showStatus('ログイン成功！顧客管理画面に移動します', 'success');
+                    
+                    // 顧客管理画面にリダイレクト
+                    setTimeout(() => {
+                        window.location.href = 'customer.html';
+                    }, 1500);
+                    
+                } else {
+                    throw new Error('認証データの保存に失敗しました');
+                }
+                
+            } catch (error) {
+                console.error('❌ ログインエラー:', error);
+                
+                let errorMessage = 'ログインに失敗しました';
+                
+                // エラーハンドリング詳細化
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage = 'ログインがキャンセルされました';
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMessage = 'ポップアップがブロックされました。ポップアップブロッカーを無効にしてください';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage = 'ネットワークエラーが発生しました。接続を確認してください';
+                } else if (error.code === 'auth/invalid-api-key') {
+                    errorMessage = 'Firebase API設定エラーです。管理者にお問い合わせください';
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMessage = 'Google認証が有効化されていません。管理者にお問い合わせください';
+                } else if (error.message.includes('credential')) {
+                    errorMessage = '認証情報の取得に失敗しました。再度お試しください';
+                } else {
+                    errorMessage = `エラー: ${error.message}`;
+                }
+                
+                showStatus(errorMessage, 'error');
+                
+                // ボタン状態復旧
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // 初期化処理（修正版 - 無限ループ防止）
         document.addEventListener('DOMContentLoaded', function() {
-            // URLパラメータで自動ログインを確認
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('demo') === 'true') {
-                document.getElementById('loginEmail').value = 'demo@rentpipe.jp';
-                document.getElementById('loginPassword').value = 'demo123';
-                showMessage('デモアカウント情報が入力されました', 'success');
+            console.log('🚀 RentPipe ログインシステム初期化');
+            
+            // まず完全ログアウト状態かチェック
+            if (!isCompletelyLoggedOut()) {
+                console.log('⚠️ 不完全なログアウト状態検出 - 認証データクリア');
+                
+                // 不完全な認証データをクリア
+                const authKeys = [
+                    'rentpipe_auth_simple', 'rentpipe_user_simple', 
+                    'rentpipe_temp_auth', 'rentpipe_user_info',
+                    'rentpipe_authenticated', 'rentpipe_user'
+                ];
+                
+                authKeys.forEach(key => localStorage.removeItem(key));
+                sessionStorage.clear();
+                
+                // Firebase認証も確実にクリア
+                if (firebase.auth) {
+                    firebase.auth().signOut().catch(e => 
+                        console.warn('Firebase認証クリア警告:', e)
+                    );
+                }
             }
+            
+            // Firebase認証状態監視（修正版）
+            firebase.auth().onAuthStateChanged((user) => {
+                console.log('🔍 Firebase認証状態変更:', user ? user.email : '未認証');
+                
+                if (user && isCompletelyLoggedOut()) {
+                    // Firebase認証はあるが、LocalStorageが空の場合は不整合
+                    console.log('⚠️ Firebase認証と LocalStorage 状態不整合検出');
+                    
+                    // 統合認証データを作成して保存
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL,
+                        accessToken: null, // Firebase認証状態復旧時はnull
+                        emailVerified: user.emailVerified,
+                        loginMethod: 'google_session_recovery',
+                        loginTime: new Date().toISOString()
+                    };
+                    
+                    const saveSuccess = saveIntegratedAuthData(userData);
+                    
+                    if (saveSuccess) {
+                        console.log('✅ セッション復旧成功 - 顧客管理画面へ');
+                        showStatus('セッション復旧しました。顧客管理画面に移動します', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'customer.html';
+                        }, 1500);
+                    } else {
+                        console.warn('⚠️ セッション復旧失敗 - Firebase認証クリア');
+                        firebase.auth().signOut();
+                    }
+                    
+                } else if (user && !isCompletelyLoggedOut()) {
+                    // 正常な認証状態
+                    console.log('✅ 正常な認証状態確認:', user.email);
+                    showStatus('既にログイン済みです。顧客管理画面に移動します', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'customer.html';
+                    }, 1500);
+                    
+                } else {
+                    // 完全未認証状態
+                    console.log('✅ 完全未認証状態 - ログイン画面表示');
+                }
+            });
         });
     </script>
 </body>
