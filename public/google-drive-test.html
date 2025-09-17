@@ -100,7 +100,25 @@
     </div>
 
     <!-- Google Drive API SDK -->
-    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Firebase設定（google-drive-test.html用）
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+            authDomain: "rentpipe-ab04e.firebaseapp.com",
+            projectId: "rentpipe-ab04e",
+            storageBucket: "rentpipe-ab04e.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456ghi789"
+        };
+        
+        // Firebase初期化
+        firebase.initializeApp(firebaseConfig);
+        console.log("✅ Firebase初期化完了（google-drive-test.html）");
+    </script>    <script src="https://apis.google.com/js/api.js"></script>
     
     <script>
         // 認証状態管理
@@ -229,78 +247,132 @@ Google Drive API機能を使用するには、ログインが必要です。
         }
         
         // Google Drive API初期化
+        // Google Drive API初期化（修正版 - APIキー対応）
         async function initializeDriveAPI() {
             if (!isAuthenticated) {
-                log('drive-init-result', '❌ 認証されていません。先に認証状態を確認してください。', 'error');
+                log("drive-init-result", "❌ 認証されていません。先に認証状態を確認してください。", "error");
                 return;
             }
             
-            console.log('🔧 Google Drive API初期化開始');
-            log('drive-init-result', '🔧 Google Drive API初期化中...', 'info');
+            console.log("🔧 Google Drive API初期化開始");
+            log("drive-init-result", "🔧 Google Drive API初期化中...", "info");
             
             try {
                 // Google API Client Library が読み込まれているか確認
                 if (!window.gapi) {
-                    throw new Error('Google API Client Library が読み込まれていません');
+                    throw new Error("Google API Client Library が読み込まれていません");
                 }
                 
-                // gapi client 初期化
+                // gapi client 初期化（APIキー付き）
                 await new Promise((resolve, reject) => {
-                    window.gapi.load('client', {
+                    window.gapi.load("client", {
                         callback: resolve,
                         onerror: reject
                     });
                 });
                 
-                // Google Drive API Discovery Document 読み込み
+                console.log("🔑 Google API Client設定中...");
+                
+                // Firebase APIキーを使用してGoogle Drive APIを初期化
                 await window.gapi.client.init({
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+                    apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM", // Firebase APIキー
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
                 });
                 
-                // アクセストークンを設定（LocalStorageから取得）
-                const userInfo = localStorage.getItem('rentpipe_user_info');
-                if (userInfo) {
-                    const userData = JSON.parse(userInfo);
-                    if (userData.accessToken) {
+                console.log("✅ Google API Client初期化完了");
+                
+                // Firebase認証からアクセストークンを取得
+                let tokenSet = false;
+                
+                try {
+                    // Firebaseの現在のユーザーからIDトークンを取得
+                    if (window.firebase && firebase.auth && firebase.auth().currentUser) {
+                        const user = firebase.auth().currentUser;
+                        const idToken = await user.getIdToken();
+                        
                         window.gapi.client.setToken({
-                            access_token: userData.accessToken
+                            access_token: idToken
                         });
-                        console.log('✅ アクセストークン設定完了');
-                    } else {
-                        console.warn('⚠️ アクセストークンがありません（一部機能制限の可能性）');
+                        console.log("✅ Firebase IDトークンを使用");
+                        tokenSet = true;
                     }
+                } catch (tokenError) {
+                    console.warn("⚠️ Firebase IDトークン取得エラー:", tokenError);
                 }
+                
+                if (!tokenSet) {
+                    throw new Error("アクセストークンの設定に失敗しました。再ログインが必要です。");
+                }
+                
+                // Drive API接続テスト
+                console.log("🔍 Google Drive API接続テスト中...");
+                const testResponse = await window.gapi.client.drive.about.get({
+                    fields: "user"
+                });
+                
+                console.log("✅ Drive API接続テスト成功:", testResponse.result.user.displayName);
                 
                 driveAPIReady = true;
                 
-                log('drive-init-result', `✅ Google Drive API初期化完了
+                log("drive-init-result", `✅ Google Drive API初期化完了
+
+APIキー: 設定済み (Firebase)
+アクセストークン: 設定済み
+接続テスト: 成功
+ユーザー: ${testResponse.result.user.displayName}
 
 使用可能機能:
-- ファイル一覧取得
+- ファイル一覧取得  
 - ファイル作成・更新  
 - フォルダー管理
-- ファイルメタデータ操作`, 'success');
+- ファイルメタデータ操作`, "success");
                 
                 // フォルダー作成ボタンを有効化
-                document.getElementById('folderBtn').disabled = false;
+                document.getElementById("folderBtn").disabled = false;
                 
-                console.log('✅ Google Drive API初期化完了');
+                console.log("✅ Google Drive API初期化完了");
                 
             } catch (error) {
-                console.error('❌ Google Drive API初期化エラー:', error);
-                log('drive-init-result', `❌ Google Drive API初期化失敗
-
-エラー: ${error.message}
-
-対処方法:
-1. ログイン状態を確認
-2. Google Drive API権限を確認  
-3. ネットワーク接続を確認`, 'error');
+                console.error("❌ Google Drive API初期化エラー:", error);
                 
+                let errorMessage = `❌ Google Drive API初期化失敗
+
+エラー: ${error.message}`;
+                
+                if (error.status === 403) {
+                    errorMessage += `
+
+🔧 403エラー対処方法:
+1. Firebase Console で Google Drive API を有効化
+2. ログアウトして再ログイン（新しい権限取得）
+3. Google Drive権限を許可
+
+📋 設定手順:
+1. https://console.firebase.google.com/project/rentpipe-ab04e
+2. Authentication → Sign-in method → Google設定確認
+3. https://console.cloud.google.com/apis/dashboard?project=rentpipe-ab04e
+4. Google Drive API を有効化`;
+                    
+                } else if (error.status === 401) {
+                    errorMessage += `
+
+🔧 401エラー対処方法:
+1. ログアウトして再ログイン
+2. アクセストークンの再取得`;
+                    
+                } else {
+                    errorMessage += `
+
+🔧 一般的な対処方法:
+1. ネットワーク接続を確認
+2. ブラウザを再読み込み
+3. ログアウト→再ログイン`;
+                }
+                
+                log("drive-init-result", errorMessage, "error");
                 driveAPIReady = false;
             }
-        }
-        
+        }        
         // RentPipeフォルダー作成
         async function createRentPipeFolder() {
             if (!driveAPIReady) {
