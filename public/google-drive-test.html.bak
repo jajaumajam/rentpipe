@@ -100,7 +100,25 @@
     </div>
 
     <!-- Google Drive API SDK -->
-    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Firebase設定（google-drive-test.html用）
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
+            authDomain: "rentpipe-ab04e.firebaseapp.com",
+            projectId: "rentpipe-ab04e",
+            storageBucket: "rentpipe-ab04e.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456ghi789"
+        };
+        
+        // Firebase初期化
+        firebase.initializeApp(firebaseConfig);
+        console.log("✅ Firebase初期化完了（google-drive-test.html）");
+    </script>    <script src="https://apis.google.com/js/api.js"></script>
     
     <script>
         // 認証状態管理
