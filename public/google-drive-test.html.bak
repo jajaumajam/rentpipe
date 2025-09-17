@@ -553,14 +553,32 @@ CSV特徴:
         }
         
         // ページ読み込み時の初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Google Drive APIテストページ初期化');
+        // ページ読み込み時の初期化（Firebase認証初期化待機）
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("🚀 Google Drive APIテストページ初期化");
             
-            // 初期認証状態確認
+            // Firebase認証の初期化を待つ
             setTimeout(() => {
-                checkAuthStatus();
-            }, 500);
-        });
-    </script>
+                console.log("🔍 Firebase認証初期化確認中...");
+                
+                if (window.firebase && firebase.auth) {
+                    // Firebase認証状態を確認
+                    firebase.auth().onAuthStateChanged((user) => {
+                        if (user) {
+                            console.log("✅ Firebase認証ユーザー確認:", user.email);
+                        } else {
+                            console.log("⚠️ Firebase認証ユーザーなし");
+                        }
+                        
+                        // 初期認証状態確認（Firebase確認後）
+                        setTimeout(checkAuthStatus, 1000);
+                    });
+                } else {
+                    console.warn("⚠️ Firebase未初期化");
+                    // Firebase無しでもLocalStorage認証状態確認
+                    setTimeout(checkAuthStatus, 1000);
+                }
+            }, 1000);
+        });    </script>
 </body>
 </html>

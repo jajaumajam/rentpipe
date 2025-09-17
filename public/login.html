@@ -207,126 +207,135 @@
         }
 
         // Googleログイン処理（修正版 - アクセストークンエラー対応）
+        // Googleログイン処理（アクセストークン確実取得版）
         async function handleGoogleLogin() {
-            console.log('🔐 Googleログイン開始');
+            console.log("🔐 Googleログイン開始");
             
-            const btn = document.getElementById('googleLoginBtn');
+            const btn = document.getElementById("googleLoginBtn");
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = 'ログイン中...';
+            btn.innerHTML = "ログイン中...";
             
-            showStatus('Googleアカウントでログイン中...', 'loading');
+            showStatus("Googleアカウントでログイン中...", "loading");
             
             try {
                 // Google認証プロバイダーの設定
                 const provider = new firebase.auth.GoogleAuthProvider();
                 
-                // スコープは必要最小限に制限（アクセストークン取得エラーを回避）
-                provider.addScope('email');
-                // Google Drive API権限を追加（Phase 2実装）
+                // Google Drive API用のスコープを明示的に追加
+                provider.addScope("email");
+                provider.addScope("profile");
                 provider.addScope("https://www.googleapis.com/auth/drive.file");
-                provider.addScope("https://www.googleapis.com/auth/drive.metadata.readonly");                provider.addScope('profile');
+                provider.addScope("https://www.googleapis.com/auth/drive.metadata.readonly");
                 
-                // アカウント選択を強制
+                // アクセストークン取得を強制
                 provider.setCustomParameters({
-                    prompt: 'select_account'
+                    prompt: "consent", // 毎回権限確認（アクセストークン確実取得）
+                    access_type: "offline" // リフレッシュトークンも取得
                 });
                 
-                console.log('🔑 Google認証実行中...');
+                console.log("🔑 Google認証実行中（Drive API権限付き）...");
                 const result = await firebase.auth().signInWithPopup(provider);
                 
                 const user = result.user;
-                console.log('✅ Firebase認証成功:', user.email);
+                console.log("✅ Firebase認証成功:", user.email);
                 
-                // アクセストークン取得（安全な方法）
+                // アクセストークン取得（確実版）
+                const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
                 let accessToken = null;
-                let credential = null;
                 
+                if (credential && credential.accessToken) {
+                    accessToken = credential.accessToken;
+                    console.log("✅ Google OAuth アクセストークン取得成功");
+                } else {
+                    console.warn("⚠️ credential.accessTokenが取得できませんでした");
+                    throw new Error("Google Drive API用のアクセストークンが取得できませんでした。再度お試しください。");
+                }
+                
+                // アクセストークンの有効性確認（簡易テスト）
+                console.log("🔍 アクセストークン有効性確認中...");
                 try {
-                    credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-                    if (credential) {
-                        accessToken = credential.accessToken;
-                        console.log('✅ アクセストークン取得:', accessToken ? '成功' : '取得できませんでした');
-                    } else {
-                        console.warn('⚠️ Credential取得できませんでした');
+                    const tokenTestResponse = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
+                    const tokenInfo = await tokenTestResponse.json();
+                    
+                    if (tokenInfo.error) {
+                        throw new Error(`無効なアクセストークン: ${tokenInfo.error}`);
                     }
-                } catch (credentialError) {
-                    console.warn('⚠️ Credential取得エラー:', credentialError.message);
+                    
+                    console.log("✅ アクセストークン有効性確認成功:", {
+                        scope: tokenInfo.scope,
+                        expires_in: tokenInfo.expires_in
+                    });
+                    
+                    // Drive APIスコープが含まれているか確認
+                    if (!tokenInfo.scope || !tokenInfo.scope.includes("drive")) {
+                        throw new Error("Google Drive API権限が含まれていません。権限を確認してください。");
+                    }
+                    
+                } catch (tokenTestError) {
+                    console.error("❌ アクセストークン確認エラー:", tokenTestError);
+                    throw new Error("アクセストークンの確認に失敗しました。権限を確認してください。");
                 }
                 
-                // 代替手段でアクセストークンを取得
-                if (!accessToken) {
-                    try {
-                        accessToken = await user.getIdToken();
-                        console.log('✅ IDトークンを代替アクセストークンとして使用');
-                    } catch (tokenError) {
-                        console.warn('⚠️ IDトークン取得エラー:', tokenError.message);
-                    }
-                }
-                
-                // 統合ユーザーデータを作成（安全な方法）
+                // 統合ユーザーデータを作成
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: user.displayName,
                     photoURL: user.photoURL,
-                    accessToken: accessToken, // null でも大丈夫
+                    accessToken: accessToken, // 確実に設定
                     emailVerified: user.emailVerified,
-                    loginMethod: 'google',
-                    loginTime: new Date().toISOString()
+                    loginMethod: "google_oauth",
+                    loginTime: new Date().toISOString(),
+                    tokenExpiry: new Date(Date.now() + 3600 * 1000).toISOString() // 1時間後
                 };
                 
-                console.log('👤 ユーザーデータ作成完了:', {
+                console.log("👤 ユーザーデータ作成完了:", {
                     email: userData.email,
                     displayName: userData.displayName,
-                    hasAccessToken: !!userData.accessToken
+                    hasAccessToken: !!userData.accessToken,
+                    tokenLength: userData.accessToken ? userData.accessToken.length : 0
                 });
                 
                 // 統合認証データ保存
                 const saveSuccess = saveIntegratedAuthData(userData);
                 
                 if (saveSuccess) {
-                    showStatus('ログイン成功！顧客管理画面に移動します', 'success');
+                    showStatus("ログイン成功！Google Drive API権限取得完了。顧客管理画面に移動します", "success");
                     
                     // 顧客管理画面にリダイレクト
                     setTimeout(() => {
-                        window.location.href = 'customer.html';
-                    }, 1500);
+                        window.location.href = "customer.html";
+                    }, 2000);
                     
                 } else {
-                    throw new Error('認証データの保存に失敗しました');
+                    throw new Error("認証データの保存に失敗しました");
                 }
                 
             } catch (error) {
-                console.error('❌ ログインエラー:', error);
+                console.error("❌ ログインエラー:", error);
                 
-                let errorMessage = 'ログインに失敗しました';
+                let errorMessage = "ログインに失敗しました";
                 
-                // エラーハンドリング詳細化
-                if (error.code === 'auth/popup-closed-by-user') {
-                    errorMessage = 'ログインがキャンセルされました';
-                } else if (error.code === 'auth/popup-blocked') {
-                    errorMessage = 'ポップアップがブロックされました。ポップアップブロッカーを無効にしてください';
-                } else if (error.code === 'auth/network-request-failed') {
-                    errorMessage = 'ネットワークエラーが発生しました。接続を確認してください';
-                } else if (error.code === 'auth/invalid-api-key') {
-                    errorMessage = 'Firebase API設定エラーです。管理者にお問い合わせください';
-                } else if (error.code === 'auth/operation-not-allowed') {
-                    errorMessage = 'Google認証が有効化されていません。管理者にお問い合わせください';
-                } else if (error.message.includes('credential')) {
-                    errorMessage = '認証情報の取得に失敗しました。再度お試しください';
+                if (error.code === "auth/popup-closed-by-user") {
+                    errorMessage = "ログインがキャンセルされました";
+                } else if (error.code === "auth/popup-blocked") {
+                    errorMessage = "ポップアップがブロックされました。ポップアップブロッカーを無効にしてください";
+                } else if (error.message.includes("アクセストークン")) {
+                    errorMessage = `Google Drive API権限エラー: ${error.message}`;
+                } else if (error.message.includes("Drive API")) {
+                    errorMessage = `Drive API権限エラー: ${error.message}`;
                 } else {
                     errorMessage = `エラー: ${error.message}`;
                 }
                 
-                showStatus(errorMessage, 'error');
+                showStatus(errorMessage, "error");
                 
                 // ボタン状態復旧
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
         }
-
         // 初期化処理（修正版 - 無限ループ防止）
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 RentPipe ログインシステム初期化');
