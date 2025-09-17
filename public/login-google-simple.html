@@ -162,7 +162,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <script>
-        // 🔧 強化版 Firebase設定（認証データ保存確実版）
+        // 🔧 修正版 Firebase設定（全認証データ保存確実版）
         const firebaseConfig = {
             apiKey: "AIzaSyBvJGdan0lvVSkaAbbSXQkoh6YyPoGyTgM",
             authDomain: "rentpipe-ab04e.firebaseapp.com",
@@ -196,9 +196,9 @@
             debugDiv.style.display = 'block';
         }
 
-        // 統合認証データ保存
-        function saveIntegratedAuthData(userData) {
-            console.log('💾 統合認証データ保存開始:', userData.email);
+        // 完全統合認証データ保存（修正版）
+        function saveCompleteAuthData(userData) {
+            console.log('💾 完全統合認証データ保存開始:', userData.email);
             
             try {
                 // 1. simple-reliable-auth 形式で保存
@@ -206,30 +206,58 @@
                 localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
                 console.log('✅ simple-reliable-auth 形式保存完了');
                 
-                // 2. Google認証フラグも保存（互換性のため）
+                // 2. Google認証フラグも保存（互換性のため）- 修正版
                 localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
                 localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
                 console.log('✅ Google認証フラグ形式保存完了');
                 
-                // 3. 保存確認
+                // 3. 追加の認証情報保存
+                localStorage.setItem('rentpipe_auth', JSON.stringify({
+                    isAuthenticated: true,
+                    method: 'google',
+                    loginTime: new Date().toISOString(),
+                    user: userData
+                }));
+                console.log('✅ 追加認証情報保存完了');
+                
+                // 4. 保存確認（詳細版）
                 const verification = {
                     'rentpipe_auth_simple': localStorage.getItem('rentpipe_auth_simple'),
                     'rentpipe_user_simple': !!localStorage.getItem('rentpipe_user_simple'),
                     'rentpipe_temp_auth': localStorage.getItem('rentpipe_temp_auth'),
-                    'rentpipe_user_info': !!localStorage.getItem('rentpipe_user_info')
+                    'rentpipe_user_info': !!localStorage.getItem('rentpipe_user_info'),
+                    'rentpipe_auth': !!localStorage.getItem('rentpipe_auth')
                 };
                 
-                console.log('🔍 保存確認:', verification);
+                console.log('🔍 保存確認（詳細）:', verification);
+                
+                // 5. photoURL の確認
+                console.log('🖼️ 写真URL確認:', userData.photoURL);
                 
                 const debugInfo = `
                     ユーザー: ${userData.email}<br>
+                    表示名: ${userData.displayName || '未設定'}<br>
+                    写真URL: ${userData.photoURL ? '✅ あり' : '❌ なし'}<br>
                     simple-reliable-auth: ${verification.rentpipe_auth_simple}<br>
                     Google認証フラグ: ${verification.rentpipe_temp_auth}<br>
-                    ユーザーデータ: 保存済み
+                    ユーザーデータ: 全形式で保存済み<br>
+                    <small>写真: ${userData.photoURL}</small>
                 `;
                 showDebugInfo(debugInfo);
                 
-                return true;
+                // 6. すべての認証データが保存されているかチェック
+                const allSaved = verification.rentpipe_auth_simple === 'logged_in' &&
+                                verification.rentpipe_user_simple &&
+                                verification.rentpipe_temp_auth === 'google_authenticated' &&
+                                verification.rentpipe_user_info;
+                
+                if (allSaved) {
+                    console.log('✅ 全認証データ保存確認済み');
+                    return true;
+                } else {
+                    console.warn('⚠️ 一部認証データの保存に問題があります:', verification);
+                    return false;
+                }
                 
             } catch (error) {
                 console.error('❌ 認証データ保存エラー:', error);
@@ -238,7 +266,7 @@
             }
         }
 
-        // Googleログイン処理
+        // Googleログイン処理（修正版）
         async function handleGoogleLogin() {
             console.log('🔐 Googleログイン開始');
             
@@ -272,27 +300,47 @@
                 
                 console.log('✅ Firebase認証成功:', user.email);
                 console.log('🔑 アクセストークン取得:', !!credential.accessToken);
+                console.log('🖼️ 写真URL:', user.photoURL);
                 
-                // 統合ユーザーデータを作成
+                // 統合ユーザーデータを作成（修正版・写真URL確実保存）
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: user.displayName,
-                    photoURL: user.photoURL,
+                    photoURL: user.photoURL, // 確実に保存
                     accessToken: credential.accessToken,
                     emailVerified: user.emailVerified,
                     loginMethod: 'google',
-                    loginTime: new Date().toISOString()
+                    loginTime: new Date().toISOString(),
+                    // 追加情報
+                    providerData: user.providerData,
+                    metadata: {
+                        creationTime: user.metadata.creationTime,
+                        lastSignInTime: user.metadata.lastSignInTime
+                    }
                 };
                 
-                console.log('👤 ユーザーデータ作成完了:', userData);
+                console.log('👤 完全ユーザーデータ作成完了:', userData);
                 
-                // 統合認証データ保存
-                const saveSuccess = saveIntegratedAuthData(userData);
+                // 完全統合認証データ保存
+                const saveSuccess = saveCompleteAuthData(userData);
                 
                 if (saveSuccess) {
-                    console.log('💾 認証データ保存完了');
-                    showStatus('ログイン成功！ダッシュボードに移動します', 'success');
+                    console.log('💾 全認証データ保存完了');
+                    showStatus('ログイン成功！顧客管理画面に移動します', 'success');
+                    
+                    // 写真URLテスト（デバッグ用）
+                    if (userData.photoURL) {
+                        console.log('🧪 写真URL読み込みテスト開始...');
+                        const img = new Image();
+                        img.onload = () => {
+                            console.log('✅ 写真URL読み込み成功');
+                        };
+                        img.onerror = () => {
+                            console.warn('⚠️ 写真URL読み込み失敗');
+                        };
+                        img.src = userData.photoURL;
+                    }
                     
                     // リダイレクト先を選択
                     const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || 'customer-minimal.html';
@@ -300,7 +348,7 @@
                     setTimeout(() => {
                         console.log(`🔄 ${redirectTarget} にリダイレクト`);
                         window.location.href = redirectTarget;
-                    }, 2000);
+                    }, 2500);
                     
                 } else {
                     throw new Error('認証データの保存に失敗しました');
@@ -333,16 +381,18 @@
 
         // 初期化処理
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Simple Google Login 強化版 初期化完了');
+            console.log('🚀 Complete Google Login 初期化完了');
             
             // 既存の認証状態確認
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     console.log('✅ 既にログイン済み:', user.email);
                     
-                    // 認証データが不完全な場合は補完
+                    // 認証データが不完全な場合は補完（修正版）
                     const authSimple = localStorage.getItem('rentpipe_auth_simple');
-                    if (authSimple !== 'logged_in') {
+                    const tempAuth = localStorage.getItem('rentpipe_temp_auth');
+                    
+                    if (authSimple !== 'logged_in' || tempAuth !== 'google_authenticated') {
                         console.log('🔧 認証データを補完中...');
                         const userData = {
                             uid: user.uid,
@@ -353,10 +403,10 @@
                             loginMethod: 'google',
                             loginTime: new Date().toISOString()
                         };
-                        saveIntegratedAuthData(userData);
+                        saveCompleteAuthData(userData);
                     }
                     
-                    showStatus('既にログイン済みです。ダッシュボードに移動します', 'success');
+                    showStatus('既にログイン済みです。顧客管理画面に移動します', 'success');
                     setTimeout(() => {
                         window.location.href = 'customer-minimal.html';
                     }, 1500);

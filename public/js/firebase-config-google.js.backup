@@ -249,10 +249,3 @@ window.requireAuth = function() {
 };
 
 console.log('✅ Google認証システム準備完了');
-
-// 既存の設定に追加
-if (window.googleProvider) {
-    window.googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
-    window.googleProvider.addScope('https://www.googleapis.com/auth/drive.metadata.readonly');
-    console.log('✅ Googleドライブ権限を追加');
-}

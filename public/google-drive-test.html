@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive API テスト - RentPipe</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Drive API テスト</h1>
+    
+    <div class="test-section">
+        <h2>1. 認証状態確認</h2>
+        <button onclick="checkAuth()">認証状態チェック</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Google Drive API初期化</h2>
+        <button onclick="initializeDriveAPI()">Drive API初期化</button>
+        <div id="drive-init-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. RentPipeフォルダー作成</h2>
+        <button onclick="createRentPipeFolder()">フォルダー作成</button>
+        <div id="folder-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. CSV変換テスト</h2>
+        <button onclick="testCSVConversion()">CSV変換テスト</button>
+        <div id="csv-result"></div>
+    </div>
+
+    <!-- Firebase設定（既存） -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    
+    <!-- 既存システム -->
+    <script src="js/firebase-config-google.js"></script>
+    <script src="js/unified-data-manager.js"></script>
+    
+    <!-- 新規機能 -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="js/google-drive-api.js"></script>
+    <script src="js/csv-data-manager.js"></script>
+    
+    <script>
+        // テスト関数群
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            element.innerHTML = `<div class="${className}"><pre>${message}</pre></div>`;
+        }
+        
+        async function checkAuth() {
+            try {
+                log('auth-result', '認証状態確認中...');
+                
+                if (window.auth && window.auth.currentUser) {
+                    const user = window.auth.currentUser;
+                    log('auth-result', `✅ 認証済み\nUID: ${user.uid}\nEmail: ${user.email || 'なし'}`, 'success');
+                } else {
+                    log('auth-result', '❌ 未認証です。Googleログインが必要です。', 'error');
+                }
+            } catch (error) {
+                log('auth-result', `❌ エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        async function initializeDriveAPI() {
+            try {
+                log('drive-init-result', 'Google Drive API初期化中...');
+                
+                const result = await window.GoogleDriveAPI.initialize();
+                if (result) {
+                    log('drive-init-result', '✅ Google Drive API初期化成功', 'success');
+                } else {
+                    log('drive-init-result', '❌ Google Drive API初期化失敗', 'error');
+                }
+            } catch (error) {
+                log('drive-init-result', `❌ エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createRentPipeFolder() {
+            try {
+                log('folder-result', 'RentPipeフォルダー作成中...');
+                
+                const folderId = await window.GoogleDriveAPI.ensureRentPipeFolder();
+                if (folderId) {
+                    log('folder-result', `✅ RentPipeフォルダー準備完了\nフォルダーID: ${folderId}`, 'success');
+                } else {
+                    log('folder-result', '❌ フォルダー作成失敗', 'error');
+                }
+            } catch (error) {
+                log('folder-result', `❌ エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        function testCSVConversion() {
+            try {
+                log('csv-result', 'CSV変換テスト実行中...');
+                
+                // テスト用顧客データ
+                const testCustomers = [
+                    {
+                        id: 'test-001',
+                        name: 'テスト太郎',
+                        email: 'test@example.com',
+                        phone: '090-1234-5678',
+                        pipelineStatus: '初回相談',
+                        preferences: {
+                            budgetMin: 50000,
+                            budgetMax: 100000,
+                            areas: ['渋谷', '新宿'],
+                            roomType: '1K',
+                            requirements: ['駅近', 'ペット可']
+                        },
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+                ];
+                
+                // CSV変換テスト
+                const csvContent = window.CSVDataManager.customersToCSV(testCustomers);
+                
+                // CSV → 顧客データ変換テスト
+                const convertedCustomers = window.CSVDataManager.csvToCustomers(csvContent);
+                
+                const result = `✅ CSV変換テスト成功
+                
+元データ: ${testCustomers.length}件
+CSV変換後:
+${csvContent.split('\n').slice(0, 3).join('\n')}
+...
+
+逆変換後: ${convertedCustomers.length}件
+顧客名: ${convertedCustomers[0]?.name}
+予算: ${convertedCustomers[0]?.preferences?.budgetMin}〜${convertedCustomers[0]?.preferences?.budgetMax}円`;
+                
+                log('csv-result', result, 'success');
+                
+            } catch (error) {
+                log('csv-result', `❌ エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // Firebase認証の初期化を待つ
+            setTimeout(() => {
+                if (window.auth) {
+                    window.auth.onAuthStateChanged(function(user) {
+                        console.log('認証状態変更:', user ? '認証済み' : '未認証');
+                    });
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
