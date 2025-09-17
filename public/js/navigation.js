@@ -73,39 +73,56 @@ function createNavigation() {
 }
 
 // セキュアログアウト関数
+// セキュアログアウト関数（完全版）
 function secureLogout() {
-    if (confirm('ログアウトしますか？')) {
-        console.log('🔒 セキュアログアウト開始...');
+    if (confirm("ログアウトしますか？")) {
+        console.log("🔒 完全ログアウト実行中...");
         
-        // 統一認証システムを使用してログアウト
-        if (window.UnifiedAuth) {
-            if (window.UnifiedAuth.logout()) {
-                console.log('✅ 統一認証システムでログアウト完了');
-            }
+        // 1. Firebase認証の完全ログアウト
+        if (window.firebase && firebase.auth) {
+            firebase.auth().signOut().then(() => {
+                console.log("✅ Firebase認証ログアウト完了");
+            }).catch(error => {
+                console.warn("⚠️ Firebase認証ログアウトエラー:", error);
+            });
         }
         
-        // フォールバック: 手動で全キー削除
-        const allKeys = Object.keys(localStorage);
-        const authKeys = allKeys.filter(key => 
-            key.startsWith('rentpipe_') && 
-            !key.includes('account_deleted') && 
-            !key.includes('user_profile')
-        );
+        // 2. LocalStorageの全認証データクリア
+        const authKeys = [
+            "rentpipe_auth_simple",
+            "rentpipe_user_simple", 
+            "rentpipe_temp_auth",
+            "rentpipe_user_info",
+            "rentpipe_authenticated",
+            "rentpipe_user"
+        ];
         
         authKeys.forEach(key => {
             localStorage.removeItem(key);
-            console.log(`🗑️ フォールバック削除: ${key}`);
+            console.log(`🗑️ ${key} 削除`);
         });
         
-        // セッションクリア
+        // 3. SessionStorageもクリア
         sessionStorage.clear();
         
-        // ログイン画面にリダイレクト（replaceを使用して履歴をクリア）
-        console.log('🔄 ログイン画面にリダイレクト...');
-        window.location.replace('login.html');
+        // 4. Firebase関連のIndexedDBクリア（可能な場合）
+        try {
+            const firebaseKeys = Object.keys(localStorage).filter(key => 
+                key.startsWith("firebase:") || key.startsWith("firebaseui")
+            );
+            firebaseKeys.forEach(key => localStorage.removeItem(key));
+        } catch (e) {
+            console.warn("Firebase IndexedDB クリア警告:", e);
+        }
+        
+        console.log("✅ 全認証データクリア完了");
+        
+        // 5. ログインページに強制リダイレクト（履歴クリア）
+        setTimeout(() => {
+            window.location.replace("login.html");
+        }, 500);
     }
 }
-
 // 既存関数との互換性
 if (typeof logout === 'undefined') {
     window.logout = secureLogout;

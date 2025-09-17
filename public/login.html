@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン - RentPipe</title>
-    <link rel="stylesheet" href="css/style.css">
     <style>
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
         .simple-login-container {
             min-height: 100vh;
             display: flex;
@@ -158,6 +162,29 @@
             statusElement.innerHTML = message;
         }
 
+        // 認証状態の完全チェック関数
+        function isCompletelyLoggedOut() {
+            // LocalStorage認証データチェック
+            const authKeys = [
+                'rentpipe_auth_simple',
+                'rentpipe_user_simple', 
+                'rentpipe_temp_auth',
+                'rentpipe_user_info',
+                'rentpipe_authenticated',
+                'rentpipe_user'
+            ];
+            
+            const hasAuthData = authKeys.some(key => localStorage.getItem(key));
+            
+            if (hasAuthData) {
+                console.log('🔍 LocalStorage認証データが存在 - ログアウト不完全');
+                return false;
+            }
+            
+            console.log('✅ LocalStorage認証データなし - 完全ログアウト状態');
+            return true;
+        }
+
         // 統合認証データ保存関数
         function saveIntegratedAuthData(userData) {
             try {
@@ -266,18 +293,52 @@
             }
         }
 
-        // 初期化処理
+        // 初期化処理（修正版 - 無限ループ防止）
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 RentPipe ログインシステム初期化完了');
+            console.log('🚀 RentPipe ログインシステム初期化');
             
-            // 既存の認証状態確認
+            // まず完全ログアウト状態かチェック
+            if (!isCompletelyLoggedOut()) {
+                console.log('⚠️ 不完全なログアウト状態検出 - 認証データクリア');
+                
+                // 不完全な認証データをクリア
+                const authKeys = [
+                    'rentpipe_auth_simple', 'rentpipe_user_simple', 
+                    'rentpipe_temp_auth', 'rentpipe_user_info',
+                    'rentpipe_authenticated', 'rentpipe_user'
+                ];
+                
+                authKeys.forEach(key => localStorage.removeItem(key));
+                sessionStorage.clear();
+                
+                // Firebase認証も確実にクリア
+                if (firebase.auth) {
+                    firebase.auth().signOut().catch(e => 
+                        console.warn('Firebase認証クリア警告:', e)
+                    );
+                }
+                
+                console.log('✅ 認証データクリア完了 - ログイン画面表示');
+            }
+            
+            // Firebase認証状態監視（修正版）
             firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    console.log('👤 既にログイン済み:', user.email);
-                    showStatus('既にログイン済みです。移動します...', 'success');
+                if (user && isCompletelyLoggedOut()) {
+                    // Firebase認証はあるが、LocalStorageが空の場合は不整合
+                    console.log('⚠️ Firebase認証と LocalStorage 状態不整合 - Firebase認証クリア');
+                    firebase.auth().signOut().catch(e => 
+                        console.warn('Firebase認証クリア警告:', e)
+                    );
+                } else if (user && !isCompletelyLoggedOut()) {
+                    // 正常な認証状態
+                    console.log('👤 有効な認証状態確認:', user.email);
+                    showStatus('既にログイン済みです。顧客管理画面に移動します...', 'success');
                     setTimeout(() => {
                         window.location.href = 'customer.html';
                     }, 1500);
+                } else {
+                    // 完全未認証状態
+                    console.log('✅ 完全未認証状態 - ログイン画面表示');
                 }
             });
         });
