@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データ確認 - RentPipe</title>
+    <style>
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .debug-section { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .btn { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+        }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 6px; 
+            overflow-x: auto; 
+            max-height: 300px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 RentPipe データ確認ツール</h1>
+    
+    <div class="debug-section">
+        <h2>📊 ローカルストレージ確認</h2>
+        <button onclick="showAllLocalStorage()" class="btn btn-primary">全データ表示</button>
+        <button onclick="showCustomerData()" class="btn btn-success">顧客データのみ表示</button>
+        <pre id="storageResult">ここに結果が表示されます</pre>
+    </div>
+    
+    <div class="debug-section">
+        <h2>🔗 詳細ページテスト</h2>
+        <div id="customerLinks">
+            <!-- 動的に生成 -->
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>⚙️ データ修復</h2>
+        <button onclick="fixDataStructure()" class="btn btn-primary">データ構造修復</button>
+        <button onclick="generateSampleData()" class="btn btn-success">サンプルデータ生成</button>
+        <pre id="fixResult">修復結果がここに表示されます</pre>
+    </div>
+
+    <script>
+        // 全ローカルストレージデータ表示
+        function showAllLocalStorage() {
+            const result = document.getElementById('storageResult');
+            const allData = {};
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.includes('rentpipe')) {
+                    try {
+                        allData[key] = JSON.parse(localStorage.getItem(key));
+                    } catch (e) {
+                        allData[key] = localStorage.getItem(key);
+                    }
+                }
+            }
+            
+            result.textContent = JSON.stringify(allData, null, 2);
+            console.log('📊 全ローカルストレージデータ:', allData);
+        }
+        
+        // 顧客データのみ表示
+        function showCustomerData() {
+            const result = document.getElementById('storageResult');
+            const linksContainer = document.getElementById('customerLinks');
+            
+            // 複数の可能なキーをチェック
+            const possibleKeys = [
+                'rentpipe_demo_customers',
+                'rentpipe_customers',
+                'customers',
+                'demo_customers',
+                'rentpipe_data'
+            ];
+            
+            let customerData = null;
+            let usedKey = null;
+            
+            for (const key of possibleKeys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            customerData = parsed;
+                            usedKey = key;
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn(`キー ${key} のパースエラー:`, e);
+                    }
+                }
+            }
+            
+            if (customerData) {
+                result.textContent = `使用キー: ${usedKey}\n\n` + JSON.stringify(customerData, null, 2);
+                
+                // 詳細ページリンクを生成
+                linksContainer.innerHTML = '<h3>詳細ページテストリンク:</h3>';
+                customerData.forEach((customer, index) => {
+                    const link = document.createElement('a');
+                    link.href = `customer-detail.html?id=${customer.id}`;
+                    link.textContent = `${customer.name || '名前未設定'} (ID: ${customer.id})`;
+                    link.style.cssText = 'display: block; margin: 8px 0; padding: 8px; background: #f0f9ff; border-radius: 4px; text-decoration: none; color: #1e40af;';
+                    link.target = '_blank';
+                    linksContainer.appendChild(link);
+                });
+                
+                console.log(`✅ 顧客データ見つかりました (${usedKey}):`, customerData);
+            } else {
+                result.textContent = '❌ 顧客データが見つかりません\n\n利用可能なキー:\n' + 
+                    Array.from({length: localStorage.length}, (_, i) => localStorage.key(i)).join('\n');
+                console.error('❌ 顧客データが見つかりません');
+            }
+        }
+        
+        // データ構造修復
+        function fixDataStructure() {
+            const result = document.getElementById('fixResult');
+            
+            try {
+                // 既存データを取得
+                let customerData = null;
+                const possibleKeys = ['rentpipe_demo_customers', 'rentpipe_customers', 'customers'];
+                
+                for (const key of possibleKeys) {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        customerData = JSON.parse(data);
+                        break;
+                    }
+                }
+                
+                if (!customerData || !Array.isArray(customerData)) {
+                    throw new Error('修復対象のデータがありません');
+                }
+                
+                // データ構造を統一
+                const fixedData = customerData.map(customer => {
+                    return {
+                        id: customer.id || `customer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        name: customer.name || '名前未設定',
+                        email: customer.email || '',
+                        phone: customer.phone || '',
+                        age: customer.age || null,
+                        occupation: customer.occupation || '',
+                        annualIncome: customer.annualIncome || null,
+                        pipelineStatus: customer.pipelineStatus || customer.status || '初回相談',
+                        status: customer.pipelineStatus || customer.status || '初回相談',
+                        preferences: customer.preferences || {
+                            budgetMin: null,
+                            budgetMax: null,
+                            areas: [],
+                            roomType: '',
+                            requirements: []
+                        },
+                        notes: customer.notes || '',
+                        urgency: customer.urgency || '中',
+                        contactTime: customer.contactTime || '',
+                        source: customer.source || 'デモ',
+                        createdAt: customer.createdAt || new Date().toISOString(),
+                        updatedAt: customer.updatedAt || new Date().toISOString()
+                    };
+                });
+                
+                // 統一キーで保存
+                localStorage.setItem('rentpipe_demo_customers', JSON.stringify(fixedData));
+                
+                result.textContent = `✅ データ修復完了!\n\n修復済みデータ (${fixedData.length}件):\n` + 
+                    JSON.stringify(fixedData, null, 2);
+                
+                console.log('✅ データ修復完了:', fixedData);
+                
+            } catch (error) {
+                result.textContent = `❌ 修復エラー: ${error.message}`;
+                console.error('❌ データ修復エラー:', error);
+            }
+        }
+        
+        // サンプルデータ生成
+        function generateSampleData() {
+            const sampleData = [
+                {
+                    id: 'demo-customer-001',
+                    name: '田中太郎',
+                    email: 'tanaka@example.com',
+                    phone: '090-1234-5678',
+                    age: 32,
+                    occupation: '会社員',
+                    annualIncome: 500,
+                    pipelineStatus: '初回相談',
+                    status: '初回相談',
+                    preferences: {
+                        budgetMin: 8,
+                        budgetMax: 12,
+                        areas: ['渋谷区', '新宿区'],
+                        roomType: '1LDK',
+                        requirements: ['駅近', 'ペット可']
+                    },
+                    notes: 'IT系企業勤務。転職に伴い引っ越し検討中。',
+                    urgency: '中',
+                    contactTime: '平日19時以降',
+                    source: 'デモ',
+                    createdAt: new Date('2024-01-15').toISOString(),
+                    updatedAt: new Date().toISOString()
+                },
+                {
+                    id: 'demo-customer-002',
+                    name: '佐藤花子',
+                    email: 'sato@example.com',
+                    phone: '090-2345-6789',
+                    age: 28,
+                    occupation: 'デザイナー',
+                    annualIncome: 400,
+                    pipelineStatus: '物件紹介',
+                    status: '物件紹介',
+                    preferences: {
+                        budgetMin: 10,
+                        budgetMax: 15,
+                        areas: ['目黒区', '品川区'],
+                        roomType: '2DK',
+                        requirements: ['南向き', 'バストイレ別']
+                    },
+                    notes: 'デザイン事務所勤務。在宅ワークが多いため静かな環境を希望。',
+                    urgency: '高',
+                    contactTime: '土日希望',
+                    source: 'デモ',
+                    createdAt: new Date('2024-01-20').toISOString(),
+                    updatedAt: new Date().toISOString()
+                },
+                {
+                    id: 'demo-customer-003',
+                    name: '山田一郎',
+                    email: 'yamada@example.com',
+                    phone: '090-3456-7890',
+                    age: 35,
+                    occupation: '営業',
+                    annualIncome: 600,
+                    pipelineStatus: '内見',
+                    status: '内見',
+                    preferences: {
+                        budgetMin: 12,
+                        budgetMax: 18,
+                        areas: ['中央区', '港区'],
+                        roomType: '1LDK',
+                        requirements: ['高層階', '駐車場あり']
+                    },
+                    notes: '外資系企業の営業マン。転勤により都心部への引っ越し。',
+                    urgency: '中',
+                    contactTime: '平日昼休み',
+                    source: 'デモ',
+                    createdAt: new Date('2024-01-25').toISOString(),
+                    updatedAt: new Date().toISOString()
+                }
+            ];
+            
+            localStorage.setItem('rentpipe_demo_customers', JSON.stringify(sampleData));
+            
+            const result = document.getElementById('fixResult');
+            result.textContent = `✅ サンプルデータ生成完了!\n\n生成されたデータ (${sampleData.length}件):\n` + 
+                JSON.stringify(sampleData, null, 2);
+            
+            console.log('✅ サンプルデータ生成完了:', sampleData);
+        }
+        
+        // ページ読み込み時に実行
+        document.addEventListener('DOMContentLoaded', function() {
+            showCustomerData();
+        });
+    </script>
+</body>
+</html>

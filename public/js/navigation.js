@@ -102,7 +102,7 @@ function secureLogout() {
         
         // ログイン画面にリダイレクト（replaceを使用して履歴をクリア）
         console.log('🔄 ログイン画面にリダイレクト...');
-        window.location.replace('login-google-simple.html');
+        window.location.replace('login.html');
     }
 }
 

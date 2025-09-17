@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            font-size: 32px;
+        }
+        
+        .profile-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+        
+        .profile-email {
+            color: #6b7280;
+            font-size: 16px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .info-value {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <main class="profile-container">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div id="profileAvatar" class="profile-avatar">
+                    👤
+                </div>
+                <div id="profileName" class="profile-name">
+                    ユーザー名
+                </div>
+                <div id="profileEmail" class="profile-email">
+                    メールアドレス
+                </div>
+            </div>
+            
+            <div id="profileInfo">
+                <div class="info-row">
+                    <span class="info-label">ユーザーID</span>
+                    <span class="info-value" id="userId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ログイン方法</span>
+                    <span class="info-value" id="loginMethod">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">最終ログイン</span>
+                    <span class="info-value" id="lastLogin">-</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="goBack()" class="btn btn-outline" style="margin-right: 10px;">
+                    ← 戻る
+                </button>
+                <button onclick="handleLogout()" class="btn btn-danger">
+                    ログアウト
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- navigation.js を読み込んでナビゲーション生成 -->
+    <script src="js/navigation.js"></script>
+    <!-- シンプル認証システム -->
+    <script src="js/simple-reliable-auth.js"></script>
+
+    <script>
+        console.log('👤 プロフィールページ初期化中...');
+        
+        // プロフィール情報表示
+        function displayProfile() {
+            const user = getUser();
+            
+            if (!user) {
+                console.error('❌ ユーザー情報が取得できません');
+                return;
+            }
+            
+            console.log('👤 プロフィール表示:', user.email);
+            
+            // プロフィール情報更新
+            document.getElementById('profileName').textContent = user.displayName || 'ユーザー';
+            document.getElementById('profileEmail').textContent = user.email || 'メールアドレス未設定';
+            document.getElementById('userId').textContent = user.uid?.substring(0, 8) + '...' || '不明';
+            document.getElementById('loginMethod').textContent = user.uid?.startsWith('demo') ? 'デモログイン' : 'Google認証';
+            document.getElementById('lastLogin').textContent = new Date().toLocaleString('ja-JP');
+            
+            // プロフィール画像
+            const avatarElement = document.getElementById('profileAvatar');
+            if (user.photoURL) {
+                avatarElement.innerHTML = `<img src="${user.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;" alt="Profile">`;
+            } else {
+                avatarElement.innerHTML = '👤';
+            }
+        }
+        
+        // 戻るボタン
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        // ログアウト処理
+        function handleLogout() {
+            if (confirm('ログアウトしますか？')) {
+                logout();
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // ページ読み込み完了後にプロフィール表示
+        setTimeout(() => {
+            displayProfile();
+        }, 500);
+        
+        console.log('✅ プロフィールページ準備完了');
+    </script>
+</body>
+</html>

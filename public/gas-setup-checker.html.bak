@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Apps Script設定確認ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .step {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            color: #991b1b;
+        }
+        
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            color: #065f46;
+        }
+        
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .btn-success { background: #34a853; }
+        .btn-warning { background: #f59e0b; }
+        .btn-danger { background: #ef4444; }
+        
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .checklist {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .checklist li:before {
+            content: "☐ ";
+            margin-right: 8px;
+        }
+        
+        .checklist li.checked:before {
+            content: "✅ ";
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Google Apps Script設定確認ツール</h1>
+    
+    <!-- Load failedエラーの説明 -->
+    <div class="section">
+        <h2>🚨 「Load failed」エラーについて</h2>
+        <div class="error">
+            <strong>「Load failed」エラーの原因:</strong><br>
+            Google Apps Scriptが正しく設定・デプロイされていません。<br>
+            このため、RentPipeのフォーム作成が古いAPIにフォールバックし、400エラーが発生しています。
+        </div>
+        
+        <div class="step">
+            <strong>解決の流れ:</strong><br>
+            1. Google Apps Scriptの設定を一から確認<br>
+            2. 正しいコードが実装されているか確認<br>
+            3. 正しくデプロイされているか確認<br>
+            4. アクセス権限が正しく設定されているか確認
+        </div>
+    </div>
+    
+    <!-- URL形式チェック -->
+    <div class="section">
+        <h2>🔗 Step 1: URL形式チェック</h2>
+        <p>使用しているGoogle Apps ScriptのURLを入力してください：</p>
+        <input type="text" id="gas-url-check" class="url-input" 
+               placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+        <button class="btn" onclick="checkURLFormat()">URL形式確認</button>
+        <div id="url-check-result" class="step">
+            URLを入力して「URL形式確認」をクリックしてください
+        </div>
+    </div>
+    
+    <!-- Google Apps Scriptコード確認 -->
+    <div class="section">
+        <h2>📝 Step 2: Google Apps Scriptコード確認</h2>
+        <p>Google Apps Scriptに以下のコードが正しく実装されているか確認してください：</p>
+        
+        <div class="step">
+            <strong>🔍 確認手順:</strong><br>
+            1. <a href="https://script.google.com" target="_blank">script.google.com</a> を開く<br>
+            2. 「RentPipe Forms Creator」プロジェクトを開く<br>
+            3. 以下のコードが正しく実装されているか確認
+        </div>
+        
+        <div class="code-block">// 必須関数1: createCustomerForm
+function createCustomerForm(customerData) {
+  try {
+    console.log('📝 顧客専用フォーム作成開始:', customerData.name);
+    
+    // フォーム作成
+    const form = FormApp.create(customerData.name + '様専用 物件希望調査フォーム - RentPipe');
+    
+    // ... 質問項目追加コード ...
+    
+    return {
+      success: true,
+      form: {
+        id: form.getId(),
+        title: form.getTitle(),
+        url: form.getPublishedUrl(),
+        editUrl: form.getEditUrl(),
+        responsesUrl: `https://docs.google.com/forms/d/${form.getId()}/responses`,
+        createdAt: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 必須関数2: doPost（ウェブアプリ用）
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const result = createCustomerForm(data.customerData);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</div>
+        
+        <button class="btn btn-success" onclick="showFullCode()">完全なコードを表示</button>
+        <div id="full-code" style="display: none;">
+            <h4>📋 完全なGoogle Apps Scriptコード:</h4>
+            <div class="code-block" id="complete-code">コードが表示されます</div>
+        </div>
+    </div>
+    
+    <!-- デプロイ設定確認 -->
+    <div class="section">
+        <h2>🚀 Step 3: デプロイ設定確認</h2>
+        <div class="step">
+            <strong>🔍 デプロイ確認チェックリスト:</strong>
+            <ul class="checklist">
+                <li id="check-1">Google Apps Scriptでコードを保存済み</li>
+                <li id="check-2">「デプロイ」→「新しいデプロイ」を実行済み</li>
+                <li id="check-3">種類で「ウェブアプリ」を選択済み</li>
+                <li id="check-4">実行者を「自分」に設定済み</li>
+                <li id="check-5">アクセスできるユーザーを「全員」に設定済み</li>
+                <li id="check-6">ウェブアプリのURLを取得済み</li>
+                <li id="check-7">権限確認で「許可」を選択済み</li>
+            </ul>
+        </div>
+        
+        <button class="btn btn-warning" onclick="showDeploySteps()">詳細なデプロイ手順を表示</button>
+        <div id="deploy-steps" style="display: none;">
+            <div class="step">
+                <strong>📋 詳細なデプロイ手順:</strong><br><br>
+                
+                <strong>1. コード保存:</strong><br>
+                - Ctrl+S でコードを保存<br><br>
+                
+                <strong>2. デプロイ開始:</strong><br>
+                - 「デプロイ」ボタン（右上）をクリック<br>
+                - 「新しいデプロイ」をクリック<br><br>
+                
+                <strong>3. デプロイ設定:</strong><br>
+                - 種類: 「⚙️ ウェブアプリ」を選択<br>
+                - 説明: 「RentPipe Forms Creator v1」<br>
+                - 実行者: 「自分」<br>
+                - アクセスできるユーザー: 「全員」 ⚠️重要<br><br>
+                
+                <strong>4. 権限許可:</strong><br>
+                - 「デプロイ」ボタンをクリック<br>
+                - 「アクセスを確認」→「詳細設定」→「安全ではないページに移動」→「許可」<br><br>
+                
+                <strong>5. URL取得:</strong><br>
+                - 「ウェブアプリのURL」をコピー<br>
+                - 形式: https://script.google.com/macros/s/.../exec
+            </div>
+        </div>
+    </div>
+    
+    <!-- 修正済みURL接続テスト -->
+    <div class="section">
+        <h2>🧪 Step 4: 修正後接続テスト</h2>
+        <p>上記の設定を修正した後、再度接続テストを実行してください：</p>
+        <input type="text" id="fixed-gas-url" class="url-input" 
+               placeholder="修正後のGoogle Apps Script URL">
+        <button class="btn btn-success" onclick="testFixedGAS()">修正後接続テスト</button>
+        <div id="fixed-test-result" class="step">
+            修正後のURLでテスト結果が表示されます
+        </div>
+    </div>
+    
+    <!-- 代替手順 -->
+    <div class="section">
+        <h2>🔄 Step 5: 代替手順（上記で解決しない場合）</h2>
+        <div class="step">
+            <strong>新しいGoogle Apps Scriptプロジェクトを作成:</strong><br>
+            1. <a href="https://script.google.com" target="_blank">script.google.com</a> で「新しいプロジェクト」<br>
+            2. プロジェクト名: 「RentPipe Forms Creator v2」<br>
+            3. 完全なコードを再度コピー&ペースト<br>
+            4. 再度デプロイを実行
+        </div>
+        
+        <button class="btn btn-danger" onclick="showAlternativeSteps()">代替手順の詳細</button>
+        <div id="alternative-steps" style="display: none;">
+            <div class="error">
+                <strong>⚠️ 注意: 新しいプロジェクトを作成する場合</strong><br>
+                1. 古いプロジェクトは削除しないでください<br>
+                2. 新しいプロジェクトで完全に同じコードを使用<br>
+                3. デプロイ設定も完全に同じにする<br>
+                4. 新しいURLをRentPipeに設定
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL形式チェック
+        function checkURLFormat() {
+            const url = document.getElementById('gas-url-check').value.trim();
+            const resultDiv = document.getElementById('url-check-result');
+            
+            if (!url) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = '❌ URLを入力してください';
+                return;
+            }
+            
+            const checks = {
+                hasHttps: url.startsWith('https://'),
+                hasScriptDomain: url.includes('script.google.com'),
+                hasMacros: url.includes('/macros/'),
+                hasExec: url.endsWith('/exec'),
+                hasScriptId: /\/s\/[A-Za-z0-9_-]+\//.test(url)
+            };
+            
+            const allChecksPass = Object.values(checks).every(check => check);
+            
+            let resultText = '';
+            if (allChecksPass) {
+                resultDiv.className = 'success';
+                resultText = '✅ URL形式は正しいです！\n\n';
+            } else {
+                resultDiv.className = 'error';
+                resultText = '❌ URL形式に問題があります：\n\n';
+            }
+            
+            resultText += `HTTPS: ${checks.hasHttps ? '✅' : '❌'}\n`;
+            resultText += `Google Script ドメイン: ${checks.hasScriptDomain ? '✅' : '❌'}\n`;
+            resultText += `Macros パス: ${checks.hasMacros ? '✅' : '❌'}\n`;
+            resultText += `Exec エンドポイント: ${checks.hasExec ? '✅' : '❌'}\n`;
+            resultText += `Script ID: ${checks.hasScriptId ? '✅' : '❌'}\n`;
+            
+            if (!allChecksPass) {
+                resultText += '\n💡 正しい形式: https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+            }
+            
+            resultDiv.textContent = resultText;
+        }
+        
+        // 完全なコードを表示
+        function showFullCode() {
+            const codeDiv = document.getElementById('complete-code');
+            const fullCodeDiv = document.getElementById('full-code');
+            
+            codeDiv.textContent = `// RentPipe Google Forms Creator - 完全版
+function createCustomerForm(customerData) {
+  try {
+    console.log('📝 顧客専用フォーム作成開始:', customerData.name);
+    
+    // フォーム作成
+    const form = FormApp.create(customerData.name + '様専用 物件希望調査フォーム - RentPipe');
+    
+    // 説明文設定
+    form.setDescription(\`🏠 RentPipe 物件希望調査フォーム
+
+\${customerData.name}様、いつもお世話になっております。
+より最適な物件をご提案するため、詳しいご希望条件をお聞かせください。
+
+📋 このフォームについて
+- \${customerData.name}様専用のフォームです
+- 回答内容は担当エージェントのみが確認できます
+- 何度でも回答を修正していただけます
+
+🔒 プライバシー保護
+お客様の個人情報は適切に管理され、物件ご提案以外の目的では使用いたしません。\`);
+    
+    // 質問項目追加
+    form.addTextItem()
+        .setTitle('【基本情報】お名前')
+        .setRequired(true);
+    
+    form.addTextItem()
+        .setTitle('【基本情報】メールアドレス')
+        .setRequired(true);
+    
+    form.addTextItem()
+        .setTitle('【基本情報】電話番号')
+        .setRequired(true);
+    
+    form.addTextItem()
+        .setTitle('【住居希望】予算（下限）')
+        .setHelpText('月額家賃の下限をお教えください（万円）')
+        .setRequired(true);
+    
+    form.addTextItem()
+        .setTitle('【住居希望】予算（上限）')
+        .setHelpText('月額家賃の上限をお教えください（万円）')
+        .setRequired(true);
+    
+    form.addParagraphTextItem()
+        .setTitle('【住居希望】希望エリア')
+        .setHelpText('希望する地域・駅名などをお教えください（複数可）')
+        .setRequired(true);
+    
+    form.addMultipleChoiceItem()
+        .setTitle('【住居希望】間取り')
+        .setChoiceValues([
+          'ワンルーム・1K',
+          '1DK・1LDK', 
+          '2K・2DK',
+          '2LDK・3K',
+          '3DK・3LDK',
+          '4LDK以上',
+          'その他・相談'
+        ])
+        .setRequired(true);
+    
+    form.addParagraphTextItem()
+        .setTitle('【詳細条件】その他ご希望・ご質問')
+        .setHelpText('駅徒歩時間、築年数、ペット、楽器、駐車場、オートロックなど、その他のご希望がありましたら自由にお書きください')
+        .setRequired(false);
+    
+    // 確認メッセージ設定
+    form.setConfirmationMessage('ご回答ありがとうございました。担当者が確認の上、最適な物件をご提案させていただきます。');
+    
+    // 結果を返却
+    const result = {
+      success: true,
+      form: {
+        id: form.getId(),
+        title: form.getTitle(),
+        url: form.getPublishedUrl(),
+        editUrl: form.getEditUrl(),
+        responsesUrl: \`https://docs.google.com/forms/d/\${form.getId()}/responses\`,
+        createdAt: new Date().toISOString()
+      }
+    };
+    
+    console.log('✅ フォーム作成成功:', result);
+    return result;
+    
+  } catch (error) {
+    console.error('❌ フォーム作成エラー:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// ウェブアプリとして公開するための関数（必須）
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const result = createCustomerForm(data.customerData);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// テスト用関数
+function testCreateForm() {
+  const testCustomer = {
+    name: 'テスト太郎',
+    email: 'test@example.com',
+    phone: '03-0000-0000'
+  };
+  
+  const result = createCustomerForm(testCustomer);
+  console.log('テスト結果:', result);
+  return result;
+}`;
+            
+            fullCodeDiv.style.display = 'block';
+        }
+        
+        // デプロイ手順を表示
+        function showDeploySteps() {
+            document.getElementById('deploy-steps').style.display = 'block';
+        }
+        
+        // 代替手順を表示
+        function showAlternativeSteps() {
+            document.getElementById('alternative-steps').style.display = 'block';
+        }
+        
+        // 修正後接続テスト
+        async function testFixedGAS() {
+            const gasUrl = document.getElementById('fixed-gas-url').value.trim();
+            const resultDiv = document.getElementById('fixed-test-result');
+            
+            if (!gasUrl) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = '❌ URLを入力してください';
+                return;
+            }
+            
+            try {
+                resultDiv.className = 'step';
+                resultDiv.textContent = '🔄 修正後接続テスト実行中...';
+                
+                const testData = {
+                    customerData: {
+                        id: 'fixed-test-' + Date.now(),
+                        name: '修正テスト太郎',
+                        email: 'fixed@example.com',
+                        phone: '03-2222-2222'
+                    }
+                };
+                
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = \`✅ 修正後接続テスト成功！
+
+フォーム作成完了:
+- ID: \${result.form.id}
+- タイトル: \${result.form.title}
+- URL: \${result.form.url}
+
+🎉 Google Apps Scriptが正常に動作しています！
+このURLをRentPipeの顧客管理ページで設定してください。\`;
+                    
+                    // 成功した場合、フォームを確認
+                    if (confirm('作成されたフォームを確認しますか？')) {
+                        window.open(result.form.url, '_blank');
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = \`❌ Google Apps Scriptエラー: \${result.error}\`;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = \`❌ 修正後も接続失敗: \${error.message}
+
+まだ解決していない問題:
+1. URL形式が正しくない
+2. デプロイ設定が「全員」になっていない
+3. 権限許可が完了していない
+4. コードに構文エラーがある
+
+代替手順を試してください。\`;
+            }
+        }
+        
+        console.log('🔧 Google Apps Script設定確認ツール準備完了');
+    </script>
+</body>
+</html>

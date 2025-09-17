@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>料金プラン - RentPipe</title>
+    <link rel="stylesheet" href="css/pricing.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🏠 RentPipe</div>
+    </nav>
+
+    <div class="pricing-container">
+        <div class="pricing-header">
+            <h1>RentPipe料金プラン</h1>
+            <p>あなたのビジネスに最適なプランを選択してください</p>
+        </div>
+        
+        <div class="pricing-grid" id="pricingGrid">
+            <!-- プランカードがここに動的に生成されます -->
+        </div>
+        
+        <div class="faq-section">
+            <h2>よくある質問</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">無料トライアルはありますか？</div>
+                <div class="faq-answer">はい。フリープランで基本機能をお試しいただけます。また、有料プランには14日間の無料トライアル期間があります。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">プランの変更はいつでもできますか？</div>
+                <div class="faq-answer">はい。管理画面からいつでもプランのアップグレード・ダウングレードが可能です。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">顧客数の上限を超えた場合はどうなりますか？</div>
+                <div class="faq-answer">上限の90%に達するとお知らせメールを送信します。超過した場合も既存データは保護されますが、新規顧客の登録ができなくなります。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">データのエクスポートは可能ですか？</div>
+                <div class="faq-answer">プロプラン以上で、CSV・JSON・Excel形式でのデータエクスポートが可能です。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">支払い方法は何がありますか？</div>
+                <div class="faq-answer">クレジットカード（Visa, MasterCard, American Express, JCB）での月次自動決済に対応しています。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">解約手続きはどのようにしますか？</div>
+                <div class="faq-answer">管理画面からいつでも解約可能です。解約後も当月分はご利用いただけ、翌月から課金は停止されます。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">複数のエージェントで共同利用できますか？</div>
+                <div class="faq-answer">はい。プロプラン以上でチームメンバーの招待機能をご利用いただけます。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">サポート体制はどうなっていますか？</div>
+                <div class="faq-answer">全プランでメールサポートを提供しています。プロプラン以上では優先サポートを提供します。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">セキュリティ対策はどうなっていますか？</div>
+                <div class="faq-answer">SSL暗号化、定期的なバックアップ、セキュアなデータセンターを使用しています。</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/pricing-plans.js"></script>
+    <script src="js/stripe-config.js"></script>
+    <script src="js/pricing-ui.js"></script>
+</body>
+</html>

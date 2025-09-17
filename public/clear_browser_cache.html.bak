@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ブラウザキャッシュクリア</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .step { margin: 20px 0; padding: 15px; background: #f0f9ff; border-radius: 8px; }
+        .btn { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🗑️ ブラウザキャッシュクリア</h1>
+    
+    <div class="step">
+        <h3>1. ハードリロード</h3>
+        <p><strong>Ctrl+Shift+R</strong> を押してハードリロードしてください</p>
+        <button class="btn" onclick="location.reload(true)">ハードリロード実行</button>
+    </div>
+    
+    <div class="step">
+        <h3>2. ローカルストレージクリア</h3>
+        <button class="btn" onclick="clearLocalStorage()">ローカルストレージクリア</button>
+        <p id="ls-status">状態: 未実行</p>
+    </div>
+    
+    <div class="step">
+        <h3>3. 新しいページに移動</h3>
+        <a href="customer.html" class="btn" style="text-decoration: none;">顧客管理ページへ</a>
+    </div>
+    
+    <script>
+        function clearLocalStorage() {
+            try {
+                localStorage.clear();
+                document.getElementById('ls-status').textContent = '✅ ローカルストレージをクリアしました';
+                document.getElementById('ls-status').style.color = 'green';
+            } catch (error) {
+                document.getElementById('ls-status').textContent = '❌ エラー: ' + error.message;
+                document.getElementById('ls-status').style.color = 'red';
+            }
+        }
+        
+        console.log('🗑️ ブラウザキャッシュクリアページ');
+        console.log('古いJavaScriptファイルがキャッシュされている可能性があります');
+    </script>
+</body>
+</html>

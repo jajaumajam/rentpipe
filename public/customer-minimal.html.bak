@@ -385,7 +385,7 @@
                     const result = await authResult;
                     if (!result) {
                         console.log('🔒 未認証 - ログインページにリダイレクト');
-                        window.location.href = 'login.html';
+                        window.location.href = 'login-google-simple.html';
                         return;
                     }
                     window.currentUser = result.user;
@@ -399,13 +399,13 @@
                 } else {
                     // 未認証
                     console.log('🔒 統合認証チェック結果: 未認証');
-                    window.location.href = 'login.html';
+                    window.location.href = 'login-google-simple.html';
                     return;
                 }
                 
             } catch (error) {
                 console.error('❌ 統合認証チェックエラー:', error);
-                window.location.href = 'login.html';
+                window.location.href = 'login-google-simple.html';
             }
         }
 
@@ -471,7 +471,7 @@
                 authDiv.innerHTML = `
                     <h3 style="color: #dc2626; margin: 0 0 0.5rem 0;">❌ 認証状態: 未ログイン</h3>
                     <p style="margin: 0;">ログインが必要です</p>
-                    <button onclick="window.location.href='login.html'" style="margin-top: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    <button onclick="window.location.href='login-google-simple.html'" style="margin-top: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
                         Googleログイン
                     </button>
                 `;
@@ -658,7 +658,7 @@
                 firebase.auth().signOut();
                 
                 console.log('🔒 ログアウト完了');
-                window.location.href = 'login.html';
+                window.location.href = 'login-google-simple.html';
             }
         }
 

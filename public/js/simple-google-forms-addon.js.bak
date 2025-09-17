@@ -168,7 +168,7 @@ window.SimpleGoogleFormsAddon = {
         } else {
             indicator.innerHTML = `
                 🔑 <strong>Google Forms機能を使用するにはログインが必要です</strong>
-                <a href="login.html" style="
+                <a href="login-google-simple.html" style="
                     margin-left: 10px; padding: 6px 12px; background: #3b82f6; color: white; 
                     text-decoration: none; border-radius: 4px; font-size: 12px;
                 ">Googleでログイン</a>
@@ -211,7 +211,7 @@ window.SimpleGoogleFormsAddon = {
             
             // ログインページにリダイレクト
             setTimeout(() => {
-                window.location.href = 'login.html';
+                window.location.href = 'login-google-simple.html';
             }, 1000);
         }
     },
@@ -322,7 +322,7 @@ window.SimpleGoogleFormsAddon = {
             // 未認証の場合
             const confirmLogin = confirm('Google Forms機能を使用するには、ログインが必要です。\n\nログインページに移動しますか？');
             if (confirmLogin) {
-                window.location.href = 'login.html';
+                window.location.href = 'login-google-simple.html';
             }
             return;
         }

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規顧客登録 - RentPipe</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>🏠 RentPipe</h1>
+            <nav>
+                <a href="index.html">ホーム</a>
+                <a href="customer.html">顧客管理</a>
+                <a href="pipeline.html">パイプライン</a>
+                <a href="analytics.html">分析</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h2>📝 新規顧客登録</h2>
+            <p>新しい顧客情報を登録します</p>
+        </div>
+
+        <div class="form-container">
+            <div id="success-message" class="success-message" style="display: none;">
+                ✅ 顧客を正常に登録しました！
+            </div>
+
+            <form id="customer-form">
+                <!-- 基本情報 -->
+                <h3>👤 基本情報</h3>
+                
+                <div class="form-group">
+                    <label for="name">氏名 *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">メールアドレス *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">電話番号 *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                </div>
+                
+                <!-- 希望条件 -->
+                <h3>🏠 希望条件</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="budget-min">予算下限（万円）</label>
+                        <input type="number" id="budget-min" name="budgetMin" min="0" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="budget-max">予算上限（万円）</label>
+                        <input type="number" id="budget-max" name="budgetMax" min="0" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="areas">希望エリア</label>
+                    <input type="text" id="areas" name="areas" placeholder="例：新宿, 渋谷, 池袋">
+                </div>
+                
+                <div class="form-group">
+                    <label for="room-type">間取り</label>
+                    <select id="room-type" name="roomType">
+                        <option value="">選択してください</option>
+                        <option value="ワンルーム">ワンルーム</option>
+                        <option value="1K">1K</option>
+                        <option value="1DK">1DK</option>
+                        <option value="1LDK">1LDK</option>
+                        <option value="2K">2K</option>
+                        <option value="2DK">2DK</option>
+                        <option value="2LDK">2LDK</option>
+                        <option value="3K">3K</option>
+                        <option value="3DK">3DK</option>
+                        <option value="3LDK">3LDK</option>
+                        <option value="4LDK以上">4LDK以上</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requirements">特別な要望</label>
+                    <input type="text" id="requirements" name="requirements" placeholder="例：ペット可, 楽器可, 駐車場">
+                </div>
+                
+                <!-- 営業情報 -->
+                <h3>📋 営業情報</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="urgency">緊急度</label>
+                        <select id="urgency" name="urgency">
+                            <option value="low">低（3ヶ月以上）</option>
+                            <option value="medium" selected>中（1-3ヶ月）</option>
+                            <option value="high">高（1ヶ月以内）</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-time">連絡希望時間</label>
+                        <select id="contact-time" name="contactTime">
+                            <option value="anytime">いつでも</option>
+                            <option value="daytime" selected>日中（9-17時）</option>
+                            <option value="evening">夕方以降（17時以降）</option>
+                            <option value="weekend">土日のみ</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">メモ・備考</label>
+                    <textarea id="notes" name="notes" placeholder="顧客の特徴、要注意事項などを記載"></textarea>
+                </div>
+                
+                <!-- ボタン -->
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">📝 顧客を登録</button>
+                    <a href="customer.html" class="btn btn-outline">← 戻る</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // フォーム送信処理
+        document.getElementById('customer-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            try {
+                // フォームデータ取得
+                const formData = new FormData(this);
+                const customerData = {
+                    id: 'customer-' + Date.now(),
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    pipelineStatus: 'lead',
+                    preferences: {
+                        budgetMin: parseFloat(formData.get('budgetMin')) || null,
+                        budgetMax: parseFloat(formData.get('budgetMax')) || null,
+                        areas: formData.get('areas') ? formData.get('areas').split(',').map(area => area.trim()) : [],
+                        roomType: formData.get('roomType') || '',
+                        requirements: formData.get('requirements') ? formData.get('requirements').split(',').map(req => req.trim()) : []
+                    },
+                    notes: formData.get('notes') || '',
+                    urgency: formData.get('urgency') || 'medium',
+                    contactTime: formData.get('contactTime') || 'daytime',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'manual_entry'
+                };
+                
+                // 既存の顧客データ取得
+                const existingCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
+                
+                // 新しい顧客を追加
+                existingCustomers.push(customerData);
+                
+                // ローカルストレージに保存
+                localStorage.setItem('customers', JSON.stringify(existingCustomers));
+                
+                // 成功メッセージ表示
+                document.getElementById('success-message').style.display = 'block';
+                
+                // フォームリセット
+                this.reset();
+                
+                // 3秒後に顧客管理ページに戻る
+                setTimeout(() => {
+                    window.location.href = 'customer.html';
+                }, 2000);
+                
+                console.log('✅ 顧客登録完了:', customerData);
+                
+            } catch (error) {
+                console.error('❌ 顧客登録エラー:', error);
+                alert('顧客登録に失敗しました: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

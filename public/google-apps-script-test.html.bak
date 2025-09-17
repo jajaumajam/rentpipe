@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Apps Script統合テスト - RentPipe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #3367d6;
+        }
+        
+        .btn-success {
+            background: #34a853;
+        }
+        
+        .btn-danger {
+            background: #ea4335;
+        }
+        
+        .btn-warning {
+            background: #fbbc04;
+            color: #333;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .step-guide {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Google Apps Script統合テスト</h1>
+    
+    <!-- セットアップガイド -->
+    <div class="section">
+        <h2>📋 セットアップガイド</h2>
+        <div class="step-guide">
+            <h4>🔧 事前準備（Google Apps Script側）</h4>
+            <ol>
+                <li><a href="https://script.google.com" target="_blank">script.google.com</a> で新しいプロジェクトを作成</li>
+                <li>提供されたコードを貼り付け</li>
+                <li>「デプロイ」→「新しいデプロイ」→「ウェブアプリ」</li>
+                <li>実行者：「自分」、アクセス：「全員」で公開</li>
+                <li>生成されたウェブアプリURLをコピー</li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- Script URL設定 -->
+    <div class="section">
+        <h2>🔗 Script URL設定</h2>
+        <p>Google Apps ScriptのウェブアプリURLを入力してください：</p>
+        <input type="text" id="script-url-input" class="url-input" 
+               placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+        <div style="margin-top: 10px;">
+            <button onclick="setScriptUrl()" class="btn btn-success">URL設定</button>
+            <button onclick="checkCurrentUrl()" class="btn">現在のURL確認</button>
+        </div>
+        <div id="url-status" class="status status-info">
+            URLが設定されていません
+        </div>
+    </div>
+    
+    <!-- 接続テスト -->
+    <div class="section">
+        <h2>🧪 接続テスト</h2>
+        <div style="margin-bottom: 15px;">
+            <button onclick="testConnection()" class="btn btn-success">接続テスト</button>
+            <button onclick="testFormCreation()" class="btn btn-warning">フォーム作成テスト</button>
+        </div>
+        <div id="connection-status" class="status status-info">
+            接続テスト結果が表示されます
+        </div>
+        
+        <div id="created-form-info" style="display: none; margin-top: 15px; padding: 15px; background: #e8f5e8; border-radius: 4px;">
+            <h4>✅ 作成されたフォーム</h4>
+            <p><strong>ID:</strong> <span id="form-id"></span></p>
+            <p><strong>タイトル:</strong> <span id="form-title"></span></p>
+            <p><strong>URL:</strong> <a id="form-url" href="#" target="_blank">フォームを開く</a></p>
+            <p><strong>編集URL:</strong> <a id="form-edit-url" href="#" target="_blank">編集画面を開く</a></p>
+        </div>
+    </div>
+    
+    <!-- ログ -->
+    <div class="section">
+        <h2>📋 詳細ログ</h2>
+        <button onclick="clearLogs()" class="btn btn-danger">ログクリア</button>
+        <div id="log-area" class="log-area">
+            ログが表示されます...
+        </div>
+    </div>
+
+    <!-- スクリプト読み込み -->
+    <script src="js/google-apps-script-forms.js"></script>
+    
+    <script>
+        let logs = [];
+        
+        // ログ関数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push(logEntry);
+            
+            // ログエリアに表示
+            const logArea = document.getElementById('log-area');
+            logArea.textContent = logs.join('\n');
+            logArea.scrollTop = logArea.scrollHeight;
+            
+            // コンソールにも出力
+            console.log(logEntry);
+        }
+        
+        // ログクリア
+        function clearLogs() {
+            logs = [];
+            document.getElementById('log-area').textContent = 'ログがクリアされました。';
+        }
+        
+        // Script URL設定
+        function setScriptUrl() {
+            const url = document.getElementById('script-url-input').value.trim();
+            
+            if (!url) {
+                alert('URLを入力してください');
+                return;
+            }
+            
+            if (!url.includes('script.google.com')) {
+                alert('正しいGoogle Apps ScriptのURLを入力してください');
+                return;
+            }
+            
+            window.GoogleAppsScriptForms.setScriptUrl(url);
+            
+            document.getElementById('url-status').className = 'status status-success';
+            document.getElementById('url-status').textContent = '✅ URL設定完了: ' + url;
+            
+            log('Script URL設定: ' + url);
+        }
+        
+        // 現在のURL確認
+        function checkCurrentUrl() {
+            const debugInfo = window.GoogleAppsScriptForms.getDebugInfo();
+            document.getElementById('url-status').className = 'status status-info';
+            document.getElementById('url-status').innerHTML = `
+                現在のURL: ${debugInfo.scriptUrl}<br>
+                有効なURL: ${debugInfo.hasValidUrl ? '✅' : '❌'}
+            `;
+            
+            log('現在のURL確認: ' + JSON.stringify(debugInfo, null, 2));
+        }
+        
+        // 接続テスト
+        async function testConnection() {
+            log('接続テスト開始');
+            
+            document.getElementById('connection-status').className = 'status status-info';
+            document.getElementById('connection-status').textContent = '🔄 接続テスト中...';
+            
+            try {
+                const result = await window.GoogleAppsScriptForms.testConnection();
+                
+                if (result.success) {
+                    document.getElementById('connection-status').className = 'status status-success';
+                    document.getElementById('connection-status').textContent = '✅ 接続テスト成功！Google Apps Scriptとの通信が正常です。';
+                    log('接続テスト成功: ' + JSON.stringify(result.result, null, 2));
+                } else {
+                    throw new Error(result.error);
+                }
+                
+            } catch (error) {
+                document.getElementById('connection-status').className = 'status status-error';
+                document.getElementById('connection-status').textContent = '❌ 接続テスト失敗: ' + error.message;
+                log('接続テスト失敗: ' + error.message);
+            }
+        }
+        
+        // フォーム作成テスト
+        async function testFormCreation() {
+            log('フォーム作成テスト開始');
+            
+            document.getElementById('connection-status').className = 'status status-info';
+            document.getElementById('connection-status').textContent = '🔄 フォーム作成テスト中...';
+            
+            try {
+                const testCustomer = {
+                    id: 'gas-test-customer',
+                    name: 'テスト太郎',
+                    email: 'test@example.com',
+                    phone: '03-0000-0000'
+                };
+                
+                const result = await window.GoogleAppsScriptForms.createCustomerForm(testCustomer);
+                
+                if (result.success) {
+                    document.getElementById('connection-status').className = 'status status-success';
+                    document.getElementById('connection-status').textContent = '✅ フォーム作成テスト成功！';
+                    
+                    // フォーム情報表示
+                    displayCreatedForm(result.form);
+                    
+                    log('フォーム作成テスト成功: ' + JSON.stringify(result.form, null, 2));
+                } else {
+                    throw new Error(result.error);
+                }
+                
+            } catch (error) {
+                document.getElementById('connection-status').className = 'status status-error';
+                document.getElementById('connection-status').textContent = '❌ フォーム作成テスト失敗: ' + error.message;
+                log('フォーム作成テスト失敗: ' + error.message);
+            }
+        }
+        
+        // 作成されたフォーム情報表示
+        function displayCreatedForm(formInfo) {
+            document.getElementById('form-id').textContent = formInfo.id;
+            document.getElementById('form-title').textContent = formInfo.title;
+            document.getElementById('form-url').href = formInfo.url;
+            document.getElementById('form-edit-url').href = formInfo.editUrl;
+            document.getElementById('created-form-info').style.display = 'block';
+        }
+        
+        // ページ読み込み時
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Google Apps Script統合テストページ起動');
+            checkCurrentUrl();
+        });
+    </script>
+</body>
+</html>

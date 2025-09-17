@@ -1,0 +1,9 @@
+            <button id="quickRegisterBtn" class="btn btn-primary">
+                ⚡ クイック登録
+            </button>
+            <button onclick="dataExporter.showExportModal()" class="btn btn-outline" title="データエクスポート">
+                📥 エクスポート
+            </button>
+            <button onclick="showFormURLModal()" class="btn btn-outline" title="顧客用詳細フォーム">
+                📝 顧客用詳細フォーム
+            </button>

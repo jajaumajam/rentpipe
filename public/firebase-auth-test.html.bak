@@ -148,7 +148,7 @@
                 showResult('Google認証設定', true, 'プロバイダー設定成功');
                 
                 // 実際の認証はユーザーの判断に委ねる
-                log('⚠️ 実際のログインテストは login.html で実行してください');
+                log('⚠️ 実際のログインテストは login-google-simple.html で実行してください');
                 
             } catch (error) {
                 log(`❌ Google認証設定エラー: ${error.message}`);

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>緊急データ復旧 - RentPipe</title>
+    <style>
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            padding: 20px; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            line-height: 1.6;
+        }
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px 10px 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🚨 RentPipe 緊急データ復旧</h1>
+    
+    <div class="card">
+        <h2>🔍 現在の状況確認</h2>
+        <button onclick="checkCurrentStatus()" class="btn btn-primary">現在の状況を確認</button>
+        <pre id="statusResult">ここに結果が表示されます</pre>
+    </div>
+    
+    <div class="card">
+        <h2>📦 データ復旧オプション</h2>
+        <button onclick="restoreDefaultData()" class="btn btn-success">デモデータ復旧</button>
+        <p>7件のデモ顧客データを復旧します。</p>
+        
+        <button onclick="forceFirebaseSync()" class="btn btn-warning">Firebase強制同期</button>
+        <p>ローカルデータをFirebaseに強制的に同期します。</p>
+        
+        <button onclick="completeReset()" class="btn btn-danger">完全リセット</button>
+        <p>⚠️ 全てのデータを削除してデモ環境に戻します。</p>
+    </div>
+    
+    <div class="card">
+        <h2>🔗 画面間移動</h2>
+        <a href="customer.html" class="btn btn-primary">👥 顧客管理</a>
+        <a href="pipeline.html" class="btn btn-primary">📈 パイプライン</a>
+        <a href="index.html" class="btn btn-primary">📊 ダッシュボード</a>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/emergency-data-recovery.js"></script>
+    
+    <script>
+        function checkCurrentStatus() {
+            const result = document.getElementById('statusResult');
+            
+            let status = '=== 📊 現在の状況 ===\n';
+            
+            // ローカルストレージ確認
+            const possibleKeys = ['rentpipe_demo_customers', 'rentpipe_customers', 'customers'];
+            for (const key of possibleKeys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        status += `${key}: ${parsed.length}件\n`;
+                    } catch (e) {
+                        status += `${key}: エラー\n`;
+                    }
+                } else {
+                    status += `${key}: なし\n`;
+                }
+            }
+            
+            // Firebase状況
+            status += `\nFirebase接続: ${window.auth && window.auth.currentUser ? 'はい' : 'いいえ'}\n`;
+            status += `FirebaseDataManager: ${window.FirebaseDataManager ? 'はい' : 'いいえ'}\n`;
+            status += `UnifiedDataManager: ${window.UnifiedDataManager ? 'はい' : 'いいえ'}\n`;
+            
+            result.textContent = status;
+        }
+        
+        // ページ読み込み時に自動チェック
+        setTimeout(checkCurrentStatus, 1000);
+    </script>
+</body>
+</html>
+    <script src="js/data-key-unifier.js"></script>
+    <script>
+        // データキー統一ボタンを追加
+        document.addEventListener('DOMContentLoaded', function() {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h2>🔗 データキー統一</h2>
+                <button onclick="forceReloadAllData()" class="btn btn-success">データ統一実行</button>
+                <p>両画面で同じデータキーを参照するように統一します。</p>
+            `;
+            document.body.insertBefore(card, document.querySelector('.card:last-of-type'));
+        });
+    </script>
+</body>
+</html>
