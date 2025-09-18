@@ -43,7 +43,7 @@
         <div id="statusMessage" class="status-message" style="display: none;"></div>
 
         <div style="text-align: center;">
-            <button id="googleLoginBtn" onclick="handleGoogleLogin()" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 16px;">
+            <button id="googleLoginBtn" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 16px;">
                 🔐 Googleアカウントでログイン
             </button>
         </div>
@@ -83,17 +83,17 @@
         firebase.initializeApp(firebaseConfig);
 
         // ステータス表示
-        function showStatus(message, type = 'loading') {
+        function showStatus(message, type) {
             const statusDiv = document.getElementById('statusMessage');
             statusDiv.textContent = message;
-            statusDiv.className = \`status-message status-\${type}\`;
+            statusDiv.className = 'status-message status-' + type;
             statusDiv.style.display = 'block';
         }
 
         // デバッグ情報表示
         function showDebugInfo(info) {
             const debugDiv = document.getElementById('debugInfo');
-            debugDiv.innerHTML = \`<strong>🔍 デバッグ情報:</strong><br>\${info}\`;
+            debugDiv.innerHTML = '<strong>🔍 デバッグ情報:</strong><br>' + info;
             debugDiv.style.display = 'block';
         }
 
@@ -120,7 +120,7 @@
         }
 
         // Googleログイン処理
-        async function handleGoogleLogin() {
+        function handleGoogleLogin() {
             console.log('🔐 Googleログイン開始');
             
             const btn = document.getElementById('googleLoginBtn');
@@ -130,93 +130,100 @@
             
             showStatus('Googleアカウントでログイン中...', 'loading');
             
-            try {
-                // Google認証プロバイダーの設定
-                const provider = new firebase.auth.GoogleAuthProvider();
-                
-                // 新しいクライアントIDに対応するスコープ設定
-                provider.addScope('https://www.googleapis.com/auth/drive.file');
-                provider.addScope('email');
-                provider.addScope('profile');
-                
-                // 強制的にアカウント選択画面を表示
-                provider.setCustomParameters({
-                    prompt: 'select_account'
+            // Google認証プロバイダーの設定
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            // 新しいクライアントIDに対応するスコープ設定
+            provider.addScope('https://www.googleapis.com/auth/drive.file');
+            provider.addScope('email');
+            provider.addScope('profile');
+            
+            // 強制的にアカウント選択画面を表示
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
+            
+            console.log('🔑 ポップアップ認証を開始...');
+            
+            firebase.auth().signInWithPopup(provider)
+                .then(function(result) {
+                    const user = result.user;
+                    const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+                    
+                    console.log('✅ Firebase認証成功:', user.email);
+                    
+                    // ユーザーデータ準備
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.displayName,
+                        picture: user.photoURL,
+                        accessToken: credential ? credential.accessToken : null
+                    };
+                    
+                    // 認証データ保存
+                    const saved = saveAuthData(userData);
+                    
+                    if (saved) {
+                        showStatus('ログイン成功: ' + user.email, 'success');
+                        showDebugInfo(
+                            'ユーザー: ' + userData.email + '<br>' +
+                            '認証状態: 保存完了<br>' +
+                            'アクセストークン: ' + (credential ? '取得済み' : '未取得')
+                        );
+                        
+                        // 3秒後にリダイレクト
+                        setTimeout(function() {
+                            window.location.href = 'customer-no-auth.html';
+                        }, 3000);
+                        
+                    } else {
+                        throw new Error('認証データの保存に失敗しました');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('❌ ログインエラー:', error);
+                    
+                    let errorMessage = 'ログインに失敗しました';
+                    
+                    if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'ポップアップがブロックされました。ブラウザの設定を確認してください。';
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        errorMessage = 'ログインがキャンセルされました。';
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage = 'ログインウィンドウが閉じられました。';
+                    } else if (error.message.includes('invalid')) {
+                        errorMessage = 'OAuth設定に問題があります。管理者にお問い合わせください。';
+                    }
+                    
+                    showStatus(errorMessage, 'error');
+                    showDebugInfo(
+                        'エラーコード: ' + (error.code || 'unknown') + '<br>' +
+                        'エラーメッセージ: ' + error.message
+                    );
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
                 });
-                
-                console.log('🔑 ポップアップ認証を開始...');
-                const result = await firebase.auth().signInWithPopup(provider);
-                
-                const user = result.user;
-                const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-                
-                console.log('✅ Firebase認証成功:', user.email);
-                
-                // ユーザーデータ準備
-                const userData = {
-                    uid: user.uid,
-                    email: user.email,
-                    name: user.displayName,
-                    picture: user.photoURL,
-                    accessToken: credential ? credential.accessToken : null
-                };
-                
-                // 認証データ保存
-                const saved = saveAuthData(userData);
-                
-                if (saved) {
-                    showStatus(\`ログイン成功: \${user.email}\`, 'success');
-                    showDebugInfo(\`
-                        ユーザー: \${userData.email}<br>
-                        認証状態: 保存完了<br>
-                        アクセストークン: \${credential ? '取得済み' : '未取得'}
-                    \`);
-                    
-                    // 3秒後にリダイレクト
-                    setTimeout(() => {
-                        window.location.href = 'customer-no-auth.html';
-                    }, 3000);
-                    
-                } else {
-                    throw new Error('認証データの保存に失敗しました');
-                }
-                
-            } catch (error) {
-                console.error('❌ ログインエラー:', error);
-                
-                let errorMessage = 'ログインに失敗しました';
-                
-                if (error.code === 'auth/popup-blocked') {
-                    errorMessage = 'ポップアップがブロックされました。ブラウザの設定を確認してください。';
-                } else if (error.code === 'auth/cancelled-popup-request') {
-                    errorMessage = 'ログインがキャンセルされました。';
-                } else if (error.code === 'auth/popup-closed-by-user') {
-                    errorMessage = 'ログインウィンドウが閉じられました。';
-                } else if (error.message.includes('invalid')) {
-                    errorMessage = 'OAuth設定に問題があります。管理者にお問い合わせください。';
-                }
-                
-                showStatus(errorMessage, 'error');
-                showDebugInfo(\`
-                    エラーコード: \${error.code || 'unknown'}<br>
-                    エラーメッセージ: \${error.message}
-                \`);
-                
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
         }
 
         // ページ読み込み完了時
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 修正版ログインページ読み込み完了');
             
+            // ボタンにイベントリスナー追加
+            const loginBtn = document.getElementById('googleLoginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', handleGoogleLogin);
+                console.log('✅ ログインボタンイベント設定完了');
+            }
+            
             // 既にログインしているかチェック
             const authStatus = localStorage.getItem('rentpipe_auth_simple');
             if (authStatus === 'logged_in') {
                 showStatus('既にログイン済みです', 'success');
-                setTimeout(() => {
+                setTimeout(function() {
                     window.location.href = 'customer-no-auth.html';
                 }, 2000);
             }
