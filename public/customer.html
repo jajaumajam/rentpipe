@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>顧客管理 - RentPipe</title>
+    <title>顧客管理（認証チェック無効） - RentPipe</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,26 +12,51 @@
             <h1>🏠 RentPipe</h1>
             <nav class="nav-container">
                 <a href="index.html">ホーム</a>
-                <a href="customer.html" class="active">顧客管理</a>
-                <a href="customer-minimal.html">簡易版</a>
+                <a href="customer-bypass-auth.html" class="active">顧客管理（テスト版）</a>
+                <a href="customer-no-auth.html">認証なし版</a>
                 <a href="pipeline.html">パイプライン</a>
-                <!-- ユーザー情報表示エリア（一意ID） -->
-                <div id="unique-nav-user-info" class="nav-user-info"></div>
-                <button onclick="handleLogout()" class="btn btn-outline nav-logout">ログアウト</button>
+                <div class="nav-user-info">
+                    <span id="current-user">🧪 テストモード</span>
+                </div>
             </nav>
         </div>
     </header>
 
     <main class="main-content">
         <div class="page-header">
-            <h2>👥 顧客管理</h2>
-            <p>顧客情報の管理と営業進捗の追跡 - Google Drive同期対応</p>
+            <h2>👥 顧客管理（認証チェック無効版）</h2>
+            <p>Google Drive統合機能付き - 認証問題を回避したバージョン</p>
         </div>
 
         <!-- Google Drive同期状況表示 -->
-        <div id="google-forms-status" style="margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #f3f4f6;">
+        <div id="google-drive-sync-panel" style="margin: 1rem 0; padding: 1rem; border-radius: 8px; background: #f3f4f6;">
             <h3>☁️ Google Drive 同期</h3>
-            <p>システム初期化中...</p>
+            <div id="sync-status" class="sync-status-disconnected">
+                <span id="sync-status-text">未接続 - クラウド同期を開始してください</span>
+                <div id="sync-controls">
+                    <button id="btn-connect-drive" onclick="CustomerGoogleDriveIntegration.connectToDrive()" class="btn btn-primary">
+                        🔗 Google Drive接続
+                    </button>
+                    <button id="btn-sync-now" onclick="CustomerGoogleDriveIntegration.syncNow()" disabled class="btn btn-success">
+                        🔄 今すぐ同期
+                    </button>
+                    <button onclick="downloadBackup()" class="btn btn-outline">
+                        💾 バックアップDL
+                    </button>
+                </div>
+                <div id="sync-info" style="margin-top: 10px; font-size: 14px; color: #666;">
+                    <span id="last-sync-time">未同期</span> • 
+                    <span id="sync-mode">オフラインモード</span>
+                </div>
+            </div>
+            
+            <!-- 同期設定 -->
+            <div id="sync-settings" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; display: none;">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="auto-sync-checkbox" onchange="CustomerGoogleDriveIntegration.toggleAutoSync(this.checked)" checked>
+                    自動同期を有効にする（データ変更時に自動でGoogle Driveに保存）
+                </label>
+            </div>
         </div>
 
         <!-- 顧客操作ボタン -->
@@ -42,8 +67,11 @@
             <button onclick="refreshCustomers()" class="btn btn-outline">
                 🔄 リスト更新
             </button>
-            <a href="google-drive-integration-test.html" target="_blank" class="btn btn-outline">
-                🔧 統合テスト
+            <button onclick="addTestCustomer()" class="btn btn-warning">
+                ➕ テスト顧客追加
+            </button>
+            <a href="login-direct.html" class="btn btn-outline">
+                🔐 認証テスト
             </a>
         </div>
 
@@ -54,198 +82,257 @@
                 <p>顧客データを読み込み中...</p>
             </div>
         </div>
+        
+        <!-- ログ表示 -->
+        <div style="margin: 2rem 0; padding: 1rem; border-radius: 8px; background: #f8f9fa;">
+            <h3>📝 実行ログ</h3>
+            <pre id="log-output" style="max-height: 200px; overflow-y: auto; font-size: 12px;">システム初期化中...</pre>
+        </div>
     </main>
 
-    <!-- 必要なスクリプトのみ読み込み -->
-    <!-- 基本システム -->
-    <script src="js/simple-reliable-auth.js"></script>
-    <script src="js/local-first-sync.js"></script>
-    <script src="js/customer-unified.js"></script>
-    
-    <!-- Google Drive統合（新規追加） -->
+    <!-- 必要なスクリプトのみ読み込み（認証チェック無効） -->
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-drive-data-manager.js"></script>
     <script src="js/customer-google-drive-integration.js"></script>
     
     <script>
-        // 🚀 customer.html Google Drive統合版 初期化
-        console.log('🚀 Customer管理画面（Google Drive統合版）初期化開始');
+        // 🚀 認証チェック無効版の顧客管理システム
+        console.log('🚀 認証チェック無効版 顧客管理システム初期化');
         
-        let isSystemReady = false;
+        let logs = [];
         
-        // DOM読み込み完了時の処理
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('📄 DOM読み込み完了');
+        // ログ追加
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            logs.push(logMessage);
             
-            try {
-                // 1. 基本システム初期化待機
-                await waitForBasicSystems();
-                
-                // 2. 顧客データ読み込み
-                loadCustomerData();
-                
-                // 3. Google Drive統合初期化
-                await initializeGoogleDriveIntegration();
-                
-                isSystemReady = true;
-                console.log('✅ 全システム初期化完了');
-                
-            } catch (error) {
-                console.error('❌ 初期化エラー:', error);
+            const logElement = document.getElementById('log-output');
+            if (logElement) {
+                logElement.textContent = logs.join('\n');
+                logElement.scrollTop = logElement.scrollHeight;
             }
-        });
+            
+            console.log(logMessage);
+        }
         
-        // 基本システムの初期化待機
-        function waitForBasicSystems() {
-            return new Promise((resolve) => {
-                const checkInterval = setInterval(() => {
-                    if (window.customerManager || window.CustomerUnified) {
-                        clearInterval(checkInterval);
-                        console.log('✅ 基本システム準備完了');
-                        resolve();
-                    }
-                }, 100);
-                
-                // 5秒でタイムアウト
-                setTimeout(() => {
-                    clearInterval(checkInterval);
-                    console.log('⚠️ 基本システム初期化タイムアウト - 続行');
-                    resolve();
-                }, 5000);
-            });
+        // 顧客データ表示
+        function displayCustomers(customers) {
+            const customerList = document.getElementById('customer-list');
+            
+            if (customers.length === 0) {
+                customerList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
+                        <h3>顧客データがありません</h3>
+                        <p>新しい顧客を登録するか、テスト顧客を追加してください。</p>
+                        <div style="margin-top: 20px;">
+                            <a href="customer-form.html" class="btn btn-primary" style="margin-right: 10px;">📝 新規顧客登録</a>
+                            <button onclick="addTestCustomer()" class="btn btn-warning">➕ テスト顧客追加</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            customerList.innerHTML = customers.map(customer => `
+                <div class="customer-card" data-customer-id="${customer.id}">
+                    <div class="customer-header">
+                        <div class="customer-info">
+                            <h3>${customer.name || '名前未設定'}</h3>
+                            <div class="customer-meta">
+                                ${customer.email || 'メール未設定'} • ${customer.phone || '電話未設定'}
+                            </div>
+                            <div class="customer-status">
+                                ステータス: ${customer.pipelineStatus || customer.status || '未設定'}
+                            </div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">
+                                作成: ${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : '不明'}
+                            </div>
+                        </div>
+                        <div class="customer-actions">
+                            <a href="customer-detail.html?id=${customer.id}" class="btn btn-outline">詳細</a>
+                            <button onclick="editCustomer('${customer.id}')" class="btn btn-primary">編集</button>
+                            <button onclick="deleteCustomer('${customer.id}')" class="btn btn-danger">削除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
         
         // 顧客データ読み込み
-        function loadCustomerData() {
+        function loadCustomers() {
             try {
-                if (window.customerManager && typeof window.customerManager.loadCustomers === 'function') {
-                    console.log('🔄 顧客データ読み込み（統合システム）');
-                    window.customerManager.loadCustomers();
-                } else if (window.CustomerUnified && typeof window.CustomerUnified.loadCustomers === 'function') {
-                    console.log('🔄 顧客データ読み込み（フォールバック）');
-                    window.CustomerUnified.loadCustomers();
-                } else {
-                    console.log('🔄 顧客データ読み込み（基本）');
-                    loadCustomersBasic();
-                }
+                addLog('📊 顧客データ読み込み中...');
+                const customers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
+                displayCustomers(customers);
+                addLog(`✅ 顧客データ表示: ${customers.length}件`);
+                
             } catch (error) {
-                console.error('❌ 顧客データ読み込みエラー:', error);
-                loadCustomersBasic();
+                addLog(`❌ 顧客データ読み込みエラー: ${error.message}`);
+                console.error('顧客データ読み込みエラー:', error);
             }
         }
         
-        // 基本的な顧客データ読み込み（フォールバック）
-        function loadCustomersBasic() {
+        // テスト顧客追加
+        function addTestCustomer() {
+            const testCustomer = {
+                id: 'test_' + Date.now(),
+                name: 'テスト顧客_' + Math.floor(Math.random() * 1000),
+                email: `test${Math.floor(Math.random() * 1000)}@example.com`,
+                phone: '090-' + Math.floor(Math.random() * 10000) + '-' + Math.floor(Math.random() * 10000),
+                pipelineStatus: ['初回相談', '物件紹介', '内見', '申込'][Math.floor(Math.random() * 4)],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                notes: 'Google Drive統合テスト用のデータです'
+            };
+            
             try {
                 const customers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
-                console.log(`📊 基本顧客データ読み込み: ${customers.length}件`);
+                customers.push(testCustomer);
+                localStorage.setItem('rentpipe_customers', JSON.stringify(customers));
                 
-                const customerList = document.getElementById('customer-list');
-                if (customers.length === 0) {
-                    customerList.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #6b7280;">
-                            <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
-                            <h3>まだ顧客が登録されていません</h3>
-                            <p>新しい顧客を登録してください。</p>
-                            <a href="customer-form.html" class="btn btn-primary" style="margin-top: 15px;">
-                                📝 新規顧客登録
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    customerList.innerHTML = customers.map(customer => `
-                        <div class="customer-card" data-customer-id="${customer.id}">
-                            <div class="customer-header">
-                                <div class="customer-info">
-                                    <h3>${customer.name || '名前未設定'}</h3>
-                                    <div class="customer-meta">
-                                        ${customer.email || 'メール未設定'} • ${customer.phone || '電話未設定'}
-                                    </div>
-                                    <div class="customer-status">
-                                        ステータス: ${customer.pipelineStatus || customer.status || '未設定'}
-                                    </div>
-                                </div>
-                                <div class="customer-actions">
-                                    <a href="customer-detail.html?id=${customer.id}" class="btn btn-outline">詳細</a>
-                                    <button onclick="editCustomer('${customer.id}')" class="btn btn-primary">編集</button>
-                                    <button onclick="deleteCustomer('${customer.id}')" class="btn btn-danger">削除</button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
+                addLog(`➕ テスト顧客追加: ${testCustomer.name}`);
+                loadCustomers();
                 
             } catch (error) {
-                console.error('❌ 基本顧客データ読み込みエラー:', error);
-                document.getElementById('customer-list').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #dc2626;">
-                        <h3>データ読み込みエラー</h3>
-                        <p>顧客データの読み込みに失敗しました。</p>
-                        <button onclick="location.reload()" class="btn btn-primary">
-                            🔄 ページを再読み込み
-                        </button>
-                    </div>
-                `;
+                addLog(`❌ テスト顧客追加エラー: ${error.message}`);
             }
         }
         
-        // Google Drive統合初期化
-        async function initializeGoogleDriveIntegration() {
-            try {
-                console.log('☁️ Google Drive統合初期化開始...');
-                
-                if (window.CustomerGoogleDriveIntegration) {
-                    const success = await window.CustomerGoogleDriveIntegration.initialize();
-                    if (success) {
-                        console.log('✅ Google Drive統合初期化成功');
-                    } else {
-                        console.log('⚠️ Google Drive統合初期化失敗（オフラインモード）');
-                    }
-                } else {
-                    console.log('⚠️ Google Drive統合スクリプト未読み込み（オフラインモード）');
-                }
-                
-            } catch (error) {
-                console.error('❌ Google Drive統合初期化エラー:', error);
-            }
-        }
-        
-        // グローバル関数（HTMLから呼び出される）
-        function editCustomer(customerId) {
-            window.location.href = `customer-form.html?edit=${customerId}`;
-        }
-        
+        // 顧客削除
         function deleteCustomer(customerId) {
-            if (!confirm('この顧客を削除しますか？この操作は取り消しできません。')) {
-                return;
-            }
+            if (!confirm('この顧客を削除しますか？')) return;
             
             try {
                 const customers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
                 const updatedCustomers = customers.filter(c => c.id !== customerId);
                 localStorage.setItem('rentpipe_customers', JSON.stringify(updatedCustomers));
                 
-                console.log(`🗑️ 顧客削除: ${customerId}`);
-                loadCustomerData(); // リスト更新
+                addLog(`🗑️ 顧客削除: ${customerId}`);
+                loadCustomers();
                 
             } catch (error) {
-                console.error('❌ 顧客削除エラー:', error);
-                alert('顧客削除中にエラーが発生しました');
+                addLog(`❌ 顧客削除エラー: ${error.message}`);
             }
         }
         
+        // 顧客編集（簡易版）
+        function editCustomer(customerId) {
+            const customers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
+            const customer = customers.find(c => c.id === customerId);
+            
+            if (!customer) return;
+            
+            const newName = prompt('新しい名前を入力してください:', customer.name);
+            if (!newName || newName === customer.name) return;
+            
+            try {
+                customer.name = newName;
+                customer.updatedAt = new Date().toISOString();
+                localStorage.setItem('rentpipe_customers', JSON.stringify(customers));
+                
+                addLog(`✏️ 顧客編集: ${customer.name}`);
+                loadCustomers();
+                
+            } catch (error) {
+                addLog(`❌ 顧客編集エラー: ${error.message}`);
+            }
+        }
+        
+        // リスト更新
         function refreshCustomers() {
-            console.log('🔄 顧客リスト更新');
-            loadCustomerData();
+            addLog('🔄 顧客リスト更新');
+            loadCustomers();
         }
         
-        function handleLogout() {
-            if (confirm('ログアウトしますか？')) {
-                console.log('👋 ログアウト');
-                // 必要に応じてログアウト処理
-                window.location.href = 'login.html';
+        // バックアップダウンロード
+        function downloadBackup() {
+            try {
+                const customers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
+                if (customers.length === 0) {
+                    alert('バックアップするデータがありません');
+                    return;
+                }
+                
+                const csvContent = convertToCSV(customers);
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `rentpipe_backup_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                
+                addLog('💾 バックアップダウンロード完了');
+                
+            } catch (error) {
+                addLog(`❌ バックアップダウンロードエラー: ${error.message}`);
             }
         }
+        
+        // CSV変換
+        function convertToCSV(customers) {
+            const headers = ['ID', '名前', 'メール', '電話', 'ステータス', '作成日', '更新日'];
+            const csvRows = [headers.join(',')];
+            
+            customers.forEach(customer => {
+                const row = [
+                    customer.id || '',
+                    `"${(customer.name || '').replace(/"/g, '""')}"`,
+                    customer.email || '',
+                    customer.phone || '',
+                    customer.pipelineStatus || customer.status || '',
+                    customer.createdAt || '',
+                    customer.updatedAt || ''
+                ];
+                csvRows.push(row.join(','));
+            });
+            
+            return '\ufeff' + csvRows.join('\n'); // BOM付きUTF-8
+        }
+        
+        // CSS追加
+        const style = document.createElement('style');
+        style.textContent = `
+            .customer-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: white; }
+            .customer-header { display: flex; justify-content: space-between; align-items: center; }
+            .customer-info h3 { margin: 0 0 0.5rem 0; }
+            .customer-meta { color: #6b7280; font-size: 14px; margin-bottom: 0.5rem; }
+            .customer-status { color: #059669; font-weight: 500; font-size: 14px; }
+            .customer-actions button { margin-left: 0.5rem; }
+            
+            .sync-status-disconnected { padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; }
+            .sync-status-connected { padding: 15px; background: #d1fae5; border: 1px solid #10b981; border-radius: 6px; }
+            .sync-status-syncing { padding: 15px; background: #e0e7ff; border: 1px solid #8b5cf6; border-radius: 6px; }
+            .sync-status-error { padding: 15px; background: #fee2e2; border: 1px solid #f87171; border-radius: 6px; }
+            
+            @media (max-width: 768px) {
+                .customer-header { flex-direction: column; align-items: flex-start; }
+                .customer-actions { margin-top: 1rem; width: 100%; }
+                .customer-actions button { margin: 0.25rem; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // ページ読み込み完了時
+        document.addEventListener('DOMContentLoaded', async function() {
+            addLog('📄 認証チェック無効版 顧客管理システム読み込み完了');
+            
+            // 顧客データ読み込み
+            loadCustomers();
+            
+            // Google Drive統合初期化
+            if (window.CustomerGoogleDriveIntegration) {
+                try {
+                    await window.CustomerGoogleDriveIntegration.initialize();
+                    addLog('✅ Google Drive統合初期化完了');
+                } catch (error) {
+                    addLog(`⚠️ Google Drive統合初期化失敗: ${error.message}`);
+                }
+            }
+            
+            addLog('🎯 利用可能機能: 顧客管理、Google Drive同期、バックアップ');
+        });
         
     </script>
 </body>
