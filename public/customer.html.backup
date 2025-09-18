@@ -267,7 +267,7 @@
                     section.className = 'google-forms-section forms-auth-required';
                     statusText.textContent = '顧客専用の物件希望調査フォームを自動作成するにはGoogle認証が必要です（モック版）';
                     actionArea.innerHTML = `
-                        <button onclick="window.location.href='login-google-simple.html'" class="btn" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
+                        <button onclick="window.location.href='login.html'" class="btn" style="background: white; color: #1e40af; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
                             🔑 Google認証してフォーム機能を利用
                         </button>
                     `;
@@ -309,7 +309,7 @@
                     const result = await authResult;
                     if (!result) {
                         console.log('🔒 未認証 - ログインページにリダイレクト');
-                        window.location.href = 'login-google-simple.html';
+                        window.location.href = 'login.html';
                         return;
                     }
                     window.currentUser = result.user;
@@ -323,13 +323,13 @@
                 } else {
                     // 未認証
                     console.log('🔒 統合認証チェック結果: 未認証');
-                    window.location.href = 'login-google-simple.html';
+                    window.location.href = 'login.html';
                     return;
                 }
                 
             } catch (error) {
                 console.error('❌ 統合認証チェックエラー:', error);
-                window.location.href = 'login-google-simple.html';
+                window.location.href = 'login.html';
             }
         }
 
@@ -575,7 +575,7 @@
                 // Firebaseからもログアウト
                 firebase.auth().signOut().then(() => {
                     console.log('✅ 全認証からログアウト完了');
-                    window.location.href = 'login-google-simple.html';
+                    window.location.href = 'login.html';
                 });
             }
         }
