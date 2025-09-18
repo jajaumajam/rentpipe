@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive API テスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status-box { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Google Drive API テスト</h1>
+        
+        <div id="status-display" class="status-box warning">
+            <h3>📊 初期化状況</h3>
+            <p>ページ読み込み完了...</p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button id="btn-initialize" onclick="initializeAPI()">
+                1. API初期化
+            </button>
+            
+            <button id="btn-login" onclick="requestAccess()" disabled>
+                2. Google認証
+            </button>
+            
+            <button id="btn-create-folder" onclick="testCreateFolder()" disabled>
+                3. フォルダ作成テスト
+            </button>
+            
+            <button onclick="showDebugInfo()">
+                デバッグ情報表示
+            </button>
+        </div>
+        
+        <div id="debug-info" class="status-box" style="display: none;">
+            <h3>🔍 デバッグ情報</h3>
+            <pre id="debug-content"></pre>
+        </div>
+        
+        <div id="log-output" class="status-box">
+            <h3>📝 実行ログ</h3>
+            <pre id="log-content">準備中...</pre>
+        </div>
+    </div>
+
+    <script src="js/google-drive-api-simple.js"></script>
+    <script>
+        let logContent = [];
+        
+        // ログ表示関数
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            logContent.push(logMessage);
+            document.getElementById('log-content').textContent = logContent.join('\n');
+            console.log(logMessage);
+        }
+        
+        // 1. API初期化
+        async function initializeAPI() {
+            addLog('🔧 API初期化開始...');
+            
+            try {
+                const success = await window.GoogleDriveAPISimple.initialize();
+                
+                if (success) {
+                    addLog('✅ API初期化成功');
+                    updateStatus('API初期化完了', 'success');
+                    document.getElementById('btn-login').disabled = false;
+                } else {
+                    addLog('❌ API初期化失敗');
+                    updateStatus('API初期化失敗', 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ 初期化エラー: ${error.message}`);
+                updateStatus(`初期化エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 2. Google認証
+        function requestAccess() {
+            addLog('🔑 Google認証開始...');
+            
+            // トークン取得成功時のコールバック設定
+            window.GoogleDriveAPISimple.onTokenReceived = function(token) {
+                addLog('✅ アクセストークン取得成功');
+                updateStatus('Google認証完了', 'success');
+                document.getElementById('btn-create-folder').disabled = false;
+            };
+            
+            try {
+                window.GoogleDriveAPISimple.requestAccessToken();
+                addLog('🔄 認証ダイアログ表示中...');
+                
+            } catch (error) {
+                addLog(`❌ 認証エラー: ${error.message}`);
+                updateStatus(`認証エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 3. フォルダ作成テスト
+        async function testCreateFolder() {
+            const folderName = `RentPipe-Test-${Date.now()}`;
+            addLog(`📁 テストフォルダ「${folderName}」作成開始...`);
+            
+            try {
+                const folder = await window.GoogleDriveAPISimple.createFolder(folderName);
+                addLog(`✅ フォルダ作成成功: ${folder.name} (ID: ${folder.id})`);
+                updateStatus('フォルダ作成テスト成功！', 'success');
+                
+            } catch (error) {
+                addLog(`❌ フォルダ作成エラー: ${error.message}`);
+                updateStatus(`フォルダ作成失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        // ステータス表示更新
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status-display');
+            statusDiv.className = `status-box ${type}`;
+            statusDiv.innerHTML = `<h3>📊 現在の状況</h3><p>${message}</p>`;
+        }
+        
+        // デバッグ情報表示
+        function showDebugInfo() {
+            const debugInfo = window.GoogleDriveAPISimple.getDebugInfo();
+            document.getElementById('debug-content').textContent = JSON.stringify(debugInfo, null, 2);
+            document.getElementById('debug-info').style.display = 'block';
+            addLog('🔍 デバッグ情報を表示');
+        }
+        
+        // ページ読み込み完了時
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('📄 ページ読み込み完了');
+            addLog('👆 「1. API初期化」ボタンをクリックして開始してください');
+        });
+    </script>
+</body>
+</html>
