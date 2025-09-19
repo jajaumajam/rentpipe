@@ -46,7 +46,8 @@ window.GoogleDriveDataManager = {
         
         try {
             // 既存フォルダ検索
-            const folders = await window.GoogleDriveAPIv2.searchFolders(this.config.rentpipeFolderName);
+            const query = `name='${this.config.rentpipeFolderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+            const folders = await window.GoogleDriveAPIv2.searchFiles(query);
             
             if (folders.length > 0) {
                 this.rentpipeFolderId = folders[0].id;
@@ -70,14 +71,15 @@ window.GoogleDriveDataManager = {
         
         try {
             // フォルダ内のファイル検索
-            const files = await this.searchFilesInFolder(this.rentpipeFolderId, this.config.customersFileName);
+            const query = `'${this.rentpipeFolderId}' in parents and name='${this.config.customersFileName}' and trashed=false`;
+            const files = await window.GoogleDriveAPIv2.searchFiles(query);
             
             if (files.length > 0) {
                 this.customersFileId = files[0].id;
                 console.log('✅ 既存顧客データファイル使用:', this.customersFileId);
             } else {
                 // 新規作成（空のCSV）
-                const csvContent = 'id,name,email,phone,pipelineStatus,createdAt,updatedAt\n';
+                const csvContent = 'id,name,email,phone,pipelineStatus,createdAt,updatedAt,notes\n';
                 const file = await this.createCSVFile(this.config.customersFileName, csvContent);
                 this.customersFileId = file.id;
                 console.log('✅ 顧客データファイル新規作成:', this.customersFileId);
@@ -89,26 +91,10 @@ window.GoogleDriveDataManager = {
         }
     },
     
-    // フォルダ内ファイル検索
-    searchFilesInFolder: async function(folderId, fileName) {
-        try {
-            const response = await window.gapi.client.drive.files.list({
-                q: `'${folderId}' in parents and name='${fileName}'`,
-                fields: 'files(id, name)'
-            });
-            
-            return response.result.files || [];
-            
-        } catch (error) {
-            console.error('❌ フォルダ内ファイル検索エラー:', error);
-            throw error;
-        }
-    },
-    
     // CSVファイル作成
     createCSVFile: async function(fileName, content) {
         try {
-            const blob = new Blob([content], { type: 'text/csv' });
+            const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
             
             const metadata = {
                 name: fileName,
@@ -139,53 +125,57 @@ window.GoogleDriveDataManager = {
         }
     },
     
-    // 顧客データをGoogle Driveに保存
-    saveCustomersToGoogleDrive: async function(customers) {
-        if (!this.isReady) {
-            throw new Error('データ管理システムが初期化されていません');
-        }
-        
+    // LocalStorage → GoogleドライブCSV同期
+    syncWithLocalStorage: async function() {
         try {
-            console.log(`💾 顧客データ保存開始: ${customers.length}件`);
+            if (!this.isReady) {
+                throw new Error('Google Drive データ管理システムが準備できていません');
+            }
             
-            // バックアップ作成
-            await this.createBackup();
+            console.log('🔄 LocalStorage → Google Drive 同期開始...');
             
-            // CSVデータ生成
-            const csvContent = this.convertCustomersToCSV(customers);
+            // LocalStorageから顧客データ取得
+            const localCustomers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
+            console.log(`📊 LocalStorage顧客データ: ${localCustomers.length}件`);
             
-            // Google Driveに保存
+            // CSV形式に変換
+            const csvContent = this.convertCustomersToCSV(localCustomers);
+            
+            // GoogleドライブのCSVファイルを更新
             await this.updateCSVFile(this.customersFileId, csvContent);
             
-            console.log('✅ 顧客データ保存完了');
-            return true;
+            console.log(`✅ Google Drive同期完了: ${localCustomers.length}件`);
+            return localCustomers;
             
         } catch (error) {
-            console.error('❌ 顧客データ保存エラー:', error);
+            console.error('❌ Google Drive同期エラー:', error);
             throw error;
         }
     },
     
-    // Google Driveから顧客データを読み込み
-    loadCustomersFromGoogleDrive: async function() {
-        if (!this.isReady) {
-            throw new Error('データ管理システムが初期化されていません');
-        }
-        
+    // GoogleドライブCSV → LocalStorage同期
+    syncFromGoogleDrive: async function() {
         try {
-            console.log('📥 顧客データ読み込み開始...');
+            if (!this.isReady) {
+                throw new Error('Google Drive データ管理システムが準備できていません');
+            }
             
-            // CSVファイル読み込み
+            console.log('🔄 Google Drive → LocalStorage 同期開始...');
+            
+            // GoogleドライブからCSVファイルを読み込み
             const csvContent = await this.readCSVFile(this.customersFileId);
             
             // CSV → JSON変換
             const customers = this.convertCSVToCustomers(csvContent);
             
-            console.log(`✅ 顧客データ読み込み完了: ${customers.length}件`);
+            // LocalStorageに保存
+            localStorage.setItem('rentpipe_customers', JSON.stringify(customers));
+            
+            console.log(`✅ LocalStorage同期完了: ${customers.length}件`);
             return customers;
             
         } catch (error) {
-            console.error('❌ 顧客データ読み込みエラー:', error);
+            console.error('❌ LocalStorage同期エラー:', error);
             throw error;
         }
     },
@@ -193,7 +183,7 @@ window.GoogleDriveDataManager = {
     // CSVファイル更新
     updateCSVFile: async function(fileId, content) {
         try {
-            const blob = new Blob([content], { type: 'text/csv' });
+            const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
             
             const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
                 method: 'PATCH',
@@ -247,7 +237,7 @@ window.GoogleDriveDataManager = {
                 `"${(customer.name || '').replace(/"/g, '""')}"`,
                 customer.email || '',
                 customer.phone || '',
-                customer.pipelineStatus || '',
+                customer.pipelineStatus || customer.status || '',
                 customer.createdAt || '',
                 customer.updatedAt || '',
                 `"${(customer.notes || '').replace(/"/g, '""')}"`
@@ -259,24 +249,36 @@ window.GoogleDriveDataManager = {
     
     // CSV → 顧客データ変換
     convertCSVToCustomers: function(csvContent) {
-        const lines = csvContent.split('\n').filter(line => line.trim());
-        if (lines.length === 0) return [];
-        
-        const headers = lines[0].split(',');
-        const customers = [];
-        
-        for (let i = 1; i < lines.length; i++) {
-            const values = this.parseCSVLine(lines[i]);
-            if (values.length >= headers.length) {
+        try {
+            const lines = csvContent.split('\n');
+            const headers = lines[0].split(',');
+            const customers = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = this.parseCSVLine(line);
+                if (values.length < headers.length) continue;
+                
                 const customer = {};
                 headers.forEach((header, index) => {
-                    customer[header] = values[index] || '';
+                    const value = values[index] || '';
+                    customer[header.trim()] = value.replace(/^"(.*)"$/, '$1').replace(/""/g, '"');
                 });
-                customers.push(customer);
+                
+                // 必須フィールドのチェック
+                if (customer.id && customer.name) {
+                    customers.push(customer);
+                }
             }
+            
+            return customers;
+            
+        } catch (error) {
+            console.error('❌ CSV変換エラー:', error);
+            return [];
         }
-        
-        return customers;
     },
     
     // CSV行パース
@@ -288,81 +290,23 @@ window.GoogleDriveDataManager = {
         for (let i = 0; i < line.length; i++) {
             const char = line[i];
             
-            if (char === '"' && (i === 0 || line[i-1] === ',')) {
-                inQuotes = true;
-            } else if (char === '"' && inQuotes) {
-                inQuotes = false;
+            if (char === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
             } else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
+                result.push(current);
                 current = '';
             } else {
                 current += char;
             }
         }
         
-        result.push(current.trim());
+        result.push(current);
         return result;
-    },
-    
-    // バックアップ作成
-    createBackup: async function() {
-        try {
-            if (!this.customersFileId) return;
-            
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
-            const backupName = `${this.config.backupPrefix}${timestamp}.csv`;
-            
-            // 現在のファイル内容を取得
-            const currentContent = await this.readCSVFile(this.customersFileId);
-            
-            // バックアップファイル作成
-            await this.createCSVFile(backupName, currentContent);
-            
-            console.log(`✅ バックアップ作成完了: ${backupName}`);
-            
-        } catch (error) {
-            console.warn('⚠️ バックアップ作成エラー:', error);
-            // バックアップエラーは処理を止めない
-        }
-    },
-    
-    // LocalStorageと同期
-    syncWithLocalStorage: async function() {
-        try {
-            console.log('🔄 LocalStorageとの同期開始...');
-            
-            // LocalStorageから現在の顧客データ取得
-            const localCustomers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
-            
-            if (localCustomers.length > 0) {
-                // Google Driveに保存
-                await this.saveCustomersToGoogleDrive(localCustomers);
-                console.log('✅ LocalStorage → Google Drive 同期完了');
-            }
-            
-            // Google Driveから最新データ取得
-            const driveCustomers = await this.loadCustomersFromGoogleDrive();
-            
-            // LocalStorageを更新
-            localStorage.setItem('rentpipe_customers', JSON.stringify(driveCustomers));
-            console.log('✅ Google Drive → LocalStorage 同期完了');
-            
-            return driveCustomers;
-            
-        } catch (error) {
-            console.error('❌ 同期エラー:', error);
-            throw error;
-        }
-    },
-    
-    // デバッグ情報
-    getDebugInfo: function() {
-        return {
-            isReady: this.isReady,
-            rentpipeFolderId: this.rentpipeFolderId,
-            customersFileId: this.customersFileId,
-            config: this.config
-        };
     }
 };
 
