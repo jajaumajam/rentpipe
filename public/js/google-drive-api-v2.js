@@ -59,24 +59,17 @@ window.GoogleDriveAPIv2 = {
                 return;
             }
             
-            console.log('📚 Google Identity Services 読み込み中...');
+            console.log('📥 Google Identity Services 読み込み中...');
             const script = document.createElement('script');
             script.src = 'https://accounts.google.com/gsi/client';
             script.async = true;
             script.defer = true;
-            
             script.onload = () => {
-                setTimeout(() => {
-                    if (window.google?.accounts?.oauth2) {
-                        console.log('✅ Google Identity Services 読み込み完了');
-                        resolve();
-                    } else {
-                        reject(new Error('Google Identity Services 初期化失敗'));
-                    }
-                }, 1000);
+                console.log('✅ Google Identity Services 読み込み完了');
+                // 読み込み後少し待つ
+                setTimeout(resolve, 500);
             };
-            
-            script.onerror = reject;
+            script.onerror = () => reject(new Error('Google Identity Services 読み込み失敗'));
             document.head.appendChild(script);
         });
     },
@@ -85,242 +78,144 @@ window.GoogleDriveAPIv2 = {
     loadGoogleAPIClient: function() {
         return new Promise((resolve, reject) => {
             if (window.gapi) {
-                console.log('✅ Google API Client Library 既に読み込み済み');
+                console.log('✅ Google API Client 既に読み込み済み');
                 resolve();
                 return;
             }
             
-            console.log('📚 Google API Client Library 読み込み中...');
+            console.log('📥 Google API Client 読み込み中...');
             const script = document.createElement('script');
             script.src = 'https://apis.google.com/js/api.js';
             script.onload = () => {
-                console.log('✅ Google API Client Library 読み込み完了');
+                console.log('✅ Google API Client 読み込み完了');
                 resolve();
             };
-            script.onerror = reject;
+            script.onerror = () => reject(new Error('Google API Client 読み込み失敗'));
             document.head.appendChild(script);
         });
     },
     
     // Token Client 初期化
     initializeTokenClient: function() {
-        console.log('🔧 Token Client 初期化中...');
-        
-        this.tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: this.config.clientId,
-            scope: this.config.scopes.join(' '),
-            callback: this.handleTokenResponse.bind(this)
-        });
-        
-        console.log('✅ Token Client 初期化完了');
+        try {
+            console.log('🔧 Token Client 初期化中...');
+            
+            if (!window.google?.accounts?.oauth2) {
+                throw new Error('Google Identity Services が利用できません');
+            }
+            
+            this.tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: this.config.clientId,
+                scope: this.config.scopes.join(' '),
+                callback: (response) => {
+                    console.log('✅ Token取得:', response);
+                    if (response.access_token) {
+                        this.accessToken = response.access_token;
+                        this.isAuthenticated = true;
+                        
+                        // トークンをLocalStorageに保存
+                        localStorage.setItem('google_access_token', response.access_token);
+                        localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());
+                    }
+                }
+            });
+            
+            console.log('✅ Token Client 初期化完了');
+            
+        } catch (error) {
+            console.error('❌ Token Client 初期化エラー:', error);
+            throw error;
+        }
     },
     
     // Google API Client 初期化
     initializeGAPIClient: async function() {
-        console.log('🔧 Google API Client 初期化中...');
-        
-        await new Promise((resolve, reject) => {
-            window.gapi.load('client', {
-                callback: resolve,
-                onerror: reject
-            });
-        });
-        
-        await window.gapi.client.init({
-            discoveryDocs: this.config.discoveryDocs
-        });
-        
-        console.log('✅ Google API Client 初期化完了');
-    },
-    
-    // 認証開始
-    authenticate: function() {
-        console.log('🔑 Google認証開始...');
-        
-        if (!this.tokenClient) {
-            throw new Error('Token Client が初期化されていません');
-        }
-        
-        return new Promise((resolve, reject) => {
-            this.authResolve = resolve;
-            this.authReject = reject;
-            
-            this.tokenClient.requestAccessToken({
-                prompt: 'consent'
-            });
-        });
-    },
-    
-    // トークンレスポンス処理
-    handleTokenResponse: async function(response) {
         try {
-            if (response.error) {
-                console.error('❌ 認証エラー:', response.error);
-                if (this.authReject) this.authReject(new Error(response.error));
-                return;
+            console.log('🔧 Google API Client 初期化中...');
+            
+            if (!window.gapi) {
+                throw new Error('Google API Client が利用できません');
             }
             
-            this.accessToken = response.access_token;
-            console.log('✅ アクセストークン取得成功');
-            
-            // Google API Client にトークン設定
-            window.gapi.client.setToken({
-                access_token: this.accessToken
+            await new Promise((resolve, reject) => {
+                window.gapi.load('client', {
+                    callback: resolve,
+                    onerror: reject
+                });
             });
             
-            // ユーザー情報取得
-            await this.fetchUserInfo();
+            await window.gapi.client.init({
+                apiKey: '', // 公開APIキーは不要（OAuth使用）
+                discoveryDocs: this.config.discoveryDocs
+            });
             
-            this.isAuthenticated = true;
-            console.log(`✅ 認証完了: ${this.userInfo?.email}`);
-            
-            if (this.authResolve) this.authResolve(this.userInfo);
+            console.log('✅ Google API Client 初期化完了');
             
         } catch (error) {
-            console.error('❌ トークン処理エラー:', error);
-            if (this.authReject) this.authReject(error);
+            console.error('❌ Google API Client 初期化エラー:', error);
+            throw error;
         }
     },
     
-    // ユーザー情報取得
-    fetchUserInfo: async function() {
+    // 認証実行
+    authenticate: async function() {
         try {
-            const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`
+            console.log('🔐 Google認証開始...');
+            
+            if (!this.isInitialized) {
+                throw new Error('Google Drive API が初期化されていません');
+            }
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    this.tokenClient.callback = async (response) => {
+                        try {
+                            if (response.error) {
+                                reject(new Error(`認証エラー: ${response.error}`));
+                                return;
+                            }
+                            
+                            if (!response.access_token) {
+                                reject(new Error('アクセストークンが取得できませんでした'));
+                                return;
+                            }
+                            
+                            console.log('✅ アクセストークン取得成功');
+                            this.accessToken = response.access_token;
+                            this.isAuthenticated = true;
+                            
+                            // トークンを保存
+                            localStorage.setItem('google_access_token', response.access_token);
+                            localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());
+                            
+                            // ユーザー情報を取得
+                            const userInfo = await this.getUserInfo();
+                            this.userInfo = userInfo;
+                            
+                            console.log('✅ Google認証完了:', userInfo.email);
+                            resolve(userInfo);
+                            
+                        } catch (error) {
+                            console.error('❌ 認証コールバックエラー:', error);
+                            reject(error);
+                        }
+                    };
+                    
+                    // 認証フローを開始
+                    this.tokenClient.requestAccessToken({ prompt: 'consent' });
+                    
+                } catch (error) {
+                    console.error('❌ 認証開始エラー:', error);
+                    reject(error);
                 }
             });
             
-            if (!response.ok) {
-                throw new Error(`ユーザー情報取得エラー: ${response.status}`);
-            }
-            
-            this.userInfo = await response.json();
-            console.log('✅ ユーザー情報取得成功:', this.userInfo.email);
-            
         } catch (error) {
-            console.error('❌ ユーザー情報取得エラー:', error);
+            console.error('❌ Google認証エラー:', error);
             throw error;
         }
     },
     
-    // フォルダ作成
-    createFolder: async function(folderName, parentFolderId = null) {
-        if (!this.isAuthenticated) {
-            throw new Error('認証が必要です');
-        }
-        
-        try {
-            console.log(`📁 フォルダ作成開始: ${folderName}`);
-            
-            const metadata = {
-                name: folderName,
-                mimeType: 'application/vnd.google-apps.folder'
-            };
-            
-            if (parentFolderId) {
-                metadata.parents = [parentFolderId];
-            }
-            
-            const response = await window.gapi.client.drive.files.create({
-                resource: metadata
-            });
-            
-            console.log('✅ フォルダ作成成功:', response.result.id);
-            return response.result;
-            
-        } catch (error) {
-            console.error('❌ フォルダ作成エラー:', error);
-            throw error;
-        }
-    },
-    
-    // ファイル一覧取得
-    listFiles: async function(folderId = null, pageSize = 10) {
-        if (!this.isAuthenticated) {
-            throw new Error('認証が必要です');
-        }
-        
-        try {
-            console.log('📋 ファイル一覧取得開始...');
-            
-            let query = '';
-            if (folderId) {
-                query = `'${folderId}' in parents`;
-            }
-            
-            const response = await window.gapi.client.drive.files.list({
-                q: query,
-                pageSize: pageSize,
-                fields: 'nextPageToken, files(id, name, mimeType, createdTime, modifiedTime)'
-            });
-            
-            console.log(`✅ ファイル一覧取得成功: ${response.result.files.length}件`);
-            return response.result.files;
-            
-        } catch (error) {
-            console.error('❌ ファイル一覧取得エラー:', error);
-            throw error;
-        }
-    },
-    
-    // RentPipe専用フォルダ作成
-    createRentPipeFolder: async function() {
-        try {
-            console.log('🏠 RentPipe専用フォルダ作成開始...');
-            
-            // 既存のRentPipeフォルダを検索
-            const existingFolders = await this.searchFolders('RentPipe');
-            if (existingFolders.length > 0) {
-                console.log('✅ RentPipeフォルダ既存:', existingFolders[0].id);
-                return existingFolders[0];
-            }
-            
-            // 新規作成
-            const folder = await this.createFolder('RentPipe');
-            console.log('✅ RentPipeフォルダ作成完了:', folder.id);
-            return folder;
-            
-        } catch (error) {
-            console.error('❌ RentPipeフォルダ作成エラー:', error);
-            throw error;
-        }
-    },
-    
-    // フォルダ検索
-    searchFolders: async function(folderName) {
-        try {
-            const response = await window.gapi.client.drive.files.list({
-                q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder'`,
-                fields: 'files(id, name)'
-            });
-            
-            return response.result.files || [];
-            
-        } catch (error) {
-            console.error('❌ フォルダ検索エラー:', error);
-            throw error;
-        }
-    },
-    
-    // デバッグ情報
-    getDebugInfo: function() {
-        return {
-            isInitialized: this.isInitialized,
-            isAuthenticated: this.isAuthenticated,
-            hasTokenClient: !!this.tokenClient,
-            hasAccessToken: !!this.accessToken,
-            userEmail: this.userInfo?.email,
-            config: {
-                clientId: this.config.clientId.substring(0, 20) + '...',
-                scopes: this.config.scopes
-            }
-        };
-    }
-};
-
-console.log('✅ Google Drive API v2 準備完了');
-
     // 静かな認証（ポップアップなし）
     authenticateSilent: async function() {
         try {
@@ -346,11 +241,6 @@ console.log('✅ Google Drive API v2 準備完了');
                 return userInfo;
             }
             
-            // 静寂な再認証を試行（Google Identity Servicesの場合）
-            if (window.google?.accounts?.oauth2) {
-                return null; // 静寂認証は初回認証後のみ可能
-            }
-            
             return null; // 静寂認証が利用できない
             
         } catch (error) {
@@ -358,7 +248,7 @@ console.log('✅ Google Drive API v2 準備完了');
             return null;
         }
     },
-
+    
     // ユーザー情報取得
     getUserInfo: async function() {
         try {
@@ -381,5 +271,74 @@ console.log('✅ Google Drive API v2 準備完了');
             console.error('❌ ユーザー情報取得エラー:', error);
             throw error;
         }
+    },
+    
+    // Google Driveフォルダ作成
+    createFolder: async function(folderName, parentFolderId = null) {
+        try {
+            console.log(`📁 フォルダ作成: ${folderName}`);
+            
+            if (!this.isAuthenticated || !this.accessToken) {
+                throw new Error('Google認証が必要です');
+            }
+            
+            const metadata = {
+                name: folderName,
+                mimeType: 'application/vnd.google-apps.folder'
+            };
+            
+            if (parentFolderId) {
+                metadata.parents = [parentFolderId];
+            }
+            
+            const response = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(metadata)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`フォルダ作成失敗: ${response.status}`);
+            }
+            
+            const folder = await response.json();
+            console.log('✅ フォルダ作成成功:', folder.name);
+            return folder;
+            
+        } catch (error) {
+            console.error('❌ フォルダ作成エラー:', error);
+            throw error;
+        }
+    },
+    
+    // ファイル検索
+    searchFiles: async function(query) {
+        try {
+            if (!this.isAuthenticated || !this.accessToken) {
+                throw new Error('Google認証が必要です');
+            }
+            
+            const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`ファイル検索失敗: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            return result.files || [];
+            
+        } catch (error) {
+            console.error('❌ ファイル検索エラー:', error);
+            throw error;
+        }
     }
 };
+
+console.log('✅ Google Drive API v2 準備完了');
