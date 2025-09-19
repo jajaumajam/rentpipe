@@ -6,20 +6,19 @@
     <title>顧客管理 | RentPipe</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* 認証状態表示 */
         .auth-status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 6px;
             font-size: 14px;
+            font-weight: 500;
         }
-        .auth-status.success { background: #d4edda; color: #155724; }
-        .auth-status.warning { background: #fff3cd; color: #856404; }
-        .auth-status.error { background: #f8d7da; color: #721c24; }
+        .auth-status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .auth-status.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .auth-status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         
-        /* Google Drive同期状態 */
         .sync-status {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 4px;
             font-size: 12px;
             display: inline-block;
@@ -29,7 +28,6 @@
         .sync-status.synced { background: #e8f5e8; color: #2e7d32; }
         .sync-status.error { background: #ffebee; color: #c62828; }
         
-        /* 読み込みスピナー */
         .loading-spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #3498db;
@@ -44,6 +42,15 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .script-loading-status {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -53,6 +60,12 @@
     <!-- メインコンテンツ -->
     <main class="main-content">
         <div class="container">
+            <!-- スクリプト読み込み状況（デバッグ用） -->
+            <div id="script-loading-status" class="script-loading-status" style="display: none;">
+                <strong>📋 スクリプト読み込み状況:</strong>
+                <div id="script-status-details"></div>
+            </div>
+
             <!-- 認証・同期状態表示 -->
             <div id="auth-sync-status" class="auth-status warning">
                 🔄 システム初期化中...
@@ -65,6 +78,9 @@
                     <a href="customer-form.html" class="btn btn-primary">📝 新規顧客追加</a>
                     <button id="manual-sync-btn" class="btn btn-secondary" style="display: none;">
                         🔄 手動同期
+                    </button>
+                    <button onclick="showScriptStatus()" class="btn btn-outline" style="font-size: 12px;">
+                        🔍 デバッグ
                     </button>
                 </div>
             </div>
@@ -112,29 +128,63 @@
         </div>
     </main>
 
-    <!-- JavaScript - 正しい読み込み順序 -->
+    <!-- JavaScript - 最適化された読み込み順序 -->
+    <!-- 1. 基本システム -->
     <script src="js/navigation.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
-    <!-- Google Drive API v2 を先に読み込む -->
-    <script src="js/google-drive-api-v2.js"></script>
-    
-    <!-- 統合認証マネージャー -->
+    <!-- 2. 統合認証マネージャー（最優先） -->
     <script src="js/integrated-auth-manager-v2.js"></script>
+    
+    <!-- 3. Google Drive API -->
+    <script src="js/google-drive-api-v2.js"></script>
     
     <script>
         // グローバル変数
         let currentAuthState = null;
         let currentCustomers = [];
         let isAutoSyncEnabled = true;
+        let systemInitialized = false;
+
+        // スクリプト読み込み状況表示
+        function showScriptStatus() {
+            const statusDiv = document.getElementById('script-loading-status');
+            const detailsDiv = document.getElementById('script-status-details');
+            
+            statusDiv.style.display = statusDiv.style.display === 'none' ? 'block' : 'none';
+            
+            if (statusDiv.style.display === 'block') {
+                const checks = [
+                    { name: 'navigation.js', obj: 'window.generateNavigation' },
+                    { name: 'unified-data-manager.js', obj: 'window.UnifiedDataManager' },
+                    { name: 'integrated-auth-manager-v2.js', obj: 'window.IntegratedAuthManagerV2' },
+                    { name: 'google-drive-api-v2.js', obj: 'window.GoogleDriveAPIv2' }
+                ];
+                
+                let html = '<ul style="margin: 5px 0; padding-left: 20px;">';
+                
+                checks.forEach(check => {
+                    try {
+                        const exists = eval(check.obj);
+                        const status = exists ? '✅' : '❌';
+                        html += `<li>${status} ${check.name} - ${exists ? 'OK' : 'なし'}</li>`;
+                    } catch (error) {
+                        html += `<li>❌ ${check.name} - エラー: ${error.message}</li>`;
+                    }
+                });
+                
+                html += '</ul>';
+                detailsDiv.innerHTML = html;
+            }
+        }
 
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 顧客管理ページ初期化開始');
             
             try {
-                // ナビゲーション生成を待つ
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // 短い待機（他のスクリプトの読み込み完了を待つ）
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
                 // スクリプト読み込み確認
                 await checkScriptLoading();
@@ -151,25 +201,30 @@
                 // UI初期化
                 setupEventListeners();
                 
+                systemInitialized = true;
                 console.log('✅ 顧客管理ページ初期化完了');
                 
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
                 showAuthStatus(`初期化失敗: ${error.message}`, 'error');
+                
+                // デバッグ情報を自動表示
+                showScriptStatus();
             }
         });
 
-        // スクリプト読み込み確認
+        // スクリプト読み込み確認（強化版）
         async function checkScriptLoading() {
             console.log('🔍 スクリプト読み込み状況確認...');
             
             const checks = [
-                { name: 'Google Drive API v2', obj: 'window.GoogleDriveAPIv2' },
-                { name: '統合認証マネージャー v2', obj: 'window.IntegratedAuthManagerV2' },
-                { name: 'Unified Data Manager', obj: 'window.UnifiedDataManager' }
+                { name: '統合認証マネージャー v2', obj: 'window.IntegratedAuthManagerV2', critical: true },
+                { name: 'Google Drive API v2', obj: 'window.GoogleDriveAPIv2', critical: false },
+                { name: 'Unified Data Manager', obj: 'window.UnifiedDataManager', critical: false }
             ];
             
             const missing = [];
+            const warnings = [];
             
             for (const check of checks) {
                 try {
@@ -177,21 +232,34 @@
                     if (exists) {
                         console.log(`✅ ${check.name} OK`);
                     } else {
-                        console.warn(`⚠️ ${check.name} なし`);
-                        missing.push(check.name);
+                        const message = `${check.name} なし`;
+                        if (check.critical) {
+                            missing.push(message);
+                        } else {
+                            warnings.push(message);
+                        }
+                        console.warn(`⚠️ ${message}`);
                     }
                 } catch (error) {
-                    console.warn(`❌ ${check.name} エラー:`, error.message);
-                    missing.push(check.name);
+                    const message = `${check.name} エラー: ${error.message}`;
+                    if (check.critical) {
+                        missing.push(message);
+                    } else {
+                        warnings.push(message);
+                    }
+                    console.error(`❌ ${message}`);
                 }
             }
             
             if (missing.length > 0) {
-                const missingText = missing.join(', ');
-                throw new Error(`必要なスクリプトが読み込まれていません: ${missingText}`);
+                throw new Error(`重要なスクリプトが読み込まれていません: ${missing.join(', ')}`);
             }
             
-            console.log('✅ すべてのスクリプト読み込み確認完了');
+            if (warnings.length > 0) {
+                console.warn(`⚠️ 一部機能が制限されます: ${warnings.join(', ')}`);
+            }
+            
+            console.log('✅ 必須スクリプト読み込み確認完了');
         }
 
         // 統合認証システム初期化
@@ -199,10 +267,12 @@
             showAuthStatus('🔧 認証システム初期化中...', 'warning');
             
             try {
-                // 統合認証マネージャー初期化
-                const initialized = await window.IntegratedAuthManagerV2.initialize();
-                if (!initialized) {
-                    throw new Error('統合認証マネージャー初期化に失敗しました');
+                // 統合認証マネージャー初期化確認
+                if (!window.IntegratedAuthManagerV2.isInitialized) {
+                    const initialized = await window.IntegratedAuthManagerV2.initialize();
+                    if (!initialized) {
+                        throw new Error('統合認証マネージャー初期化に失敗しました');
+                    }
                 }
                 
                 // 認証状態取得
@@ -211,21 +281,22 @@
                 
                 // RentPipe認証確認
                 if (!currentAuthState.isAuthenticated) {
-                    throw new Error('RentPipeにログインしていません');
+                    console.warn('⚠️ RentPipeにログインしていません - ログインページにリダイレクト');
+                    
+                    showAuthStatus('ログインが必要です。3秒後にログインページに移動します...', 'warning');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                    return false;
                 }
                 
-                showAuthStatus(`✅ ${currentAuthState.rentpipeAuth.user?.email || 'ユーザー'} でログイン中`, 'success');
+                const userEmail = currentAuthState.rentpipeAuth.user?.email || 'ユーザー';
+                showAuthStatus(`✅ ${userEmail} でログイン中`, 'success');
                 return true;
                 
             } catch (error) {
                 console.error('❌ 認証システム初期化エラー:', error);
                 showAuthStatus(`❌ 認証エラー: ${error.message}`, 'error');
-                
-                // ログインページにリダイレクト（3秒後）
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 3000);
-                
                 return false;
             }
         }
@@ -233,14 +304,19 @@
         // Google Drive統合初期化
         async function initializeGoogleDriveIntegration() {
             try {
+                // Google Drive APIが利用できない場合はスキップ
+                if (!window.GoogleDriveAPIv2) {
+                    console.warn('⚠️ Google Drive API v2 が利用できません - 基本機能のみ使用');
+                    addSyncStatus('⚠️ Drive機能無し', 'warning');
+                    return false;
+                }
+                
                 showAuthStatus('☁️ Google Drive連携確認中...', 'warning');
                 
                 // Google認証状態確認
-                const canUseGoogleForms = window.IntegratedAuthManagerV2.canUseGoogleForms();
                 const isFullyAuthenticated = window.IntegratedAuthManagerV2.isFullyAuthenticated();
                 
                 console.log('🔍 Google認証状態:', {
-                    canUseGoogleForms,
                     isFullyAuthenticated,
                     googleAuth: currentAuthState.googleAuth
                 });
@@ -315,7 +391,7 @@
         function showManualAuthButton() {
             const statusDiv = document.getElementById('auth-sync-status');
             statusDiv.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <span>⚠️ Google Drive未接続 - 手動認証が必要です</span>
                     <button id="manual-google-auth-btn" class="btn btn-primary" onclick="performManualGoogleAuth()">
                         🔐 Google Drive接続
@@ -323,9 +399,6 @@
                 </div>
             `;
             statusDiv.className = 'auth-status warning';
-            
-            // 手動同期ボタンも表示
-            document.getElementById('manual-sync-btn').style.display = 'inline-block';
         }
 
         // 手動Google認証実行
@@ -358,8 +431,11 @@
                     tokenExpiry: Date.now() + (3600 * 1000)
                 });
                 
-                // Google Drive統合を再初期化
-                await initializeGoogleDriveIntegration();
+                // 認証状態を更新
+                currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
+                
+                // 表示更新
+                showAuthStatus('☁️ Google Drive自動同期有効', 'success');
                 
             } catch (error) {
                 console.error('❌ 手動Google認証エラー:', error);
@@ -531,12 +607,6 @@
             if (statusFilter) {
                 statusFilter.addEventListener('change', performSearch);
             }
-            
-            // 手動同期ボタン
-            const manualSyncBtn = document.getElementById('manual-sync-btn');
-            if (manualSyncBtn) {
-                manualSyncBtn.addEventListener('click', performManualSync);
-            }
         }
 
         // 検索実行
@@ -567,33 +637,6 @@
             currentCustomers = filteredCustomers;
             updateCustomerList();
             currentCustomers = originalCustomers;
-        }
-
-        // 手動同期実行
-        async function performManualSync() {
-            const btn = document.getElementById('manual-sync-btn');
-            const originalText = btn.textContent;
-            
-            try {
-                btn.textContent = '同期中...';
-                btn.disabled = true;
-                
-                console.log('🔄 手動同期実行中...');
-                addSyncStatus('🔄 同期中', 'syncing');
-                
-                // 実際の同期処理（将来実装）
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                addSyncStatus('✅ 同期完了', 'synced');
-                
-            } catch (error) {
-                console.error('❌ 手動同期エラー:', error);
-                addSyncStatus('❌ 同期エラー', 'error');
-                
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }
         }
     </script>
 </body>
