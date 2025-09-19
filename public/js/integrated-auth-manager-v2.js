@@ -240,3 +240,70 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 console.log('✅ 統合認証マネージャー v2 準備完了');
+
+    // Google認証状態更新
+    updateGoogleAuth: async function(googleAuthInfo) {
+        try {
+            console.log('🔄 Google認証状態更新中...', googleAuthInfo.user?.email);
+            
+            this.authState.googleAuth = {
+                isSignedIn: googleAuthInfo.isSignedIn,
+                user: googleAuthInfo.user,
+                accessToken: googleAuthInfo.accessToken,
+                tokenExpiry: googleAuthInfo.tokenExpiry
+            };
+            
+            // LocalStorageに保存
+            const authData = {
+                isSignedIn: googleAuthInfo.isSignedIn,
+                user: googleAuthInfo.user,
+                accessToken: googleAuthInfo.accessToken,
+                tokenExpiry: googleAuthInfo.tokenExpiry
+            };
+            
+            localStorage.setItem('google_auth_data', JSON.stringify(authData));
+            
+            // トークン情報も個別保存（Google Drive API V2との互換性）
+            if (googleAuthInfo.accessToken) {
+                localStorage.setItem('google_access_token', googleAuthInfo.accessToken);
+                localStorage.setItem('google_token_expiry', googleAuthInfo.tokenExpiry.toString());
+            }
+            
+            console.log('✅ Google認証状態更新完了');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Google認証状態更新エラー:', error);
+            return false;
+        }
+    },
+
+    // 完全ログアウト
+    performFullLogout: function() {
+        console.log('🚪 完全ログアウト実行中...');
+        
+        // 認証状態クリア
+        this.clearGoogleAuth();
+        this.clearRentPipeAuth();
+        
+        // 個別トークンもクリア
+        localStorage.removeItem('google_access_token');
+        localStorage.removeItem('google_token_expiry');
+        
+        console.log('✅ 完全ログアウト完了');
+        
+        // ログインページにリダイレクト
+        window.location.href = 'login.html';
+    }
+};
+
+// グローバルログアウト関数
+window.performFullLogout = function() {
+    if (window.IntegratedAuthManagerV2) {
+        window.IntegratedAuthManagerV2.performFullLogout();
+    } else {
+        console.warn('⚠️ 統合認証マネージャーが利用できません');
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+};

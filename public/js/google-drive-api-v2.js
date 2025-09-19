@@ -320,3 +320,66 @@ window.GoogleDriveAPIv2 = {
 };
 
 console.log('✅ Google Drive API v2 準備完了');
+
+    // 静かな認証（ポップアップなし）
+    authenticateSilent: async function() {
+        try {
+            console.log('🔄 Google静寂認証を試行中...');
+            
+            if (!this.isInitialized) {
+                throw new Error('Google Drive API が初期化されていません');
+            }
+            
+            // 既存のトークンがある場合はそれを使用
+            const existingToken = localStorage.getItem('google_access_token');
+            const tokenExpiry = localStorage.getItem('google_token_expiry');
+            
+            if (existingToken && tokenExpiry && new Date().getTime() < parseInt(tokenExpiry)) {
+                console.log('✅ 既存トークンが有効');
+                this.accessToken = existingToken;
+                this.isAuthenticated = true;
+                
+                // ユーザー情報を取得
+                const userInfo = await this.getUserInfo();
+                this.userInfo = userInfo;
+                
+                return userInfo;
+            }
+            
+            // 静寂な再認証を試行（Google Identity Servicesの場合）
+            if (window.google?.accounts?.oauth2) {
+                return null; // 静寂認証は初回認証後のみ可能
+            }
+            
+            return null; // 静寂認証が利用できない
+            
+        } catch (error) {
+            console.log('ℹ️ 静寂認証は利用できません:', error.message);
+            return null;
+        }
+    },
+
+    // ユーザー情報取得
+    getUserInfo: async function() {
+        try {
+            if (!this.accessToken) {
+                throw new Error('アクセストークンがありません');
+            }
+            
+            const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${this.accessToken}`);
+            
+            if (!response.ok) {
+                throw new Error(`ユーザー情報取得失敗: ${response.status}`);
+            }
+            
+            const userInfo = await response.json();
+            console.log('✅ ユーザー情報取得成功:', userInfo.email);
+            
+            return userInfo;
+            
+        } catch (error) {
+            console.error('❌ ユーザー情報取得エラー:', error);
+            throw error;
+        }
+    }
+};
