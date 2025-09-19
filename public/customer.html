@@ -200,8 +200,8 @@
         }
         
         // 順次スクリプト読み込み
-        // スクリプトファイルを順次読み込み（依存関係を考慮）
-        function loadScriptsSequentially() {
+        // 順次スクリプト読み込み（Google Drive統合対応）
+        async function loadScriptsSequentially() {
             return new Promise((resolve, reject) => {
                 loadScript('js/navigation.js', function() {
                     loadScript('js/unified-data-manager.js', function() {
@@ -284,45 +284,74 @@
             console.log('🚀 顧客管理ページ初期化開始');
             
             try {
-        // スクリプトファイルを順次読み込み（依存関係を考慮）
-        function loadScriptsSequentially() {
-            return new Promise((resolve, reject) => {
-                loadScript('js/navigation.js', function() {
-                    loadScript('js/unified-data-manager.js', function() {
-                        loadScript('js/integrated-auth-manager-v2.js', function() {
-                            loadScript('js/google-drive-api-v2.js', function() {
-                                loadScript('js/google-drive-data-manager.js', function() {
-                                    loadScript('js/customer-google-drive-integration.js', function() {
-                                        console.log('✅ すべてのスクリプト読み込み完了');
-                                        resolve();
-                                    }, function() {
-                                        console.warn('⚠️ customer-google-drive-integration.js 読み込み失敗（オプション機能）');
-                                        resolve();
-                                    });
-                                }, function() {
-                                    console.warn('⚠️ google-drive-data-manager.js 読み込み失敗（オプション機能）');
-                                    resolve();
-                                });
-                            }, function() {
-                                console.warn('⚠️ Google Drive API v2 読み込み失敗（オプション機能）');
-                                resolve();
-                            });
-                        }, function() {
-                            reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
-                        });
-                    }, function() {
-                        console.warn('⚠️ unified-data-manager.js 読み込み失敗（オプション機能）');
-                        loadScript('js/integrated-auth-manager-v2.js', function() {
-                            resolve();
-                        }, function() {
-                            reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
-                        });
-                    });
-                }, function() {
-                    reject(new Error('navigation.js 読み込み失敗'));
-                });
-            });
+                await loadScriptsSequentially();
+                await new Promise(resolve => setTimeout(resolve, 300));
+                await checkScriptLoading();
+                await initializeAuthenticationSystem();
+                await initializeGoogleDriveIntegration();
+                await loadCustomerData();
+                setupEventListeners();
+                
+                systemInitialized = true;
+                console.log('✅ 顧客管理ページ初期化完了');
+                
+            } catch (error) {
+                console.error('❌ 初期化エラー:', error);
+                showAuthStatus(`初期化失敗: ${error.message}`, 'error');
+                showScriptStatus();
+            }
+        });
+
+        // スクリプト読み込み確認
+        async function checkScriptLoading() {
+            console.log('🔍 スクリプト読み込み状況確認...');
+            
+            const checks = [
+                { name: 'ナビゲーション', obj: 'window.generateNavigation || window.createNavigation', critical: true },
+                { name: '統合認証マネージャー v2', obj: 'window.IntegratedAuthManagerV2', critical: true },
+                { name: 'Google Drive API v2', obj: 'window.GoogleDriveAPIv2', critical: false },
+                { name: 'Unified Data Manager', obj: 'window.UnifiedDataManager', critical: false }
+            ];
+            
+            const missing = [];
+            const warnings = [];
+            
+            for (const check of checks) {
+                try {
+                    const exists = eval(check.obj);
+                    if (exists) {
+                        console.log(`✅ ${check.name} OK`);
+                    } else {
+                        const message = `${check.name} なし`;
+                        if (check.critical) {
+                            missing.push(message);
+                        } else {
+                            warnings.push(message);
+                        }
+                        console.warn(`⚠️ ${message}`);
+                    }
+                } catch (error) {
+                    const message = `${check.name} エラー: ${error.message}`;
+                    if (check.critical) {
+                        missing.push(message);
+                    } else {
+                        warnings.push(message);
+                    }
+                    console.error(`❌ ${message}`);
+                }
+            }
+            
+            if (missing.length > 0) {
+                throw new Error(`重要なスクリプトが読み込まれていません: ${missing.join(', ')}`);
+            }
+            
+            if (warnings.length > 0) {
+                console.warn(`⚠️ 一部機能が制限されます: ${warnings.join(', ')}`);
+            }
+            
+            console.log('✅ 必須スクリプト読み込み確認完了');
         }
+
         // 統合認証システム初期化
         async function initializeAuthenticationSystem() {
             showAuthStatus('🔧 認証システム初期化中...', 'warning');
