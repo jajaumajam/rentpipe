@@ -4,62 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 | RentPipe</title>
-    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 既存の充実したスタイルシート -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/pipeline-responsive.css">
+    
     <style>
-        .auth-status {
-            padding: 12px 16px;
-            margin: 12px 0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
+        /* customer.html専用の追加スタイル */
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
         }
-        .auth-status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .auth-status.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .auth-status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         
-        .sync-status {
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            display: inline-block;
-            margin-left: 10px;
+        .welcome-banner h2 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            font-weight: 600;
         }
-        .sync-status.syncing { background: #e3f2fd; color: #1976d2; }
-        .sync-status.synced { background: #e8f5e8; color: #2e7d32; }
-        .sync-status.error { background: #ffebee; color: #c62828; }
         
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
+        .welcome-banner p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        /* main.cssとの互換性確保 */
+        .main-content {
+            margin-top: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 20px;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* 改良されたカードデザイン */
+        .customer-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
         }
         
-        .script-loading-status {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
+        .customer-card:hover {
+            border-left-color: #3b82f6;
+            transform: translateX(4px);
+        }
+        
+        /* ステータスバッジの改善 */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        .script-loading-status ul {
-            margin: 5px 0;
-            padding-left: 20px;
-        }
-        
-        .script-loading-status li {
-            margin: 2px 0;
-        }
+        .status-initial { background: #fee2e2; color: #991b1b; }
+        .status-presentation { background: #fed7aa; color: #9a3412; }
+        .status-viewing { background: #fde68a; color: #92400e; }
+        .status-application { background: #dcfce7; color: #166534; }
+        .status-screening { background: #dbeafe; color: #1e40af; }
+        .status-contract { background: #e0e7ff; color: #3730a3; }
+        .status-complete { background: #f3e8ff; color: #581c87; }
     </style>
 </head>
 <body>
@@ -69,6 +85,12 @@
     <!-- メインコンテンツ -->
     <main class="main-content">
         <div class="container">
+            <!-- ウェルカムバナー -->
+            <div class="welcome-banner">
+                <h2>👋 顧客管理システムへようこそ</h2>
+                <p>効率的な顧客管理でビジネスを加速させましょう</p>
+            </div>
+
             <!-- スクリプト読み込み状況（デバッグ用） -->
             <div id="script-loading-status" class="script-loading-status" style="display: none;">
                 <strong>📋 スクリプト読み込み状況:</strong>
@@ -81,10 +103,15 @@
             </div>
 
             <!-- ページヘッダー -->
-            <div class="page-header">
-                <h1>👥 顧客管理</h1>
-                <div class="page-actions">
-                    <a href="customer-form.html" class="btn btn-primary">📝 新規顧客追加</a>
+            <div class="dashboard-header">
+                <div class="header-content">
+                    <h1>👥 顧客管理</h1>
+                    <p>顧客情報の一元管理とパイプライン追跡</p>
+                </div>
+                <div class="header-actions">
+                    <a href="customer-form.html" class="btn btn-primary">
+                        📝 新規顧客追加
+                    </a>
                     <button id="manual-sync-btn" class="btn btn-secondary" style="display: none;">
                         🔄 手動同期
                     </button>
@@ -95,9 +122,10 @@
             </div>
 
             <!-- 検索・フィルター -->
-            <div class="search-controls">
-                <div class="search-form">
-                    <input type="text" id="search-input" class="form-control" placeholder="顧客名・メール・電話で検索...">
+            <div class="search-controls" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px;">
+                <h3 style="margin-bottom: 15px; color: #374151;">🔍 検索・フィルター</h3>
+                <div style="display: grid; grid-template-columns: 1fr 200px; gap: 15px;">
+                    <input type="text" id="search-input" class="form-control" placeholder="顧客名・メール・電話番号で検索...">
                     <select id="status-filter" class="form-control">
                         <option value="">すべてのステータス</option>
                         <option value="初回相談">初回相談</option>
@@ -112,26 +140,41 @@
             </div>
 
             <!-- 統計 -->
-            <div id="customer-stats" class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">総顧客数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">今月新規</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">成約済</div>
+            <div class="dashboard-stats">
+                <div class="stats-grid" id="customer-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">総顧客数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🆕</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">今月新規</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">成約済</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">進行中</div>
+                    </div>
                 </div>
             </div>
 
             <!-- 顧客一覧 -->
-            <div id="customer-list" class="customer-list">
-                <div style="text-align: center; padding: 40px;">
-                    <div class="loading-spinner"></div>
-                    <p>顧客データを読み込み中...</p>
+            <div class="activity-section">
+                <div class="activity-header">
+                    <h2>👥 顧客一覧</h2>
+                </div>
+                <div id="customer-list" class="activity-list">
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="loading-spinner"></div>
+                        <p>顧客データを読み込み中...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,26 +202,21 @@
         // 順次スクリプト読み込み
         async function loadScriptsSequentially() {
             return new Promise((resolve, reject) => {
-                // 1. navigation.js
                 loadScript('js/navigation.js', function() {
-                    // 2. unified-data-manager.js
                     loadScript('js/unified-data-manager.js', function() {
-                        // 3. integrated-auth-manager-v2.js
                         loadScript('js/integrated-auth-manager-v2.js', function() {
-                            // 4. google-drive-api-v2.js
                             loadScript('js/google-drive-api-v2.js', function() {
                                 console.log('✅ すべてのスクリプト読み込み完了');
                                 resolve();
                             }, function() {
                                 console.warn('⚠️ Google Drive API v2 読み込み失敗（オプション機能）');
-                                resolve(); // Google Drive APIは必須ではないので続行
+                                resolve();
                             });
                         }, function() {
                             reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
                         });
                     }, function() {
                         console.warn('⚠️ unified-data-manager.js 読み込み失敗（オプション機能）');
-                        // 3. integrated-auth-manager-v2.js (unified-data-manager.jsなしでも続行)
                         loadScript('js/integrated-auth-manager-v2.js', function() {
                             resolve();
                         }, function() {
@@ -236,25 +274,12 @@
             console.log('🚀 顧客管理ページ初期化開始');
             
             try {
-                // スクリプトの順次読み込み
                 await loadScriptsSequentially();
-                
-                // 少し待機（スクリプトの初期化完了を待つ）
                 await new Promise(resolve => setTimeout(resolve, 300));
-                
-                // スクリプト読み込み確認
                 await checkScriptLoading();
-                
-                // 統合認証マネージャー初期化
                 await initializeAuthenticationSystem();
-                
-                // Google Drive自動連携開始
                 await initializeGoogleDriveIntegration();
-                
-                // 顧客データ読み込み
                 await loadCustomerData();
-                
-                // UI初期化
                 setupEventListeners();
                 
                 systemInitialized = true;
@@ -263,13 +288,11 @@
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
                 showAuthStatus(`初期化失敗: ${error.message}`, 'error');
-                
-                // デバッグ情報を自動表示
                 showScriptStatus();
             }
         });
 
-        // スクリプト読み込み確認（強化版）
+        // スクリプト読み込み確認
         async function checkScriptLoading() {
             console.log('🔍 スクリプト読み込み状況確認...');
             
@@ -324,7 +347,6 @@
             showAuthStatus('🔧 認証システム初期化中...', 'warning');
             
             try {
-                // 統合認証マネージャー初期化確認
                 if (!window.IntegratedAuthManagerV2.isInitialized) {
                     const initialized = await window.IntegratedAuthManagerV2.initialize();
                     if (!initialized) {
@@ -332,14 +354,11 @@
                     }
                 }
                 
-                // 認証状態取得
                 currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
                 console.log('🔍 現在の認証状態:', currentAuthState);
                 
-                // RentPipe認証確認
                 if (!currentAuthState.isAuthenticated) {
                     console.warn('⚠️ RentPipeにログインしていません - ログインページにリダイレクト');
-                    
                     showAuthStatus('ログインが必要です。3秒後にログインページに移動します...', 'warning');
                     setTimeout(() => {
                         window.location.href = 'login.html';
@@ -361,7 +380,6 @@
         // Google Drive統合初期化
         async function initializeGoogleDriveIntegration() {
             try {
-                // Google Drive APIが利用できない場合はスキップ
                 if (!window.GoogleDriveAPIv2) {
                     console.warn('⚠️ Google Drive API v2 が利用できません - 基本機能のみ使用');
                     addSyncStatus('⚠️ Drive機能無し', 'warning');
@@ -370,30 +388,19 @@
                 
                 showAuthStatus('☁️ Google Drive連携確認中...', 'warning');
                 
-                // Google認証状態確認
                 const isFullyAuthenticated = window.IntegratedAuthManagerV2.isFullyAuthenticated();
-                
-                console.log('🔍 Google認証状態:', {
-                    isFullyAuthenticated,
-                    googleAuth: currentAuthState.googleAuth
-                });
+                console.log('🔍 Google認証状態:', { isFullyAuthenticated, googleAuth: currentAuthState.googleAuth });
                 
                 if (isFullyAuthenticated) {
-                    // 既にGoogle認証済み
                     showAuthStatus('☁️ Google Drive自動同期有効', 'success');
                     return true;
-                    
                 } else {
-                    // Google認証が必要
                     showAuthStatus('⚠️ Google Drive未接続 - 自動認証を試行中...', 'warning');
-                    
-                    // 自動でGoogle認証を試行
                     const googleAuthSuccess = await attemptAutoGoogleAuth();
                     if (googleAuthSuccess) {
                         showAuthStatus('☁️ Google Drive自動同期有効', 'success');
                         return true;
                     } else {
-                        // 手動認証ボタンを表示
                         showManualAuthButton();
                         return false;
                     }
@@ -412,24 +419,21 @@
             try {
                 console.log('🔄 Google自動認証を試行中...');
                 
-                // Google Drive API初期化
                 const initialized = await window.GoogleDriveAPIv2.initialize();
                 if (!initialized) {
                     throw new Error('Google Drive API初期化に失敗');
                 }
                 
-                // 静かに認証を試行（ポップアップなし）
                 const userInfo = await window.GoogleDriveAPIv2.authenticateSilent();
                 
                 if (userInfo) {
                     console.log('✅ Google自動認証成功:', userInfo.email);
                     
-                    // 統合認証マネージャーに保存
                     await window.IntegratedAuthManagerV2.updateGoogleAuth({
                         isSignedIn: true,
                         user: userInfo,
                         accessToken: window.GoogleDriveAPIv2.accessToken,
-                        tokenExpiry: Date.now() + (3600 * 1000) // 1時間
+                        tokenExpiry: Date.now() + (3600 * 1000)
                     });
                     
                     return true;
@@ -469,18 +473,15 @@
                 
                 showAuthStatus('🔐 Google認証中...', 'warning');
                 
-                // Google Drive API初期化
                 const initialized = await window.GoogleDriveAPIv2.initialize();
                 if (!initialized) {
                     throw new Error('Google Drive API初期化に失敗');
                 }
                 
-                // 認証実行（ポップアップあり）
                 const userInfo = await window.GoogleDriveAPIv2.authenticate();
                 
                 console.log('✅ Google手動認証成功:', userInfo.email);
                 
-                // 統合認証マネージャーに保存
                 await window.IntegratedAuthManagerV2.updateGoogleAuth({
                     isSignedIn: true,
                     user: userInfo,
@@ -488,10 +489,7 @@
                     tokenExpiry: Date.now() + (3600 * 1000)
                 });
                 
-                // 認証状態を更新
                 currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
-                
-                // 表示更新
                 showAuthStatus('☁️ Google Drive自動同期有効', 'success');
                 
             } catch (error) {
@@ -508,7 +506,6 @@
             try {
                 console.log('📊 顧客データ読み込み開始');
                 
-                // まずはLocalStorageから読み込み
                 const localCustomers = JSON.parse(localStorage.getItem('rentpipe_customers') || '[]');
                 
                 if (localCustomers.length > 0) {
@@ -517,7 +514,6 @@
                     updateStats();
                     console.log(`📊 LocalStorageから ${localCustomers.length}件の顧客データを読み込み`);
                 } else {
-                    // デモデータがない場合は作成
                     await createDemoData();
                 }
                 
@@ -559,6 +555,21 @@
                     },
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
+                },
+                {
+                    id: 'demo-3',
+                    name: '山田次郎',
+                    email: 'yamada@example.com',
+                    phone: '090-3456-7890',
+                    pipelineStatus: '契約',
+                    preferences: {
+                        budgetMin: 100000,
+                        budgetMax: 150000,
+                        areas: ['恵比寿', '中目黒'],
+                        roomType: '2LDK'
+                    },
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
                 }
             ];
             
@@ -568,6 +579,20 @@
             updateStats();
             
             console.log('✅ デモデータを作成しました');
+        }
+
+        // ステータスに応じたクラス名を取得
+        function getStatusClass(status) {
+            const statusMap = {
+                '初回相談': 'status-initial',
+                '物件紹介': 'status-presentation',
+                '内見': 'status-viewing',
+                '申込': 'status-application',
+                '審査': 'status-screening',
+                '契約': 'status-contract',
+                '完了': 'status-complete'
+            };
+            return statusMap[status] || 'status-initial';
         }
 
         // 顧客一覧更新
@@ -580,20 +605,29 @@
             }
             
             customerList.innerHTML = currentCustomers.map(customer => `
-                <div class="customer-card" data-customer-id="${customer.id}">
-                    <div class="customer-header">
+                <div class="activity-item customer-card" data-customer-id="${customer.id}">
+                    <div class="customer-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div class="customer-info">
-                            <h3>${customer.name}</h3>
-                            <div class="customer-meta">
-                                ${customer.email} • ${customer.phone}
+                            <h3 style="margin: 0 0 5px 0; font-size: 18px;">👤 ${customer.name}</h3>
+                            <div class="customer-meta" style="color: #64748b; font-size: 14px; margin-bottom: 8px;">
+                                📧 ${customer.email} • 📱 ${customer.phone}
                             </div>
                             <div class="customer-status">
-                                ステータス: ${customer.pipelineStatus}
+                                <span class="status-badge ${getStatusClass(customer.pipelineStatus)}">
+                                    ${customer.pipelineStatus}
+                                </span>
                             </div>
+                            ${customer.preferences ? `
+                                <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                    💰 ¥${customer.preferences.budgetMin?.toLocaleString()} - ¥${customer.preferences.budgetMax?.toLocaleString()} • 
+                                    🏠 ${customer.preferences.roomType} • 
+                                    📍 ${customer.preferences.areas?.join(', ') || 'エリア未設定'}
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="customer-actions">
-                            <a href="customer-detail.html?id=${customer.id}" class="btn btn-sm btn-outline">
-                                詳細
+                            <a href="customer-detail.html?id=${customer.id}" class="btn btn-primary btn-sm">
+                                📋 詳細
                             </a>
                         </div>
                     </div>
@@ -612,11 +646,15 @@
                        created.getMonth() === thisMonth.getMonth();
             }).length;
             const completed = currentCustomers.filter(c => c.pipelineStatus === '完了').length;
+            const inProgress = currentCustomers.filter(c => 
+                c.pipelineStatus !== '完了' && c.pipelineStatus !== '初回相談'
+            ).length;
             
-            if (statCards.length >= 3) {
+            if (statCards.length >= 4) {
                 statCards[0].textContent = totalCustomers;
                 statCards[1].textContent = thisMonthNew;
                 statCards[2].textContent = completed;
+                statCards[3].textContent = inProgress;
             }
         }
 
@@ -624,12 +662,12 @@
         function showEmptyState() {
             const customerList = document.getElementById('customer-list');
             customerList.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #6b7280;">
-                    <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
-                    <h3>まだ顧客が登録されていません</h3>
-                    <p>新しい顧客を登録してください。</p>
-                    <a href="customer-form.html" class="btn btn-primary" style="margin-top: 15px;">
-                        📝 新規顧客登録
+                <div style="text-align: center; padding: 60px 20px; color: #64748b;">
+                    <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">👥</div>
+                    <h3 style="font-size: 24px; margin-bottom: 10px; color: #374151;">まだ顧客が登録されていません</h3>
+                    <p style="font-size: 16px; margin-bottom: 25px;">新しい顧客を登録して、効率的な顧客管理を始めましょう。</p>
+                    <a href="customer-form.html" class="btn btn-primary">
+                        📝 最初の顧客を登録
                     </a>
                 </div>
             `;
@@ -653,7 +691,6 @@
 
         // イベントリスナー設定
         function setupEventListeners() {
-            // 検索機能
             const searchInput = document.getElementById('search-input');
             const statusFilter = document.getElementById('status-filter');
             
@@ -673,7 +710,6 @@
             
             let filteredCustomers = [...currentCustomers];
             
-            // テキスト検索
             if (searchTerm) {
                 filteredCustomers = filteredCustomers.filter(customer => 
                     customer.name.toLowerCase().includes(searchTerm) ||
@@ -682,14 +718,12 @@
                 );
             }
             
-            // ステータスフィルター
             if (statusFilter) {
                 filteredCustomers = filteredCustomers.filter(customer => 
                     customer.pipelineStatus === statusFilter
                 );
             }
             
-            // 一時的に表示を更新
             const originalCustomers = currentCustomers;
             currentCustomers = filteredCustomers;
             updateCustomerList();
