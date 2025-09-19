@@ -51,10 +51,19 @@
             border-radius: 4px;
             font-size: 12px;
         }
+        
+        .script-loading-status ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        .script-loading-status li {
+            margin: 2px 0;
+        }
     </style>
 </head>
 <body>
-    <!-- ナビゲーション -->
+    <!-- ナビゲーション（navigation.jsが生成） -->
     <nav id="main-nav" class="main-nav"></nav>
 
     <!-- メインコンテンツ -->
@@ -128,16 +137,60 @@
         </div>
     </main>
 
-    <!-- JavaScript - 最適化された読み込み順序 -->
-    <!-- 1. 基本システム -->
-    <script src="js/navigation.js"></script>
-    <script src="js/unified-data-manager.js"></script>
-    
-    <!-- 2. 統合認証マネージャー（最優先） -->
-    <script src="js/integrated-auth-manager-v2.js"></script>
-    
-    <!-- 3. Google Drive API -->
-    <script src="js/google-drive-api-v2.js"></script>
+    <!-- JavaScript - 確実な読み込み順序 -->
+    <script>
+        console.log('🚀 customer.html スクリプト読み込み開始');
+        
+        // スクリプトの動的読み込み関数
+        function loadScript(src, onLoad, onError) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                console.log(`✅ ${src} 読み込み完了`);
+                if (onLoad) onLoad();
+            };
+            script.onerror = function() {
+                console.error(`❌ ${src} 読み込み失敗`);
+                if (onError) onError();
+            };
+            document.head.appendChild(script);
+        }
+        
+        // 順次スクリプト読み込み
+        async function loadScriptsSequentially() {
+            return new Promise((resolve, reject) => {
+                // 1. navigation.js
+                loadScript('js/navigation.js', function() {
+                    // 2. unified-data-manager.js
+                    loadScript('js/unified-data-manager.js', function() {
+                        // 3. integrated-auth-manager-v2.js
+                        loadScript('js/integrated-auth-manager-v2.js', function() {
+                            // 4. google-drive-api-v2.js
+                            loadScript('js/google-drive-api-v2.js', function() {
+                                console.log('✅ すべてのスクリプト読み込み完了');
+                                resolve();
+                            }, function() {
+                                console.warn('⚠️ Google Drive API v2 読み込み失敗（オプション機能）');
+                                resolve(); // Google Drive APIは必須ではないので続行
+                            });
+                        }, function() {
+                            reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
+                        });
+                    }, function() {
+                        console.warn('⚠️ unified-data-manager.js 読み込み失敗（オプション機能）');
+                        // 3. integrated-auth-manager-v2.js (unified-data-manager.jsなしでも続行)
+                        loadScript('js/integrated-auth-manager-v2.js', function() {
+                            resolve();
+                        }, function() {
+                            reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
+                        });
+                    });
+                }, function() {
+                    reject(new Error('navigation.js 読み込み失敗'));
+                });
+            });
+        }
+    </script>
     
     <script>
         // グローバル変数
@@ -155,13 +208,13 @@
             
             if (statusDiv.style.display === 'block') {
                 const checks = [
-                    { name: 'navigation.js', obj: 'window.generateNavigation' },
+                    { name: 'navigation.js', obj: 'window.generateNavigation || window.createNavigation' },
                     { name: 'unified-data-manager.js', obj: 'window.UnifiedDataManager' },
                     { name: 'integrated-auth-manager-v2.js', obj: 'window.IntegratedAuthManagerV2' },
                     { name: 'google-drive-api-v2.js', obj: 'window.GoogleDriveAPIv2' }
                 ];
                 
-                let html = '<ul style="margin: 5px 0; padding-left: 20px;">';
+                let html = '<ul>';
                 
                 checks.forEach(check => {
                     try {
@@ -178,13 +231,16 @@
             }
         }
 
-        // ページ初期化
+        // ページ初期化（メイン関数）
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 顧客管理ページ初期化開始');
             
             try {
-                // 短い待機（他のスクリプトの読み込み完了を待つ）
-                await new Promise(resolve => setTimeout(resolve, 200));
+                // スクリプトの順次読み込み
+                await loadScriptsSequentially();
+                
+                // 少し待機（スクリプトの初期化完了を待つ）
+                await new Promise(resolve => setTimeout(resolve, 300));
                 
                 // スクリプト読み込み確認
                 await checkScriptLoading();
@@ -218,6 +274,7 @@
             console.log('🔍 スクリプト読み込み状況確認...');
             
             const checks = [
+                { name: 'ナビゲーション', obj: 'window.generateNavigation || window.createNavigation', critical: true },
                 { name: '統合認証マネージャー v2', obj: 'window.IntegratedAuthManagerV2', critical: true },
                 { name: 'Google Drive API v2', obj: 'window.GoogleDriveAPIv2', critical: false },
                 { name: 'Unified Data Manager', obj: 'window.UnifiedDataManager', critical: false }

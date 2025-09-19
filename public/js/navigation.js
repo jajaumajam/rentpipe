@@ -1,6 +1,10 @@
-// RentPipe 統一ナビゲーションシステム（エンドユーザー向け最終版）
+// 🧭 RentPipe 統一ナビゲーションシステム（完全版）
+console.log('🧭 ナビゲーションシステム初期化中...');
+
+// ナビゲーション作成関数
 function createNavigation() {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    console.log(`📄 現在のページ: ${currentPage}`);
     
     const navHTML = `
     <nav class="navbar">
@@ -33,21 +37,48 @@ function createNavigation() {
                     <span class="nav-icon">👤</span>
                     <span>プロフィール</span>
                 </a>
-                <button onclick="secureLogout()" class="btn btn-outline nav-logout">ログアウト</button>
+                <button onclick="secureLogout()" class="btn btn-outline nav-logout">
+                    <span class="nav-icon">🚪</span>
+                    <span>ログアウト</span>
+                </button>
             </div>
         </div>
     </nav>`;
     
+    // 既存のナビゲーションを削除（重複防止）
+    const existingNav = document.querySelector('nav.navbar');
+    if (existingNav) {
+        existingNav.remove();
+    }
+    
     // ナビゲーションを挿入
     const navContainer = document.createElement('div');
     navContainer.innerHTML = navHTML;
-    document.body.insertBefore(navContainer.firstElementChild, document.body.firstChild);
     
-    // モバイルメニューのトグル機能
+    // main-navクラスのある要素に挿入、なければbodyの最初に挿入
+    const mainNav = document.getElementById('main-nav');
+    if (mainNav) {
+        mainNav.appendChild(navContainer.firstElementChild);
+    } else {
+        document.body.insertBefore(navContainer.firstElementChild, document.body.firstChild);
+    }
+    
+    // モバイルメニューのトグル機能を設定
+    setupMobileMenu();
+    
+    // 開発者モードショートカットを設定
+    setupDeveloperMode();
+    
+    console.log('✅ ナビゲーション作成完了');
+}
+
+// モバイルメニューの設定
+function setupMobileMenu() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
     
     if (navToggle && navMenu) {
+        // メニュートグルイベント
         navToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             navToggle.classList.toggle('active');
@@ -61,121 +92,122 @@ function createNavigation() {
                 navToggle.classList.remove('active');
             });
         });
+        
+        // 画面クリック時にメニューを閉じる
+        document.addEventListener('click', function(e) {
+            if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                navToggle.classList.remove('active');
+            }
+        });
+        
+        console.log('✅ モバイルメニュー設定完了');
     }
+}
 
-    // 開発者モード：Shift+Ctrl+D でデータヘルス画面にアクセス
-    document.addEventListener('keydown', (e) => {
+// 開発者モード設定
+function setupDeveloperMode() {
+    document.addEventListener('keydown', function(e) {
         if (e.shiftKey && e.ctrlKey && e.key === 'D') {
             console.log('🔧 開発者モード：データヘルス画面へ');
-            window.location.href = 'data-health.html';
+            if (confirm('開発者モードでデータヘルス画面に移動しますか？')) {
+                window.location.href = 'data-health.html';
+            }
         }
     });
 }
 
 // セキュアログアウト関数
-// セキュアログアウト関数（完全版）
 function secureLogout() {
-    if (confirm("ログアウトしますか？")) {
-        console.log("🔒 完全ログアウト実行中...");
+    if (!confirm('ログアウトしますか？')) {
+        return;
+    }
+    
+    console.log('🔒 完全ログアウト実行中...');
+    
+    try {
+        // 1. 統合認証マネージャーのログアウト
+        if (window.IntegratedAuthManagerV2 && typeof window.IntegratedAuthManagerV2.performFullLogout === 'function') {
+            console.log('🔄 統合認証マネージャーでログアウト...');
+            window.IntegratedAuthManagerV2.performFullLogout();
+            return; // 統合認証マネージャーがリダイレクトを行う
+        }
         
-        // 1. Firebase認証の完全ログアウト
+        // 2. Firebase認証ログアウト（利用可能な場合）
         if (window.firebase && firebase.auth) {
             firebase.auth().signOut().then(() => {
-                console.log("✅ Firebase認証ログアウト完了");
+                console.log('✅ Firebase認証ログアウト完了');
             }).catch(error => {
-                console.warn("⚠️ Firebase認証ログアウトエラー:", error);
+                console.warn('⚠️ Firebase認証ログアウトエラー:', error);
             });
         }
         
-        // 2. LocalStorageの全認証データクリア
+        // 3. LocalStorageの認証データクリア
         const authKeys = [
-            "rentpipe_auth_simple",
-            "rentpipe_user_simple", 
-            "rentpipe_temp_auth",
-            "rentpipe_user_info",
-            "rentpipe_authenticated",
-            "rentpipe_user"
+            'rentpipe_auth_simple',
+            'rentpipe_user_simple', 
+            'rentpipe_temp_auth',
+            'rentpipe_user_info',
+            'rentpipe_authenticated',
+            'rentpipe_user',
+            'rentpipe_auth',
+            'google_auth_data',
+            'google_access_token',
+            'google_token_expiry'
         ];
         
         authKeys.forEach(key => {
-            localStorage.removeItem(key);
-            console.log(`🗑️ ${key} 削除`);
+            if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                console.log(`🗑️ ${key} 削除完了`);
+            }
         });
         
-        // 3. SessionStorageもクリア
+        // 4. SessionStorageクリア
         sessionStorage.clear();
+        console.log('🗑️ SessionStorage クリア完了');
         
-        // 4. Firebase関連のIndexedDBクリア（可能な場合）
-        try {
-            const firebaseKeys = Object.keys(localStorage).filter(key => 
-                key.startsWith("firebase:") || key.startsWith("firebaseui")
-            );
-            firebaseKeys.forEach(key => localStorage.removeItem(key));
-        } catch (e) {
-            console.warn("Firebase IndexedDB クリア警告:", e);
-        }
+        console.log('✅ 完全ログアウト完了');
         
-        console.log("✅ 全認証データクリア完了");
+        // 5. ログイン画面にリダイレクト
+        window.location.replace('login.html');
         
-        // 5. ログインページに強制リダイレクト（履歴クリア）
-        setTimeout(() => {
-            window.location.replace("login.html");
-        }, 500);
+    } catch (error) {
+        console.error('❌ ログアウトエラー:', error);
+        
+        // フォールバック: 強制的にLocalStorageをクリアしてリダイレクト
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('login.html');
     }
 }
-// 既存関数との互換性
+
+// ナビゲーション生成関数をグローバルに公開
+window.generateNavigation = createNavigation;
+window.createNavigation = createNavigation;
+window.secureLogout = secureLogout;
+
+// 互換性のため
 if (typeof logout === 'undefined') {
     window.logout = secureLogout;
 }
 
-// DOMContentLoadedで実行
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createNavigation);
-} else {
-    createNavigation();
-}
-
-console.log('✅ エンドユーザー向け最終版ナビゲーションシステム準備完了');
-console.log('💡 開発者向け：Shift+Ctrl+D でデータヘルス画面にアクセス可能');
-
-// 顧客詳細ページ専用の追加機能
-function enhanceNavigationForCustomerDetail() {
-    const currentPath = window.location.pathname;
-    
-    // customer-detail.htmlの場合のみ実行
-    if (currentPath.includes('customer-detail.html')) {
-        console.log('🎯 顧客詳細ページ: ナビゲーション調整中...');
-        
-        // 顧客管理をアクティブに設定
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            
-            // customer.htmlリンクを見つけてアクティブにする
-            if (link.href.includes('customer.html')) {
-                link.classList.add('active');
-                console.log('✅ 顧客管理メニューをアクティブに設定');
-            }
+// 自動初期化
+function initializeNavigation() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            // 少し遅延させてナビゲーションを生成（CSSの読み込み完了を待つ）
+            setTimeout(createNavigation, 100);
         });
-        
-        // ページタイトルも調整
-        document.title = '顧客詳細 - RentPipe';
+    } else {
+        // 既に読み込み完了している場合
+        setTimeout(createNavigation, 100);
     }
 }
 
-// 既存のcreateNavigation関数実行後に追加処理を実行
-const originalCreateNavigation = createNavigation;
-createNavigation = function() {
-    // 既存の処理を実行
-    originalCreateNavigation();
-    
-    // customer-detail.html用の追加処理
-    setTimeout(enhanceNavigationForCustomerDetail, 100);
-};
+// 初期化実行
+initializeNavigation();
 
-// 既にナビゲーションが作成済みの場合は即座に実行
-if (document.querySelector('.navbar')) {
-    enhanceNavigationForCustomerDetail();
-}
-
-console.log('✅ 顧客詳細ページ対応を追加しました');
+console.log('✅ 統一ナビゲーションシステム準備完了');
+console.log('💡 使用方法: createNavigation() または generateNavigation()');
+console.log('🔑 ショートカット: Shift+Ctrl+D で開発者モード');
