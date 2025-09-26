@@ -388,38 +388,68 @@
         }
 
         // Google Drive統合初期化
+        // Google Drive統合初期化（自動同期機能付き - 修正版）
         async function initializeGoogleDriveIntegration() {
             try {
+                console.log('🔧 Google Drive統合初期化（自動同期機能）開始...');
+                
                 if (!window.GoogleDriveAPIv2) {
                     console.warn('⚠️ Google Drive API v2 が利用できません - 基本機能のみ使用');
-                    addSyncStatus('⚠️ Drive機能無し', 'warning');
+                    showAuthStatus('⚠️ Google Drive機能なし', 'warning');
                     return false;
                 }
                 
-                showAuthStatus('☁️ Google Drive連携確認中...', 'warning');
+                showAuthStatus('☁️ Google Drive API初期化中...', 'warning');
                 
+                // Step 0: GoogleDriveAPIv2の完全初期化（これが欠けていた！）
+                const apiInitialized = await window.GoogleDriveAPIv2.initialize();
+                if (!apiInitialized) {
+                    throw new Error('Google Drive API v2 初期化に失敗');
+                }
+                console.log('✅ Google Drive API v2 初期化完了');
+                
+                // Step 1: 基本認証状態確認
                 const isFullyAuthenticated = window.IntegratedAuthManagerV2.isFullyAuthenticated();
-                console.log('🔍 Google認証状態:', { isFullyAuthenticated, googleAuth: currentAuthState.googleAuth });
+                console.log('🔍 基本認証状態:', { isFullyAuthenticated });
                 
-                if (isFullyAuthenticated) {
-                    showAuthStatus('☁️ Google Drive自動同期有効', 'success');
-                    return true;
-                } else {
-                    showAuthStatus('⚠️ Google Drive未接続 - 自動認証を試行中...', 'warning');
-                    const googleAuthSuccess = await attemptAutoGoogleAuth();
-                    if (googleAuthSuccess) {
-                        showAuthStatus('☁️ Google Drive自動同期有効', 'success');
-                        return true;
-                    } else {
-                        showManualAuthButton();
-                        return false;
-                    }
+                if (!isFullyAuthenticated) {
+                    console.warn('⚠️ Google認証が不完全です');
+                    showAuthStatus('⚠️ Google Drive同期には完全な認証が必要', 'warning');
+                    return false;
                 }
                 
+                // Step 2: Google Drive API認証
+                showAuthStatus('☁️ Google Drive権限取得中...', 'warning');
+                const driveAuthenticated = await window.GoogleDriveAPIv2.authenticate();
+                if (!driveAuthenticated || !window.GoogleDriveAPIv2.accessToken) {
+                    throw new Error('Google Drive API認証に失敗');
+                }
+                console.log('✅ Google Drive API認証成功');
+                
+                // Step 3: GoogleDriveDataManager初期化
+                showAuthStatus('☁️ データ管理システム初期化中...', 'warning');
+                const dataManagerReady = await window.GoogleDriveDataManager.initialize();
+                if (!dataManagerReady) {
+                    throw new Error('GoogleDriveDataManager初期化に失敗');
+                }
+                console.log('✅ GoogleDriveDataManager初期化成功');
+                
+                // Step 4: CustomerGoogleDriveIntegration初期化
+                if (window.CustomerGoogleDriveIntegration) {
+                    await window.CustomerGoogleDriveIntegration.initialize();
+                }
+                
+                // Step 5: 初回データ同期
+                showAuthStatus('☁️ 初回データ同期中...', 'warning');
+                const customers = await window.GoogleDriveDataManager.syncFromGoogleDrive();
+                console.log(`✅ 初回データ同期完了: ${customers.length}件`);
+                
+                showAuthStatus(`☁️ Google Drive自動同期有効 (${customers.length}件同期済み)`, 'success');
+                return true;
+                
             } catch (error) {
-                console.error('❌ Google Drive統合エラー:', error);
-                showAuthStatus(`Google Drive連携エラー: ${error.message}`, 'error');
-                showManualAuthButton();
+                console.error('❌ Google Drive統合初期化エラー:', error);
+                showAuthStatus(`❌ Google Drive統合初期化失敗: ${error.message}`, 'error');
                 return false;
             }
         }
