@@ -211,12 +211,16 @@
                 const driveReady = await GoogleDriveAPIv2.initialize();
                 if (driveReady) {
                     addLog('✅ Google Drive API 初期化完了', 'success');
+                } else {
+                    throw new Error('Google Drive API 初期化失敗');
                 }
                 
                 // Google Sheets API 初期化
                 const sheetsReady = await GoogleSheetsAPI.initialize();
                 if (sheetsReady) {
                     addLog('✅ Google Sheets API 初期化完了', 'success');
+                } else {
+                    throw new Error('Google Sheets API 初期化失敗');
                 }
                 
                 // 保存されたスプレッドシートIDを確認
@@ -235,34 +239,38 @@
             }
         }
         
-        // Google認証
+        // Google認証（既存の動作パターンを使用）
         async function handleAuth() {
             try {
                 addLog('🔐 Google認証開始...');
                 updateStatus('🔐 Google認証中...', 'loading');
                 
-                // トークンリクエスト
-                GoogleDriveAPIv2.tokenClient.requestAccessToken();
+                // 既存のauthenticate()メソッドを使用（customer.htmlと同じパターン）
+                const userInfo = await GoogleDriveAPIv2.authenticate();
                 
-                // トークン取得を待つ
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                if (GoogleDriveAPIv2.accessToken) {
-                    // Sheets API にトークン設定
-                    GoogleSheetsAPI.setAccessToken(GoogleDriveAPIv2.accessToken);
-                    
-                    addLog('✅ Google認証成功', 'success');
-                    updateStatus('✅ 認証完了 - スプレッドシートを作成できます', 'success');
-                    
-                    const hasSpreadsheet = !!GoogleSheetsAPI.spreadsheetId;
-                    updateButtons(true, hasSpreadsheet);
-                } else {
-                    throw new Error('トークン取得失敗');
+                if (!userInfo) {
+                    throw new Error('認証失敗：ユーザー情報を取得できませんでした');
                 }
+                
+                if (!GoogleDriveAPIv2.accessToken) {
+                    throw new Error('認証失敗：アクセストークンを取得できませんでした');
+                }
+                
+                addLog('✅ Google Drive API 認証成功: ' + userInfo.email, 'success');
+                
+                // Sheets API にトークン設定
+                GoogleSheetsAPI.setAccessToken(GoogleDriveAPIv2.accessToken);
+                addLog('✅ Google Sheets API トークン設定完了', 'success');
+                
+                updateStatus('✅ 認証完了 - スプレッドシートを作成できます', 'success');
+                
+                const hasSpreadsheet = !!GoogleSheetsAPI.spreadsheetId;
+                updateButtons(true, hasSpreadsheet);
                 
             } catch (error) {
                 addLog('❌ 認証エラー: ' + error.message, 'error');
                 updateStatus('❌ 認証エラー', 'error');
+                console.error('認証エラー詳細:', error);
             }
         }
         
@@ -290,6 +298,7 @@
             } catch (error) {
                 addLog('❌ スプレッドシート作成エラー: ' + error.message, 'error');
                 updateStatus('❌ スプレッドシート作成エラー', 'error');
+                console.error('スプレッドシート作成エラー詳細:', error);
             }
         }
         
@@ -309,6 +318,7 @@
             } catch (error) {
                 addLog('❌ データ読み込みエラー: ' + error.message, 'error');
                 updateStatus('❌ データ読み込みエラー', 'error');
+                console.error('データ読み込みエラー詳細:', error);
             }
         }
         
@@ -384,6 +394,7 @@
             } catch (error) {
                 addLog('❌ データ保存エラー: ' + error.message, 'error');
                 updateStatus('❌ データ保存エラー', 'error');
+                console.error('データ保存エラー詳細:', error);
             }
         }
         
