@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顧客管理 - RentPipe</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Google Sheets統合UI用の追加スタイル */
+        .sheets-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .sheets-status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        
+        .sheets-status-disconnected {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+        }
+        
+        .sheets-status-connected {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+        }
+        
+        .sheets-status-syncing {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+        }
+        
+        .sheets-status-error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+        }
+        
+        .sheets-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .sheets-info {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+        
+        .sync-icon {
+            display: inline-block;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <div id="navigation"></div>
+    
+    <!-- メインコンテンツ -->
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>👥 顧客管理</h1>
+                <p class="page-description">顧客情報の登録・管理</p>
+            </div>
+            <a href="customer-form.html" class="btn btn-primary">
+                <span>➕ 新規顧客登録</span>
+            </a>
+        </div>
+
+        <!-- 統計カード -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <h3 id="stat-total">0</h3>
+                    <p>総顧客数</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-content">
+                    <h3 id="stat-new">0</h3>
+                    <p>今月の新規</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3 id="stat-completed">0</h3>
+                    <p>成約済み</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔄</div>
+                <div class="stat-content">
+                    <h3 id="stat-progress">0</h3>
+                    <p>対応中</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Sheets統合パネル -->
+        <div class="sheets-panel">
+            <h3>📊 Google Sheets データ同期</h3>
+            
+            <div id="sheets-status" class="sheets-status sheets-status-disconnected">
+                <div>
+                    <strong>ステータス:</strong>
+                    <span id="sheets-status-text">未接続 - Google Sheetsと連携してデータを同期できます</span>
+                </div>
+                <div class="sheets-controls">
+                    <button id="btn-sheets-connect" class="btn btn-primary" onclick="connectGoogleSheets()">
+                        📊 Google Sheets接続
+                    </button>
+                    <button id="btn-sheets-create" class="btn btn-success" onclick="createNewSpreadsheet()" style="display: none;">
+                        📄 新規作成
+                    </button>
+                    <button id="btn-sheets-sync" class="btn btn-success" onclick="syncWithSheets()" style="display: none;">
+                        🔄 今すぐ同期
+                    </button>
+                </div>
+            </div>
+            
+            <div id="sheets-info" class="sheets-info" style="display: none;">
+                <div><strong>スプレッドシートID:</strong> <span id="sheets-spreadsheet-id">-</span></div>
+                <div><strong>最終同期:</strong> <span id="sheets-last-sync">-</span></div>
+                <div><strong>同期モード:</strong> <span id="sheets-sync-mode">手動</span></div>
+                <div style="margin-top: 10px;">
+                    <a id="sheets-link" href="#" target="_blank" class="btn btn-secondary" style="display: none;">
+                        🔗 スプレッドシートを開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 認証・同期ステータス（既存のGoogle Drive用） -->
+        <div id="auth-sync-status" class="auth-status warning">
+            初期化中...
+        </div>
+
+        <!-- 検索・フィルター -->
+        <div class="search-filter-container">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="🔍 顧客名、メール、電話番号で検索..." onkeyup="searchCustomers()">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterByStatus('all')">すべて</button>
+                <button class="filter-btn" onclick="filterByStatus('見込み客')">見込み客</button>
+                <button class="filter-btn" onclick="filterByStatus('内見予定')">内見予定</button>
+                <button class="filter-btn" onclick="filterByStatus('商談中')">商談中</button>
+                <button class="filter-btn" onclick="filterByStatus('成約')">成約</button>
+            </div>
+        </div>
+
+        <!-- 顧客リスト -->
+        <div id="customer-list" class="customer-grid">
+            <!-- 顧客カードがここに表示されます -->
+        </div>
+    </div>
+
+    <!-- Google API Client & Identity Services -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <!-- RentPipe Core Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/unified-data-manager.js"></script>
+    
+    <!-- Google Integration Scripts -->
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    <script src="js/unified-sheets-manager.js"></script>
+    
+    <!-- Customer Management Scripts -->
+    <script src="js/customer-unified.js"></script>
+    
+    <script>
+        // グローバル変数
+        let allCustomers = [];
+        let filteredCustomers = [];
+        let currentStatusFilter = 'all';
+        
+        // Google Sheets接続
+        async function connectGoogleSheets() {
+            const btn = document.getElementById('btn-sheets-connect');
+            const originalText = btn.textContent;
+            
+            try {
+                btn.textContent = '接続中...';
+                btn.disabled = true;
+                
+                updateSheetsStatus('🔐 Google認証中...', 'syncing');
+                
+                // Google Drive API初期化（Sheets APIも同時に初期化される）
+                if (!window.GoogleDriveAPIv2?.isInitialized) {
+                    await window.GoogleDriveAPIv2.initialize();
+                }
+                
+                // Google認証
+                const userInfo = await window.GoogleDriveAPIv2.authenticate();
+                
+                if (!userInfo) {
+                    throw new Error('Google認証に失敗しました');
+                }
+                
+                // Sheets APIにトークン設定
+                window.GoogleSheetsAPI.setAccessToken(window.GoogleDriveAPIv2.accessToken);
+                
+                // 保存されたスプレッドシートIDを確認
+                const savedId = window.GoogleSheetsAPI.loadSpreadsheetId();
+                
+                if (savedId) {
+                    // 既存のスプレッドシートに接続
+                    updateSheetsStatus('✅ 既存のスプレッドシートに接続しました', 'connected');
+                    await window.UnifiedSheetsManager.enableSheetsIntegration(savedId);
+                    showSheetsInfo(savedId);
+                    
+                    // ボタン表示切り替え
+                    btn.style.display = 'none';
+                    document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+                } else {
+                    // 新規作成を促す
+                    updateSheetsStatus('✅ 認証成功 - 新しいスプレッドシートを作成してください', 'connected');
+                    btn.style.display = 'none';
+                    document.getElementById('btn-sheets-create').style.display = 'inline-block';
+                }
+                
+            } catch (error) {
+                console.error('❌ Google Sheets接続エラー:', error);
+                updateSheetsStatus('❌ 接続エラー: ' + error.message, 'error');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // 新規スプレッドシート作成
+        async function createNewSpreadsheet() {
+            const btn = document.getElementById('btn-sheets-create');
+            const originalText = btn.textContent;
+            
+            try {
+                btn.textContent = '作成中...';
+                btn.disabled = true;
+                
+                updateSheetsStatus('📄 スプレッドシート作成中...', 'syncing');
+                
+                const timestamp = new Date().toLocaleString('ja-JP').replace(/\//g, '-').replace(/:/g, '-');
+                const title = `RentPipe_データベース_${timestamp}`;
+                
+                const spreadsheetId = await window.GoogleSheetsAPI.createSpreadsheet(title);
+                
+                // 統合マネージャーを有効化
+                await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
+                
+                updateSheetsStatus('✅ スプレッドシート作成完了 - 自動同期有効', 'connected');
+                showSheetsInfo(spreadsheetId);
+                
+                // ボタン表示切り替え
+                btn.style.display = 'none';
+                document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+                
+                // 顧客リストを更新
+                await loadCustomers();
+                
+            } catch (error) {
+                console.error('❌ スプレッドシート作成エラー:', error);
+                updateSheetsStatus('❌ 作成エラー: ' + error.message, 'error');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // 手動同期
+        async function syncWithSheets() {
+            const btn = document.getElementById('btn-sheets-sync');
+            const originalText = btn.textContent;
+            
+            try {
+                btn.innerHTML = '<span class="sync-icon">🔄</span> 同期中...';
+                btn.disabled = true;
+                
+                updateSheetsStatus('🔄 データ同期中...', 'syncing');
+                
+                await window.UnifiedSheetsManager.syncToSheets();
+                
+                updateSheetsStatus('✅ 同期完了', 'connected');
+                updateLastSyncTime();
+                
+                btn.textContent = originalText;
+                btn.disabled = false;
+                
+            } catch (error) {
+                console.error('❌ 同期エラー:', error);
+                updateSheetsStatus('❌ 同期エラー: ' + error.message, 'error');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // ステータス更新
+        function updateSheetsStatus(message, type) {
+            const statusDiv = document.getElementById('sheets-status');
+            const statusText = document.getElementById('sheets-status-text');
+            
+            statusText.textContent = message;
+            statusDiv.className = `sheets-status sheets-status-${type}`;
+        }
+        
+        // スプレッドシート情報表示
+        function showSheetsInfo(spreadsheetId) {
+            const infoDiv = document.getElementById('sheets-info');
+            const idSpan = document.getElementById('sheets-spreadsheet-id');
+            const link = document.getElementById('sheets-link');
+            
+            idSpan.textContent = spreadsheetId;
+            link.href = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+            link.style.display = 'inline-block';
+            infoDiv.style.display = 'block';
+            
+            document.getElementById('sheets-sync-mode').textContent = '自動（5分ごと）';
+            updateLastSyncTime();
+        }
+        
+        // 最終同期時刻更新
+        function updateLastSyncTime() {
+            const status = window.UnifiedSheetsManager.getStatus();
+            const lastSyncSpan = document.getElementById('sheets-last-sync');
+            
+            if (status.lastSyncTime) {
+                lastSyncSpan.textContent = status.lastSyncTime.toLocaleString('ja-JP');
+            } else {
+                lastSyncSpan.textContent = '未同期';
+            }
+        }
+        
+        // 顧客データ読み込み
+        async function loadCustomers() {
+            try {
+                // 統合マネージャーから読み込み（LocalStorage優先）
+                allCustomers = window.UnifiedSheetsManager.getCustomers();
+                filteredCustomers = allCustomers;
+                
+                displayCustomers(filteredCustomers);
+                updateStats();
+                
+                console.log('✅ 顧客データ読み込み完了:', allCustomers.length, '件');
+                
+            } catch (error) {
+                console.error('❌ 顧客データ読み込みエラー:', error);
+            }
+        }
+        
+        // 顧客表示
+        function displayCustomers(customers) {
+            const customerList = document.getElementById('customer-list');
+            
+            if (!customers || customers.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            customerList.innerHTML = customers.map(customer => `
+                <div class="customer-card">
+                    <div class="customer-card-header">
+                        <h3>${customer.name}</h3>
+                        <span class="status-badge status-${customer.pipelineStatus}">${customer.pipelineStatus}</span>
+                    </div>
+                    <div class="customer-card-body">
+                        <p>📧 ${customer.email}</p>
+                        <p>📱 ${customer.phone}</p>
+                        <p>💰 ${(customer.preferences?.budgetMin || 0).toLocaleString()}〜${(customer.preferences?.budgetMax || 0).toLocaleString()}円</p>
+                        <p>📍 ${(customer.preferences?.areas || []).join('、') || '未設定'}</p>
+                    </div>
+                    <div class="customer-card-footer">
+                        <button class="btn btn-sm" onclick="editCustomer('${customer.id}')">編集</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.id}')">削除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 統計更新
+        function updateStats() {
+            const total = allCustomers.length;
+            const thisMonth = allCustomers.filter(c => {
+                const created = new Date(c.createdAt);
+                const now = new Date();
+                return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+            }).length;
+            const completed = allCustomers.filter(c => c.pipelineStatus === '成約').length;
+            const inProgress = allCustomers.filter(c => c.pipelineStatus !== '成約' && c.pipelineStatus !== '見込み客').length;
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-new').textContent = thisMonth;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-progress').textContent = inProgress;
+        }
+        
+        // 空状態表示
+        function showEmptyState() {
+            const customerList = document.getElementById('customer-list');
+            customerList.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: #64748b;">
+                    <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">👥</div>
+                    <h3>まだ顧客が登録されていません</h3>
+                    <p>新しい顧客を登録して、効率的な顧客管理を始めましょう。</p>
+                    <a href="customer-form.html" class="btn btn-primary">📝 最初の顧客を登録</a>
+                </div>
+            `;
+        }
+        
+        // 検索
+        function searchCustomers() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            filteredCustomers = allCustomers.filter(customer => {
+                return customer.name.toLowerCase().includes(searchTerm) ||
+                       customer.email.toLowerCase().includes(searchTerm) ||
+                       customer.phone.includes(searchTerm);
+            });
+            
+            displayCustomers(filteredCustomers);
+        }
+        
+        // ステータスフィルター
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // フィルター適用
+            if (status === 'all') {
+                filteredCustomers = allCustomers;
+            } else {
+                filteredCustomers = allCustomers.filter(c => c.pipelineStatus === status);
+            }
+            
+            displayCustomers(filteredCustomers);
+        }
+        
+        // 初期化
+        async function initialize() {
+            try {
+                console.log('🚀 システム初期化開始...');
+                
+                // 統合データ管理システム初期化
+                await window.UnifiedSheetsManager.initialize();
+                
+                // 顧客データ読み込み
+                await loadCustomers();
+                
+                console.log('✅ システム初期化完了');
+                
+            } catch (error) {
+                console.error('❌ システム初期化エラー:', error);
+            }
+        }
+        
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initialize);
+    </script>
+</body>
+</html>
