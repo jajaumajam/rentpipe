@@ -388,6 +388,7 @@
         }
 
         // Google Drive統合初期化
+        // Google Drive統合初期化（自動同期機能付き - 修正版）
         // Google Drive統合初期化（自動同期機能付き - 柔軟認証版）
         async function initializeGoogleDriveIntegration() {
             try {
@@ -459,23 +460,7 @@
                 return false;
             }
         }
-                
-                // Step 5: 初回データ同期
-                showAuthStatus('☁️ 初回データ同期中...', 'warning');
-                const customers = await window.GoogleDriveDataManager.syncFromGoogleDrive();
-                console.log(`✅ 初回データ同期完了: ${customers.length}件`);
-                
-                showAuthStatus(`☁️ Google Drive自動同期有効 (${customers.length}件同期済み)`, 'success');
-                return true;
-                
-            } catch (error) {
-                console.error('❌ Google Drive統合初期化エラー:', error);
-                showAuthStatus(`❌ Google Drive統合初期化失敗: ${error.message}`, 'error');
-                return false;
-            }
-        }
 
-        // 自動Google認証試行
         async function attemptAutoGoogleAuth() {
             try {
                 console.log('🔄 Google自動認証を試行中...');
