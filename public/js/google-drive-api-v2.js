@@ -1,13 +1,14 @@
-// 🚀 Google Drive API v2 - 新クライアントID対応版
+// 🚀 Google Drive API v2 - Google Sheets対応版
 console.log('🚀 Google Drive API v2 初期化中...');
 
 window.GoogleDriveAPIv2 = {
-    // 最新設定（2025年9月版）
+    // 最新設定（Google Sheets対応）
     config: {
         clientId: '586040985916-r5v9q1242tiplplj0p5p9f664c70ipjj.apps.googleusercontent.com',
         projectId: 'rentpipe',
         scopes: [
             'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/spreadsheets',  // ✅ 追加
             'https://www.googleapis.com/auth/userinfo.email',
             'https://www.googleapis.com/auth/userinfo.profile'
         ],
@@ -26,6 +27,7 @@ window.GoogleDriveAPIv2 = {
         try {
             console.log('🔧 Google Drive API v2 初期化開始...');
             console.log(`📝 Client ID: ${this.config.clientId.substring(0, 20)}...`);
+            console.log(`🔑 スコープ: ${this.config.scopes.join(', ')}`);
             
             // Google Identity Services 読み込み
             await this.loadGoogleIdentityServices();
@@ -66,7 +68,6 @@ window.GoogleDriveAPIv2 = {
             script.defer = true;
             script.onload = () => {
                 console.log('✅ Google Identity Services 読み込み完了');
-                // 読み込み後少し待つ
                 setTimeout(resolve, 500);
             };
             script.onerror = () => reject(new Error('Google Identity Services 読み込み失敗'));
@@ -265,7 +266,12 @@ window.GoogleDriveAPIv2 = {
             const userInfo = await response.json();
             console.log('✅ ユーザー情報取得成功:', userInfo.email);
             
-            return userInfo;
+            return {
+                id: userInfo.id,
+                email: userInfo.email,
+                name: userInfo.name,
+                picture: userInfo.picture
+            };
             
         } catch (error) {
             console.error('❌ ユーザー情報取得エラー:', error);
@@ -273,22 +279,46 @@ window.GoogleDriveAPIv2 = {
         }
     },
     
-    // Google Driveフォルダ作成
-    createFolder: async function(folderName, parentFolderId = null) {
+    // ファイル検索
+    searchFiles: async function(query) {
         try {
-            console.log(`📁 フォルダ作成: ${folderName}`);
+            if (!this.isAuthenticated || !this.accessToken) {
+                throw new Error('Google認証が必要です');
+            }
             
+            const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType)`, {
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`ファイル検索エラー: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.files || [];
+            
+        } catch (error) {
+            console.error('❌ ファイル検索エラー:', error);
+            throw error;
+        }
+    },
+    
+    // フォルダ作成
+    createFolder: async function(name, parentId = null) {
+        try {
             if (!this.isAuthenticated || !this.accessToken) {
                 throw new Error('Google認証が必要です');
             }
             
             const metadata = {
-                name: folderName,
+                name: name,
                 mimeType: 'application/vnd.google-apps.folder'
             };
             
-            if (parentFolderId) {
-                metadata.parents = [parentFolderId];
+            if (parentId) {
+                metadata.parents = [parentId];
             }
             
             const response = await fetch('https://www.googleapis.com/drive/v3/files', {
@@ -301,44 +331,16 @@ window.GoogleDriveAPIv2 = {
             });
             
             if (!response.ok) {
-                throw new Error(`フォルダ作成失敗: ${response.status}`);
+                throw new Error(`フォルダ作成エラー: ${response.status}`);
             }
             
-            const folder = await response.json();
-            console.log('✅ フォルダ作成成功:', folder.name);
-            return folder;
+            return await response.json();
             
         } catch (error) {
             console.error('❌ フォルダ作成エラー:', error);
             throw error;
         }
-    },
-    
-    // ファイル検索
-    searchFiles: async function(query) {
-        try {
-            if (!this.isAuthenticated || !this.accessToken) {
-                throw new Error('Google認証が必要です');
-            }
-            
-            const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`ファイル検索失敗: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            return result.files || [];
-            
-        } catch (error) {
-            console.error('❌ ファイル検索エラー:', error);
-            throw error;
-        }
     }
 };
 
-console.log('✅ Google Drive API v2 準備完了');
+console.log('✅ Google Drive API v2 準備完了（Google Sheets対応）');
