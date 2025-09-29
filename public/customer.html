@@ -388,7 +388,7 @@
         }
 
         // Google Drive統合初期化
-        // Google Drive統合初期化（自動同期機能付き - 修正版）
+        // Google Drive統合初期化（自動同期機能付き - 柔軟認証版）
         async function initializeGoogleDriveIntegration() {
             try {
                 console.log('🔧 Google Drive統合初期化（自動同期機能）開始...');
@@ -401,25 +401,31 @@
                 
                 showAuthStatus('☁️ Google Drive API初期化中...', 'warning');
                 
-                // Step 0: GoogleDriveAPIv2の完全初期化（これが欠けていた！）
+                // Step 0: GoogleDriveAPIv2の完全初期化
                 const apiInitialized = await window.GoogleDriveAPIv2.initialize();
                 if (!apiInitialized) {
                     throw new Error('Google Drive API v2 初期化に失敗');
                 }
                 console.log('✅ Google Drive API v2 初期化完了');
                 
-                // Step 1: 基本認証状態確認
+                // Step 1: 基本認証状態確認（柔軟なチェック）
                 const isFullyAuthenticated = window.IntegratedAuthManagerV2.isFullyAuthenticated();
-                console.log('🔍 基本認証状態:', { isFullyAuthenticated });
+                const hasBasicAuth = window.IntegratedAuthManagerV2.getAuthState()?.isAuthenticated;
+                console.log('🔍 認証状態詳細:', { isFullyAuthenticated, hasBasicAuth });
                 
-                if (!isFullyAuthenticated) {
-                    console.warn('⚠️ Google認証が不完全です');
-                    showAuthStatus('⚠️ Google Drive同期には完全な認証が必要', 'warning');
+                if (!hasBasicAuth) {
+                    console.warn('⚠️ 基本認証が不足しています');
+                    showAuthStatus('⚠️ 基本認証が必要です', 'warning');
                     return false;
                 }
                 
-                // Step 2: Google Drive API認証
+                // Step 2: Google Drive API認証（完全認証でない場合も試行）
                 showAuthStatus('☁️ Google Drive権限取得中...', 'warning');
+                
+                if (!isFullyAuthenticated) {
+                    console.log('⚠️ 完全認証ではありませんが、Google Drive認証を試行します');
+                }
+                
                 const driveAuthenticated = await window.GoogleDriveAPIv2.authenticate();
                 if (!driveAuthenticated || !window.GoogleDriveAPIv2.accessToken) {
                     throw new Error('Google Drive API認証に失敗');
@@ -438,6 +444,21 @@
                 if (window.CustomerGoogleDriveIntegration) {
                     await window.CustomerGoogleDriveIntegration.initialize();
                 }
+                
+                // Step 5: 初回データ同期
+                showAuthStatus('☁️ 初回データ同期中...', 'warning');
+                const customers = await window.GoogleDriveDataManager.syncFromGoogleDrive();
+                console.log(`✅ 初回データ同期完了: ${customers.length}件`);
+                
+                showAuthStatus(`☁️ Google Drive自動同期有効 (${customers.length}件同期済み)`, 'success');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Google Drive統合初期化エラー:', error);
+                showAuthStatus(`❌ Google Drive統合初期化失敗: ${error.message}`, 'error');
+                return false;
+            }
+        }
                 
                 // Step 5: 初回データ同期
                 showAuthStatus('☁️ 初回データ同期中...', 'warning');
