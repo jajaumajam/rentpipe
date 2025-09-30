@@ -1,4 +1,4 @@
-// 📊 Google Sheets API 管理システム
+// 📊 Google Sheets API 管理システム（完全初期化対応版）
 console.log('📊 Google Sheets API 初期化中...');
 
 window.GoogleSheetsAPI = {
@@ -17,37 +17,59 @@ window.GoogleSheetsAPI = {
     isAuthenticated: false,
     spreadsheetId: null,
     
-    // 初期化
+    // 完全初期化（強化版）
     initialize: async function() {
         try {
-            console.log('🔧 Google Sheets API 初期化開始...');
+            console.log('🔧 Google Sheets API 完全初期化開始...');
             
-            // Google API Client がまだ読み込まれていない場合は待つ
+            // ステップ1: Google API Client確認・読み込み
             if (!window.gapi) {
-                console.log('⏳ Google API Client 待機中...');
+                console.log('⏳ Google API Client 読み込み中...');
                 await this.loadGAPI();
             }
             
-            // gapi.client の初期化
-            await new Promise((resolve, reject) => {
-                window.gapi.load('client', {
-                    callback: resolve,
-                    onerror: reject
+            // ステップ2: gapi.client初期化
+            if (!window.gapi.client) {
+                console.log('⏳ gapi.client 初期化中...');
+                await new Promise((resolve, reject) => {
+                    window.gapi.load('client', {
+                        callback: resolve,
+                        onerror: reject
+                    });
                 });
-            });
+            }
             
-            // Sheets API の設定
+            // ステップ3: Sheets API Discovery Document読み込み
+            console.log('⏳ Google Sheets API Discovery Document 読み込み中...');
             await window.gapi.client.init({
                 apiKey: '', // APIキーは不要（OAuth認証を使用）
                 discoveryDocs: this.config.discoveryDocs
             });
             
+            // ステップ4: gapi.client.sheetsの完全な初期化を待機
+            console.log('⏳ gapi.client.sheets 完全初期化待機中...');
+            let retries = 0;
+            const maxRetries = 30; // 15秒間待機
+            
+            while (!window.gapi?.client?.sheets && retries < maxRetries) {
+                console.log(`⏳ gapi.client.sheets 初期化待機中... (${retries + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                retries++;
+            }
+            
+            if (!window.gapi?.client?.sheets) {
+                throw new Error('Google Sheets API (gapi.client.sheets) の初期化がタイムアウトしました');
+            }
+            
+            // ステップ5: 初期化完了確認
+            console.log('✅ gapi.client.sheets 初期化完了確認');
             this.isInitialized = true;
-            console.log('✅ Google Sheets API 初期化完了');
+            console.log('✅ Google Sheets API 完全初期化完了');
             return true;
             
         } catch (error) {
             console.error('❌ Google Sheets API 初期化エラー:', error);
+            this.isInitialized = false;
             return false;
         }
     },
@@ -55,6 +77,11 @@ window.GoogleSheetsAPI = {
     // Google API Client ライブラリ読み込み
     loadGAPI: function() {
         return new Promise((resolve, reject) => {
+            if (window.gapi) {
+                resolve();
+                return;
+            }
+            
             const script = document.createElement('script');
             script.src = 'https://apis.google.com/js/api.js';
             script.onload = () => {
@@ -66,13 +93,71 @@ window.GoogleSheetsAPI = {
         });
     },
     
-    // アクセストークン設定
-    setAccessToken: function(token) {
-        if (window.gapi?.client) {
+    // アクセストークン設定（強化版）
+    setAccessToken: async function(token) {
+        try {
+            console.log('🔑 Sheets API アクセストークン設定開始...');
+            
+            // 初期化確認
+            if (!this.isInitialized) {
+                console.log('⚠️ Google Sheets API未初期化 - 初期化を実行...');
+                const initialized = await this.initialize();
+                if (!initialized) {
+                    throw new Error('Google Sheets API初期化に失敗');
+                }
+            }
+            
+            // gapi.clientが利用可能か確認
+            if (!window.gapi?.client) {
+                throw new Error('gapi.client が利用できません');
+            }
+            
+            // アクセストークン設定
             window.gapi.client.setToken({ access_token: token });
+            console.log('🔑 アクセストークン設定完了');
+            
+            // 認証テスト（簡単なAPI呼び出しで確認）
+            console.log('🧪 認証テスト実行中...');
+            await this.testAuthentication();
+            
             this.isAuthenticated = true;
-            console.log('✅ Sheets API アクセストークン設定完了');
+            console.log('✅ Sheets API 認証完了・テスト成功');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Sheets API アクセストークン設定エラー:', error);
+            this.isAuthenticated = false;
+            return false;
         }
+    },
+    
+    // 認証テスト
+    testAuthentication: async function() {
+        try {
+            // 空のリクエストでテスト
+            const response = await window.gapi.client.request({
+                path: 'https://www.googleapis.com/drive/v3/about',
+                params: { fields: 'user' }
+            });
+            
+            if (response.status === 200) {
+                console.log('✅ 認証テスト成功:', response.result.user?.emailAddress);
+                return true;
+            } else {
+                throw new Error('認証テスト失敗');
+            }
+            
+        } catch (error) {
+            console.error('❌ 認証テストエラー:', error);
+            throw error;
+        }
+    },
+    
+    // 完全な準備状態確認
+    isFullyReady: function() {
+        return this.isInitialized && 
+               this.isAuthenticated && 
+               window.gapi?.client?.sheets;
     },
     
     // スプレッドシート作成
@@ -80,8 +165,8 @@ window.GoogleSheetsAPI = {
         try {
             console.log('📄 スプレッドシート作成中:', title);
             
-            if (!this.isAuthenticated) {
-                throw new Error('認証が必要です');
+            if (!this.isFullyReady()) {
+                throw new Error('Google Sheets APIの準備が完了していません');
             }
             
             const response = await window.gapi.client.sheets.spreadsheets.create({
@@ -101,23 +186,21 @@ window.GoogleSheetsAPI = {
                         properties: {
                             title: 'パイプライン状態'
                         }
-                    },
-                    {
-                        properties: {
-                            title: '活動履歴'
-                        }
                     }
                 ]
             });
             
-            this.spreadsheetId = response.result.spreadsheetId;
-            console.log('✅ スプレッドシート作成完了:', this.spreadsheetId);
-            console.log('🔗 URL:', `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}`);
+            const spreadsheetId = response.result.spreadsheetId;
+            this.spreadsheetId = spreadsheetId;
             
-            // 初期データの設定
-            await this.initializeSheetHeaders();
+            // ヘッダー行作成
+            await this.setupHeaders(spreadsheetId);
             
-            return this.spreadsheetId;
+            // スプレッドシートIDを保存
+            this.saveSpreadsheetId(spreadsheetId);
+            
+            console.log('✅ スプレッドシート作成完了:', spreadsheetId);
+            return spreadsheetId;
             
         } catch (error) {
             console.error('❌ スプレッドシート作成エラー:', error);
@@ -125,135 +208,108 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // シートヘッダー初期化
-    initializeSheetHeaders: async function() {
+    // ヘッダー行設定
+    setupHeaders: async function(spreadsheetId) {
         try {
-            console.log('📝 シートヘッダー初期化中...');
+            console.log('📝 ヘッダー行設定中...');
             
-            // 顧客マスターのヘッダー
-            const customerHeaders = [
-                'ID', '名前', 'メール', '電話', 'ステータス', 
-                '予算下限', '予算上限', '希望エリア', '物件タイプ', '要望',
-                '備考', '作成日時', '更新日時'
+            const headers = [
+                ['ID', '顧客名', 'メール', '電話番号', 'パイプライン状態', '作成日', '更新日', '備考']
             ];
             
-            // パイプライン状態のヘッダー
-            const pipelineHeaders = [
-                '顧客ID', 'ステージ', '移動日時', 'メモ'
-            ];
-            
-            // 活動履歴のヘッダー
-            const activityHeaders = [
-                '顧客ID', '活動種類', '日付', '詳細'
-            ];
-            
-            // ヘッダーを書き込み
-            await window.gapi.client.sheets.spreadsheets.values.batchUpdate({
-                spreadsheetId: this.spreadsheetId,
+            await window.gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: spreadsheetId,
+                range: '顧客マスター!A1:H1',
+                valueInputOption: 'RAW',
                 resource: {
-                    valueInputOption: 'RAW',
-                    data: [
-                        {
-                            range: '顧客マスター!A1:M1',
-                            values: [customerHeaders]
-                        },
-                        {
-                            range: 'パイプライン状態!A1:D1',
-                            values: [pipelineHeaders]
-                        },
-                        {
-                            range: '活動履歴!A1:D1',
-                            values: [activityHeaders]
-                        }
-                    ]
+                    values: headers
                 }
             });
             
-            console.log('✅ シートヘッダー初期化完了');
+            console.log('✅ ヘッダー行設定完了');
             
         } catch (error) {
-            console.error('❌ シートヘッダー初期化エラー:', error);
+            console.error('❌ ヘッダー行設定エラー:', error);
             throw error;
         }
     },
     
-    // 顧客データ読み込み
-    getCustomers: async function(spreadsheetId) {
+    // データ書き込み
+    writeData: async function(data, range = '顧客マスター!A2:H') {
         try {
-            console.log('📖 顧客データ読み込み中...');
+            console.log('📝 データ書き込み中...', data.length, '件');
+            
+            if (!this.isFullyReady()) {
+                throw new Error('Google Sheets APIの準備が完了していません');
+            }
+            
+            if (!this.spreadsheetId) {
+                throw new Error('スプレッドシートIDが設定されていません');
+            }
+            
+            const values = data.map(customer => [
+                customer.id || '',
+                customer.name || '',
+                customer.email || '',
+                customer.phone || '',
+                customer.pipelineStatus || '',
+                customer.createdAt || '',
+                customer.updatedAt || '',
+                customer.notes || ''
+            ]);
+            
+            await window.gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: this.spreadsheetId,
+                range: range,
+                valueInputOption: 'RAW',
+                resource: {
+                    values: values
+                }
+            });
+            
+            console.log('✅ データ書き込み完了');
+            
+        } catch (error) {
+            console.error('❌ データ書き込みエラー:', error);
+            throw error;
+        }
+    },
+    
+    // データ読み込み
+    readData: async function(range = '顧客マスター!A2:H') {
+        try {
+            console.log('📖 データ読み込み中...');
+            
+            if (!this.isFullyReady()) {
+                throw new Error('Google Sheets APIの準備が完了していません');
+            }
+            
+            if (!this.spreadsheetId) {
+                throw new Error('スプレッドシートIDが設定されていません');
+            }
             
             const response = await window.gapi.client.sheets.spreadsheets.values.get({
-                spreadsheetId: spreadsheetId || this.spreadsheetId,
-                range: '顧客マスター!A2:M'
+                spreadsheetId: this.spreadsheetId,
+                range: range
             });
             
             const rows = response.result.values || [];
-            console.log(`✅ 顧客データ読み込み完了: ${rows.length}件`);
-            
-            // 行データを顧客オブジェクトに変換
             const customers = rows.map(row => ({
                 id: row[0] || '',
                 name: row[1] || '',
                 email: row[2] || '',
                 phone: row[3] || '',
-                pipelineStatus: row[4] || '見込み客',
-                preferences: {
-                    budgetMin: parseInt(row[5]) || 0,
-                    budgetMax: parseInt(row[6]) || 0,
-                    areas: row[7] ? row[7].split('・') : [],
-                    roomType: row[8] || '',
-                    requirements: row[9] ? row[9].split('・') : []
-                },
-                notes: row[10] || '',
-                createdAt: row[11] || new Date().toISOString(),
-                updatedAt: row[12] || new Date().toISOString()
+                pipelineStatus: row[4] || '',
+                createdAt: row[5] || '',
+                updatedAt: row[6] || '',
+                notes: row[7] || ''
             }));
             
+            console.log('✅ データ読み込み完了:', customers.length, '件');
             return customers;
             
         } catch (error) {
-            console.error('❌ 顧客データ読み込みエラー:', error);
-            throw error;
-        }
-    },
-    
-    // 顧客データ保存
-    saveCustomers: async function(customers, spreadsheetId) {
-        try {
-            console.log('💾 顧客データ保存中:', customers.length, '件');
-            
-            // 顧客データを行データに変換
-            const rows = customers.map(customer => [
-                customer.id,
-                customer.name,
-                customer.email,
-                customer.phone,
-                customer.pipelineStatus,
-                customer.preferences?.budgetMin || 0,
-                customer.preferences?.budgetMax || 0,
-                (customer.preferences?.areas || []).join('・'),
-                customer.preferences?.roomType || '',
-                (customer.preferences?.requirements || []).join('・'),
-                customer.notes || '',
-                customer.createdAt,
-                customer.updatedAt
-            ]);
-            
-            // データを書き込み
-            await window.gapi.client.sheets.spreadsheets.values.update({
-                spreadsheetId: spreadsheetId || this.spreadsheetId,
-                range: '顧客マスター!A2:M',
-                valueInputOption: 'RAW',
-                resource: {
-                    values: rows
-                }
-            });
-            
-            console.log('✅ 顧客データ保存完了');
-            return true;
-            
-        } catch (error) {
-            console.error('❌ 顧客データ保存エラー:', error);
+            console.error('❌ データ読み込みエラー:', error);
             throw error;
         }
     },
@@ -267,13 +323,26 @@ window.GoogleSheetsAPI = {
     
     // スプレッドシートID読み込み
     loadSpreadsheetId: function() {
-        const spreadsheetId = localStorage.getItem('rentpipe_spreadsheet_id');
-        if (spreadsheetId) {
-            this.spreadsheetId = spreadsheetId;
-            console.log('✅ スプレッドシートID読み込み:', spreadsheetId);
+        const savedId = localStorage.getItem('rentpipe_spreadsheet_id');
+        if (savedId) {
+            this.spreadsheetId = savedId;
+            console.log('📖 スプレッドシートID読み込み:', savedId);
         }
-        return spreadsheetId;
+        return savedId;
+    },
+    
+    // デバッグ情報
+    getDebugInfo: function() {
+        return {
+            isInitialized: this.isInitialized,
+            isAuthenticated: this.isAuthenticated,
+            isFullyReady: this.isFullyReady(),
+            spreadsheetId: this.spreadsheetId,
+            hasGAPI: !!window.gapi,
+            hasGAPIClient: !!window.gapi?.client,
+            hasGAPISheets: !!window.gapi?.client?.sheets
+        };
     }
 };
 
-console.log('✅ Google Sheets API システム準備完了');
+console.log('✅ Google Sheets API 準備完了');
