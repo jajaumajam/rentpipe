@@ -279,9 +279,9 @@
     <script src="js/local-first-sync.js"></script>
     <script src="js/cross-page-sync.js"></script>
 
-    <!-- Pipeline RentPipeデータベース統一検索システム -->
+    <!-- Pipeline RentPipeデータベース統一検索システム（修正版） -->
     <script>
-        // 🚀 Pipeline RentPipeデータベース統一検索システム
+        // 🚀 Pipeline RentPipeデータベース統一検索システム（修正版）
         console.log('🚀 Pipeline RentPipeデータベース統一検索システム初期化中...');
         
         // グローバル変数
@@ -298,7 +298,7 @@
             }
         }
         
-        // 認証システム初期化
+        // 認証システム初期化（修正版）
         async function initializeAuthenticationSystem() {
             try {
                 console.log('🔧 認証システム初期化中...');
@@ -308,10 +308,25 @@
                     throw new Error('統合認証マネージャーV2が見つかりません');
                 }
                 
+                // 【重要】IntegratedAuthManagerV2の初期化を明示的に実行
+                console.log('📋 統合認証マネージャーV2の初期化を実行...');
+                await window.IntegratedAuthManagerV2.initialize();
+                
+                // 初期化完了後に認証状態を取得
                 currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
                 
+                console.log('🔍 認証状態確認:', currentAuthState);
+                console.log('🔍 GoogleAuth詳細:', currentAuthState.googleAuth);
+                
                 if (currentAuthState.isAuthenticated) {
-                    showAuthStatus(`✅ ログイン済み: ${currentAuthState.rentpipeAuth.user?.email || 'ユーザー'}`, 'success');
+                    // Google認証の詳細確認
+                    if (currentAuthState.googleAuth?.isSignedIn && currentAuthState.googleAuth?.accessToken) {
+                        console.log('✅ 完全認証済み（Google認証も含む）');
+                        showAuthStatus(`✅ ログイン済み: ${currentAuthState.rentpipeAuth.user?.email || 'ユーザー'} (Google認証も有効)`, 'success');
+                    } else {
+                        console.log('⚠️ 基本認証済みだがGoogle認証が不完全');
+                        showAuthStatus(`⚠️ ログイン済み: ${currentAuthState.rentpipeAuth.user?.email || 'ユーザー'} (Google認証が必要)`, 'warning');
+                    }
                     return true;
                 } else {
                     console.log('🔄 未認証のためログインページにリダイレクト...');
@@ -421,7 +436,7 @@
             }
         }
         
-        // Google Sheets統合の完全自動設定
+        // Google Sheets統合の完全自動設定（修正版）
         async function setupGoogleSheetsIntegration() {
             try {
                 console.log('📊 Google Sheets統合の完全自動設定開始...');
@@ -431,7 +446,14 @@
                     await window.GoogleSheetsAPI.initialize();
                 }
                 
-                // ステップ2: ログイン認証情報を自動設定
+                // ステップ2: ログイン認証情報の詳細確認と設定
+                console.log('🔍 認証状態詳細確認:', {
+                    googleAuth: currentAuthState?.googleAuth,
+                    isSignedIn: currentAuthState?.googleAuth?.isSignedIn,
+                    hasAccessToken: !!currentAuthState?.googleAuth?.accessToken,
+                    accessTokenPreview: currentAuthState?.googleAuth?.accessToken?.substring(0, 20) + '...'
+                });
+                
                 if (currentAuthState?.googleAuth?.isSignedIn && currentAuthState?.googleAuth?.accessToken) {
                     console.log('✅ ログイン認証情報をGoogle Sheetsで使用');
                     window.GoogleSheetsAPI.setAccessToken(currentAuthState.googleAuth.accessToken);
@@ -488,7 +510,17 @@
                     }
                     
                 } else {
-                    console.warn('⚠️ Google認証情報が不完全');
+                    console.warn('⚠️ Google認証情報が不完全です');
+                    console.log('🔍 詳細:', {
+                        'IntegratedAuthManagerV2存在': !!window.IntegratedAuthManagerV2,
+                        'currentAuthState存在': !!currentAuthState,
+                        'googleAuth存在': !!currentAuthState?.googleAuth,
+                        'isSignedIn': currentAuthState?.googleAuth?.isSignedIn,
+                        'accessToken存在': !!currentAuthState?.googleAuth?.accessToken,
+                        'LocalStorage google_auth_data': !!localStorage.getItem('google_auth_data'),
+                        'LocalStorage google_access_token': !!localStorage.getItem('google_access_token')
+                    });
+                    
                     document.getElementById('btn-sheets-connect').style.display = 'inline-block';
                     updateSheetsStatus('⚠️ Google認証が必要です', 'disconnected');
                     
@@ -573,6 +605,9 @@
                     accessToken: window.GoogleDriveAPIv2.accessToken,
                     tokenExpiry: Date.now() + (3600 * 1000)
                 });
+                
+                // 認証状態を再取得
+                currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
                 
                 window.GoogleSheetsAPI.setAccessToken(window.GoogleDriveAPIv2.accessToken);
                 
@@ -662,20 +697,23 @@
             }
         }
         
-        // メイン初期化
+        // メイン初期化（修正版）
         async function initialize() {
             try {
                 console.log('🚀 Pipeline RentPipeデータベース統一検索システム初期化開始...');
                 
+                // 【重要】認証システムの確実な初期化
                 const authReady = await initializeAuthenticationSystem();
                 if (!authReady) {
-                    return;
+                    return; // ログインページにリダイレクトされる
                 }
                 
+                // 統合データ管理システム初期化
                 if (window.UnifiedSheetsManager) {
                     await window.UnifiedSheetsManager.initialize();
                 }
                 
+                // Google Sheets統合設定
                 const integrationResult = await setupGoogleSheetsIntegration();
                 console.log('📊 Google Sheets統合結果:', integrationResult);
                 
