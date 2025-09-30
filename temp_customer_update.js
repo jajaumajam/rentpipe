@@ -1,41 +1,38 @@
-// customer.htmlの<script>部分の更新内容
+// customer.htmlの新規スプレッドシート作成部分の修正内容
 
-        // スクリプトファイルを順次読み込み（依存関係を考慮）
-        function loadScriptsSequentially() {
-            return new Promise((resolve, reject) => {
-                loadScript('js/navigation.js', function() {
-                    loadScript('js/unified-data-manager.js', function() {
-                        loadScript('js/integrated-auth-manager-v2.js', function() {
-                            loadScript('js/google-drive-api-v2.js', function() {
-                                loadScript('js/google-drive-data-manager.js', function() {
-                                    loadScript('js/customer-google-drive-integration.js', function() {
-                                        console.log('✅ すべてのスクリプト読み込み完了');
-                                        resolve();
-                                    }, function() {
-                                        console.warn('⚠️ customer-google-drive-integration.js 読み込み失敗（オプション機能）');
-                                        resolve();
-                                    });
-                                }, function() {
-                                    console.warn('⚠️ google-drive-data-manager.js 読み込み失敗（オプション機能）');
-                                    resolve();
-                                });
-                            }, function() {
-                                console.warn('⚠️ Google Drive API v2 読み込み失敗（オプション機能）');
-                                resolve();
-                            });
-                        }, function() {
-                            reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
-                        });
-                    }, function() {
-                        console.warn('⚠️ unified-data-manager.js 読み込み失敗（オプション機能）');
-                        loadScript('js/integrated-auth-manager-v2.js', function() {
-                            resolve();
-                        }, function() {
-                            reject(new Error('integrated-auth-manager-v2.js 読み込み失敗'));
-                        });
-                    });
-                }, function() {
-                    reject(new Error('navigation.js 読み込み失敗'));
-                });
-            });
-        }
+// 新規スプレッドシート作成関数を以下に置き換える：
+async function createNewSpreadsheet() {
+    const btn = document.getElementById('btn-sheets-create');
+    const originalText = btn.textContent;
+    
+    try {
+        btn.textContent = '作成中...';
+        btn.disabled = true;
+        
+        updateSheetsStatus('📄 RentPipeデータベース作成中...', 'syncing');
+        
+        // 統一された命名規則: RentPipe_データベース_タイムスタンプ
+        const timestamp = new Date().toLocaleString('ja-JP').replace(/\//g, '-').replace(/:/g, '-').replace(/\s/g, '_');
+        const title = `RentPipe_データベース_${timestamp}`;
+        
+        const spreadsheetId = await window.GoogleSheetsAPI.createSpreadsheet(title);
+        
+        await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
+        
+        updateSheetsStatus('✅ RentPipeデータベース作成完了 - 自動同期有効', 'connected');
+        showSheetsInfo(spreadsheetId);
+        
+        btn.style.display = 'none';
+        document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+        
+        await loadCustomers();
+        
+        console.log('✅ 新規RentPipeデータベース作成完了:', title);
+        
+    } catch (error) {
+        console.error('❌ RentPipeデータベース作成エラー:', error);
+        updateSheetsStatus('❌ 作成エラー: ' + error.message, 'error');
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}

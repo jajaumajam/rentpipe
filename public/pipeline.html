@@ -153,14 +153,14 @@
             <div id="sheets-status" class="sheets-status sheets-status-disconnected">
                 <div>
                     <strong>ステータス:</strong>
-                    <span id="sheets-status-text">Google Sheets統合を初期化中...</span>
+                    <span id="sheets-status-text">RentPipeデータベースを検索中...</span>
                 </div>
                 <div class="sheets-controls">
                     <button id="btn-sheets-connect" class="btn btn-primary" onclick="connectGoogleSheets()" style="display: none;">
                         📊 Google Sheets接続
                     </button>
                     <button id="btn-sheets-create" class="btn btn-success" onclick="createNewSpreadsheet()" style="display: none;">
-                        📄 新規作成
+                        📄 新規データベース作成
                     </button>
                     <button id="btn-sheets-sync" class="btn btn-success" onclick="syncWithSheets()" style="display: none;">
                         🔄 今すぐ同期
@@ -170,18 +170,18 @@
             
             <!-- 既存スプレッドシート一覧 -->
             <div id="existing-sheets-container" class="existing-sheets-list" style="display: none;">
-                <h4>既存のRentPipeスプレッドシート:</h4>
+                <h4>既存のRentPipeデータベース:</h4>
                 <div id="existing-sheets-list"></div>
             </div>
             
             <div id="sheets-info" class="sheets-info" style="display: none;">
                 <div><strong>スプレッドシートID:</strong> <span id="sheets-spreadsheet-id">-</span></div>
-                <div><strong>スプレッドシート名:</strong> <span id="sheets-spreadsheet-name">-</span></div>
+                <div><strong>データベース名:</strong> <span id="sheets-spreadsheet-name">-</span></div>
                 <div><strong>最終同期:</strong> <span id="sheets-last-sync">-</span></div>
                 <div><strong>同期モード:</strong> <span id="sheets-sync-mode">手動</span></div>
                 <div style="margin-top: 10px;">
                     <a id="sheets-link" href="#" target="_blank" class="btn btn-secondary" style="display: none;">
-                        🔗 スプレッドシートを開く
+                        🔗 データベースを開く
                     </a>
                 </div>
             </div>
@@ -279,10 +279,10 @@
     <script src="js/local-first-sync.js"></script>
     <script src="js/cross-page-sync.js"></script>
 
-    <!-- Pipeline Google Sheets検索統合システム -->
+    <!-- Pipeline RentPipeデータベース統一検索システム -->
     <script>
-        // 🚀 Pipeline Google Sheets検索統合システム
-        console.log('🚀 Pipeline Google Sheets検索統合システム初期化中...');
+        // 🚀 Pipeline RentPipeデータベース統一検索システム
+        console.log('🚀 Pipeline RentPipeデータベース統一検索システム初期化中...');
         
         // グローバル変数
         let systemInitialized = false;
@@ -329,14 +329,14 @@
             }
         }
         
-        // Google Drive上でRentPipeスプレッドシートを検索
-        async function searchExistingSpreadsheets() {
+        // RentPipeデータベースを検索
+        async function searchRentPipeDatabase() {
             try {
-                console.log('🔍 Googleドライブでスプレッドシート検索中...');
-                updateSheetsStatus('🔍 既存スプレッドシートを検索中...', 'syncing');
+                console.log('🔍 RentPipeデータベースを検索中...');
+                updateSheetsStatus('🔍 RentPipeデータベースを検索中...', 'syncing');
                 
-                // Google Drive APIでファイル検索
-                const query = "name contains 'RentPipe' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false";
+                // 「RentPipe_データベース」を含むスプレッドシートを検索
+                const query = "name contains 'RentPipe_データベース' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false";
                 
                 const response = await gapi.client.request({
                     path: 'https://www.googleapis.com/drive/v3/files',
@@ -348,19 +348,25 @@
                 });
                 
                 foundSpreadsheets = response.result.files || [];
-                console.log('🔍 検索結果:', foundSpreadsheets.length, '件のスプレッドシートが見つかりました');
+                console.log('🔍 検索結果:', foundSpreadsheets.length, '件のRentPipeデータベースが見つかりました');
+                
+                if (foundSpreadsheets.length > 0) {
+                    foundSpreadsheets.forEach(sheet => {
+                        console.log(`📄 発見: ${sheet.name} (ID: ${sheet.id})`);
+                    });
+                }
                 
                 return foundSpreadsheets;
                 
             } catch (error) {
-                console.error('❌ スプレッドシート検索エラー:', error);
+                console.error('❌ RentPipeデータベース検索エラー:', error);
                 foundSpreadsheets = [];
                 return [];
             }
         }
         
-        // 既存スプレッドシート一覧表示
-        function displayExistingSpreadsheets(spreadsheets) {
+        // 既存データベース一覧表示
+        function displayExistingDatabases(spreadsheets) {
             const container = document.getElementById('existing-sheets-container');
             const listDiv = document.getElementById('existing-sheets-list');
             
@@ -377,18 +383,18 @@
                         <div class="sheet-name">${sheet.name}</div>
                         <div class="sheet-date">最終更新: ${new Date(sheet.modifiedTime).toLocaleDateString('ja-JP')}</div>
                     </div>
-                    <button class="btn btn-primary" onclick="connectToExistingSheet('${sheet.id}', '${sheet.name}')">
-                        🔗 接続
+                    <button class="btn btn-primary" onclick="connectToExistingDatabase('${sheet.id}', '${sheet.name}')">
+                        🔗 このデータベースを使用
                     </button>
                 </div>
             `).join('');
         }
         
-        // 既存スプレッドシートに接続
-        async function connectToExistingSheet(spreadsheetId, sheetName) {
+        // 既存データベースに接続
+        async function connectToExistingDatabase(spreadsheetId, sheetName) {
             try {
-                console.log('🔗 既存スプレッドシートに接続中:', sheetName);
-                updateSheetsStatus('🔗 既存スプレッドシートに接続中...', 'syncing');
+                console.log('🔗 既存RentPipeデータベースに接続中:', sheetName);
+                updateSheetsStatus('🔗 既存データベースに接続中...', 'syncing');
                 
                 // GoogleSheetsAPIとUnifiedSheetsManagerでスプレッドシートを設定
                 await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
@@ -407,10 +413,10 @@
                     await window.pipelineManager.loadPipeline();
                 }
                 
-                console.log('✅ 既存スプレッドシート接続完了');
+                console.log('✅ 既存RentPipeデータベース接続完了');
                 
             } catch (error) {
-                console.error('❌ 既存スプレッドシート接続エラー:', error);
+                console.error('❌ 既存データベース接続エラー:', error);
                 updateSheetsStatus('❌ 接続エラー: ' + error.message, 'error');
             }
         }
@@ -456,29 +462,29 @@
                         }
                     }
                     
-                    // ステップ3b: Googleドライブで検索
-                    const spreadsheets = await searchExistingSpreadsheets();
+                    // ステップ3b: Googleドライブで「RentPipe_データベース」を検索
+                    const spreadsheets = await searchRentPipeDatabase();
                     
                     if (spreadsheets.length > 0) {
-                        console.log('🔍 Googleドライブで既存スプレッドシート発見:', spreadsheets.length, '件');
+                        console.log('🔍 RentPipeデータベースが見つかりました:', spreadsheets.length, '件');
                         
-                        // 最初に見つかったスプレッドシートに自動接続
-                        const firstSheet = spreadsheets[0];
-                        await connectToExistingSheet(firstSheet.id, firstSheet.name);
+                        // 最新のデータベースに自動接続
+                        const latestDatabase = spreadsheets[0];
+                        await connectToExistingDatabase(latestDatabase.id, latestDatabase.name);
                         
-                        // 他のスプレッドシートも表示（選択肢として）
+                        // 複数ある場合は選択肢として表示
                         if (spreadsheets.length > 1) {
-                            displayExistingSpreadsheets(spreadsheets.slice(1));
+                            displayExistingDatabases(spreadsheets.slice(1));
                         }
                         
-                        return 'drive_connected';
+                        return 'database_connected';
                         
                     } else {
-                        console.log('ℹ️ 既存スプレッドシートなし - 新規作成が必要');
+                        console.log('ℹ️ RentPipeデータベースが見つかりません - 新規作成が必要');
                         document.getElementById('btn-sheets-create').style.display = 'inline-block';
-                        updateSheetsStatus('✅ Google Sheets準備完了 - 新規スプレッドシートを作成してください', 'connected');
+                        updateSheetsStatus('📄 RentPipeデータベースが見つかりません。新規作成してください。', 'disconnected');
                         
-                        return 'ready_for_creation';
+                        return 'database_not_found';
                     }
                     
                 } else {
@@ -498,7 +504,7 @@
             }
         }
         
-        // 新規スプレッドシート作成
+        // 新規RentPipeデータベース作成
         async function createNewSpreadsheet() {
             const btn = document.getElementById('btn-sheets-create');
             const originalText = btn.textContent;
@@ -507,10 +513,11 @@
                 btn.textContent = '作成中...';
                 btn.disabled = true;
                 
-                updateSheetsStatus('📄 スプレッドシート作成中...', 'syncing');
+                updateSheetsStatus('📄 RentPipeデータベース作成中...', 'syncing');
                 
+                // 統一された命名規則: RentPipe_データベース_タイムスタンプ
                 const timestamp = new Date().toLocaleString('ja-JP').replace(/\//g, '-').replace(/:/g, '-').replace(/\s/g, '_');
-                const title = `RentPipe_統合データベース_${timestamp}`;
+                const title = `RentPipe_データベース_${timestamp}`;
                 
                 const spreadsheetId = await window.GoogleSheetsAPI.createSpreadsheet(title);
                 
@@ -519,7 +526,7 @@
                 
                 await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
                 
-                updateSheetsStatus('✅ スプレッドシート作成完了 - 自動同期有効', 'connected');
+                updateSheetsStatus('✅ RentPipeデータベース作成完了 - 自動同期有効', 'connected');
                 showSheetsInfo(spreadsheetId, title);
                 
                 btn.style.display = 'none';
@@ -529,8 +536,10 @@
                     await window.pipelineManager.loadPipeline();
                 }
                 
+                console.log('✅ 新規RentPipeデータベース作成完了:', title);
+                
             } catch (error) {
-                console.error('❌ スプレッドシート作成エラー:', error);
+                console.error('❌ RentPipeデータベース作成エラー:', error);
                 updateSheetsStatus('❌ 作成エラー: ' + error.message, 'error');
                 btn.textContent = originalText;
                 btn.disabled = false;
@@ -656,7 +665,7 @@
         // メイン初期化
         async function initialize() {
             try {
-                console.log('🚀 Pipeline Google Sheets検索統合システム初期化開始...');
+                console.log('🚀 Pipeline RentPipeデータベース統一検索システム初期化開始...');
                 
                 const authReady = await initializeAuthenticationSystem();
                 if (!authReady) {
@@ -671,10 +680,10 @@
                 console.log('📊 Google Sheets統合結果:', integrationResult);
                 
                 systemInitialized = true;
-                console.log('✅ Pipeline Google Sheets検索統合システム初期化完了');
+                console.log('✅ Pipeline RentPipeデータベース統一検索システム初期化完了');
                 
             } catch (error) {
-                console.error('❌ Pipeline Google Sheets検索統合システム初期化エラー:', error);
+                console.error('❌ Pipeline RentPipeデータベース統一検索システム初期化エラー:', error);
                 showAuthStatus(`初期化失敗: ${error.message}`, 'error');
             }
         }
