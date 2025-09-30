@@ -239,7 +239,7 @@
     <script src="js/local-first-sync.js"></script>
     <script src="js/cross-page-sync.js"></script>
 
-    <!-- Pipeline Google Sheets Integration Script (customer.htmlと同じ実装) -->
+    <!-- Pipeline Google Sheets Integration Script (修正版) -->
     <script>
         // 🚀 Pipeline Google Sheets統合システム（修正版）
         console.log('🚀 Pipeline Google Sheets統合システム初期化中...');
@@ -291,7 +291,80 @@
             }
         }
         
-        // Google Sheets接続（customer.htmlと同じ実装）
+        // Google Sheets初期化 
+        async function initializeGoogleSheetsAPI() {
+            try {
+                console.log('📊 Google Sheets API初期化開始...');
+                
+                // Google Sheets API初期化
+                if (!window.GoogleSheetsAPI) {
+                    throw new Error('GoogleSheetsAPIが見つかりません');
+                }
+                
+                const initialized = await window.GoogleSheetsAPI.initialize();
+                if (!initialized) {
+                    throw new Error('GoogleSheetsAPI初期化失敗');
+                }
+                
+                console.log('✅ Google Sheets API初期化完了');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Google Sheets API初期化エラー:', error);
+                return false;
+            }
+        }
+        
+        // 既存スプレッドシート検出と初期状態設定
+        async function detectExistingSpreadsheet() {
+            try {
+                console.log('🔍 既存スプレッドシート検出中...');
+                
+                // LocalStorageから保存されたスプレッドシートIDを確認
+                const savedId = localStorage.getItem('rentpipe_spreadsheet_id');
+                
+                if (savedId) {
+                    console.log('✅ 既存スプレッドシートID検出:', savedId);
+                    
+                    // GoogleSheetsAPIにもIDを設定
+                    if (window.GoogleSheetsAPI) {
+                        window.GoogleSheetsAPI.spreadsheetId = savedId;
+                    }
+                    
+                    // UnifiedSheetsManagerでSheets統合を有効化（認証済みの場合）
+                    if (currentAuthState?.googleAuth?.isSignedIn) {
+                        console.log('🔧 既存スプレッドシートでSheets統合を有効化...');
+                        window.GoogleSheetsAPI.isAuthenticated = true;
+                        window.GoogleSheetsAPI.setAccessToken(currentAuthState.googleAuth.accessToken);
+                        
+                        await window.UnifiedSheetsManager.enableSheetsIntegration(savedId);
+                        
+                        // UIを更新
+                        document.getElementById('btn-sheets-connect').style.display = 'none';
+                        document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+                        showSheetsInfo(savedId);
+                        updateSheetsStatus('✅ 既存スプレッドシートに接続済み', 'connected');
+                        
+                        return true;
+                    } else {
+                        console.log('ℹ️ 既存スプレッドシートはあるが、Google認証が必要');
+                        updateSheetsStatus('ℹ️ 既存スプレッドシートあり - Google認証が必要', 'disconnected');
+                        return false;
+                    }
+                } else {
+                    console.log('ℹ️ 既存スプレッドシートなし');
+                    updateSheetsStatus('未接続 - Google Sheetsと連携してデータを同期できます', 'disconnected');
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('❌ 既存スプレッドシート検出エラー:', error);
+                updateSheetsStatus('❌ スプレッドシート検出エラー', 'error');
+                return false;
+            }
+        }
+        
+        // Google Sheets接続（修正版）
         async function connectGoogleSheets() {
             const btn = document.getElementById('btn-sheets-connect');
             const originalText = btn.textContent;
@@ -336,6 +409,9 @@
                         tokenExpiry: Date.now() + (3600 * 1000)
                     });
                     
+                    // 認証状態を更新
+                    currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
+                    
                     // ステップ5: Sheets APIにトークン設定
                     window.GoogleSheetsAPI.setAccessToken(window.GoogleDriveAPIv2.accessToken);
                     isAuthenticated = true;
@@ -345,12 +421,14 @@
                     throw new Error('Google認証が完了していません');
                 }
                 
-                // ステップ6: スプレッドシートの確認または作成へ
-                const savedId = window.GoogleSheetsAPI.loadSpreadsheetId();
+                // ステップ6: 再度スプレッドシート検出
+                const savedId = localStorage.getItem('rentpipe_spreadsheet_id');
                 
                 if (savedId) {
                     // 既存のスプレッドシートに接続
+                    console.log('✅ 既存スプレッドシートに接続:', savedId);
                     updateSheetsStatus('✅ 既存のスプレッドシートに接続しました', 'connected');
+                    
                     await window.UnifiedSheetsManager.enableSheetsIntegration(savedId);
                     showSheetsInfo(savedId);
                     
@@ -486,30 +564,27 @@
             }
         }
         
-        // 初期化
+        // 初期化（修正版 - 正しい順序で実行）
         async function initialize() {
             try {
                 console.log('🚀 Pipeline Google Sheets統合システム初期化開始...');
                 
-                // 認証システム初期化
+                // ステップ1: 認証システム初期化
                 const authReady = await initializeAuthenticationSystem();
                 if (!authReady) {
                     return; // ログインページにリダイレクトされる
                 }
                 
-                // 統合データ管理システム初期化
+                // ステップ2: Google Sheets API初期化
+                await initializeGoogleSheetsAPI();
+                
+                // ステップ3: 統合データ管理システム初期化
                 if (window.UnifiedSheetsManager) {
                     await window.UnifiedSheetsManager.initialize();
-                
-                    // 既存のスプレッドシートIDがあればボタン表示を調整
-                    const savedId = window.GoogleSheetsAPI?.loadSpreadsheetId();
-                    if (savedId && window.UnifiedSheetsManager.isSheetsEnabled) {
-                        document.getElementById('btn-sheets-connect').style.display = 'none';
-                        document.getElementById('btn-sheets-sync').style.display = 'inline-block';
-                        showSheetsInfo(savedId);
-                        updateSheetsStatus('✅ Google Sheets統合有効', 'connected');
-                    }
                 }
+                
+                // ステップ4: 既存スプレッドシート検出と接続
+                await detectExistingSpreadsheet();
                 
                 systemInitialized = true;
                 console.log('✅ Pipeline Google Sheets統合システム初期化完了');
