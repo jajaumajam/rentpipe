@@ -256,31 +256,30 @@
             }
         }
         
-        // 認証システム初期化
+        // 認証システム初期化（customer.htmlと同じ実装）
         async function initializeAuthenticationSystem() {
             try {
                 console.log('🔧 認証システム初期化中...');
                 showAuthStatus('🔧 認証システム初期化中...', 'warning');
                 
-                // 統合認証マネージャーを使用
-                if (!window.IntegratedAuthManager) {
-                    throw new Error('統合認証マネージャーが見つかりません');
+                // 統合認証マネージャーV2を使用（正しい名前）
+                if (!window.IntegratedAuthManagerV2) {
+                    throw new Error('統合認証マネージャーV2が見つかりません');
                 }
                 
-                const authResult = await window.IntegratedAuthManager.initialize();
+                // 既存の認証状態確認
+                const authState = window.IntegratedAuthManagerV2.getAuthState();
                 
-                if (authResult.success) {
-                    showAuthStatus(`✅ ${authResult.message}`, 'success');
+                if (authState.isAuthenticated) {
+                    showAuthStatus(`✅ ログイン済み: ${authState.rentpipeAuth.user?.email || 'ユーザー'}`, 'success');
                     return true;
                 } else {
                     // ログインページにリダイレクト
-                    if (authResult.redirectToLogin) {
-                        console.log('🔄 ログインページにリダイレクト中...');
+                    console.log('🔄 未認証のためログインページにリダイレクト...');
+                    showAuthStatus('🔄 ログインページにリダイレクト中...', 'warning');
+                    setTimeout(() => {
                         window.location.href = 'login.html';
-                        return false;
-                    }
-                    
-                    showAuthStatus(`❌ ${authResult.message}`, 'error');
+                    }, 1000);
                     return false;
                 }
                 
@@ -446,15 +445,17 @@
                 }
                 
                 // 統合データ管理システム初期化
-                await window.UnifiedSheetsManager.initialize();
+                if (window.UnifiedSheetsManager) {
+                    await window.UnifiedSheetsManager.initialize();
                 
-                // 既存のスプレッドシートIDがあればボタン表示を調整
-                const savedId = window.GoogleSheetsAPI?.loadSpreadsheetId();
-                if (savedId && window.UnifiedSheetsManager.isSheetsEnabled) {
-                    document.getElementById('btn-sheets-connect').style.display = 'none';
-                    document.getElementById('btn-sheets-sync').style.display = 'inline-block';
-                    showSheetsInfo(savedId);
-                    updateSheetsStatus('✅ Google Sheets統合有効', 'connected');
+                    // 既存のスプレッドシートIDがあればボタン表示を調整
+                    const savedId = window.GoogleSheetsAPI?.loadSpreadsheetId();
+                    if (savedId && window.UnifiedSheetsManager.isSheetsEnabled) {
+                        document.getElementById('btn-sheets-connect').style.display = 'none';
+                        document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+                        showSheetsInfo(savedId);
+                        updateSheetsStatus('✅ Google Sheets統合有効', 'connected');
+                    }
                 }
                 
                 systemInitialized = true;
