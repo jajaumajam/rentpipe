@@ -75,13 +75,13 @@
     <div class="login-container">
         <div style="text-align: center; margin-bottom: 2rem;">
             <h1>🏠 RentPipe</h1>
-            <p>Google Drive統合対応版ログイン</p>
+            <p>Google Sheets統合対応版ログイン</p>
         </div>
 
         <!-- ステップ表示 -->
         <div class="step-indicator">
             <div class="step" id="step-init">🔧 初期化</div>
-            <div class="step" id="step-auth">🔑 認証</div>
+            <div class="step" id="step-auth">🔐 認証</div>
             <div class="step" id="step-save">💾 保存</div>
             <div class="step" id="step-redirect">🚀 完了</div>
         </div>
@@ -120,15 +120,18 @@
 
     <!-- Google Drive API v2 スクリプト -->
     <script src="js/google-drive-api-v2.js"></script>
+    <!-- 統合認証マネージャーも読み込み -->
+    <script src="js/integrated-auth-manager-v2.js"></script>
 
     <script>
-        // 🚀 直接認証システム
-        console.log('🚀 直接認証ログインシステム開始');
+        // 🚀 Google Sheets対応 直接認証システム 
+        console.log('🚀 Google Sheets対応 直接認証ログインシステム開始');
         
         let authState = {
             initialized: false,
             authenticated: false,
-            userInfo: null
+            userInfo: null,
+            accessToken: null
         };
         
         // ステータス更新
@@ -164,15 +167,16 @@
                     authState: authState,
                     localStorage: {
                         rentpipe_auth_simple: localStorage.getItem('rentpipe_auth_simple'),
-                        rentpipe_user_simple: !!localStorage.getItem('rentpipe_user_simple')
+                        rentpipe_user_simple: !!localStorage.getItem('rentpipe_user_simple'),
+                        google_auth_data: !!localStorage.getItem('google_auth_data')
                     },
                     googleAPIv2: window.GoogleDriveAPIv2?.getDebugInfo() || '未読み込み'
                 });
             }
         }
         
-        // 認証データ保存
-        function saveAuthData(userInfo) {
+        // 統合認証データ保存（Google Sheets対応）
+        function saveIntegratedAuthData(userInfo, accessToken) {
             try {
                 const userData = {
                     uid: userInfo.id,
@@ -181,17 +185,35 @@
                     picture: userInfo.picture
                 };
                 
-                // 統一形式で保存
+                // 既存形式で保存（互換性）
                 localStorage.setItem('rentpipe_auth_simple', 'logged_in');
                 localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
                 localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
                 localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
                 
-                console.log('✅ 認証データ保存完了:', userInfo.email);
+                // 統合認証マネージャー形式で保存（Google Sheets対応）
+                const googleAuthData = {
+                    isSignedIn: true,
+                    user: userInfo,
+                    accessToken: accessToken,
+                    tokenExpiry: Date.now() + (3600 * 1000) // 1時間後
+                };
+                
+                localStorage.setItem('google_auth_data', JSON.stringify(googleAuthData));
+                localStorage.setItem('google_access_token', accessToken);
+                localStorage.setItem('google_token_expiry', googleAuthData.tokenExpiry.toString());
+                
+                // 統合認証マネージャーで更新
+                if (window.IntegratedAuthManagerV2) {
+                    window.IntegratedAuthManagerV2.updateGoogleAuth(googleAuthData);
+                }
+                
+                console.log('✅ 統合認証データ保存完了:', userInfo.email);
+                console.log('🔑 アクセストークン保存完了');
                 return true;
                 
             } catch (error) {
-                console.error('❌ 認証データ保存エラー:', error);
+                console.error('❌ 統合認証データ保存エラー:', error);
                 return false;
             }
         }
@@ -222,26 +244,34 @@
                 
                 // Google認証実行
                 const userInfo = await window.GoogleDriveAPIv2.authenticate();
+                const accessToken = window.GoogleDriveAPIv2.accessToken;
+                
+                if (!userInfo || !accessToken) {
+                    throw new Error('認証情報またはアクセストークンの取得に失敗しました');
+                }
+                
                 authState.userInfo = userInfo;
+                authState.accessToken = accessToken;
                 authState.authenticated = true;
                 
                 updateStep('step-auth', 'completed');
                 updateStep('step-save', 'active');
-                updateStatus('認証成功 - データ保存中...', 'success', '認証データを保存しています');
+                updateStatus('認証成功 - データ保存中...', 'success', '認証データとアクセストークンを保存しています');
                 
-                // 認証データ保存
-                const saved = saveAuthData(userInfo);
+                // 統合認証データ保存
+                const saved = saveIntegratedAuthData(userInfo, accessToken);
                 if (!saved) {
                     throw new Error('認証データの保存に失敗しました');
                 }
                 
                 updateStep('step-save', 'completed');
                 updateStep('step-redirect', 'active');
-                updateStatus('ログイン完了！', 'success', userInfo.email + ' でログインしました。まもなくリダイレクトします...');
+                updateStatus('ログイン完了！', 'success', 
+                    userInfo.email + ' でログインしました。Google Sheets連携も有効です。まもなくリダイレクトします...');
                 
                 // 3秒後にリダイレクト
                 setTimeout(function() {
-                    window.location.href = 'customer-no-auth.html';
+                    window.location.href = 'customer.html';
                 }, 3000);
                 
             } catch (error) {
@@ -269,7 +299,7 @@
             }
         }
         
-        // モックログイン
+        // モックログイン（テスト用）
         function mockLogin() {
             updateStep('step-init', 'completed');
             updateStep('step-auth', 'completed');
@@ -282,7 +312,9 @@
                 picture: null
             };
             
-            const saved = saveAuthData(mockUser);
+            const mockToken = 'mock_access_token_' + Date.now();
+            
+            const saved = saveIntegratedAuthData(mockUser, mockToken);
             
             if (saved) {
                 updateStep('step-save', 'completed');
@@ -290,7 +322,7 @@
                 updateStatus('モックログイン完了！', 'success', 'テストアカウントでログインしました');
                 
                 setTimeout(function() {
-                    window.location.href = 'customer-no-auth.html';
+                    window.location.href = 'customer.html';
                 }, 2000);
             } else {
                 updateStatus('モックログインに失敗しました', 'error');
@@ -306,21 +338,27 @@
                 // 既存ログインチェック
                 const authStatus = localStorage.getItem('rentpipe_auth_simple');
                 if (authStatus === 'logged_in') {
-                    updateStatus('既にログイン済みです', 'success', 'まもなくリダイレクトします...');
-                    updateStep('step-init', 'completed');
-                    updateStep('step-auth', 'completed');
-                    updateStep('step-save', 'completed');
-                    updateStep('step-redirect', 'active');
-                    
-                    setTimeout(function() {
-                        window.location.href = 'customer-no-auth.html';
-                    }, 2000);
-                    return;
+                    const accessToken = localStorage.getItem('google_access_token');
+                    if (accessToken) {
+                        updateStatus('既にログイン済みです', 'success', 'Google Sheets連携も有効です。まもなくリダイレクトします...');
+                        updateStep('step-init', 'completed');
+                        updateStep('step-auth', 'completed');
+                        updateStep('step-save', 'completed');
+                        updateStep('step-redirect', 'active');
+                        
+                        setTimeout(function() {
+                            window.location.href = 'customer.html';
+                        }, 2000);
+                        return;
+                    } else {
+                        console.log('⚠️ アクセストークンが見つかりません。再認証が必要です。');
+                        localStorage.removeItem('rentpipe_auth_simple');
+                    }
                 }
                 
                 // Google Drive API v2 準備確認
                 if (window.GoogleDriveAPIv2) {
-                    updateStatus('システム準備完了', 'success', 'Google認証を開始できます');
+                    updateStatus('システム準備完了', 'success', 'Google認証を開始できます（Google Sheets連携対応）');
                     document.getElementById('loginBtn').disabled = false;
                     authState.initialized = true;
                 } else {
@@ -336,7 +374,7 @@
         
         // ページ読み込み完了時
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 直接認証ログインページ読み込み完了');
+            console.log('📄 Google Sheets対応 直接認証ログインページ読み込み完了');
             
             // ログインボタンイベント設定
             document.getElementById('loginBtn').addEventListener('click', performGoogleAuth);
