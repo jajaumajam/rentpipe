@@ -6,20 +6,151 @@
     <title>パイプライン管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/pipeline-responsive.css">
+    
+    <!-- Google Sheets統合用のスタイル -->
+    <style>
+        /* Google Sheets統合パネル */
+        .sheets-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .sheets-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .sheets-status-disconnected {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .sheets-status-connected {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        
+        .sheets-status-syncing {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        
+        .sheets-status-error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .sheets-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .sheets-info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .sheets-info div {
+            margin-bottom: 8px;
+        }
+        
+        .auth-status {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .auth-status.success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        
+        .auth-status.warning {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .auth-status.error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .sync-icon {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <!-- ナビゲーションはnavigation.jsで動的に追加される -->
+    <!-- ナビゲーション -->
+    <div id="navigation"></div>
 
     <div class="pipeline-container">
-        <!-- 開発環境でのみFirebase接続状況表示 -->
-        <div id="firebaseStatus" class="firebase-status firebase-local" style="display: none;">
-            パイプライン ローカルストレージモード
+        <!-- 認証ステータス -->
+        <div id="auth-sync-status" class="auth-status warning">
+            🔧 システム初期化中...
+        </div>
+        
+        <!-- Google Sheets統合パネル -->
+        <div class="sheets-panel">
+            <h3>📊 Google Sheets データ同期</h3>
+            
+            <div id="sheets-status" class="sheets-status sheets-status-disconnected">
+                <div>
+                    <strong>ステータス:</strong>
+                    <span id="sheets-status-text">未接続 - Google Sheetsと連携してデータを同期できます</span>
+                </div>
+                <div class="sheets-controls">
+                    <button id="btn-sheets-connect" class="btn btn-primary" onclick="connectGoogleSheets()">
+                        📊 Google Sheets接続
+                    </button>
+                    <button id="btn-sheets-create" class="btn btn-success" onclick="createNewSpreadsheet()" style="display: none;">
+                        📄 新規作成
+                    </button>
+                    <button id="btn-sheets-sync" class="btn btn-success" onclick="syncWithSheets()" style="display: none;">
+                        🔄 今すぐ同期
+                    </button>
+                </div>
+            </div>
+            
+            <div id="sheets-info" class="sheets-info" style="display: none;">
+                <div><strong>スプレッドシートID:</strong> <span id="sheets-spreadsheet-id">-</span></div>
+                <div><strong>最終同期:</strong> <span id="sheets-last-sync">-</span></div>
+                <div><strong>同期モード:</strong> <span id="sheets-sync-mode">手動</span></div>
+                <div style="margin-top: 10px;">
+                    <a id="sheets-link" href="#" target="_blank" class="btn btn-secondary" style="display: none;">
+                        🔗 スプレッドシートを開く
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="pipeline-header">
             <div class="header-left">
                 <h1>パイプライン管理</h1>
-                <p style="color: #64748b; margin-top: 5px;">顧客の進捗状況を可視化・管理</p>
+                <p style="color: #64748b; margin-top: 5px;">顧客の進捗状況を可視化・管理 + Google Sheets自動同期</p>
             </div>
             <div class="header-actions">
                 <button onclick="refreshPipeline()" class="btn btn-primary" id="refreshPipeline">
@@ -88,29 +219,259 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-
-    <!-- 既存のスクリプト読み込み -->
-    <script src="js/unified-data-manager.js"></script>
+    <!-- Google API Client & Identity Services -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <!-- RentPipe Core Scripts -->
     <script src="js/navigation.js"></script>
+    <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/unified-data-manager.js"></script>
+    
+    <!-- Google Integration Scripts -->
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    <script src="js/unified-sheets-manager.js"></script>
+    
+    <!-- Pipeline Management Scripts -->
     <script src="js/pipeline-unified.js"></script>
     <script src="js/data-key-unifier.js"></script>
     <script src="js/local-first-sync.js"></script>
     <script src="js/cross-page-sync.js"></script>
-    <!-- 開発環境でのみデバッグツール読み込み -->
+
+    <!-- Pipeline Google Sheets Integration Script -->
     <script>
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            document.write('<script src="js/data-source-debugger.js"><\/script>');
-            document.getElementById('firebaseStatus').style.display = 'flex';
+        // 🚀 Pipeline Google Sheets統合システム
+        console.log('🚀 Pipeline Google Sheets統合システム初期化中...');
+        
+        // グローバル変数
+        let systemInitialized = false;
+        
+        // 認証状況表示
+        function showAuthStatus(message, type) {
+            const statusDiv = document.getElementById('auth-sync-status');
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                statusDiv.className = `auth-status ${type}`;
+            }
         }
+        
+        // 認証システム初期化
+        async function initializeAuthenticationSystem() {
+            try {
+                console.log('🔧 認証システム初期化中...');
+                showAuthStatus('🔧 認証システム初期化中...', 'warning');
+                
+                // 統合認証マネージャーを使用
+                if (!window.IntegratedAuthManager) {
+                    throw new Error('統合認証マネージャーが見つかりません');
+                }
+                
+                const authResult = await window.IntegratedAuthManager.initialize();
+                
+                if (authResult.success) {
+                    showAuthStatus(`✅ ${authResult.message}`, 'success');
+                    return true;
+                } else {
+                    // ログインページにリダイレクト
+                    if (authResult.redirectToLogin) {
+                        console.log('🔄 ログインページにリダイレクト中...');
+                        window.location.href = 'login.html';
+                        return false;
+                    }
+                    
+                    showAuthStatus(`❌ ${authResult.message}`, 'error');
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('❌ 認証システム初期化エラー:', error);
+                showAuthStatus(`認証エラー: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        // Google Sheets接続
+        async function connectGoogleSheets() {
+            const btn = document.getElementById('btn-sheets-connect');
+            const originalText = btn.textContent;
+            
+            try {
+                btn.innerHTML = '<span class="sync-icon">🔄</span> 接続中...';
+                btn.disabled = true;
+                
+                updateSheetsStatus('🔄 Google Sheets接続中...', 'syncing');
+                
+                // 統合データマネージャーでSheets統合を有効化
+                const success = await window.UnifiedSheetsManager.enableSheetsIntegration();
+                
+                if (success) {
+                    updateSheetsStatus('✅ Google Sheets接続完了', 'connected');
+                    btn.style.display = 'none';
+                    document.getElementById('btn-sheets-create').style.display = 'inline-block';
+                } else {
+                    throw new Error('Google Sheets接続に失敗しました');
+                }
+                
+                btn.textContent = originalText;
+                btn.disabled = false;
+                
+            } catch (error) {
+                console.error('❌ Google Sheets接続エラー:', error);
+                updateSheetsStatus('❌ 接続エラー: ' + error.message, 'error');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // 新規スプレッドシート作成
+        async function createNewSpreadsheet() {
+            const btn = document.getElementById('btn-sheets-create');
+            const originalText = btn.textContent;
+            
+            try {
+                btn.innerHTML = '<span class="sync-icon">🔄</span> 作成中...';
+                btn.disabled = true;
+                
+                updateSheetsStatus('📄 スプレッドシート作成中...', 'syncing');
+                
+                const timestamp = new Date().toLocaleString('ja-JP').replace(/\//g, '-').replace(/:/g, '-').replace(/\s/g, '_');
+                const title = `RentPipe_パイプライン_${timestamp}`;
+                
+                const spreadsheetId = await window.GoogleSheetsAPI.createSpreadsheet(title);
+                
+                await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
+                
+                updateSheetsStatus('✅ スプレッドシート作成完了 - 自動同期有効', 'connected');
+                showSheetsInfo(spreadsheetId);
+                
+                btn.style.display = 'none';
+                document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+                
+                // パイプラインデータを再読み込み
+                if (window.pipelineManager) {
+                    await window.pipelineManager.loadPipeline();
+                }
+                
+            } catch (error) {
+                console.error('❌ スプレッドシート作成エラー:', error);
+                updateSheetsStatus('❌ 作成エラー: ' + error.message, 'error');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // 手動同期
+        async function syncWithSheets() {
+            const btn = document.getElementById('btn-sheets-sync');
+            const originalText = btn.textContent;
+            
+            try {
+                btn.innerHTML = '<span class="sync-icon">🔄</span> 同期中...';
+                btn.disabled = true;
+                
+                updateSheetsStatus('🔄 データ同期中...', 'syncing');
+                
+                await window.UnifiedSheetsManager.syncToSheets();
+                
+                updateSheetsStatus('✅ 同期完了', 'connected');
+                updateLastSyncTime();
+                
+                btn.textContent = originalText;
+                btn.disabled = false;
+                
+            } catch (error) {
+                console.error('❌ 同期エラー:', error);
+                updateSheetsStatus('❌ 同期エラー: ' + error.message, 'error');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // ステータス更新
+        function updateSheetsStatus(message, type) {
+            const statusDiv = document.getElementById('sheets-status');
+            const statusText = document.getElementById('sheets-status-text');
+            
+            if (statusText) {
+                statusText.textContent = message;
+            }
+            if (statusDiv) {
+                statusDiv.className = `sheets-status sheets-status-${type}`;
+            }
+        }
+        
+        // スプレッドシート情報表示
+        function showSheetsInfo(spreadsheetId) {
+            const infoDiv = document.getElementById('sheets-info');
+            const idSpan = document.getElementById('sheets-spreadsheet-id');
+            const link = document.getElementById('sheets-link');
+            
+            if (idSpan) idSpan.textContent = spreadsheetId;
+            if (link) {
+                link.href = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+                link.style.display = 'inline-block';
+            }
+            if (infoDiv) infoDiv.style.display = 'block';
+            
+            const syncMode = document.getElementById('sheets-sync-mode');
+            if (syncMode) syncMode.textContent = '自動（5分ごと）';
+            
+            updateLastSyncTime();
+        }
+        
+        // 最終同期時刻更新
+        function updateLastSyncTime() {
+            const status = window.UnifiedSheetsManager.getStatus();
+            const lastSyncSpan = document.getElementById('sheets-last-sync');
+            
+            if (lastSyncSpan) {
+                if (status.lastSyncTime) {
+                    lastSyncSpan.textContent = status.lastSyncTime.toLocaleString('ja-JP');
+                } else {
+                    lastSyncSpan.textContent = '未同期';
+                }
+            }
+        }
+        
+        // 初期化
+        async function initialize() {
+            try {
+                console.log('🚀 Pipeline Google Sheets統合システム初期化開始...');
+                
+                // 認証システム初期化
+                const authReady = await initializeAuthenticationSystem();
+                if (!authReady) {
+                    return; // ログインページにリダイレクトされる
+                }
+                
+                // 統合データ管理システム初期化
+                await window.UnifiedSheetsManager.initialize();
+                
+                // 既存のスプレッドシートIDがあればボタン表示を調整
+                const savedId = window.GoogleSheetsAPI?.loadSpreadsheetId();
+                if (savedId && window.UnifiedSheetsManager.isSheetsEnabled) {
+                    document.getElementById('btn-sheets-connect').style.display = 'none';
+                    document.getElementById('btn-sheets-sync').style.display = 'inline-block';
+                    showSheetsInfo(savedId);
+                    updateSheetsStatus('✅ Google Sheets統合有効', 'connected');
+                }
+                
+                systemInitialized = true;
+                console.log('✅ Pipeline Google Sheets統合システム初期化完了');
+                
+            } catch (error) {
+                console.error('❌ Pipeline Google Sheets統合システム初期化エラー:', error);
+                showAuthStatus(`初期化失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initialize);
     </script>
+
     <!-- デバッグ機能 -->
     <script src="js/debug-customer-detail.js"></script>
-    <!-- Google認証システム -->
-    <!-- 緩い認証チェック -->
-    <!-- 緩い認証チェック -->
-    <!-- 統一認証チェック -->
-    <!-- 認証無効化テスト -->
-</html>
-    <!-- 顧客詳細リンク機能 -->
     <script src="js/customer-detail-links.js"></script>
+</body>
+</html>
