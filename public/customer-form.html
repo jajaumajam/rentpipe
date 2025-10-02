@@ -7,12 +7,26 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         .form-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .page-header h2 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+        
+        .page-header p {
+            margin: 0;
+            color: #6b7280;
         }
         
         .form-group {
@@ -21,8 +35,8 @@
         
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
+            margin-bottom: 8px;
+            font-weight: 500;
             color: #374151;
         }
         
@@ -30,34 +44,51 @@
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 10px 12px;
+            padding: 10px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 14px;
         }
         
         .form-group textarea {
-            height: 100px;
+            min-height: 100px;
             resize: vertical;
         }
         
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 20px;
+        }
+        
+        h3 {
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+            color: #1f2937;
+        }
+        
+        .success-message {
+            padding: 15px;
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            color: #065f46;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
         }
         
         .btn {
             padding: 12px 24px;
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 500;
-            margin-right: 10px;
+            cursor: pointer;
             text-decoration: none;
             display: inline-block;
-            text-align: center;
+            transition: all 0.2s;
         }
         
         .btn-primary {
@@ -65,19 +96,19 @@
             color: white;
         }
         
-        .btn-outline {
-            background: transparent;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
+        .btn-primary:hover {
+            background: #2563eb;
         }
         
-        .success-message {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #10b981;
+        .btn-outline {
+            background: white;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            margin-left: 10px;
+        }
+        
+        .btn-outline:hover {
+            background: #f9fafb;
         }
     </style>
 </head>
@@ -97,7 +128,7 @@
     <main class="main-content">
         <div class="page-header">
             <h2>📝 新規顧客登録</h2>
-            <p>新しい顧客情報を登録します</p>
+            <p>新しい顧客情報を登録します（自動的にGoogle Sheetsにも同期されます）</p>
         </div>
 
         <div class="form-container">
@@ -140,12 +171,12 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="areas">希望エリア</label>
-                    <input type="text" id="areas" name="areas" placeholder="例：新宿, 渋谷, 池袋">
+                    <label for="areas">希望エリア（カンマ区切り）</label>
+                    <input type="text" id="areas" name="areas" placeholder="例: 渋谷, 新宿, 池袋">
                 </div>
                 
                 <div class="form-group">
-                    <label for="room-type">間取り</label>
+                    <label for="room-type">部屋タイプ</label>
                     <select id="room-type" name="roomType">
                         <option value="">選択してください</option>
                         <option value="ワンルーム">ワンルーム</option>
@@ -155,37 +186,34 @@
                         <option value="2K">2K</option>
                         <option value="2DK">2DK</option>
                         <option value="2LDK">2LDK</option>
-                        <option value="3K">3K</option>
-                        <option value="3DK">3DK</option>
-                        <option value="3LDK">3LDK</option>
-                        <option value="4LDK以上">4LDK以上</option>
+                        <option value="3LDK以上">3LDK以上</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="requirements">特別な要望</label>
-                    <input type="text" id="requirements" name="requirements" placeholder="例：ペット可, 楽器可, 駐車場">
+                    <label for="requirements">こだわり条件（カンマ区切り）</label>
+                    <input type="text" id="requirements" name="requirements" placeholder="例: 駅近, オートロック, ペット可">
                 </div>
                 
-                <!-- 営業情報 -->
-                <h3>📋 営業情報</h3>
+                <!-- その他情報 -->
+                <h3>📋 その他情報</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="urgency">緊急度</label>
                         <select id="urgency" name="urgency">
-                            <option value="low">低（3ヶ月以上）</option>
-                            <option value="medium" selected>中（1-3ヶ月）</option>
-                            <option value="high">高（1ヶ月以内）</option>
+                            <option value="低">低（3ヶ月以上）</option>
+                            <option value="中" selected>中（1-3ヶ月）</option>
+                            <option value="高">高（1ヶ月以内）</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="contact-time">連絡希望時間</label>
                         <select id="contact-time" name="contactTime">
-                            <option value="anytime">いつでも</option>
-                            <option value="daytime" selected>日中（9-17時）</option>
-                            <option value="evening">夕方以降（17時以降）</option>
-                            <option value="weekend">土日のみ</option>
+                            <option value="いつでも">いつでも</option>
+                            <option value="平日日中" selected>平日日中（9-17時）</option>
+                            <option value="平日夜・土日">平日夜・土日</option>
+                            <option value="土日のみ">土日のみ</option>
                         </select>
                     </div>
                 </div>
@@ -204,62 +232,68 @@
         </div>
     </main>
 
+    <!-- ✅ customer-form.htmlはunified-data-manager.jsのみ必要 -->
+    <script src="js/unified-data-manager.js"></script>
+    
     <script>
-        // フォーム送信処理
+        // フォーム送信処理（統一データ管理システム統合版）
         document.getElementById('customer-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             try {
+                console.log('📝 新規顧客登録開始...');
+                
                 // フォームデータ取得
                 const formData = new FormData(this);
+                
+                // 顧客データオブジェクト作成
                 const customerData = {
-                    id: 'customer-' + Date.now(),
                     name: formData.get('name'),
                     email: formData.get('email'),
                     phone: formData.get('phone'),
-                    pipelineStatus: 'lead',
+                    pipelineStatus: '初回相談',
                     preferences: {
-                        budgetMin: parseFloat(formData.get('budgetMin')) || null,
-                        budgetMax: parseFloat(formData.get('budgetMax')) || null,
-                        areas: formData.get('areas') ? formData.get('areas').split(',').map(area => area.trim()) : [],
+                        budgetMin: formData.get('budgetMin') ? parseFloat(formData.get('budgetMin')) * 10000 : null,
+                        budgetMax: formData.get('budgetMax') ? parseFloat(formData.get('budgetMax')) * 10000 : null,
+                        areas: formData.get('areas') ? formData.get('areas').split(',').map(area => area.trim()).filter(a => a) : [],
                         roomType: formData.get('roomType') || '',
-                        requirements: formData.get('requirements') ? formData.get('requirements').split(',').map(req => req.trim()) : []
+                        requirements: formData.get('requirements') ? formData.get('requirements').split(',').map(req => req.trim()).filter(r => r) : []
                     },
                     notes: formData.get('notes') || '',
-                    urgency: formData.get('urgency') || 'medium',
-                    contactTime: formData.get('contactTime') || 'daytime',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
+                    urgency: formData.get('urgency') || '中',
+                    contactTime: formData.get('contactTime') || 'いつでも',
                     source: 'manual_entry'
                 };
                 
-                // 既存の顧客データ取得
-                const existingCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
+                console.log('📋 登録データ:', customerData);
                 
-                // 新しい顧客を追加
-                existingCustomers.push(customerData);
+                // 統一データ管理システム経由で保存（LocalStorage + Google Sheets）
+                const newCustomer = window.UnifiedDataManager.addCustomer(customerData);
                 
-                // ローカルストレージに保存
-                localStorage.setItem('customers', JSON.stringify(existingCustomers));
-                
-                // 成功メッセージ表示
-                document.getElementById('success-message').style.display = 'block';
-                
-                // フォームリセット
-                this.reset();
-                
-                // 3秒後に顧客管理ページに戻る
-                setTimeout(() => {
-                    window.location.href = 'customer.html';
-                }, 2000);
-                
-                console.log('✅ 顧客登録完了:', customerData);
+                if (newCustomer) {
+                    console.log('✅ 顧客登録成功:', newCustomer.id);
+                    
+                    // 成功メッセージ表示
+                    document.getElementById('success-message').style.display = 'block';
+                    
+                    // フォームリセット
+                    this.reset();
+                    
+                    // 3秒後に顧客管理ページに戻る
+                    setTimeout(() => {
+                        window.location.href = 'customer.html';
+                    }, 2000);
+                } else {
+                    throw new Error('顧客登録に失敗しました');
+                }
                 
             } catch (error) {
                 console.error('❌ 顧客登録エラー:', error);
-                alert('顧客登録に失敗しました: ' + error.message);
+                alert('❌ 顧客登録に失敗しました: ' + error.message);
             }
         });
+        
+        console.log('✅ 新規顧客登録フォーム準備完了（統一データ管理システム統合版）');
     </script>
 </body>
 </html>

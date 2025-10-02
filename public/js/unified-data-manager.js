@@ -1,442 +1,172 @@
-// RentPipe 統一データ管理システム（修正版）
+// 🔄 統一データ管理システム（Google Sheets統合版）
 class UnifiedDataManager {
     constructor() {
-        // 統一データキー（全画面で共通使用）
         this.CUSTOMERS_KEY = 'rentpipe_customers';
-        this.HISTORY_KEY = 'rentpipe_pipeline_history';
-        this.AUTH_KEY = 'rentpipe_auth';
-        this.PROFILE_KEY = 'rentpipe_user_profile';
-        
-        console.log('📊 統一データ管理システム初期化開始...');
-        this.init();
-    }
-
-    init() {
-        console.log('📦 統一データ管理システム初期化中...');
-        
-        // 古いデータの移行・統合
-        this.migrateOldData();
-        
-        // 初期データの確認・生成（強制実行）
+        this.HISTORY_KEY = 'rentpipe_history';
+        console.log('✅ 統一データ管理システム初期化（Google Sheets統合版）');
         this.ensureDataExists();
-        
-        console.log('✅ 統一データ管理システム準備完了');
-        console.log('📊 最終顧客数:', this.getCustomers().length);
     }
 
-    // 古いデータを統一キーに移行
-    migrateOldData() {
-        console.log('📦 古いデータを統一形式に移行中...');
-        
-        // 顧客データの移行
-        const oldCustomerKeys = [
-            'rentpipe_stable_customers',
-            'rentpipe_demo_customers', 
-            'customers',
-            'demo_customers',
-            'demoCustomers'
-        ];
-        
-        let migratedCustomers = null;
-        let foundDataCount = 0;
-        
-        for (const oldKey of oldCustomerKeys) {
-            const oldData = localStorage.getItem(oldKey);
-            if (oldData) {
-                try {
-                    const parsedData = JSON.parse(oldData);
-                    if (Array.isArray(parsedData) && parsedData.length > 0) {
-                        if (!migratedCustomers || parsedData.length > migratedCustomers.length) {
-                            migratedCustomers = parsedData;
-                            foundDataCount = parsedData.length;
-                            console.log(`📦 ${oldKey} から顧客データを発見: ${parsedData.length}件`);
-                        }
-                    }
-                } catch (error) {
-                    console.warn(`❌ ${oldKey} の解析に失敗:`, error);
-                }
-            }
-        }
-        
-        // 既存の統一データも確認
-        const existingData = localStorage.getItem(this.CUSTOMERS_KEY);
-        if (existingData) {
-            try {
-                const existing = JSON.parse(existingData);
-                if (Array.isArray(existing) && existing.length > 0) {
-                    console.log(`📊 既存の統一データ: ${existing.length}件`);
-                    if (!migratedCustomers || existing.length > migratedCustomers.length) {
-                        migratedCustomers = existing;
-                        foundDataCount = existing.length;
-                    }
-                }
-            } catch (error) {
-                console.warn('❌ 既存統一データの解析に失敗:', error);
-            }
-        }
-        
-        // 統一キーに保存
-        if (migratedCustomers && migratedCustomers.length > 0) {
-            localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(migratedCustomers));
-            console.log(`✅ ${foundDataCount}件の顧客データを統一キーに移行`);
-        } else {
-            console.log('📦 移行可能なデータが見つかりません - 新規デモデータを生成します');
-        }
-        
-        // 古いキーをクリーンアップ
-        oldCustomerKeys.forEach(key => {
-            if (key !== this.CUSTOMERS_KEY && localStorage.getItem(key)) {
-                // 重要: データが正常に移行された場合のみ削除
-                if (foundDataCount > 0) {
-                    localStorage.removeItem(key);
-                    console.log(`🗑️ 古いデータキー削除: ${key}`);
-                }
-            }
-        });
-        
-        // パイプライン履歴の初期化
-        const historyData = localStorage.getItem(this.HISTORY_KEY);
-        if (!historyData) {
-            localStorage.setItem(this.HISTORY_KEY, JSON.stringify([]));
-            console.log('📈 パイプライン履歴を初期化');
-        }
-    }
-
-    // データの存在確認・生成（強制実行版）
+    // 初期データ確認・生成
     ensureDataExists() {
-        let customersData = this.getCustomers();
+        const existingData = localStorage.getItem(this.CUSTOMERS_KEY);
         
-        console.log('🔍 現在のデータ状況:', {
-            顧客数: customersData.length,
-            ローカルストレージキー: Object.keys(localStorage).filter(k => k.startsWith('rentpipe'))
-        });
-        
-        if (!customersData || customersData.length === 0) {
-            console.log('👥 顧客データが存在しないため、デモデータを強制生成します...');
-            const demoCustomers = this.generateUnifiedDemoData();
-            
-            // 強制保存
-            const success = this.saveCustomers(demoCustomers);
-            if (success) {
-                console.log(`✅ ${demoCustomers.length}件のデモ顧客データを生成・保存完了`);
-                
-                // 履歴も生成
-                this.generateInitialHistory(demoCustomers);
-            } else {
-                console.error('❌ デモデータの保存に失敗しました');
-            }
+        if (!existingData || existingData === '[]') {
+            console.log('ℹ️ 初期データが存在しないため、デモデータを生成します');
+            const demoCustomers = this.generateDemoCustomers();
+            this.saveCustomers(demoCustomers);
         } else {
-            console.log(`📊 既存の顧客データを確認: ${customersData.length}件`);
+            console.log('✅ 既存データ確認完了');
         }
-        
-        // 保存後の確認
-        const finalData = this.getCustomers();
-        console.log(`🎯 最終確認 - 顧客データ数: ${finalData.length}`);
     }
 
-    // デモ履歴の生成
-    generateInitialHistory(customers) {
-        const history = [];
+    // デモデータ生成
+    generateDemoCustomers() {
         const now = new Date();
-        
-        customers.forEach((customer, index) => {
-            // 各顧客の登録履歴を作成
-            history.push({
-                id: `history-${Date.now()}-${index}`,
-                customerId: customer.id,
-                fromStatus: '',
-                toStatus: customer.pipelineStatus,
-                timestamp: new Date(now.getTime() - (customers.length - index) * 24 * 60 * 60 * 1000).toISOString(),
-                notes: '初回登録'
-            });
-        });
-        
-        this.saveHistory(history);
-        console.log(`📝 ${history.length}件の初期履歴を生成`);
-    }
+        const today = now.toISOString();
+        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // 統一デモデータの生成
-    generateUnifiedDemoData() {
-        const demoCustomers = [
+        return [
             {
-                id: 'unified-demo-1',
+                id: 'demo-tanaka-001',
                 name: '田中 太郎',
                 email: 'tanaka@example.com',
                 phone: '090-1234-5678',
                 age: 28,
-                occupation: 'システムエンジニア',
-                annualIncome: 5200000,
-                pipelineStatus: '初回相談',
+                occupation: 'ITエンジニア',
+                annualIncome: 5000000,
+                pipelineStatus: '内見',
                 preferences: {
-                    budgetMin: 80000,
-                    budgetMax: 120000,
-                    areas: ['渋谷区', '港区'],
-                    roomType: '1LDK',
-                    requirements: ['駅近', 'バストイレ別', 'オートロック']
+                    budgetMin: 70000,
+                    budgetMax: 90000,
+                    areas: ['渋谷', '新宿', '池袋'],
+                    roomType: '1K',
+                    requirements: ['駅近', 'オートロック', '2階以上']
                 },
-                notes: '転職に伴い引越し予定。駅から徒歩5分以内希望。',
+                notes: '週末の内見を希望。ペット不可物件を探している。',
                 urgency: '高',
-                contactTime: '平日18時以降',
-                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                source: 'Web問い合わせ'
+                contactTime: '平日夜・土日',
+                createdAt: lastMonth,
+                updatedAt: today,
+                source: 'web'
             },
             {
-                id: 'unified-demo-2',
+                id: 'demo-sato-002',
                 name: '佐藤 花子',
                 email: 'sato@example.com',
                 phone: '080-9876-5432',
                 age: 32,
-                occupation: 'マーケティング',
-                annualIncome: 4800000,
-                pipelineStatus: '物件紹介',
-                preferences: {
-                    budgetMin: 100000,
-                    budgetMax: 150000,
-                    areas: ['目黒区', '世田谷区'],
-                    roomType: '2LDK',
-                    requirements: ['ファミリー向け', '南向き', '駐車場付き']
-                },
-                notes: '家族向けの物件を希望。小学校が近いことを重視。',
-                urgency: '中',
-                contactTime: '土日祝日',
-                createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                source: '店舗来訪'
-            },
-            {
-                id: 'unified-demo-3',
-                name: '鈴木 一郎',
-                email: 'suzuki@example.com',
-                phone: '070-1111-2222',
-                age: 24,
-                occupation: '大学院生',
-                annualIncome: 1200000,
-                pipelineStatus: '内見',
-                preferences: {
-                    budgetMin: 60000,
-                    budgetMax: 90000,
-                    areas: ['新宿区', '中野区'],
-                    roomType: '1K',
-                    requirements: ['学生可', '家具付き', '初期費用安']
-                },
-                notes: '来春就職予定。保証人は両親。',
-                urgency: '中',
-                contactTime: '平日午後',
-                createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-                source: '紹介'
-            },
-            {
-                id: 'unified-demo-4',
-                name: '山田 美咲',
-                email: 'yamada@example.com',
-                phone: '090-5555-7777',
-                age: 29,
-                occupation: 'デザイナー',
-                annualIncome: 3600000,
+                occupation: '会社員',
+                annualIncome: 4500000,
                 pipelineStatus: '申込',
                 preferences: {
-                    budgetMin: 85000,
-                    budgetMax: 115000,
-                    areas: ['恵比寿', '代官山'],
+                    budgetMin: 80000,
+                    budgetMax: 100000,
+                    areas: ['品川', '目黒', '恵比寿'],
                     roomType: '1LDK',
-                    requirements: ['デザイナーズ', '築浅', 'ペット可']
+                    requirements: ['駅近', 'バストイレ別', '南向き']
                 },
-                notes: 'クリエイティブな環境を重視。猫を飼っている。',
-                urgency: '高',
-                contactTime: 'いつでも',
-                createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                source: 'SNS広告'
-            },
-            {
-                id: 'unified-demo-5',
-                name: '高橋 健太',
-                email: 'takahashi@example.com',
-                phone: '080-3333-4444',
-                age: 35,
-                occupation: '営業職',
-                annualIncome: 6200000,
-                pipelineStatus: '審査',
-                preferences: {
-                    budgetMin: 120000,
-                    budgetMax: 180000,
-                    areas: ['品川区', '港区'],
-                    roomType: '2LDK',
-                    requirements: ['高層階', '駅直結', 'コンシェルジュ']
-                },
-                notes: '出張が多いため利便性重視。高級志向。',
-                urgency: '低',
-                contactTime: '平日夜・週末',
-                createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date().toISOString(),
-                source: '知人紹介'
-            },
-            {
-                id: 'unified-demo-6',
-                name: '伊藤 さくら',
-                email: 'ito@example.com',
-                phone: '070-8888-9999',
-                age: 26,
-                occupation: '看護師',
-                annualIncome: 4200000,
-                pipelineStatus: '契約',
-                preferences: {
-                    budgetMin: 75000,
-                    budgetMax: 105000,
-                    areas: ['文京区', '台東区'],
-                    roomType: '1DK',
-                    requirements: ['病院近く', '24時間出入り', '宅配ボックス']
-                },
-                notes: '夜勤があるため24時間アクセス可能な物件希望。',
+                notes: '4月入居希望。静かな環境を求めている。',
                 urgency: '中',
-                contactTime: '不定期',
-                createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                source: '医療系求人サイト'
+                contactTime: '平日日中',
+                createdAt: lastWeek,
+                updatedAt: today,
+                source: 'referral'
             },
             {
-                id: 'unified-demo-7',
-                name: '中村 大輔',
-                email: 'nakamura@example.com',
-                phone: '090-7777-1111',
-                age: 31,
-                occupation: '研究職',
-                annualIncome: 4500000,
-                pipelineStatus: '完了',
+                id: 'demo-yamada-003',
+                name: '山田 次郎',
+                email: 'yamada@example.com',
+                phone: '070-5555-6666',
+                age: 25,
+                occupation: '学生',
+                annualIncome: 0,
+                pipelineStatus: '初回相談',
                 preferences: {
-                    budgetMin: 90000,
-                    budgetMax: 130000,
-                    areas: ['杉並区', '練馬区'],
-                    roomType: '2DK',
-                    requirements: ['静かな環境', '書斎可', 'インターネット']
+                    budgetMin: 50000,
+                    budgetMax: 70000,
+                    areas: ['中野', '高円寺', '吉祥寺'],
+                    roomType: '1K',
+                    requirements: ['駅近', '安い', 'インターネット無料']
                 },
-                notes: '在宅勤務多め。静かで集中できる環境必須。',
+                notes: '大学の近くで予算重視。初めての一人暮らし。',
                 urgency: '低',
-                contactTime: '平日日中',
-                createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-                source: '大学関係者紹介'
+                contactTime: 'いつでも',
+                createdAt: today,
+                updatedAt: today,
+                source: 'phone'
             }
         ];
-
-        console.log('🏗️ 統一デモデータ生成:', demoCustomers.length, '件');
-        return demoCustomers;
     }
 
-    // 顧客データの取得
+    // 顧客データ取得
     getCustomers() {
         try {
             const data = localStorage.getItem(this.CUSTOMERS_KEY);
-            if (data) {
-                const customers = JSON.parse(data);
-                return Array.isArray(customers) ? customers : [];
-            }
-            return [];
+            return data ? JSON.parse(data) : [];
         } catch (error) {
             console.error('❌ 顧客データ取得エラー:', error);
             return [];
         }
     }
 
-    // 顧客データの保存
+    // 顧客データ保存（Google Sheets統合版）★重要な修正★
     saveCustomers(customers) {
         try {
-            if (!Array.isArray(customers)) {
-                console.error('❌ 無効な顧客データ: 配列である必要があります');
-                return false;
+            // 1. LocalStorageに即座に保存（既存機能）
+            localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(customers));
+            console.log('💾 LocalStorageに保存:', customers.length, '件');
+            
+            // 2. Google Sheets統合が有効な場合は同期（新機能）
+            if (window.UnifiedSheetsManager && window.UnifiedSheetsManager.isSheetsEnabled) {
+                console.log('📊 Google Sheets同期を実行中...');
+                // 非同期で同期（エラーが出てもLocalStorageは保存済み）
+                window.UnifiedSheetsManager.syncToSheets(customers)
+                    .then(() => {
+                        console.log('✅ Google Sheets同期完了');
+                    })
+                    .catch(error => {
+                        console.warn('⚠️ Google Sheets同期エラー（LocalStorageには保存済み）:', error);
+                    });
+            } else {
+                console.log('ℹ️ Google Sheets統合は無効（LocalStorageのみ）');
             }
             
-            localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(customers));
-            console.log(`💾 顧客データ保存完了: ${customers.length}件`);
-            
-            // 保存後の確認
-            const saved = localStorage.getItem(this.CUSTOMERS_KEY);
-            const parsed = JSON.parse(saved);
-            console.log(`✅ 保存確認: ${parsed.length}件が正常に保存されました`);
-            
             return true;
+            
         } catch (error) {
             console.error('❌ 顧客データ保存エラー:', error);
             return false;
         }
     }
 
-    // パイプライン履歴の取得
-    getHistory() {
-        try {
-            const data = localStorage.getItem(this.HISTORY_KEY);
-            if (data) {
-                const history = JSON.parse(data);
-                return Array.isArray(history) ? history : [];
-            }
-            return [];
-        } catch (error) {
-            console.error('❌ 履歴データ取得エラー:', error);
-            return [];
-        }
-    }
-
-    // パイプライン履歴の保存
-    saveHistory(history) {
-        try {
-            if (!Array.isArray(history)) {
-                console.error('❌ 無効な履歴データ: 配列である必要があります');
-                return false;
-            }
-            
-            localStorage.setItem(this.HISTORY_KEY, JSON.stringify(history));
-            return true;
-        } catch (error) {
-            console.error('❌ 履歴データ保存エラー:', error);
-            return false;
-        }
-    }
-
-    // パイプライン履歴エントリの追加
-    addHistoryEntry(customerId, fromStatus, toStatus, notes = '') {
-        const history = this.getHistory();
-        const entry = {
-            id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            customerId: customerId,
-            fromStatus: fromStatus,
-            toStatus: toStatus,
-            timestamp: new Date().toISOString(),
-            notes: notes
-        };
-        
-        history.push(entry);
-        this.saveHistory(history);
-        
-        console.log(`📝 履歴エントリ追加: ${customerId} ${fromStatus} → ${toStatus}`);
-        return entry;
-    }
-
-    // 特定顧客の取得
-    getCustomerById(id) {
+    // IDで顧客取得
+    getCustomerById(customerId) {
         const customers = this.getCustomers();
-        return customers.find(customer => customer.id === id) || null;
+        return customers.find(customer => customer.id === customerId);
     }
 
-    // 顧客データの更新
+    // 顧客データ更新
     updateCustomer(customerId, updateData) {
         const customers = this.getCustomers();
         const index = customers.findIndex(customer => customer.id === customerId);
         
         if (index === -1) {
-            console.error('❌ 顧客が見つかりません:', customerId);
+            console.error('❌ 更新対象の顧客が見つかりません:', customerId);
             return false;
         }
         
-        // 更新前のステータスを記録
         const oldStatus = customers[index].pipelineStatus;
         
-        // データを更新
-        customers[index] = { ...customers[index], ...updateData };
-        customers[index].updatedAt = new Date().toISOString();
+        // 更新データをマージ
+        customers[index] = {
+            ...customers[index],
+            ...updateData,
+            updatedAt: new Date().toISOString()
+        };
         
-        // ステータスが変更された場合は履歴を記録
+        // ステータスが更新された場合は履歴を記録
         if (updateData.pipelineStatus && updateData.pipelineStatus !== oldStatus) {
             this.addHistoryEntry(customerId, oldStatus, updateData.pipelineStatus);
         }
@@ -517,6 +247,47 @@ class UnifiedDataManager {
         return success;
     }
 
+    // 履歴エントリ追加
+    addHistoryEntry(customerId, fromStatus, toStatus, note = '') {
+        try {
+            const history = JSON.parse(localStorage.getItem(this.HISTORY_KEY) || '[]');
+            
+            const entry = {
+                id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                customerId: customerId,
+                fromStatus: fromStatus,
+                toStatus: toStatus,
+                note: note,
+                timestamp: new Date().toISOString()
+            };
+            
+            history.push(entry);
+            localStorage.setItem(this.HISTORY_KEY, JSON.stringify(history));
+            
+            console.log(`📝 履歴追加: ${customerId} ${fromStatus} → ${toStatus}`);
+            
+        } catch (error) {
+            console.error('❌ 履歴追加エラー:', error);
+        }
+    }
+
+    // 履歴取得
+    getHistory(customerId = null) {
+        try {
+            const history = JSON.parse(localStorage.getItem(this.HISTORY_KEY) || '[]');
+            
+            if (customerId) {
+                return history.filter(entry => entry.customerId === customerId);
+            }
+            
+            return history;
+            
+        } catch (error) {
+            console.error('❌ 履歴取得エラー:', error);
+            return [];
+        }
+    }
+
     // データ統計の取得
     getDataStatistics() {
         const customers = this.getCustomers();
@@ -547,7 +318,7 @@ class UnifiedDataManager {
             thisMonthNew: thisMonthCustomers,
             thisMonthCompleted: thisMonthCompleted,
             historyEntries: history.length,
-            conversionRate: customers.length > 0 ? 
+            conversionRate: customers.length > 0 ?
                 Math.round((statusCounts['完了'] / customers.length) * 100) : 0
         };
     }
@@ -599,4 +370,4 @@ window.UnifiedDataManager = new UnifiedDataManager();
 window.getCustomers = () => window.UnifiedDataManager.getCustomers();
 window.saveCustomers = (customers) => window.UnifiedDataManager.saveCustomers(customers);
 
-console.log('✅ 統一データ管理システム準備完了（修正版）');
+console.log('✅ 統一データ管理システム準備完了（Google Sheets統合版）');
