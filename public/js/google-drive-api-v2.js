@@ -344,3 +344,73 @@ window.GoogleDriveAPIv2 = {
 };
 
 console.log('✅ Google Drive API v2 準備完了（Google Sheets対応）');
+
+    // 🔍 スプレッドシート検索（追加メソッド）
+    searchSpreadsheets: async function(nameQuery) {
+        try {
+            console.log('🔍 スプレッドシート検索開始:', nameQuery);
+            
+            if (!this.isAuthenticated || !this.accessToken) {
+                throw new Error('認証が完了していません');
+            }
+            
+            if (!window.gapi?.client?.drive) {
+                throw new Error('Google Drive APIが初期化されていません');
+            }
+            
+            // Google Drive APIでスプレッドシートを検索
+            const response = await window.gapi.client.drive.files.list({
+                q: `name contains '${nameQuery}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+                fields: 'files(id, name, createdTime, modifiedTime)',
+                orderBy: 'modifiedTime desc',
+                pageSize: 10
+            });
+            
+            const files = response.result.files || [];
+            console.log(`✅ ${files.length}件のスプレッドシートを発見`);
+            
+            return files;
+            
+        } catch (error) {
+            console.error('❌ スプレッドシート検索エラー:', error);
+            throw error;
+        }
+    }
+};
+
+console.log('✅ Google Drive API v2 完全準備完了（searchSpreadsheets追加）');
+
+    // 🔍 スプレッドシート検索（追加メソッド）
+    searchSpreadsheets: async function(nameQuery) {
+        try {
+            console.log('🔍 スプレッドシート検索開始:', nameQuery);
+            
+            if (!this.isAuthenticated || !this.accessToken) {
+                throw new Error('認証が完了していません');
+            }
+            
+            if (!window.gapi?.client?.drive) {
+                throw new Error('Google Drive APIが初期化されていません');
+            }
+            
+            // Google Drive APIでスプレッドシートを検索
+            const response = await window.gapi.client.drive.files.list({
+                q: `name contains '${nameQuery}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+                fields: 'files(id, name, createdTime, modifiedTime)',
+                orderBy: 'modifiedTime desc',
+                pageSize: 10
+            });
+            
+            const files = response.result.files || [];
+            console.log(`✅ ${files.length}件のスプレッドシートを発見`);
+            
+            return files;
+            
+        } catch (error) {
+            console.error('❌ スプレッドシート検索エラー:', error);
+            throw error;
+        }
+    }
+};
+
+console.log('✅ Google Drive API v2 完全準備完了（searchSpreadsheets追加）');
