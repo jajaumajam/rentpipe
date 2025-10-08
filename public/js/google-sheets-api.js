@@ -18,6 +18,9 @@ window.GoogleSheetsAPI = {
     spreadsheetId: null,
     accessToken: null,
     
+    // シート名（英語）
+    SHEET_NAME: 'Customers',
+    
     // 完全初期化（強化版）
     initialize: async function() {
         try {
@@ -150,7 +153,7 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // スプレッドシート作成（待機強化版）
+    // スプレッドシート作成（待機強化版 + 英語シート名）
     createSpreadsheet: async function(title) {
         try {
             console.log('📄 スプレッドシート作成中:', title);
@@ -176,14 +179,14 @@ window.GoogleSheetsAPI = {
             
             console.log('✅ API準備完了 - スプレッドシート作成実行');
             
-            // スプレッドシート作成
+            // スプレッドシート作成（英語シート名）
             const response = await window.gapi.client.sheets.spreadsheets.create({
                 properties: {
                     title: title
                 },
                 sheets: [{
                     properties: {
-                        title: '顧客データ',
+                        title: this.SHEET_NAME,  // 英語シート名
                         gridProperties: {
                             rowCount: 1000,
                             columnCount: 20
@@ -211,7 +214,7 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // データ読み込み
+    // データ読み込み（英語シート名）
     readData: async function() {
         try {
             if (!this.spreadsheetId) {
@@ -226,7 +229,7 @@ window.GoogleSheetsAPI = {
             
             const response = await window.gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: this.spreadsheetId,
-                range: '顧客データ!A:Z'
+                range: `${this.SHEET_NAME}!A:Z`  // 英語シート名
             });
             
             const rows = response.result.values || [];
@@ -257,7 +260,7 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // データ書き込み
+    // データ書き込み（英語シート名）
     writeData: async function(customers) {
         try {
             if (!this.spreadsheetId) {
@@ -287,10 +290,10 @@ window.GoogleSheetsAPI = {
             // ヘッダー + データ
             const values = [headers, ...rows];
             
-            // スプレッドシートに書き込み
+            // スプレッドシートに書き込み（英語シート名）
             await window.gapi.client.sheets.spreadsheets.values.update({
                 spreadsheetId: this.spreadsheetId,
-                range: '顧客データ!A1',
+                range: `${this.SHEET_NAME}!A1`,  // 英語シート名
                 valueInputOption: 'RAW',
                 resource: {
                     values: values
@@ -323,4 +326,4 @@ window.GoogleSheetsAPI = {
     }
 };
 
-console.log('✅ Google Sheets API 準備完了');
+console.log('✅ Google Sheets API 準備完了（英語シート名対応）');
