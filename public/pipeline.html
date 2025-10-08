@@ -8,8 +8,8 @@
     <style>
         .pipeline-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin-top: 30px;
         }
         
@@ -17,12 +17,12 @@
             background: #f9fafb;
             border-radius: 12px;
             padding: 15px;
-            min-height: 500px;
+            min-height: 400px;
         }
         
         .pipeline-header {
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
             margin-bottom: 15px;
             padding: 10px;
             background: white;
@@ -32,10 +32,10 @@
         
         .pipeline-card {
             background: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
             margin-bottom: 10px;
-            cursor: move;
+            cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: all 0.2s;
         }
@@ -46,13 +46,14 @@
         }
         
         .pipeline-card h4 {
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             color: #1f2937;
+            font-size: 14px;
         }
         
         .pipeline-card p {
-            margin: 5px 0;
-            font-size: 13px;
+            margin: 3px 0;
+            font-size: 12px;
             color: #6b7280;
         }
         
@@ -111,16 +112,14 @@
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-sheets-api.js"></script>
     
-    <!-- ✅ 正しい順序：unified-sheets-manager.js を先に -->
+    <!-- ✅ 正しい順序 -->
     <script src="js/unified-sheets-manager.js"></script>
-    
-    <!-- ✅ 正しい順序：unified-data-manager.js を後に -->
     <script src="js/unified-data-manager.js"></script>
     
-    <!-- Pipeline Script -->
-    <script src="js/pipeline.js"></script>
-    
     <script>
+        const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
+        let allCustomers = [];
+        
         // ページ初期化
         console.log('📊 パイプライン管理ページ初期化開始');
         
@@ -148,12 +147,56 @@
                     }
                 }
                 
+                // パイプライン表示
+                loadPipeline();
+                
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
                 statusDiv.className = 'auth-status error';
                 statusDiv.textContent = '❌ 初期化エラー: ' + error.message;
             }
         });
+        
+        // パイプライン読み込み
+        function loadPipeline() {
+            try {
+                allCustomers = window.UnifiedDataManager.getCustomers();
+                console.log('✅ 顧客データ読み込み完了:', allCustomers.length, '件');
+                
+                displayPipeline();
+            } catch (error) {
+                console.error('❌ パイプライン読み込みエラー:', error);
+            }
+        }
+        
+        // パイプライン表示
+        function displayPipeline() {
+            const container = document.getElementById('pipeline-container');
+            
+            container.innerHTML = statuses.map(status => {
+                const customers = allCustomers.filter(c => c.pipelineStatus === status);
+                
+                return `
+                    <div class="pipeline-column">
+                        <div class="pipeline-header">
+                            ${status} (${customers.length})
+                        </div>
+                        ${customers.map(customer => `
+                            <div class="pipeline-card" onclick="goToCustomer('${customer.id}')">
+                                <h4>${customer.name}</h4>
+                                <p>📧 ${customer.email}</p>
+                                <p>📱 ${customer.phone}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 顧客詳細へ
+        function goToCustomer(customerId) {
+            window.location.href = `customer-form.html?edit=${customerId}`;
+        }
         
         console.log('✅ パイプライン管理ページ準備完了');
     </script>

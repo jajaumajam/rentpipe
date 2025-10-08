@@ -70,14 +70,14 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
-        .customer-header {
+        .customer-card-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
             margin-bottom: 15px;
         }
         
-        .customer-name {
+        .customer-card h3 {
             font-size: 18px;
             font-weight: 600;
             color: #1f2937;
@@ -99,17 +99,17 @@
         .status-契約 { background: #d1fae5; color: #065f46; }
         .status-完了 { background: #d1d5db; color: #374151; }
         
-        .customer-info {
+        .customer-card-body {
             margin-bottom: 15px;
             font-size: 14px;
             color: #6b7280;
         }
         
-        .customer-info p {
+        .customer-card-body p {
             margin: 5px 0;
         }
         
-        .customer-actions {
+        .customer-card-footer {
             display: flex;
             gap: 10px;
             margin-top: 15px;
@@ -287,14 +287,15 @@
     <!-- ✅ 正しい順序：unified-data-manager.js を後に -->
     <script src="js/unified-data-manager.js"></script>
     
-    <!-- Customer Management Script -->
-    <script src="js/customer-unified.js"></script>
-    
     <script>
+        // グローバル変数
+        let allCustomers = [];
+        let filteredCustomers = [];
+        
         // ページ初期化
         console.log('📄 顧客管理ページ初期化開始');
         
-        // 認証状態チェック
+        // 認証状態チェックと初期化
         window.addEventListener('DOMContentLoaded', async () => {
             const statusDiv = document.getElementById('auth-sync-status');
             
@@ -317,10 +318,10 @@
                         statusDiv.className = 'auth-status warning';
                         statusDiv.textContent = 'ℹ️ LocalStorageモード - Google認証後にGoogle Sheets連携が有効になります';
                     }
-                } else {
-                    statusDiv.className = 'auth-status warning';
-                    statusDiv.textContent = 'ℹ️ LocalStorageモード';
                 }
+                
+                // 顧客データ読み込み
+                await loadCustomers();
                 
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
@@ -329,15 +330,97 @@
             }
         });
         
-        // 検索機能
-        function searchCustomers() {
-            if (window.customerManager) {
-                const searchTerm = document.getElementById('search-input').value;
-                window.customerManager.searchCustomers(searchTerm);
+        // 顧客データ読み込み
+        async function loadCustomers() {
+            try {
+                console.log('📋 顧客データ読み込み中...');
+                
+                allCustomers = window.UnifiedDataManager.getCustomers();
+                filteredCustomers = allCustomers;
+                
+                console.log('✅ 顧客データ読み込み完了:', allCustomers.length, '件');
+                
+                displayCustomers(filteredCustomers);
+                updateStats();
+                
+            } catch (error) {
+                console.error('❌ 顧客データ読み込みエラー:', error);
             }
         }
         
-        // フィルター機能
+        // 顧客表示
+        function displayCustomers(customers) {
+            const customerList = document.getElementById('customer-list');
+            
+            if (!customers || customers.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            customerList.innerHTML = customers.map(customer => `
+                <div class="customer-card">
+                    <div class="customer-card-header">
+                        <h3>${customer.name}</h3>
+                        <span class="status-badge status-${customer.pipelineStatus}">${customer.pipelineStatus}</span>
+                    </div>
+                    <div class="customer-card-body">
+                        <p>📧 ${customer.email}</p>
+                        <p>📱 ${customer.phone}</p>
+                        <p>💰 ${(customer.preferences?.budgetMin || 0).toLocaleString()}〜${(customer.preferences?.budgetMax || 0).toLocaleString()}円</p>
+                        <p>📍 ${(customer.preferences?.areas || []).join('、') || '未設定'}</p>
+                    </div>
+                    <div class="customer-card-footer">
+                        <button class="btn btn-sm" onclick="editCustomer('${customer.id}')">編集</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.id}')">削除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 統計更新
+        function updateStats() {
+            const total = allCustomers.length;
+            const thisMonth = allCustomers.filter(c => {
+                const created = new Date(c.createdAt);
+                const now = new Date();
+                return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+            }).length;
+            const completed = allCustomers.filter(c => c.pipelineStatus === '完了').length;
+            const inProgress = allCustomers.filter(c => c.pipelineStatus !== '完了' && c.pipelineStatus !== '初回相談').length;
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-new').textContent = thisMonth;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-progress').textContent = inProgress;
+        }
+        
+        // 空状態表示
+        function showEmptyState() {
+            const customerList = document.getElementById('customer-list');
+            customerList.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: #64748b; grid-column: 1 / -1;">
+                    <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">👥</div>
+                    <h3>まだ顧客が登録されていません</h3>
+                    <p>新しい顧客を登録して、効率的な顧客管理を始めましょう。</p>
+                    <a href="customer-form.html" class="btn btn-primary">📝 最初の顧客を登録</a>
+                </div>
+            `;
+        }
+        
+        // 検索
+        function searchCustomers() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            filteredCustomers = allCustomers.filter(customer => {
+                return customer.name.toLowerCase().includes(searchTerm) ||
+                       customer.email.toLowerCase().includes(searchTerm) ||
+                       customer.phone.includes(searchTerm);
+            });
+            
+            displayCustomers(filteredCustomers);
+        }
+        
+        // フィルター
         function filterByStatus(status) {
             // フィルターボタンのアクティブ状態更新
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -345,8 +428,36 @@
             });
             event.target.classList.add('active');
             
-            if (window.customerManager) {
-                window.customerManager.filterByStatus(status);
+            if (status === 'all') {
+                filteredCustomers = allCustomers;
+            } else {
+                filteredCustomers = allCustomers.filter(c => c.pipelineStatus === status);
+            }
+            
+            displayCustomers(filteredCustomers);
+        }
+        
+        // 編集
+        function editCustomer(customerId) {
+            window.location.href = `customer-form.html?edit=${customerId}`;
+        }
+        
+        // 削除
+        function deleteCustomer(customerId) {
+            if (!confirm('この顧客を削除しますか？この操作は取り消しできません。')) {
+                return;
+            }
+            
+            try {
+                if (window.UnifiedDataManager.deleteCustomer(customerId)) {
+                    loadCustomers();
+                    alert('✅ 顧客を削除しました');
+                } else {
+                    alert('❌ 顧客の削除に失敗しました');
+                }
+            } catch (error) {
+                console.error('❌ 顧客削除エラー:', error);
+                alert('❌ 顧客削除中にエラーが発生しました');
             }
         }
         
