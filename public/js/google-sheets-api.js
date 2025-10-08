@@ -20,6 +20,7 @@ window.GoogleSheetsAPI = {
     
     // シート名（英語）
     SHEET_NAME: 'Customers',
+    OLD_SHEET_NAME: '顧客データ',  // 旧シート名
     
     // 完全初期化（強化版）
     initialize: async function() {
@@ -46,14 +47,14 @@ window.GoogleSheetsAPI = {
             // ステップ3: Sheets API Discovery Document読み込み
             console.log('⏳ Google Sheets API Discovery Document 読み込み中...');
             await window.gapi.client.init({
-                apiKey: '', // APIキーは不要（OAuth認証を使用）
+                apiKey: '',
                 discoveryDocs: this.config.discoveryDocs
             });
             
             // ステップ4: gapi.client.sheetsの完全な初期化を待機（強化版）
             console.log('⏳ gapi.client.sheets 完全初期化待機中...');
             let retries = 0;
-            const maxRetries = 40; // 20秒間待機
+            const maxRetries = 40;
             
             while (!window.gapi?.client?.sheets?.spreadsheets && retries < maxRetries) {
                 console.log(`⏳ gapi.client.sheets.spreadsheets 初期化待機中... (${retries + 1}/${maxRetries})`);
@@ -130,7 +131,6 @@ window.GoogleSheetsAPI = {
             // 認証テスト実行
             console.log('🧪 認証テスト実行中...');
             try {
-                // シンプルなAPIコールでテスト
                 await window.gapi.client.request({
                     path: 'https://www.googleapis.com/oauth2/v1/userinfo',
                     method: 'GET'
@@ -142,13 +142,67 @@ window.GoogleSheetsAPI = {
                 
             } catch (testError) {
                 console.warn('⚠️ 認証テスト失敗（処理継続）:', testError.message);
-                // テスト失敗でも処理は継続
                 this.isAuthenticated = true;
                 return true;
             }
             
         } catch (error) {
             console.error('❌ アクセストークン設定エラー:', error);
+            return false;
+        }
+    },
+    
+    // シート名修正（旧シート名を新シート名に変更）
+    fixSheetName: async function(spreadsheetId) {
+        try {
+            console.log('🔧 シート名確認・修正中...');
+            
+            // スプレッドシート情報取得
+            const response = await window.gapi.client.sheets.spreadsheets.get({
+                spreadsheetId: spreadsheetId
+            });
+            
+            const sheets = response.result.sheets || [];
+            console.log('📋 既存シート:', sheets.map(s => s.properties.title));
+            
+            // 旧シート名（顧客データ）を探す
+            const oldSheet = sheets.find(s => s.properties.title === this.OLD_SHEET_NAME);
+            
+            if (oldSheet) {
+                console.log('🔄 旧シート名を発見 - 修正します:', this.OLD_SHEET_NAME);
+                
+                // シート名を変更
+                await window.gapi.client.sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: spreadsheetId,
+                    resource: {
+                        requests: [{
+                            updateSheetProperties: {
+                                properties: {
+                                    sheetId: oldSheet.properties.sheetId,
+                                    title: this.SHEET_NAME
+                                },
+                                fields: 'title'
+                            }
+                        }]
+                    }
+                });
+                
+                console.log('✅ シート名を修正しました:', this.OLD_SHEET_NAME, '→', this.SHEET_NAME);
+                return true;
+            }
+            
+            // 新シート名が既に存在するか確認
+            const newSheet = sheets.find(s => s.properties.title === this.SHEET_NAME);
+            if (newSheet) {
+                console.log('✅ 正しいシート名が既に存在します:', this.SHEET_NAME);
+                return true;
+            }
+            
+            console.log('ℹ️ シート名修正不要');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ シート名修正エラー:', error);
             return false;
         }
     },
@@ -186,7 +240,7 @@ window.GoogleSheetsAPI = {
                 },
                 sheets: [{
                     properties: {
-                        title: this.SHEET_NAME,  // 英語シート名
+                        title: this.SHEET_NAME,
                         gridProperties: {
                             rowCount: 1000,
                             columnCount: 20
@@ -214,7 +268,7 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // データ読み込み（英語シート名）
+    // データ読み込み（シート名自動修正付き）
     readData: async function() {
         try {
             if (!this.spreadsheetId) {
@@ -225,11 +279,14 @@ window.GoogleSheetsAPI = {
                 this.spreadsheetId = savedId;
             }
             
+            // シート名を修正（旧シート名があれば）
+            await this.fixSheetName(this.spreadsheetId);
+            
             console.log('📖 Google Sheetsからデータ読み込み中...');
             
             const response = await window.gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A:Z`  // 英語シート名
+                range: `${this.SHEET_NAME}!A:Z`
             });
             
             const rows = response.result.values || [];
@@ -249,7 +306,7 @@ window.GoogleSheetsAPI = {
                     customer[header] = row[index] || '';
                 });
                 return customer;
-            }).filter(c => c.id); // IDがあるもののみ
+            }).filter(c => c.id);
             
             console.log('✅ データ読み込み完了:', customers.length, '件');
             return customers;
@@ -260,12 +317,15 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // データ書き込み（英語シート名）
+    // データ書き込み（シート名自動修正付き）
     writeData: async function(customers) {
         try {
             if (!this.spreadsheetId) {
                 throw new Error('スプレッドシートIDが設定されていません');
             }
+            
+            // シート名を修正（旧シート名があれば）
+            await this.fixSheetName(this.spreadsheetId);
             
             console.log('📝 Google Sheetsにデータ書き込み中:', customers.length, '件');
             
@@ -290,10 +350,10 @@ window.GoogleSheetsAPI = {
             // ヘッダー + データ
             const values = [headers, ...rows];
             
-            // スプレッドシートに書き込み（英語シート名）
+            // スプレッドシートに書き込み
             await window.gapi.client.sheets.spreadsheets.values.update({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A1`,  // 英語シート名
+                range: `${this.SHEET_NAME}!A1`,
                 valueInputOption: 'RAW',
                 resource: {
                     values: values
@@ -326,4 +386,4 @@ window.GoogleSheetsAPI = {
     }
 };
 
-console.log('✅ Google Sheets API 準備完了（英語シート名対応）');
+console.log('✅ Google Sheets API 準備完了（シート名自動修正機能付き）');
