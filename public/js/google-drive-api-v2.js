@@ -8,7 +8,7 @@ window.GoogleDriveAPIv2 = {
         projectId: 'rentpipe',
         scopes: [
             'https://www.googleapis.com/auth/drive.file',
-            'https://www.googleapis.com/auth/spreadsheets',  // ✅ 追加
+            'https://www.googleapis.com/auth/spreadsheets',
             'https://www.googleapis.com/auth/userinfo.email',
             'https://www.googleapis.com/auth/userinfo.profile'
         ],
@@ -146,7 +146,7 @@ window.GoogleDriveAPIv2 = {
             });
             
             await window.gapi.client.init({
-                apiKey: '', // 公開APIキーは不要（OAuth使用）
+                apiKey: '',
                 discoveryDocs: this.config.discoveryDocs
             });
             
@@ -217,39 +217,6 @@ window.GoogleDriveAPIv2 = {
         }
     },
     
-    // 静かな認証（ポップアップなし）
-    authenticateSilent: async function() {
-        try {
-            console.log('🔄 Google静寂認証を試行中...');
-            
-            if (!this.isInitialized) {
-                throw new Error('Google Drive API が初期化されていません');
-            }
-            
-            // 既存のトークンがある場合はそれを使用
-            const existingToken = localStorage.getItem('google_access_token');
-            const tokenExpiry = localStorage.getItem('google_token_expiry');
-            
-            if (existingToken && tokenExpiry && new Date().getTime() < parseInt(tokenExpiry)) {
-                console.log('✅ 既存トークンが有効');
-                this.accessToken = existingToken;
-                this.isAuthenticated = true;
-                
-                // ユーザー情報を取得
-                const userInfo = await this.getUserInfo();
-                this.userInfo = userInfo;
-                
-                return userInfo;
-            }
-            
-            return null; // 静寂認証が利用できない
-            
-        } catch (error) {
-            console.log('ℹ️ 静寂認証は利用できません:', error.message);
-            return null;
-        }
-    },
-    
     // ユーザー情報取得
     getUserInfo: async function() {
         try {
@@ -279,73 +246,7 @@ window.GoogleDriveAPIv2 = {
         }
     },
     
-    // ファイル検索
-    searchFiles: async function(query) {
-        try {
-            if (!this.isAuthenticated || !this.accessToken) {
-                throw new Error('Google認証が必要です');
-            }
-            
-            const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType)`, {
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`ファイル検索エラー: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data.files || [];
-            
-        } catch (error) {
-            console.error('❌ ファイル検索エラー:', error);
-            throw error;
-        }
-    },
-    
-    // フォルダ作成
-    createFolder: async function(name, parentId = null) {
-        try {
-            if (!this.isAuthenticated || !this.accessToken) {
-                throw new Error('Google認証が必要です');
-            }
-            
-            const metadata = {
-                name: name,
-                mimeType: 'application/vnd.google-apps.folder'
-            };
-            
-            if (parentId) {
-                metadata.parents = [parentId];
-            }
-            
-            const response = await fetch('https://www.googleapis.com/drive/v3/files', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(metadata)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`フォルダ作成エラー: ${response.status}`);
-            }
-            
-            return await response.json();
-            
-        } catch (error) {
-            console.error('❌ フォルダ作成エラー:', error);
-            throw error;
-        }
-    }
-};
-
-console.log('✅ Google Drive API v2 準備完了（Google Sheets対応）');
-
-    // 🔍 スプレッドシート検索（追加メソッド）
+    // 🔍 スプレッドシート検索（新規追加）
     searchSpreadsheets: async function(nameQuery) {
         try {
             console.log('🔍 スプレッドシート検索開始:', nameQuery);
@@ -378,39 +279,4 @@ console.log('✅ Google Drive API v2 準備完了（Google Sheets対応）');
     }
 };
 
-console.log('✅ Google Drive API v2 完全準備完了（searchSpreadsheets追加）');
-
-    // 🔍 スプレッドシート検索（追加メソッド）
-    searchSpreadsheets: async function(nameQuery) {
-        try {
-            console.log('🔍 スプレッドシート検索開始:', nameQuery);
-            
-            if (!this.isAuthenticated || !this.accessToken) {
-                throw new Error('認証が完了していません');
-            }
-            
-            if (!window.gapi?.client?.drive) {
-                throw new Error('Google Drive APIが初期化されていません');
-            }
-            
-            // Google Drive APIでスプレッドシートを検索
-            const response = await window.gapi.client.drive.files.list({
-                q: `name contains '${nameQuery}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-                fields: 'files(id, name, createdTime, modifiedTime)',
-                orderBy: 'modifiedTime desc',
-                pageSize: 10
-            });
-            
-            const files = response.result.files || [];
-            console.log(`✅ ${files.length}件のスプレッドシートを発見`);
-            
-            return files;
-            
-        } catch (error) {
-            console.error('❌ スプレッドシート検索エラー:', error);
-            throw error;
-        }
-    }
-};
-
-console.log('✅ Google Drive API v2 完全準備完了（searchSpreadsheets追加）');
+console.log('✅ Google Drive API v2 準備完了（Google Sheets対応 + searchSpreadsheets）');
