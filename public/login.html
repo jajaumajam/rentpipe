@@ -3,130 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直接認証ログイン - RentPipe</title>
+    <title>ログイン - RentPipe</title>
+    <link rel="stylesheet" href="css/style.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 2rem;
-            background: #f5f5f5;
-        }
         .login-container {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
         }
-        .status-box {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .status-loading { background: #dbeafe; border: 2px solid #3b82f6; color: #1e40af; }
-        .status-success { background: #d1fae5; border: 2px solid #10b981; color: #065f46; }
-        .status-error { background: #fee2e2; border: 2px solid #f87171; color: #991b1b; }
-        .status-warning { background: #fff3cd; border: 2px solid #ffc107; color: #856404; }
         
-        button {
-            background: #3b82f6;
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            font-size: 32px;
+            margin: 0 0 10px 0;
+        }
+        
+        .login-header p {
+            color: #6b7280;
+            margin: 0;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: #4285f4;
             color: white;
             border: none;
-            padding: 15px 30px;
             border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            width: 100%;
-            margin: 10px 0;
-            transition: background 0.3s;
+            transition: background 0.2s;
+            margin-bottom: 15px;
         }
-        button:hover { background: #2563eb; }
-        button:disabled { background: #9ca3af; cursor: not-allowed; }
         
-        .step-indicator {
-            display: flex;
-            justify-content: space-between;
+        .login-btn:hover:not(:disabled) {
+            background: #3367d6;
+        }
+        
+        .login-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .status-success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        
+        .status-error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .status-loading {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        
+        .progress-steps {
             margin: 20px 0;
         }
+        
         .step {
-            flex: 1;
-            text-align: center;
+            display: flex;
+            align-items: center;
             padding: 10px;
-            margin: 0 5px;
+            margin: 5px 0;
             border-radius: 6px;
-            background: #f3f4f6;
             font-size: 14px;
         }
-        .step.active { background: #3b82f6; color: white; }
-        .step.completed { background: #10b981; color: white; }
-        .step.error { background: #f87171; color: white; }
         
-        .debug-section {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 14px;
+        .step-pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .step-active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .step-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .step-error {
+            background: #fee2e2;
+            color: #991b1b;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <h1>🏠 RentPipe</h1>
-            <p>Google Sheets統合対応版ログイン</p>
-        </div>
-
-        <!-- ステップ表示 -->
-        <div class="step-indicator">
-            <div class="step" id="step-init">🔧 初期化</div>
-            <div class="step" id="step-auth">🔐 認証</div>
-            <div class="step" id="step-save">💾 保存</div>
-            <div class="step" id="step-redirect">🚀 完了</div>
-        </div>
-
-        <!-- ステータス表示 -->
-        <div id="status" class="status-box status-warning">
-            <strong>準備中...</strong><br>
-            Google Identity Services を読み込み中です
-        </div>
-
-        <!-- 操作ボタン -->
-        <div style="text-align: center;">
-            <button id="loginBtn" disabled>
-                🔐 Google認証を開始
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🏠 RentPipe</h1>
+                <p>不動産エージェント向け顧客管理システム</p>
+            </div>
+            
+            <button id="loginBtn" class="login-btn" onclick="startGoogleAuth()">
+                🔐 Googleでログイン
             </button>
-            <button onclick="mockLogin()" style="background: #f59e0b;">
-                🧪 テスト用モックログイン
-            </button>
-        </div>
-
-        <!-- デバッグ情報 -->
-        <div id="debugInfo" class="debug-section" style="display: none;">
-            <strong>🔍 デバッグ情報:</strong>
-            <pre id="debugContent"></pre>
-        </div>
-
-        <!-- ナビゲーション -->
-        <div style="margin-top: 2rem; text-align: center; font-size: 14px; color: #6b7280;">
-            <p>
-                <a href="customer-no-auth.html">認証なし版でテスト</a> |
-                <a href="google-drive-integration-test.html">統合テスト</a> |
-                <button onclick="toggleDebug()" style="background: none; border: none; color: #3b82f6; cursor: pointer; padding: 0; font-size: inherit;">デバッグ表示</button>
-            </p>
+            
+            <div id="status-message" style="display: none;"></div>
+            
+            <div class="progress-steps">
+                <div id="step-init" class="step step-pending">
+                    <span>1. システム初期化</span>
+                </div>
+                <div id="step-auth" class="step step-pending">
+                    <span>2. Google認証</span>
+                </div>
+                <div id="step-save" class="step step-pending">
+                    <span>3. 認証情報保存</span>
+                </div>
+                <div id="step-redirect" class="step step-pending">
+                    <span>4. 顧客管理画面へ</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Google Drive API v2 スクリプト -->
-    <script src="js/google-drive-api-v2.js"></script>
-    <!-- 統合認証マネージャーも読み込み -->
+    <!-- Google API Client & Identity Services -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <!-- RentPipe Scripts -->
     <script src="js/integrated-auth-manager-v2.js"></script>
-
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    
     <script>
-        // 🚀 Google Sheets対応 直接認証システム 
-        console.log('🚀 Google Sheets対応 直接認証ログインシステム開始');
-        
         let authState = {
             initialized: false,
             authenticated: false,
@@ -134,82 +170,94 @@
             accessToken: null
         };
         
-        // ステータス更新
-        function updateStatus(message, type, details = '') {
-            const status = document.getElementById('status');
-            status.innerHTML = '<strong>' + message + '</strong>' + (details ? '<br>' + details : '');
-            status.className = 'status-box status-' + type;
+        // ステータス表示
+        function updateStatus(message, type, detail = '') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-box status-' + type;
+            statusDiv.innerHTML = `<strong>${message}</strong>${detail ? '<br><small>' + detail + '</small>' : ''}`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
         }
         
         // ステップ更新
         function updateStep(stepId, status) {
             const step = document.getElementById(stepId);
             if (step) {
-                step.className = 'step ' + status;
+                step.className = 'step step-' + status;
+                
+                if (status === 'completed') {
+                    step.innerHTML = '<span>✅ ' + step.textContent.trim() + '</span>';
+                } else if (status === 'active') {
+                    step.innerHTML = '<span>⏳ ' + step.textContent.trim() + '</span>';
+                } else if (status === 'error') {
+                    step.innerHTML = '<span>❌ ' + step.textContent.trim() + '</span>';
+                }
             }
         }
         
-        // デバッグ情報表示
-        function updateDebugInfo(info) {
-            const debugContent = document.getElementById('debugContent');
-            if (debugContent) {
-                debugContent.textContent = JSON.stringify(info, null, 2);
-            }
-        }
-        
-        // デバッグ表示切り替え
-        function toggleDebug() {
-            const debugInfo = document.getElementById('debugInfo');
-            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
-            
-            if (debugInfo.style.display === 'block') {
-                updateDebugInfo({
-                    authState: authState,
-                    localStorage: {
-                        rentpipe_auth_simple: localStorage.getItem('rentpipe_auth_simple'),
-                        rentpipe_user_simple: !!localStorage.getItem('rentpipe_user_simple'),
-                        google_auth_data: !!localStorage.getItem('google_auth_data')
-                    },
-                    googleAPIv2: window.GoogleDriveAPIv2?.getDebugInfo() || '未読み込み'
-                });
-            }
-        }
-        
-        // 統合認証データ保存（Google Sheets対応）
-        function saveIntegratedAuthData(userInfo, accessToken) {
+        // 統合認証データ保存（強化版）
+        async function saveIntegratedAuthData(userInfo, accessToken) {
             try {
-                const userData = {
-                    uid: userInfo.id,
-                    email: userInfo.email,
-                    name: userInfo.name,
-                    picture: userInfo.picture
+                console.log('💾 統合認証データ保存開始...');
+                console.log('👤 ユーザー情報:', userInfo);
+                console.log('🔑 トークン:', accessToken ? 'あり' : 'なし');
+                
+                // IntegratedAuthManagerV2の初期化を確認
+                if (!window.IntegratedAuthManagerV2) {
+                    throw new Error('IntegratedAuthManagerV2が読み込まれていません');
+                }
+                
+                if (!window.IntegratedAuthManagerV2.isInitialized) {
+                    console.log('🔧 IntegratedAuthManagerV2を初期化中...');
+                    await window.IntegratedAuthManagerV2.initialize();
+                }
+                
+                // 1. RentPipe認証情報を保存
+                const rentpipeAuthData = {
+                    isLoggedIn: true,
+                    user: {
+                        id: userInfo.id || userInfo.sub,
+                        email: userInfo.email,
+                        name: userInfo.name || userInfo.email.split('@')[0],
+                        picture: userInfo.picture || null
+                    },
+                    loginTime: new Date().toISOString()
                 };
                 
-                // 既存形式で保存（互換性）
-                localStorage.setItem('rentpipe_auth_simple', 'logged_in');
-                localStorage.setItem('rentpipe_user_simple', JSON.stringify(userData));
-                localStorage.setItem('rentpipe_temp_auth', 'google_authenticated');
-                localStorage.setItem('rentpipe_user_info', JSON.stringify(userData));
+                localStorage.setItem('rentpipe_auth', JSON.stringify(rentpipeAuthData));
+                console.log('✅ RentPipe認証情報保存完了');
                 
-                // 統合認証マネージャー形式で保存（Google Sheets対応）
-                const googleAuthData = {
+                // 2. Google認証情報を保存（IntegratedAuthManagerV2経由）
+                const tokenExpiry = Date.now() + (3600 * 1000); // 1時間後
+                
+                await window.IntegratedAuthManagerV2.updateGoogleAuth({
                     isSignedIn: true,
                     user: userInfo,
                     accessToken: accessToken,
-                    tokenExpiry: Date.now() + (3600 * 1000) // 1時間後
-                };
+                    tokenExpiry: tokenExpiry
+                });
                 
-                localStorage.setItem('google_auth_data', JSON.stringify(googleAuthData));
+                console.log('✅ Google認証情報保存完了（IntegratedAuthManagerV2）');
+                
+                // 3. 個別トークンも保存（互換性のため）
                 localStorage.setItem('google_access_token', accessToken);
-                localStorage.setItem('google_token_expiry', googleAuthData.tokenExpiry.toString());
+                localStorage.setItem('google_token_expiry', tokenExpiry.toString());
+                console.log('✅ 個別トークン保存完了（互換性）');
                 
-                // 統合認証マネージャーで更新
-                if (window.IntegratedAuthManagerV2) {
-                    window.IntegratedAuthManagerV2.updateGoogleAuth(googleAuthData);
+                // 4. 保存確認
+                const savedAuth = localStorage.getItem('rentpipe_auth');
+                const savedGoogleAuth = localStorage.getItem('google_auth_data');
+                const savedToken = localStorage.getItem('google_access_token');
+                
+                console.log('🔍 保存確認:');
+                console.log('  - rentpipe_auth:', !!savedAuth);
+                console.log('  - google_auth_data:', !!savedGoogleAuth);
+                console.log('  - google_access_token:', !!savedToken);
+                
+                if (!savedAuth || !savedGoogleAuth || !savedToken) {
+                    throw new Error('認証情報の保存確認に失敗しました');
                 }
                 
-                console.log('✅ 統合認証データ保存完了:', userInfo.email);
-                console.log('🔑 アクセストークン保存完了');
                 return true;
                 
             } catch (error) {
@@ -218,8 +266,8 @@
             }
         }
         
-        // Google認証実行
-        async function performGoogleAuth() {
+        // Google認証開始
+        async function startGoogleAuth() {
             const loginBtn = document.getElementById('loginBtn');
             loginBtn.disabled = true;
             loginBtn.textContent = '認証中...';
@@ -259,7 +307,7 @@
                 updateStatus('認証成功 - データ保存中...', 'success', '認証データとアクセストークンを保存しています');
                 
                 // 統合認証データ保存
-                const saved = saveIntegratedAuthData(userInfo, accessToken);
+                const saved = await saveIntegratedAuthData(userInfo, accessToken);
                 if (!saved) {
                     throw new Error('認証データの保存に失敗しました');
                 }
@@ -269,119 +317,69 @@
                 updateStatus('ログイン完了！', 'success', 
                     userInfo.email + ' でログインしました。Google Sheets連携も有効です。まもなくリダイレクトします...');
                 
-                // 3秒後にリダイレクト
+                // 2秒後にリダイレクト
                 setTimeout(function() {
+                    console.log('🔄 customer.htmlへリダイレクト...');
                     window.location.href = 'customer.html';
-                }, 3000);
+                }, 2000);
                 
             } catch (error) {
                 console.error('❌ 認証エラー:', error);
                 
                 let errorMessage = '認証に失敗しました';
                 if (error.message.includes('popup')) {
-                    errorMessage = 'ポップアップに問題があります';
+                    errorMessage = 'ポップアップがブロックされました';
                 } else if (error.message.includes('client_id')) {
                     errorMessage = 'Google OAuth設定に問題があります';
                 }
                 
                 updateStatus(errorMessage, 'error', error.message);
                 
-                // エラーステップの更新
-                if (authState.initialized) {
+                if (authState.authenticated) {
+                    updateStep('step-save', 'error');
+                } else if (authState.initialized) {
                     updateStep('step-auth', 'error');
                 } else {
                     updateStep('step-init', 'error');
                 }
                 
-            } finally {
                 loginBtn.disabled = false;
-                loginBtn.textContent = '🔐 Google認証を開始';
-            }
-        }
-        
-        // モックログイン（テスト用）
-        function mockLogin() {
-            updateStep('step-init', 'completed');
-            updateStep('step-auth', 'completed');
-            updateStep('step-save', 'active');
-            
-            const mockUser = {
-                id: 'mock_user_' + Date.now(),
-                email: 'test@example.com',
-                name: 'テストユーザー',
-                picture: null
-            };
-            
-            const mockToken = 'mock_access_token_' + Date.now();
-            
-            const saved = saveIntegratedAuthData(mockUser, mockToken);
-            
-            if (saved) {
-                updateStep('step-save', 'completed');
-                updateStep('step-redirect', 'active');
-                updateStatus('モックログイン完了！', 'success', 'テストアカウントでログインしました');
+                loginBtn.textContent = '🔐 Googleでログイン';
                 
-                setTimeout(function() {
-                    window.location.href = 'customer.html';
-                }, 2000);
-            } else {
-                updateStatus('モックログインに失敗しました', 'error');
             }
         }
         
         // 初期化
-        async function initializeSystem() {
+        async function initialize() {
             try {
-                console.log('🔧 システム初期化開始...');
-                updateStep('step-init', 'active');
+                console.log('🚀 ログインページ初期化...');
                 
-                // 既存ログインチェック
-                const authStatus = localStorage.getItem('rentpipe_auth_simple');
-                if (authStatus === 'logged_in') {
-                    const accessToken = localStorage.getItem('google_access_token');
-                    if (accessToken) {
-                        updateStatus('既にログイン済みです', 'success', 'Google Sheets連携も有効です。まもなくリダイレクトします...');
-                        updateStep('step-init', 'completed');
-                        updateStep('step-auth', 'completed');
-                        updateStep('step-save', 'completed');
-                        updateStep('step-redirect', 'active');
-                        
-                        setTimeout(function() {
+                // 既にログイン済みかチェック
+                if (window.IntegratedAuthManagerV2) {
+                    await window.IntegratedAuthManagerV2.initialize();
+                    const authState = window.IntegratedAuthManagerV2.getAuthState();
+                    
+                    if (authState.isAuthenticated) {
+                        console.log('✅ 既にログイン済み - customer.htmlへリダイレクト');
+                        updateStatus('既にログイン済みです', 'success', 'リダイレクト中...');
+                        setTimeout(() => {
                             window.location.href = 'customer.html';
-                        }, 2000);
+                        }, 1000);
                         return;
-                    } else {
-                        console.log('⚠️ アクセストークンが見つかりません。再認証が必要です。');
-                        localStorage.removeItem('rentpipe_auth_simple');
                     }
                 }
                 
-                // Google Drive API v2 準備確認
-                if (window.GoogleDriveAPIv2) {
-                    updateStatus('システム準備完了', 'success', 'Google認証を開始できます（Google Sheets連携対応）');
-                    document.getElementById('loginBtn').disabled = false;
-                    authState.initialized = true;
-                } else {
-                    throw new Error('Google Drive API v2 スクリプトが読み込まれていません');
-                }
+                console.log('✅ ログインページ初期化完了');
                 
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
-                updateStatus('初期化に失敗しました', 'error', error.message);
-                updateStep('step-init', 'error');
             }
         }
         
-        // ページ読み込み完了時
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 Google Sheets対応 直接認証ログインページ読み込み完了');
-            
-            // ログインボタンイベント設定
-            document.getElementById('loginBtn').addEventListener('click', performGoogleAuth);
-            
-            // システム初期化（1秒後に実行）
-            setTimeout(initializeSystem, 1000);
-        });
+        // ページ読み込み時に初期化
+        window.addEventListener('DOMContentLoaded', initialize);
+        
+        console.log('✅ ログインページ準備完了');
     </script>
 </body>
 </html>
