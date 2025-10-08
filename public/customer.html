@@ -38,7 +38,6 @@
             align-items: center;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 15px;
         }
         
         .sheets-status-disconnected {
@@ -51,9 +50,17 @@
             border: 1px solid #10b981;
         }
         
-        .sheets-controls {
-            display: flex;
-            gap: 10px;
+        .sheets-status-syncing {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+        }
+        
+        .sheets-info {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
         }
         
         .stats-container {
@@ -252,18 +259,23 @@
             🔧 システム初期化中...
         </div>
 
-        <!-- Google Sheets接続パネル -->
+        <!-- Google Sheets統合パネル（自動接続時は非表示）-->
         <div class="sheets-panel" id="sheets-panel" style="display: none;">
             <h3>📊 Google Sheets データ同期</h3>
-            <div id="sheets-status" class="sheets-status sheets-status-disconnected">
+            <div id="sheets-status" class="sheets-status sheets-status-connected">
                 <div>
                     <strong>ステータス:</strong>
-                    <span id="sheets-status-text">未接続 - Google Sheetsと連携してデータを同期できます</span>
+                    <span id="sheets-status-text">接続中...</span>
                 </div>
-                <div class="sheets-controls">
-                    <button id="btn-sheets-connect" class="btn btn-primary" onclick="connectGoogleSheets()">
-                        📊 Google Sheets接続
-                    </button>
+            </div>
+            <div id="sheets-info" class="sheets-info" style="display: none;">
+                <div><strong>スプレッドシートID:</strong> <span id="sheets-spreadsheet-id">-</span></div>
+                <div><strong>最終同期:</strong> <span id="sheets-last-sync">-</span></div>
+                <div><strong>同期モード:</strong> <span id="sheets-sync-mode">自動（5分ごと）</span></div>
+                <div style="margin-top: 10px;">
+                    <a id="sheets-link" href="#" target="_blank" class="btn btn-secondary">
+                        🔗 スプレッドシートを開く
+                    </a>
                 </div>
             </div>
         </div>
@@ -335,114 +347,149 @@
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-sheets-api.js"></script>
     
-    <!-- ✅ 正しい順序：unified-sheets-manager.js を先に -->
+    <!-- ✅ 正しい順序 -->
     <script src="js/unified-sheets-manager.js"></script>
-    
-    <!-- ✅ 正しい順序：unified-data-manager.js を後に -->
     <script src="js/unified-data-manager.js"></script>
     
     <script>
         // グローバル変数
         let allCustomers = [];
         let filteredCustomers = [];
+        let currentAuthState = null;
+        let systemInitialized = false;
         
         // ページ初期化
         console.log('📄 顧客管理ページ初期化開始');
         
-        // 認証状態チェックと初期化
-        window.addEventListener('DOMContentLoaded', async () => {
+        // 認証ステータス表示
+        function showAuthStatus(message, type) {
             const statusDiv = document.getElementById('auth-sync-status');
-            const sheetsPanel = document.getElementById('sheets-panel');
-            
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                statusDiv.className = `auth-status ${type}`;
+            }
+            console.log(`[認証] ${message}`);
+        }
+        
+        // Google Sheets統合の自動初期化
+        async function autoInitializeGoogleSheets() {
             try {
-                // 統合認証マネージャーの初期化を待つ
-                if (window.IntegratedAuthManagerV2) {
-                    await window.IntegratedAuthManagerV2.initialize();
-                }
+                console.log('📊 Google Sheets自動初期化開始...');
                 
-                // Google Sheets統合マネージャーの初期化
-                if (window.UnifiedSheetsManager) {
-                    await window.UnifiedSheetsManager.initialize();
+                // 保存されたスプレッドシートIDを確認
+                const savedId = window.GoogleSheetsAPI?.loadSpreadsheetId();
+                
+                if (savedId) {
+                    console.log('✅ 既存スプレッドシートID発見:', savedId);
                     
-                    const status = window.UnifiedSheetsManager.getStatus();
+                    // 既存スプレッドシートに自動接続
+                    await window.UnifiedSheetsManager.enableSheetsIntegration(savedId);
                     
-                    if (status.isSheetsEnabled) {
-                        statusDiv.className = 'auth-status success';
-                        statusDiv.textContent = '✅ Google Sheets統合有効 - 自動同期実行中（競合解決機能付き）';
-                        sheetsPanel.style.display = 'none';
-                    } else {
-                        statusDiv.className = 'auth-status warning';
-                        statusDiv.textContent = 'ℹ️ LocalStorageモード - Google Sheetsと接続して自動同期を有効にできます';
+                    showAuthStatus('✅ Google Sheets統合有効 - 自動同期実行中（競合解決機能付き）', 'success');
+                    
+                    // パネル表示
+                    const panel = document.getElementById('sheets-panel');
+                    if (panel) panel.style.display = 'block';
+                    
+                    showSheetsInfo(savedId);
+                    
+                } else {
+                    console.log('ℹ️ 保存されたスプレッドシートIDなし');
+                    
+                    // Google認証済みの場合は既存スプレッドシートを検索
+                    if (currentAuthState?.googleAuth?.isAuthenticated) {
+                        console.log('🔍 既存スプレッドシートを自動検索中...');
                         
-                        // Google認証済みの場合はGoogle Sheets接続パネルを表示
-                        if (status.authState) {
-                            sheetsPanel.style.display = 'block';
+                        try {
+                            const existingSheets = await window.GoogleDriveAPIv2.searchSpreadsheets('RentPipe_データベース');
+                            
+                            if (existingSheets && existingSheets.length > 0) {
+                                const spreadsheetId = existingSheets[0].id;
+                                console.log('✅ 既存スプレッドシート自動検出:', spreadsheetId);
+                                
+                                await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
+                                
+                                showAuthStatus('✅ Google Sheets統合有効 - 自動同期実行中（競合解決機能付き）', 'success');
+                                
+                                const panel = document.getElementById('sheets-panel');
+                                if (panel) panel.style.display = 'block';
+                                
+                                showSheetsInfo(spreadsheetId);
+                            } else {
+                                console.log('📝 既存スプレッドシートなし - 新規作成します');
+                                await autoCreateSpreadsheet();
+                            }
+                        } catch (searchError) {
+                            console.warn('⚠️ スプレッドシート検索エラー:', searchError);
+                            showAuthStatus('ℹ️ LocalStorageモード - データはブラウザに保存されています', 'warning');
                         }
+                    } else {
+                        showAuthStatus('ℹ️ LocalStorageモード - Google認証後にGoogle Sheets連携が有効になります', 'warning');
                     }
                 }
                 
-                // 顧客データ読み込み
-                await loadCustomers();
-                
             } catch (error) {
-                console.error('❌ 初期化エラー:', error);
-                statusDiv.className = 'auth-status error';
-                statusDiv.textContent = '❌ 初期化エラー: ' + error.message;
+                console.error('❌ Google Sheets自動初期化エラー:', error);
+                showAuthStatus('ℹ️ LocalStorageモード - データはブラウザに保存されています', 'warning');
             }
-        });
+        }
         
-        // Google Sheets接続
-        async function connectGoogleSheets() {
-            const btn = document.getElementById('btn-sheets-connect');
-            const originalText = btn.textContent;
-            
+        // スプレッドシート自動作成
+        async function autoCreateSpreadsheet() {
             try {
-                btn.textContent = '🔄 接続中...';
-                btn.disabled = true;
+                console.log('📝 スプレッドシート自動作成開始...');
                 
-                console.log('📊 Google Sheets接続開始...');
+                const timestamp = new Date().toISOString().slice(0, 10);
+                const title = `RentPipe_データベース_${timestamp}`;
                 
-                // 既存スプレッドシートを検索
-                console.log('🔍 既存スプレッドシートを検索中...');
-                const existingSheets = await window.GoogleDriveAPIv2.searchSpreadsheets('RentPipe_データベース');
+                const result = await window.GoogleSheetsAPI.createSpreadsheet(title);
+                const spreadsheetId = result.spreadsheetId;
                 
-                let spreadsheetId;
+                console.log('✅ スプレッドシート作成成功:', spreadsheetId);
                 
-                if (existingSheets && existingSheets.length > 0) {
-                    // 既存スプレッドシートが見つかった
-                    spreadsheetId = existingSheets[0].id;
-                    console.log('✅ 既存スプレッドシート発見:', spreadsheetId);
-                    alert(`✅ 既存のスプレッドシート「${existingSheets[0].name}」に接続しました！`);
-                } else {
-                    // 新規作成
-                    console.log('📝 新しいスプレッドシートを作成中...');
-                    const timestamp = new Date().toISOString().slice(0, 10);
-                    const spreadsheetName = `RentPipe_データベース_${timestamp}`;
-                    
-                    const newSheet = await window.GoogleSheetsAPI.createSpreadsheet(spreadsheetName);
-                    spreadsheetId = newSheet.spreadsheetId;
-                    console.log('✅ 新規スプレッドシート作成完了:', spreadsheetId);
-                    alert(`✅ 新しいスプレッドシート「${spreadsheetName}」を作成しました！`);
-                }
-                
-                // Google Sheets統合を有効化
                 await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
                 
-                // ステータス更新
-                document.getElementById('auth-sync-status').className = 'auth-status success';
-                document.getElementById('auth-sync-status').textContent = '✅ Google Sheets統合有効 - 自動同期実行中（競合解決機能付き）';
+                showAuthStatus('✅ Google Sheets統合有効 - 自動同期実行中（競合解決機能付き）', 'success');
                 
-                // パネルを非表示
-                document.getElementById('sheets-panel').style.display = 'none';
+                const panel = document.getElementById('sheets-panel');
+                if (panel) panel.style.display = 'block';
                 
-                // データを再読み込み
-                await loadCustomers();
+                showSheetsInfo(spreadsheetId);
                 
             } catch (error) {
-                console.error('❌ Google Sheets接続エラー:', error);
-                alert('❌ Google Sheets接続に失敗しました: ' + error.message);
-                btn.textContent = originalText;
-                btn.disabled = false;
+                console.error('❌ スプレッドシート自動作成エラー:', error);
+                showAuthStatus('ℹ️ LocalStorageモード - データはブラウザに保存されています', 'warning');
+            }
+        }
+        
+        // スプレッドシート情報表示
+        function showSheetsInfo(spreadsheetId) {
+            const infoDiv = document.getElementById('sheets-info');
+            const idSpan = document.getElementById('sheets-spreadsheet-id');
+            const link = document.getElementById('sheets-link');
+            const statusText = document.getElementById('sheets-status-text');
+            
+            if (idSpan) idSpan.textContent = spreadsheetId;
+            if (link) {
+                link.href = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+            }
+            if (infoDiv) infoDiv.style.display = 'block';
+            if (statusText) statusText.textContent = '✅ 接続済み - 5分ごとに自動同期';
+            
+            updateLastSyncTime();
+        }
+        
+        // 最終同期時刻更新
+        function updateLastSyncTime() {
+            const status = window.UnifiedSheetsManager?.getStatus();
+            const lastSyncSpan = document.getElementById('sheets-last-sync');
+            
+            if (lastSyncSpan && status) {
+                if (status.lastSyncTime) {
+                    lastSyncSpan.textContent = status.lastSyncTime.toLocaleString('ja-JP');
+                } else {
+                    lastSyncSpan.textContent = '未同期';
+                }
             }
         }
         
@@ -538,7 +585,6 @@
         
         // フィルター
         function filterByStatus(status) {
-            // フィルターボタンのアクティブ状態更新
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -576,6 +622,43 @@
                 alert('❌ 顧客削除中にエラーが発生しました');
             }
         }
+        
+        // 初期化
+        async function initialize() {
+            try {
+                console.log('🚀 システム初期化開始...');
+                showAuthStatus('🔧 システム初期化中...', 'warning');
+                
+                // 統合認証マネージャーの初期化
+                if (window.IntegratedAuthManagerV2) {
+                    await window.IntegratedAuthManagerV2.initialize();
+                    currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
+                    console.log('✅ 認証システム初期化完了');
+                }
+                
+                // Google Sheets統合マネージャーの初期化
+                if (window.UnifiedSheetsManager) {
+                    await window.UnifiedSheetsManager.initialize();
+                    console.log('✅ Google Sheets統合マネージャー初期化完了');
+                }
+                
+                // 顧客データ読み込み
+                await loadCustomers();
+                
+                // Google Sheets自動接続
+                await autoInitializeGoogleSheets();
+                
+                systemInitialized = true;
+                console.log('✅ システム初期化完了');
+                
+            } catch (error) {
+                console.error('❌ システム初期化エラー:', error);
+                showAuthStatus('❌ 初期化エラー: ' + error.message, 'error');
+            }
+        }
+        
+        // ページ読み込み時に初期化
+        window.addEventListener('DOMContentLoaded', initialize);
         
         console.log('✅ 顧客管理ページ準備完了');
     </script>
