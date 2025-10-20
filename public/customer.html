@@ -269,6 +269,7 @@
                 </div>
             </div>
             <div id="sheets-info" class="sheets-info" style="display: none;">
+                <div><strong>スプレッドシート名:</strong> <span id="sheets-spreadsheet-name">RentPipe_Customers</span></div>
                 <div><strong>スプレッドシートID:</strong> <span id="sheets-spreadsheet-id">-</span></div>
                 <div><strong>最終同期:</strong> <span id="sheets-last-sync">-</span></div>
                 <div><strong>同期モード:</strong> <span id="sheets-sync-mode">自動（5分ごと）</span></div>
@@ -354,6 +355,9 @@
         let currentAuthState = null;
         let systemInitialized = false;
         
+        // 🆕 固定スプレッドシート名
+        const SPREADSHEET_NAME = 'RentPipe_Customers';
+        
         console.log('📄 顧客管理ページ初期化開始');
         
         // 認証ステータス表示
@@ -366,17 +370,7 @@
             console.log(`[認証] ${message}`);
         }
         
-        // 古いスプレッドシートIDを削除
-        function cleanupOldSpreadsheet() {
-            const oldId = localStorage.getItem('rentpipe_spreadsheet_id');
-            if (oldId) {
-                console.log('🗑️ 古いスプレッドシートIDを削除:', oldId);
-                localStorage.removeItem('rentpipe_spreadsheet_id');
-                console.log('✅ 新規スプレッドシート作成の準備完了');
-            }
-        }
-        
-        // Google Sheets統合の自動初期化（完全待機版）
+        // Google Sheets統合の自動初期化（固定名検索版）
         async function autoInitializeGoogleSheets() {
             try {
                 console.log('📊 === Google Sheets自動初期化開始 ===');
@@ -391,9 +385,6 @@
                 console.log('✅ Google認証情報確認完了');
                 console.log('   Email:', currentAuthState.googleAuth.user?.email);
                 console.log('   Token:', currentAuthState.googleAuth.accessToken?.substring(0, 20) + '...');
-                
-                // 古いスプレッドシートIDを強制削除
-                cleanupOldSpreadsheet();
                 
                 // Google Sheets API初期化
                 console.log('📊 Google Sheets API初期化開始...');
@@ -421,11 +412,10 @@
                 
                 console.log('✅ アクセストークン設定完了');
                 
-                // 🆕 CRITICAL: 認証完了を確実に待機
+                // 認証完了を確実に待機
                 console.log('⏳ 認証完了待機中...');
                 let authRetries = 0;
                 while (!window.GoogleSheetsAPI.isAuthenticated && authRetries < 40) {
-                    console.log(`⏳ 認証待機中... (${authRetries + 1}/40)`);
                     await new Promise(resolve => setTimeout(resolve, 500));
                     authRetries++;
                 }
@@ -436,9 +426,55 @@
                 
                 console.log('✅ 認証完了確認');
                 
-                // 新規スプレッドシート作成
-                console.log('📝 新規スプレッドシート作成開始...');
-                await autoCreateSpreadsheet();
+                // 🆕 LocalStorageに保存されたIDを確認
+                const savedId = window.GoogleSheetsAPI.loadSpreadsheetId();
+                
+                if (savedId) {
+                    console.log('📂 保存されたスプレッドシートID発見:', savedId);
+                    console.log('🔗 既存スプレッドシートに接続します');
+                    
+                    // 既存スプレッドシートに接続
+                    await connectToExistingSpreadsheet(savedId);
+                    
+                } else {
+                    console.log('ℹ️ 保存されたスプレッドシートIDなし');
+                    console.log(`🔍 Google Driveで "${SPREADSHEET_NAME}" を検索中...`);
+                    
+                    // Google Drive API初期化確認
+                    if (!window.GoogleDriveAPIv2) {
+                        throw new Error('GoogleDriveAPIv2が読み込まれていません');
+                    }
+                    
+                    if (!window.GoogleDriveAPIv2.isInitialized) {
+                        console.log('⏳ Google Drive API初期化中...');
+                        await window.GoogleDriveAPIv2.initialize();
+                    }
+                    
+                    // トークン設定
+                    window.GoogleDriveAPIv2.accessToken = currentAuthState.googleAuth.accessToken;
+                    window.GoogleDriveAPIv2.isAuthenticated = true;
+                    
+                    try {
+                        // 🆕 固定名でスプレッドシート検索
+                        const existingSheets = await window.GoogleDriveAPIv2.searchSpreadsheets(SPREADSHEET_NAME);
+                        
+                        if (existingSheets && existingSheets.length > 0) {
+                            const spreadsheetId = existingSheets[0].id;
+                            console.log(`✅ 既存の "${SPREADSHEET_NAME}" を発見:`, spreadsheetId);
+                            
+                            // 既存スプレッドシートに接続
+                            await connectToExistingSpreadsheet(spreadsheetId);
+                            
+                        } else {
+                            console.log(`📝 "${SPREADSHEET_NAME}" が見つかりません - 新規作成します`);
+                            await createNewSpreadsheet();
+                        }
+                    } catch (searchError) {
+                        console.error('❌ スプレッドシート検索エラー:', searchError);
+                        console.log('📝 検索失敗 - 新規作成します');
+                        await createNewSpreadsheet();
+                    }
+                }
                 
                 console.log('📊 === Google Sheets自動初期化完了 ===');
                 
@@ -450,17 +486,34 @@
             }
         }
         
-        // スプレッドシート自動作成
-        async function autoCreateSpreadsheet() {
+        // 🆕 既存スプレッドシートに接続
+        async function connectToExistingSpreadsheet(spreadsheetId) {
             try {
-                console.log('📝 === 新規スプレッドシート作成開始 ===');
+                console.log('🔗 既存スプレッドシート接続開始:', spreadsheetId);
                 
-                const timestamp = new Date().toISOString().slice(0, 10);
-                const title = `RentPipe_Database_${timestamp}`;
+                await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
                 
-                console.log('📄 作成するスプレッドシート名:', title);
+                showAuthStatus('✅ Google Sheets統合有効 - 自動同期実行中（競合解決機能付き）', 'success');
                 
-                const result = await window.GoogleSheetsAPI.createSpreadsheet(title);
+                const panel = document.getElementById('sheets-panel');
+                if (panel) panel.style.display = 'block';
+                
+                showSheetsInfo(spreadsheetId);
+                
+                console.log('✅ 既存スプレッドシート接続完了');
+                
+            } catch (error) {
+                console.error('❌ 既存スプレッドシート接続エラー:', error);
+                throw error;
+            }
+        }
+        
+        // 🆕 新規スプレッドシート作成（固定名）
+        async function createNewSpreadsheet() {
+            try {
+                console.log(`📝 === 新規スプレッドシート作成開始: ${SPREADSHEET_NAME} ===`);
+                
+                const result = await window.GoogleSheetsAPI.createSpreadsheet(SPREADSHEET_NAME);
                 const spreadsheetId = result.spreadsheetId;
                 
                 console.log('✅ スプレッドシート作成成功:', spreadsheetId);
@@ -478,7 +531,7 @@
                 console.log('✅ === 新規スプレッドシート作成完了 ===');
                 
             } catch (error) {
-                console.error('❌ スプレッドシート自動作成エラー:', error);
+                console.error('❌ スプレッドシート作成エラー:', error);
                 showAuthStatus('ℹ️ LocalStorageモード - データはブラウザに保存されています', 'warning');
             }
         }
