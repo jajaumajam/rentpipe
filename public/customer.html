@@ -679,14 +679,18 @@
         }
         
         // 削除
-        function deleteCustomer(customerId) {
+        // 削除（非同期版）
+        async function deleteCustomer(customerId) {
             if (!confirm('この顧客を削除しますか？この操作は取り消しできません。')) {
                 return;
             }
             
             try {
-                if (window.UnifiedDataManager.deleteCustomer(customerId)) {
-                    loadCustomers();
+                console.log('🗑️ 顧客削除開始:', customerId);
+                
+                if (await window.UnifiedDataManager.deleteCustomer(customerId)) {
+                    console.log('✅ 顧客削除成功（Google Sheets同期完了）');
+                    await loadCustomers();
                     alert('✅ 顧客を削除しました');
                 } else {
                     alert('❌ 顧客の削除に失敗しました');
@@ -695,8 +699,7 @@
                 console.error('❌ 顧客削除エラー:', error);
                 alert('❌ 顧客削除中にエラーが発生しました');
             }
-        }
-        
+        }        
         // 初期化
         async function initialize() {
             try {
