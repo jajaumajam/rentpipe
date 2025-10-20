@@ -171,9 +171,16 @@
         </div>
     </div>
 
-    <!-- RentPipe Core Scripts -->
+    <!-- Google API Client & Identity Services -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <!-- 🆕 RentPipe Core Scripts（Google Sheets統合対応） -->
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
     <script>
@@ -244,7 +251,7 @@
             }
         }
         
-        // 🆕 フォーム送信処理（非同期版）
+        // フォーム送信処理（非同期版）
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -282,7 +289,7 @@
                 }
                 
                 if (isEditMode) {
-                    // 🆕 更新処理（awaitで待機）
+                    // 更新処理（awaitで待機）
                     console.log('🔄 顧客情報更新中...', editingCustomerId);
                     
                     const success = await window.UnifiedDataManager.updateCustomer(editingCustomerId, formData);
@@ -296,7 +303,7 @@
                     }
                     
                 } else {
-                    // 🆕 新規登録処理（awaitで待機）
+                    // 新規登録処理（awaitで待機）
                     console.log('➕ 新規顧客登録中...');
                     
                     const newCustomer = await window.UnifiedDataManager.addCustomer(formData);
