@@ -40,27 +40,14 @@ window.UnifiedDataManager = {
         }
     },
     
-    // 🆕 Google Sheetsに即座同期（デバッグ強化版）
+    // 🆕 Google Sheetsに即座同期（条件緩和版）
     syncToSheetsImmediately: async function() {
         try {
             console.log('📤 === Google Sheets即座同期開始 ===');
             
-            // Google Sheets統合が有効か確認
-            if (!window.UnifiedSheetsManager) {
-                console.log('❌ UnifiedSheetsManagerが存在しません');
-                return false;
-            }
-            
-            console.log('✅ UnifiedSheetsManager存在確認');
-            console.log('   isEnabled:', window.UnifiedSheetsManager.isEnabled);
-            
-            if (!window.UnifiedSheetsManager.isEnabled) {
-                console.log('ℹ️ Google Sheets統合が無効 - 同期スキップ');
-                return false;
-            }
-            
+            // Google Sheets APIの存在確認
             if (!window.GoogleSheetsAPI) {
-                console.log('❌ GoogleSheetsAPIが存在しません');
+                console.log('ℹ️ GoogleSheetsAPIが存在しません - 同期スキップ');
                 return false;
             }
             
@@ -68,8 +55,26 @@ window.UnifiedDataManager = {
             console.log('   isAuthenticated:', window.GoogleSheetsAPI.isAuthenticated);
             console.log('   spreadsheetId:', window.GoogleSheetsAPI.spreadsheetId);
             
+            // 🆕 認証状態とスプレッドシートIDがあれば同期（isEnabledは不問）
             if (!window.GoogleSheetsAPI.isAuthenticated) {
                 console.log('ℹ️ Google Sheets未認証 - 同期スキップ');
+                return false;
+            }
+            
+            // スプレッドシートIDの確認（保存されたIDまたは設定済みID）
+            let spreadsheetId = window.GoogleSheetsAPI.spreadsheetId;
+            
+            if (!spreadsheetId) {
+                // LocalStorageから読み込みを試みる
+                spreadsheetId = window.GoogleSheetsAPI.loadSpreadsheetId();
+                if (spreadsheetId) {
+                    window.GoogleSheetsAPI.spreadsheetId = spreadsheetId;
+                    console.log('📂 保存されたスプレッドシートIDを使用:', spreadsheetId);
+                }
+            }
+            
+            if (!spreadsheetId) {
+                console.log('ℹ️ スプレッドシートIDが未設定 - 同期スキップ');
                 return false;
             }
             
@@ -81,6 +86,14 @@ window.UnifiedDataManager = {
             await window.GoogleSheetsAPI.writeData(customers);
             
             console.log('✅ === Google Sheets即座同期完了 ===');
+            
+            // 🆕 UnifiedSheetsManagerが存在すれば、そちらも有効化
+            if (window.UnifiedSheetsManager && !window.UnifiedSheetsManager.isEnabled) {
+                console.log('🔄 UnifiedSheetsManagerを有効化します');
+                window.UnifiedSheetsManager.isEnabled = true;
+                window.UnifiedSheetsManager.spreadsheetId = spreadsheetId;
+            }
+            
             return true;
             
         } catch (error) {
@@ -92,7 +105,7 @@ window.UnifiedDataManager = {
         }
     },
     
-    // 🆕 新規顧客追加（非同期版）
+    // 新規顧客追加（非同期版）
     addCustomer: async function(customerData) {
         try {
             console.log('➕ 新規顧客追加処理開始...');
@@ -118,7 +131,7 @@ window.UnifiedDataManager = {
             
             console.log('✅ LocalStorageに保存完了:', newCustomer.id);
             
-            // 🆕 即座にGoogle Sheetsに同期（awaitで待機）
+            // 即座にGoogle Sheetsに同期（awaitで待機）
             console.log('📤 Google Sheets即座同期を実行...');
             await this.syncToSheetsImmediately();
             
@@ -130,7 +143,7 @@ window.UnifiedDataManager = {
         }
     },
     
-    // 🆕 顧客情報更新（非同期版）
+    // 顧客情報更新（非同期版）
     updateCustomer: async function(customerId, updateData) {
         try {
             console.log('✏️ 顧客情報更新処理開始:', customerId);
@@ -152,7 +165,7 @@ window.UnifiedDataManager = {
             this.saveCustomers(customers);
             console.log('✅ LocalStorageに保存完了:', customerId);
             
-            // 🆕 即座にGoogle Sheetsに同期（awaitで待機）
+            // 即座にGoogle Sheetsに同期（awaitで待機）
             console.log('📤 Google Sheets即座同期を実行...');
             await this.syncToSheetsImmediately();
             
@@ -164,7 +177,7 @@ window.UnifiedDataManager = {
         }
     },
     
-    // 🆕 顧客削除（非同期版）
+    // 顧客削除（非同期版）
     deleteCustomer: async function(customerId) {
         try {
             console.log('🗑️ 顧客削除処理開始:', customerId);
@@ -179,7 +192,7 @@ window.UnifiedDataManager = {
             this.saveCustomers(filteredCustomers);
             console.log('✅ LocalStorageから削除完了:', customerId);
             
-            // 🆕 即座にGoogle Sheetsに同期（awaitで待機）
+            // 即座にGoogle Sheetsに同期（awaitで待機）
             console.log('📤 Google Sheets即座同期を実行...');
             await this.syncToSheetsImmediately();
             
