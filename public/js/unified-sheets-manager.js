@@ -1,314 +1,107 @@
-// 🔄 統合データ管理システム（LocalStorage + Google Sheets）（競合解決版）
+// 🔄 統合データ管理システム（競合解決版 + Google Sheets優先）
 console.log('🔄 統合データ管理システム初期化中（競合解決版）...');
 
 window.UnifiedSheetsManager = {
-    // 設定
-    config: {
-        autoSyncInterval: 300000, // 5分ごとに自動同期
-        localStorageKey: 'rentpipe_customers'
-    },
-    
-    // 状態
-    isInitialized: false,
-    isSheetsEnabled: false,
-    autoSyncTimer: null,
+    // 状態管理
+    isEnabled: false,
+    spreadsheetId: null,
     lastSyncTime: null,
+    syncInterval: null,
+    isSyncing: false,
     
     // 初期化
     initialize: async function() {
         try {
             console.log('🔧 統合データ管理システム初期化開始...');
             
-            // LocalStorageの確認
-            this.ensureLocalStorage();
+            // LocalStorageからデータ確認
+            const localData = localStorage.getItem('rentpipe_demo_customers');
+            if (localData) {
+                const customers = JSON.parse(localData);
+                console.log('✅ LocalStorageデータ確認完了:', customers.length, '件');
+            }
             
-            // Google Sheets API の初期化チェック
+            // Google Sheets API初期化チェック
             console.log('📊 Google Sheets API初期化チェック...');
-            
-            if (!window.GoogleSheetsAPI) {
-                console.log('⚠️ GoogleSheetsAPIスクリプトが読み込まれていません');
-                console.log('ℹ️ LocalStorageモードで継続');
-                this.isInitialized = true;
-                return true;
-            }
-            
-            // Google Sheets APIが未初期化の場合は強制初期化
-            if (!window.GoogleSheetsAPI.isInitialized) {
-                console.log('🔧 Google Sheets API強制初期化実行中...');
-                
-                const sheetsInitialized = await window.GoogleSheetsAPI.initialize();
-                
-                if (!sheetsInitialized) {
-                    console.log('⚠️ Google Sheets API初期化失敗 - LocalStorageモードで継続');
-                    this.isInitialized = true;
-                    return true;
+            if (window.GoogleSheetsAPI) {
+                if (!window.GoogleSheetsAPI.isInitialized) {
+                    console.log('⏳ Google Sheets API初期化待機中...');
+                    // 既に初期化プロセスが進行中の可能性があるため待機
+                    let retries = 0;
+                    while (!window.GoogleSheetsAPI.isInitialized && retries < 20) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        retries++;
+                    }
+                    
+                    if (!window.GoogleSheetsAPI.isInitialized) {
+                        console.log('🔧 Google Sheets API強制初期化実行中...');
+                        await window.GoogleSheetsAPI.initialize();
+                        console.log('✅ Google Sheets API強制初期化完了');
+                    }
                 }
                 
-                console.log('✅ Google Sheets API強制初期化完了');
-            } else {
-                console.log('✅ Google Sheets API 既に初期化済み');
-            }
-            
-            // 保存されたスプレッドシートIDと認証状態を確認
-            const spreadsheetId = window.GoogleSheetsAPI.loadSpreadsheetId();
-            const hasValidAuth = this.checkAuthenticationState();
-            
-            console.log('🔍 統合確認:', {
-                'spreadsheetId': spreadsheetId,
-                'hasValidAuth': hasValidAuth,
-                'isAuthenticated': window.GoogleSheetsAPI.isAuthenticated
-            });
-            
-            if (spreadsheetId && hasValidAuth) {
-                this.isSheetsEnabled = true;
-                console.log('✅ Google Sheets統合モード有効');
+                // 統合確認
+                console.log('🔍 統合確認:', {
+                    sheetsAPI: !!window.GoogleSheetsAPI,
+                    sheetsInitialized: window.GoogleSheetsAPI?.isInitialized,
+                    sheetsAuthenticated: window.GoogleSheetsAPI?.isAuthenticated,
+                    driveAPI: !!window.GoogleDriveAPIv2,
+                    unifiedDataManager: !!window.UnifiedDataManager
+                });
                 
-                // 初回同期（競合解決版）
-                try {
-                    await this.syncWithConflictResolution();
-                } catch (syncError) {
-                    console.warn('⚠️ 初回同期に失敗しましたが、統合モードを継続:', syncError.message);
+                // スプレッドシートIDの確認
+                const savedId = window.GoogleSheetsAPI.loadSpreadsheetId();
+                if (savedId) {
+                    console.log('📂 保存済みスプレッドシートID:', savedId);
+                    this.spreadsheetId = savedId;
+                } else {
+                    console.log('ℹ️ Google Sheets未設定または未認証 - LocalStorageモード');
                 }
-                
-                // 自動同期開始
-                this.startAutoSync();
             } else {
-                console.log('ℹ️ Google Sheets未設定または未認証 - LocalStorageモード');
+                console.log('⚠️ Google Sheets API利用不可 - LocalStorageモードで動作');
             }
             
-            this.isInitialized = true;
             console.log('✅ 統合データ管理システム初期化完了');
             return true;
             
         } catch (error) {
             console.error('❌ 統合データ管理システム初期化エラー:', error);
-            console.log('ℹ️ エラー発生によりLocalStorageモードで継続');
-            this.isInitialized = true;
-            return true;
-        }
-    },
-    
-    // LocalStorage確認
-    ensureLocalStorage: function() {
-        const data = localStorage.getItem(this.config.localStorageKey);
-        if (!data || data === '[]') {
-            console.log('ℹ️ LocalStorageが空です');
-        } else {
-            console.log('✅ LocalStorageデータ確認完了');
-        }
-    },
-    
-    // 認証状態チェック
-    checkAuthenticationState: function() {
-        if (window.IntegratedAuthManagerV2) {
-            const authState = window.IntegratedAuthManagerV2.getAuthState();
-            return authState?.googleAuth?.isAuthenticated || false;
-        }
-        return false;
-    },
-    
-    // 顧客データ取得（LocalStorageから）
-    getCustomers: function() {
-        try {
-            const data = localStorage.getItem(this.config.localStorageKey);
-            return data ? JSON.parse(data) : [];
-        } catch (error) {
-            console.error('❌ 顧客データ取得エラー:', error);
-            return [];
-        }
-    },
-    
-    // 顧客データ保存（LocalStorage + Google Sheets）
-    saveCustomers: async function(customers) {
-        try {
-            // LocalStorageに即座に保存
-            localStorage.setItem(this.config.localStorageKey, JSON.stringify(customers));
-            console.log('💾 LocalStorageに保存:', customers.length, '件');
-            
-            // Google Sheetsが有効な場合は同期
-            if (this.isSheetsEnabled) {
-                await this.syncToSheets(customers);
-            }
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ 顧客データ保存エラー:', error);
             return false;
         }
     },
     
-    // 🆕 タイムスタンプによるマージ（競合解決の中核）
-    mergeByTimestamp: function(localCustomers, sheetsCustomers) {
-        console.log('🔀 タイムスタンプによるマージ開始...');
-        console.log('📱 LocalStorage:', localCustomers.length, '件');
-        console.log('📊 Google Sheets:', sheetsCustomers.length, '件');
-        
-        // IDをキーにしたマップを作成
-        const customerMap = new Map();
-        
-        // LocalStorageのデータを追加
-        localCustomers.forEach(customer => {
-            customerMap.set(customer.id, customer);
-        });
-        
-        // Google Sheetsのデータをマージ（新しい方を優先）
-        sheetsCustomers.forEach(sheetsCustomer => {
-            const localCustomer = customerMap.get(sheetsCustomer.id);
-            
-            if (!localCustomer) {
-                // Google Sheetsにのみ存在 → 追加
-                customerMap.set(sheetsCustomer.id, sheetsCustomer);
-                console.log('➕ Google Sheetsから追加:', sheetsCustomer.name);
-            } else {
-                // 両方に存在 → updatedAtを比較
-                const localTime = new Date(localCustomer.updatedAt || localCustomer.createdAt || 0);
-                const sheetsTime = new Date(sheetsCustomer.updatedAt || sheetsCustomer.createdAt || 0);
-                
-                if (sheetsTime > localTime) {
-                    // Google Sheetsの方が新しい → 置き換え
-                    customerMap.set(sheetsCustomer.id, sheetsCustomer);
-                    console.log('🔄 Google Sheetsの方が新しい:', sheetsCustomer.name);
-                } else {
-                    // LocalStorageの方が新しいか同じ → そのまま
-                    console.log('✅ LocalStorageを保持:', localCustomer.name);
-                }
-            }
-        });
-        
-        // Map → 配列に変換
-        const mergedCustomers = Array.from(customerMap.values());
-        console.log('✅ マージ完了:', mergedCustomers.length, '件');
-        
-        return mergedCustomers;
-    },
-    
-    // 🆕 競合解決付き同期
-    syncWithConflictResolution: async function() {
-        try {
-            if (!this.isSheetsEnabled) {
-                console.log('ℹ️ Google Sheets統合が無効です');
-                return false;
-            }
-            
-            console.log('🔄 競合解決付き同期開始...');
-            
-            // LocalStorageとGoogle Sheetsの両方からデータ取得
-            const localCustomers = this.getCustomers();
-            const sheetsCustomers = await window.GoogleSheetsAPI.readData();
-            
-            // タイムスタンプでマージ
-            const mergedCustomers = this.mergeByTimestamp(
-                localCustomers, 
-                sheetsCustomers || []
-            );
-            
-            // 両方に保存（同期）
-            localStorage.setItem(this.config.localStorageKey, JSON.stringify(mergedCustomers));
-            await window.GoogleSheetsAPI.writeData(mergedCustomers);
-            
-            this.lastSyncTime = new Date();
-            console.log('✅ 競合解決付き同期完了:', mergedCustomers.length, '件');
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ 競合解決付き同期エラー:', error);
-            return false;
-        }
-    },
-    
-    // Google Sheets → LocalStorage 同期
-    syncFromSheets: async function() {
-        try {
-            if (!this.isSheetsEnabled) {
-                console.log('ℹ️ Google Sheets統合が無効です');
-                return false;
-            }
-            
-            console.log('🔄 Google Sheets → LocalStorage 同期開始...');
-            
-            const customers = await window.GoogleSheetsAPI.readData();
-            
-            if (customers && customers.length > 0) {
-                localStorage.setItem(this.config.localStorageKey, JSON.stringify(customers));
-                console.log('✅ 同期完了:', customers.length, '件');
-                this.lastSyncTime = new Date();
-                return true;
-            } else {
-                console.log('ℹ️ Google Sheetsにデータがありません');
-                return false;
-            }
-            
-        } catch (error) {
-            console.error('❌ Google Sheets同期エラー:', error);
-            return false;
-        }
-    },
-    
-    // LocalStorage → Google Sheets 同期
-    syncToSheets: async function(customers = null) {
-        try {
-            if (!this.isSheetsEnabled) {
-                console.log('ℹ️ Google Sheets統合が無効です');
-                return false;
-            }
-            
-            console.log('🔄 LocalStorage → Google Sheets 同期開始...');
-            
-            const data = customers || this.getCustomers();
-            
-            await window.GoogleSheetsAPI.writeData(data);
-            
-            console.log('✅ Google Sheets同期完了:', data.length, '件');
-            this.lastSyncTime = new Date();
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Google Sheets同期エラー:', error);
-            return false;
-        }
-    },
-    
-    // Google Sheets統合を有効化
+    // 🆕 Google Sheets統合有効化（初回同期でGoogle Sheets優先）
     enableSheetsIntegration: async function(spreadsheetId) {
         try {
-            console.log('🔧 Google Sheets統合を有効化中...');
+            console.log('📊 === Google Sheets統合有効化開始 ===');
+            console.log('   スプレッドシートID:', spreadsheetId);
             
-            // Google Sheets APIの初期化確認
-            if (!window.GoogleSheetsAPI?.isInitialized) {
-                console.log('🔧 Google Sheets API再初期化中...');
-                const initialized = await window.GoogleSheetsAPI.initialize();
-                if (!initialized) {
-                    throw new Error('Google Sheets API初期化に失敗しました');
-                }
+            if (!window.GoogleSheetsAPI) {
+                throw new Error('Google Sheets APIが利用できません');
             }
             
-            // 認証状態確認と設定
-            const authState = window.IntegratedAuthManagerV2?.getAuthState();
-            if (authState?.googleAuth?.accessToken) {
-                console.log('🔑 アクセストークン設定中...');
-                const tokenSet = await window.GoogleSheetsAPI.setAccessToken(authState.googleAuth.accessToken);
-                if (!tokenSet) {
-                    throw new Error('アクセストークン設定に失敗しました');
-                }
-            } else {
-                throw new Error('有効な認証情報がありません');
+            if (!window.GoogleSheetsAPI.isInitialized) {
+                throw new Error('Google Sheets APIが初期化されていません');
             }
             
-            // スプレッドシートIDを保存
-            if (spreadsheetId) {
-                window.GoogleSheetsAPI.saveSpreadsheetId(spreadsheetId);
-                window.GoogleSheetsAPI.spreadsheetId = spreadsheetId;
+            if (!window.GoogleSheetsAPI.isAuthenticated) {
+                throw new Error('Google Sheets認証が完了していません');
             }
             
-            this.isSheetsEnabled = true;
+            // スプレッドシートIDを設定
+            window.GoogleSheetsAPI.spreadsheetId = spreadsheetId;
+            window.GoogleSheetsAPI.saveSpreadsheetId(spreadsheetId);
+            this.spreadsheetId = spreadsheetId;
             
-            // 競合解決付き初回同期
-            console.log('📤 競合解決付き初回同期中...');
-            await this.syncWithConflictResolution();
+            console.log('✅ スプレッドシートID設定完了');
             
-            // 自動同期開始
+            // 🆕 CRITICAL: 初回同期 - Google Sheetsを優先
+            console.log('🔄 初回同期開始（Google Sheets優先モード）...');
+            await this.initialSyncFromGoogleSheets();
+            
+            this.isEnabled = true;
+            
+            // 自動同期開始（5分ごと）
             this.startAutoSync();
             
             console.log('✅ Google Sheets統合有効化完了');
@@ -316,45 +109,193 @@ window.UnifiedSheetsManager = {
             
         } catch (error) {
             console.error('❌ Google Sheets統合有効化エラー:', error);
-            return false;
+            throw error;
         }
     },
     
-    // 自動同期開始（競合解決版を使用）
-    startAutoSync: function() {
-        if (this.autoSyncTimer) {
-            clearInterval(this.autoSyncTimer);
+    // 🆕 初回同期：Google Sheetsからデータを読み込んでLocalStorageを上書き
+    initialSyncFromGoogleSheets: async function() {
+        try {
+            console.log('📥 === Google Sheetsからデータ読み込み開始 ===');
+            
+            // Google Sheetsからデータ読み込み
+            const sheetsData = await window.GoogleSheetsAPI.readData();
+            console.log('📊 Google Sheetsデータ:', sheetsData.length, '件');
+            
+            // LocalStorageのデータ確認
+            const localData = window.UnifiedDataManager?.getCustomers() || [];
+            console.log('📱 LocalStorageデータ:', localData.length, '件');
+            
+            if (sheetsData.length > 0) {
+                // 🆕 Google Sheetsにデータがある場合：LocalStorageを完全上書き
+                console.log('✅ Google Sheetsのデータを優先してLocalStorageを上書きします');
+                
+                // データをパース（preferencesがJSON文字列の場合）
+                const parsedData = sheetsData.map(customer => {
+                    if (typeof customer.preferences === 'string') {
+                        try {
+                            customer.preferences = JSON.parse(customer.preferences);
+                        } catch (e) {
+                            customer.preferences = {};
+                        }
+                    }
+                    return customer;
+                });
+                
+                // LocalStorageを完全上書き
+                localStorage.setItem('rentpipe_demo_customers', JSON.stringify(parsedData));
+                console.log('💾 LocalStorageを上書き完了:', parsedData.length, '件');
+                
+                this.lastSyncTime = new Date();
+                
+            } else if (localData.length > 0) {
+                // Google Sheetsが空でLocalStorageにデータがある場合：LocalStorage → Google Sheets
+                console.log('📤 LocalStorageのデータをGoogle Sheetsに書き込みます');
+                await window.GoogleSheetsAPI.writeData(localData);
+                console.log('✅ Google Sheetsへの書き込み完了');
+                
+                this.lastSyncTime = new Date();
+                
+            } else {
+                // 両方空の場合
+                console.log('ℹ️ 両方のストレージが空です');
+            }
+            
+            console.log('📥 === 初回同期完了 ===');
+            
+        } catch (error) {
+            console.error('❌ 初回同期エラー:', error);
+            // エラーでも処理は継続（LocalStorageで動作可能）
+        }
+    },
+    
+    // タイムスタンプベースの競合解決付き同期（定期同期用）
+    syncWithConflictResolution: async function() {
+        if (this.isSyncing) {
+            console.log('⏳ 同期処理実行中のためスキップ');
+            return;
         }
         
-        this.autoSyncTimer = setInterval(async () => {
-            console.log('⏰ 自動同期実行中（競合解決版）...');
-            await this.syncWithConflictResolution();
-        }, this.config.autoSyncInterval);
-        
+        try {
+            this.isSyncing = true;
+            console.log('🔀 === 競合解決付き同期開始 ===');
+            
+            if (!this.isEnabled || !this.spreadsheetId) {
+                console.log('ℹ️ Google Sheets統合が無効です');
+                return;
+            }
+            
+            // LocalStorageとGoogle Sheetsの両方からデータ取得
+            const localCustomers = window.UnifiedDataManager?.getCustomers() || [];
+            const sheetsCustomers = await window.GoogleSheetsAPI.readData();
+            
+            console.log('🔀 タイムスタンプによるマージ開始...');
+            console.log('📱 LocalStorage:', localCustomers.length, '件');
+            console.log('📊 Google Sheets:', sheetsCustomers.length, '件');
+            
+            // データをパース
+            const parsedSheetsData = sheetsCustomers.map(customer => {
+                if (typeof customer.preferences === 'string') {
+                    try {
+                        customer.preferences = JSON.parse(customer.preferences);
+                    } catch (e) {
+                        customer.preferences = {};
+                    }
+                }
+                return customer;
+            });
+            
+            // IDでマッピング
+            const localMap = new Map(localCustomers.map(c => [c.id, c]));
+            const sheetsMap = new Map(parsedSheetsData.map(c => [c.id, c]));
+            
+            // すべてのIDを取得
+            const allIds = new Set([...localMap.keys(), ...sheetsMap.keys()]);
+            
+            const mergedCustomers = [];
+            
+            // タイムスタンプベースでマージ
+            for (const id of allIds) {
+                const localCustomer = localMap.get(id);
+                const sheetsCustomer = sheetsMap.get(id);
+                
+                if (!localCustomer && sheetsCustomer) {
+                    // Google Sheetsのみに存在 → 追加
+                    mergedCustomers.push(sheetsCustomer);
+                } else if (localCustomer && !sheetsCustomer) {
+                    // LocalStorageのみに存在 → 追加
+                    mergedCustomers.push(localCustomer);
+                } else if (localCustomer && sheetsCustomer) {
+                    // 両方に存在 → タイムスタンプで比較
+                    const localTime = new Date(localCustomer.updatedAt || localCustomer.createdAt).getTime();
+                    const sheetsTime = new Date(sheetsCustomer.updatedAt || sheetsCustomer.createdAt).getTime();
+                    
+                    if (localTime > sheetsTime) {
+                        mergedCustomers.push(localCustomer);
+                    } else {
+                        mergedCustomers.push(sheetsCustomer);
+                    }
+                }
+            }
+            
+            console.log('✅ マージ完了:', mergedCustomers.length, '件');
+            
+            // LocalStorageを更新
+            localStorage.setItem('rentpipe_demo_customers', JSON.stringify(mergedCustomers));
+            
+            // Google Sheetsに書き込み
+            await window.GoogleSheetsAPI.writeData(mergedCustomers);
+            
+            this.lastSyncTime = new Date();
+            console.log('🔀 === 競合解決付き同期完了 ===');
+            
+        } catch (error) {
+            console.error('❌ 競合解決付き同期エラー:', error);
+        } finally {
+            this.isSyncing = false;
+        }
+    },
+    
+    // 自動同期開始
+    startAutoSync: function() {
         console.log('🔄 自動同期開始（5分ごと・競合解決版）');
+        
+        // 既存のインターバルをクリア
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+        }
+        
+        // 5分ごとに同期
+        this.syncInterval = setInterval(async () => {
+            console.log('⏰ 定期同期実行...');
+            await this.syncWithConflictResolution();
+        }, 5 * 60 * 1000); // 5分
     },
     
     // 自動同期停止
     stopAutoSync: function() {
-        if (this.autoSyncTimer) {
-            clearInterval(this.autoSyncTimer);
-            this.autoSyncTimer = null;
-            console.log('⏸️ 自動同期停止');
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+            this.syncInterval = null;
+            console.log('⏹️ 自動同期停止');
         }
     },
     
-    // 統合状態取得
+    // 手動同期
+    manualSync: async function() {
+        console.log('🔄 手動同期実行');
+        await this.syncWithConflictResolution();
+    },
+    
+    // ステータス取得
     getStatus: function() {
         return {
-            isInitialized: this.isInitialized,
-            isSheetsEnabled: this.isSheetsEnabled,
+            isEnabled: this.isEnabled,
+            spreadsheetId: this.spreadsheetId,
             lastSyncTime: this.lastSyncTime,
-            customerCount: this.getCustomers().length,
-            spreadsheetId: window.GoogleSheetsAPI?.spreadsheetId || null,
-            authState: this.checkAuthenticationState(),
-            conflictResolution: 'timestamp-based' // 🆕 競合解決方式
+            isSyncing: this.isSyncing
         };
     }
 };
 
-console.log('✅ 統合データ管理システム準備完了（競合解決版）');
+console.log('✅ 統合データ管理システム準備完了（競合解決版 + Google Sheets優先）');
