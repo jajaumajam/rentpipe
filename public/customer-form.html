@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新規顧客登録 - RentPipe</title>
+    <title>顧客登録 - RentPipe</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         .form-container {
             max-width: 800px;
             margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-card {
             background: white;
-            padding: 30px;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .page-header {
+        .form-header {
             margin-bottom: 30px;
         }
         
-        .page-header h2 {
+        .form-header h1 {
+            font-size: 28px;
             margin: 0 0 10px 0;
-            color: #1f2937;
         }
         
-        .page-header p {
-            margin: 0;
+        .form-header p {
             color: #6b7280;
+            margin: 0;
         }
         
         .form-group {
@@ -35,18 +39,22 @@
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
             font-weight: 500;
-            color: #374151;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        
+        .form-group label .required {
+            color: #ef4444;
         }
         
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #d1d5db;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
         }
         
@@ -61,239 +69,254 @@
             gap: 20px;
         }
         
-        h3 {
-            margin: 30px 0 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3b82f6;
-            color: #1f2937;
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
         }
         
-        .success-message {
-            padding: 15px;
-            background: #d1fae5;
-            border: 1px solid #10b981;
-            border-radius: 8px;
-            color: #065f46;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
+        .btn-cancel {
+            background: #6b7280;
         }
         
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-outline {
-            background: white;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
-            margin-left: 10px;
-        }
-        
-        .btn-outline:hover {
-            background: #f9fafb;
+        .btn-cancel:hover {
+            background: #4b5563;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <h1>🏠 RentPipe</h1>
-            <nav>
-                <a href="index.html">ホーム</a>
-                <a href="customer.html">顧客管理</a>
-                <a href="pipeline.html">パイプライン</a>
-                <a href="analytics.html">分析</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div class="page-header">
-            <h2>📝 新規顧客登録</h2>
-            <p>新しい顧客情報を登録します（自動的にGoogle Sheetsにも同期されます）</p>
-        </div>
-
+    <!-- ナビゲーション -->
+    <div id="navigation"></div>
+    
+    <!-- メインコンテンツ -->
+    <div class="main-content">
         <div class="form-container">
-            <div id="success-message" class="success-message" style="display: none;">
-                ✅ 顧客を正常に登録しました！
+            <div class="form-card">
+                <div class="form-header">
+                    <h1 id="form-title">➕ 新規顧客登録</h1>
+                    <p id="form-description">顧客情報を入力してください</p>
+                </div>
+                
+                <form id="customer-form" onsubmit="handleSubmit(event)">
+                    <!-- 基本情報 -->
+                    <h3>基本情報</h3>
+                    
+                    <div class="form-group">
+                        <label>氏名 <span class="required">*</span></label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>メールアドレス <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>電話番号 <span class="required">*</span></label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>パイプラインステータス</label>
+                        <select id="pipelineStatus" name="pipelineStatus">
+                            <option value="初回相談">初回相談</option>
+                            <option value="物件紹介">物件紹介</option>
+                            <option value="内見">内見</option>
+                            <option value="申込">申込</option>
+                            <option value="審査">審査</option>
+                            <option value="契約">契約</option>
+                            <option value="完了">完了</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 希望条件 -->
+                    <h3 style="margin-top: 30px;">希望条件</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>予算（最低）</label>
+                            <input type="number" id="budgetMin" name="budgetMin" placeholder="50000">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>予算（最高）</label>
+                            <input type="number" id="budgetMax" name="budgetMax" placeholder="100000">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>希望エリア（カンマ区切り）</label>
+                        <input type="text" id="areas" name="areas" placeholder="渋谷区, 新宿区, 港区">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>備考</label>
+                        <textarea id="notes" name="notes" placeholder="その他の希望条件や備考"></textarea>
+                    </div>
+                    
+                    <!-- アクションボタン -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-cancel" onclick="handleCancel()">キャンセル</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">登録する</button>
+                    </div>
+                </form>
             </div>
-
-            <form id="customer-form">
-                <!-- 基本情報 -->
-                <h3>👤 基本情報</h3>
-                
-                <div class="form-group">
-                    <label for="name">氏名 *</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="email">メールアドレス *</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">電話番号 *</label>
-                        <input type="tel" id="phone" name="phone" required>
-                    </div>
-                </div>
-                
-                <!-- 希望条件 -->
-                <h3>🏠 希望条件</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="budget-min">予算下限（万円）</label>
-                        <input type="number" id="budget-min" name="budgetMin" min="0" step="0.5">
-                    </div>
-                    <div class="form-group">
-                        <label for="budget-max">予算上限（万円）</label>
-                        <input type="number" id="budget-max" name="budgetMax" min="0" step="0.5">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="areas">希望エリア（カンマ区切り）</label>
-                    <input type="text" id="areas" name="areas" placeholder="例: 渋谷, 新宿, 池袋">
-                </div>
-                
-                <div class="form-group">
-                    <label for="room-type">部屋タイプ</label>
-                    <select id="room-type" name="roomType">
-                        <option value="">選択してください</option>
-                        <option value="ワンルーム">ワンルーム</option>
-                        <option value="1K">1K</option>
-                        <option value="1DK">1DK</option>
-                        <option value="1LDK">1LDK</option>
-                        <option value="2K">2K</option>
-                        <option value="2DK">2DK</option>
-                        <option value="2LDK">2LDK</option>
-                        <option value="3LDK以上">3LDK以上</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="requirements">こだわり条件（カンマ区切り）</label>
-                    <input type="text" id="requirements" name="requirements" placeholder="例: 駅近, オートロック, ペット可">
-                </div>
-                
-                <!-- その他情報 -->
-                <h3>📋 その他情報</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="urgency">緊急度</label>
-                        <select id="urgency" name="urgency">
-                            <option value="低">低（3ヶ月以上）</option>
-                            <option value="中" selected>中（1-3ヶ月）</option>
-                            <option value="高">高（1ヶ月以内）</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="contact-time">連絡希望時間</label>
-                        <select id="contact-time" name="contactTime">
-                            <option value="いつでも">いつでも</option>
-                            <option value="平日日中" selected>平日日中（9-17時）</option>
-                            <option value="平日夜・土日">平日夜・土日</option>
-                            <option value="土日のみ">土日のみ</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="notes">メモ・備考</label>
-                    <textarea id="notes" name="notes" placeholder="顧客の特徴、要注意事項などを記載"></textarea>
-                </div>
-                
-                <!-- ボタン -->
-                <div style="margin-top: 30px;">
-                    <button type="submit" class="btn btn-primary">📝 顧客を登録</button>
-                    <a href="customer.html" class="btn btn-outline">← 戻る</a>
-                </div>
-            </form>
         </div>
-    </main>
+    </div>
 
-    <!-- ✅ customer-form.htmlはunified-data-manager.jsのみ必要 -->
+    <!-- RentPipe Core Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
     <script>
-        // フォーム送信処理（統一データ管理システム統合版）
-        document.getElementById('customer-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // グローバル変数
+        let isEditMode = false;
+        let editingCustomerId = null;
+        
+        console.log('📝 顧客登録フォーム初期化');
+        
+        // URLパラメータから編集モードを判定
+        function checkEditMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const customerId = urlParams.get('edit');
+            
+            if (customerId) {
+                console.log('✏️ 編集モード:', customerId);
+                isEditMode = true;
+                editingCustomerId = customerId;
+                
+                // UI更新
+                document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
+                document.getElementById('form-description').textContent = '顧客情報を編集してください';
+                document.getElementById('submit-btn').textContent = '更新する';
+                
+                // 既存データ読み込み
+                loadCustomerData(customerId);
+            } else {
+                console.log('➕ 新規登録モード');
+            }
+        }
+        
+        // 既存顧客データ読み込み
+        function loadCustomerData(customerId) {
+            try {
+                console.log('📖 顧客データ読み込み中...', customerId);
+                
+                if (!window.UnifiedDataManager) {
+                    throw new Error('UnifiedDataManagerが利用できません');
+                }
+                
+                const customers = window.UnifiedDataManager.getCustomers();
+                const customer = customers.find(c => c.id === customerId);
+                
+                if (!customer) {
+                    alert('❌ 顧客データが見つかりませんでした');
+                    window.location.href = 'customer.html';
+                    return;
+                }
+                
+                console.log('✅ 顧客データ読み込み完了:', customer);
+                
+                // フォームに値を設定
+                document.getElementById('name').value = customer.name || '';
+                document.getElementById('email').value = customer.email || '';
+                document.getElementById('phone').value = customer.phone || '';
+                document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
+                document.getElementById('budgetMin').value = customer.preferences?.budgetMin || '';
+                document.getElementById('budgetMax').value = customer.preferences?.budgetMax || '';
+                document.getElementById('areas').value = (customer.preferences?.areas || []).join(', ');
+                document.getElementById('notes').value = customer.notes || '';
+                
+                console.log('✅ フォームに値を設定完了');
+                
+            } catch (error) {
+                console.error('❌ 顧客データ読み込みエラー:', error);
+                alert('顧客データの読み込みに失敗しました');
+                window.location.href = 'customer.html';
+            }
+        }
+        
+        // フォーム送信処理
+        function handleSubmit(event) {
+            event.preventDefault();
             
             try {
-                console.log('📝 新規顧客登録開始...');
+                console.log('📝 フォーム送信処理開始');
                 
                 // フォームデータ取得
-                const formData = new FormData(this);
-                
-                // 顧客データオブジェクト作成
-                const customerData = {
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone'),
-                    pipelineStatus: '初回相談',
+                const formData = {
+                    name: document.getElementById('name').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    pipelineStatus: document.getElementById('pipelineStatus').value,
                     preferences: {
-                        budgetMin: formData.get('budgetMin') ? parseFloat(formData.get('budgetMin')) * 10000 : null,
-                        budgetMax: formData.get('budgetMax') ? parseFloat(formData.get('budgetMax')) * 10000 : null,
-                        areas: formData.get('areas') ? formData.get('areas').split(',').map(area => area.trim()).filter(a => a) : [],
-                        roomType: formData.get('roomType') || '',
-                        requirements: formData.get('requirements') ? formData.get('requirements').split(',').map(req => req.trim()).filter(r => r) : []
+                        budgetMin: parseInt(document.getElementById('budgetMin').value) || 0,
+                        budgetMax: parseInt(document.getElementById('budgetMax').value) || 0,
+                        areas: document.getElementById('areas').value
+                            .split(',')
+                            .map(a => a.trim())
+                            .filter(a => a)
                     },
-                    notes: formData.get('notes') || '',
-                    urgency: formData.get('urgency') || '中',
-                    contactTime: formData.get('contactTime') || 'いつでも',
-                    source: 'manual_entry'
+                    notes: document.getElementById('notes').value.trim()
                 };
                 
-                console.log('📋 登録データ:', customerData);
+                console.log('📋 フォームデータ:', formData);
                 
-                // 統一データ管理システム経由で保存（LocalStorage + Google Sheets）
-                const newCustomer = window.UnifiedDataManager.addCustomer(customerData);
+                if (!window.UnifiedDataManager) {
+                    throw new Error('UnifiedDataManagerが利用できません');
+                }
                 
-                if (newCustomer) {
-                    console.log('✅ 顧客登録成功:', newCustomer.id);
+                if (isEditMode) {
+                    // 更新処理
+                    console.log('🔄 顧客情報更新中...', editingCustomerId);
                     
-                    // 成功メッセージ表示
-                    document.getElementById('success-message').style.display = 'block';
+                    const success = window.UnifiedDataManager.updateCustomer(editingCustomerId, formData);
                     
-                    // フォームリセット
-                    this.reset();
-                    
-                    // 3秒後に顧客管理ページに戻る
-                    setTimeout(() => {
+                    if (success) {
+                        console.log('✅ 顧客情報更新成功');
+                        alert('✅ 顧客情報を更新しました');
                         window.location.href = 'customer.html';
-                    }, 2000);
+                    } else {
+                        throw new Error('顧客情報の更新に失敗しました');
+                    }
+                    
                 } else {
-                    throw new Error('顧客登録に失敗しました');
+                    // 新規登録処理
+                    console.log('➕ 新規顧客登録中...');
+                    
+                    const newCustomer = window.UnifiedDataManager.addCustomer(formData);
+                    
+                    if (newCustomer) {
+                        console.log('✅ 新規顧客登録成功:', newCustomer.id);
+                        alert('✅ 顧客を登録しました');
+                        window.location.href = 'customer.html';
+                    } else {
+                        throw new Error('顧客登録に失敗しました');
+                    }
                 }
                 
             } catch (error) {
-                console.error('❌ 顧客登録エラー:', error);
-                alert('❌ 顧客登録に失敗しました: ' + error.message);
+                console.error('❌ フォーム送信エラー:', error);
+                alert('❌ エラー: ' + error.message);
             }
+        }
+        
+        // キャンセル処理
+        function handleCancel() {
+            if (confirm('入力内容を破棄して戻りますか？')) {
+                window.location.href = 'customer.html';
+            }
+        }
+        
+        // ページ読み込み時に編集モードチェック
+        window.addEventListener('DOMContentLoaded', function() {
+            checkEditMode();
         });
         
-        console.log('✅ 新規顧客登録フォーム準備完了（統一データ管理システム統合版）');
+        console.log('✅ 顧客登録フォーム準備完了');
     </script>
 </body>
 </html>
