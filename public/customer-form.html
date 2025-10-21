@@ -175,7 +175,7 @@
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     
-    <!-- 🆕 RentPipe Core Scripts（Google Sheets統合対応） -->
+    <!-- RentPipe Core Scripts -->
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
@@ -187,8 +187,86 @@
         // グローバル変数
         let isEditMode = false;
         let editingCustomerId = null;
+        let googleSheetsInitialized = false;
         
         console.log('📝 顧客登録フォーム初期化');
+        
+        // 🆕 Google Sheets認証初期化
+        async function initializeGoogleSheets() {
+            try {
+                console.log('📊 === Google Sheets認証初期化開始 ===');
+                
+                // IntegratedAuthManagerV2から認証情報を取得
+                if (!window.IntegratedAuthManagerV2) {
+                    console.log('⚠️ IntegratedAuthManagerV2が存在しません');
+                    return false;
+                }
+                
+                await window.IntegratedAuthManagerV2.initialize();
+                const authState = window.IntegratedAuthManagerV2.getAuthState();
+                
+                console.log('🔍 認証状態:', authState);
+                
+                if (!authState?.googleAuth?.isSignedIn || !authState?.googleAuth?.accessToken) {
+                    console.log('ℹ️ Google認証情報なし - LocalStorageモードで動作');
+                    return false;
+                }
+                
+                console.log('✅ Google認証情報確認完了');
+                console.log('   Email:', authState.googleAuth.user?.email);
+                console.log('   Token:', authState.googleAuth.accessToken?.substring(0, 20) + '...');
+                
+                // Google Sheets API初期化
+                if (!window.GoogleSheetsAPI) {
+                    console.log('❌ GoogleSheetsAPIが存在しません');
+                    return false;
+                }
+                
+                if (!window.GoogleSheetsAPI.isInitialized) {
+                    console.log('⏳ Google Sheets API初期化中...');
+                    await window.GoogleSheetsAPI.initialize();
+                }
+                
+                console.log('✅ Google Sheets API初期化完了');
+                
+                // アクセストークン設定
+                console.log('🔑 アクセストークン設定中...');
+                await window.GoogleSheetsAPI.setAccessToken(authState.googleAuth.accessToken);
+                
+                // 認証完了を待機
+                console.log('⏳ 認証完了待機中...');
+                let retries = 0;
+                while (!window.GoogleSheetsAPI.isAuthenticated && retries < 20) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retries++;
+                }
+                
+                if (!window.GoogleSheetsAPI.isAuthenticated) {
+                    console.log('❌ 認証完了タイムアウト');
+                    return false;
+                }
+                
+                console.log('✅ Google Sheets認証完了');
+                
+                // スプレッドシートID設定
+                const spreadsheetId = window.GoogleSheetsAPI.loadSpreadsheetId();
+                if (spreadsheetId) {
+                    window.GoogleSheetsAPI.spreadsheetId = spreadsheetId;
+                    console.log('✅ スプレッドシートID設定完了:', spreadsheetId);
+                } else {
+                    console.log('⚠️ スプレッドシートIDが見つかりません');
+                }
+                
+                googleSheetsInitialized = true;
+                console.log('📊 === Google Sheets認証初期化完了 ===');
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Google Sheets認証初期化エラー:', error);
+                return false;
+            }
+        }
         
         // URLパラメータから編集モードを判定
         function checkEditMode() {
@@ -334,9 +412,17 @@
             }
         }
         
-        // ページ読み込み時に編集モードチェック
-        window.addEventListener('DOMContentLoaded', function() {
+        // 🆕 ページ読み込み時の初期化
+        window.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 ページ初期化開始');
+            
+            // Google Sheets認証初期化
+            await initializeGoogleSheets();
+            
+            // 編集モードチェック
             checkEditMode();
+            
+            console.log('✅ ページ初期化完了');
         });
         
         console.log('✅ 顧客登録フォーム準備完了');
