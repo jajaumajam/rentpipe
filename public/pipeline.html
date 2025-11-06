@@ -183,5 +183,51 @@
     
     <!-- ✅ Pipeline Specific Script -->
     <script src="js/pipeline-unified.js"></script>
+    
+    <!-- ✅ Google Sheets統合初期化 -->
+    <script>
+        console.log('📊 パイプラインページ: Google Sheets統合初期化開始...');
+        
+        window.addEventListener('DOMContentLoaded', async () => {
+            const statusDiv = document.getElementById('auth-sync-status');
+            
+            try {
+                // 1. 統合認証マネージャーの初期化
+                if (window.IntegratedAuthManagerV2) {
+                    console.log('🔐 統合認証マネージャー初期化中...');
+                    await window.IntegratedAuthManagerV2.initialize();
+                    console.log('✅ 統合認証マネージャー初期化完了');
+                }
+                
+                // 2. Google Sheets統合マネージャーの初期化
+                if (window.UnifiedSheetsManager) {
+                    console.log('📊 Google Sheets統合マネージャー初期化中...');
+                    await window.UnifiedSheetsManager.initialize();
+                    
+                    const status = window.UnifiedSheetsManager.getStatus();
+                    console.log('📊 Google Sheets統合状態:', status);
+                    
+                    if (status.isEnabled) {
+                        statusDiv.className = 'auth-status success';
+                        statusDiv.textContent = '✅ Google Sheets統合有効 - 自動同期実行中';
+                        console.log('✅ Google Sheets統合有効化完了');
+                    } else {
+                        statusDiv.className = 'auth-status warning';
+                        statusDiv.textContent = '📂 LocalStorageモード（Google Sheets未連携）';
+                        console.log('ℹ️ LocalStorageモードで動作中');
+                    }
+                } else {
+                    statusDiv.className = 'auth-status warning';
+                    statusDiv.textContent = '⚠️ Google Sheets統合マネージャーが利用できません';
+                    console.warn('⚠️ UnifiedSheetsManagerが見つかりません');
+                }
+                
+            } catch (error) {
+                console.error('❌ 初期化エラー:', error);
+                statusDiv.className = 'auth-status error';
+                statusDiv.textContent = '❌ 初期化エラー: ' + error.message;
+            }
+        });
+    </script>
 </body>
 </html>
