@@ -1,11 +1,8 @@
-// RentPipe パイプライン管理機能（スマホメニュー改良版）
+// RentPipe パイプライン管理機能（完全版）
 class PipelineManager {
     constructor() {
         this.dataManager = null;
-        this.draggedCustomer = null;
-        this.touchStartTime = 0;
-        this.longPressTimeout = null;
-        this.touchThreshold = 500; // 500ms
+        this.statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
         this.init();
     }
 
@@ -16,523 +13,276 @@ class PipelineManager {
         await this.waitForDataManager();
         
         // パイプラインの表示
-        this.loadPipeline();
+        this.renderPipeline();
         
-        // イベントリスナーの設定
-        this.setupEventListeners();
+        // 認証状態の更新
+        this.updateAuthStatus();
         
-        console.log('✅ 統一対応パイプライン管理システム準備完了（スマホメニュー改良版）');
+        console.log('✅ 統一対応パイプライン管理システム準備完了');
     }
 
     async waitForDataManager() {
         return new Promise((resolve) => {
-            if (window.UnifiedDataManager) {
-                this.dataManager = window.UnifiedDataManager;
-                resolve();
-            } else {
-                setTimeout(() => {
+            const checkInterval = setInterval(() => {
+                if (window.UnifiedDataManager) {
                     this.dataManager = window.UnifiedDataManager;
+                    clearInterval(checkInterval);
                     resolve();
-                }, 500);
-            }
+                }
+            }, 100);
+            
+            // タイムアウト（5秒）
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (!this.dataManager) {
+                    console.error('❌ 統一データ管理システムが利用できません');
+                }
+                resolve();
+            }, 5000);
         });
     }
 
-    loadPipeline() {
+    updateAuthStatus() {
+        const statusDiv = document.getElementById('auth-sync-status');
+        if (!statusDiv) return;
+        
+        const authState = window.IntegratedAuthManagerV2?.getAuthState();
+        
+        if (authState?.isAuthenticated && authState?.google?.isAuthenticated) {
+            statusDiv.className = 'auth-status success';
+            statusDiv.textContent = `✅ Google Sheets連携有効 - ${authState.google.email}`;
+        } else {
+            statusDiv.className = 'auth-status warning';
+            statusDiv.textContent = 'ℹ️ LocalStorageモード（Google Sheets未連携）';
+        }
+    }
+
+    renderPipeline() {
+        console.log('🎨 パイプライン描画開始...');
+        
         if (!this.dataManager) {
-            console.error('❌ 統一データ管理システムが利用できません');
+            console.error('❌ データマネージャーが利用できません');
             return;
         }
 
-        try {
-            const customers = this.dataManager.getCustomers();
-            console.log(`📊 パイプラインデータ読み込み: ${customers.length}件`);
-            
-            this.renderPipeline(customers);
-            
-        } catch (error) {
-            console.error('❌ パイプラインデータ読み込みエラー:', error);
-        }
-    }
-
-    renderPipeline(customers) {
-        const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
+        const customers = this.dataManager.getCustomers();
+        console.log(`📊 パイプラインデータ読み込み: ${customers.length}件`);
         
-        statuses.forEach(status => {
-            const statusCustomers = customers.filter(c => c.pipelineStatus === status);
-            this.renderStatusColumn(status, statusCustomers);
+        const container = document.getElementById('pipeline-container');
+        if (!container) {
+            console.error('❌ pipeline-containerが見つかりません');
+            return;
+        }
+        
+        // コンテナをクリア
+        container.innerHTML = '';
+        
+        // 各ステータスごとにカラムを作成
+        this.statuses.forEach(status => {
+            const column = this.createColumn(status, customers);
+            container.appendChild(column);
         });
+        
+        console.log('✅ パイプライン描画完了');
     }
 
-    renderStatusColumn(status, customers) {
-        const columnElement = document.querySelector(`[data-column="${status}"]`);
-        const countElement = document.querySelector(`[data-count="${status}"]`);
+    createColumn(status, allCustomers) {
+        const column = document.createElement('div');
+        column.className = 'pipeline-column';
+        column.dataset.status = status;
         
-        if (!columnElement) return;
+        // ヘッダー
+        const header = document.createElement('div');
+        header.className = 'pipeline-header';
         
-        // カウント更新
-        if (countElement) {
-            countElement.textContent = customers.length;
-        }
+        // このステータスの顧客をフィルター
+        const statusCustomers = allCustomers.filter(c => c.pipelineStatus === status);
         
-        // 顧客カードの表示
-        if (customers.length === 0) {
-            columnElement.innerHTML = `
-                <div class="empty-column">
-                    <p>顧客がいません</p>
-                </div>
-            `;
+        header.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>${status}</span>
+                <span style="background: rgba(59, 130, 246, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                    ${statusCustomers.length}
+                </span>
+            </div>
+        `;
+        
+        column.appendChild(header);
+        
+        // カードコンテナ
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'pipeline-cards';
+        
+        if (statusCustomers.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.textContent = '顧客なし';
+            cardsContainer.appendChild(emptyState);
         } else {
-            columnElement.innerHTML = customers.map(customer => 
-                this.createCustomerCard(customer)
-            ).join('');
+            statusCustomers.forEach(customer => {
+                const card = this.createCard(customer);
+                cardsContainer.appendChild(card);
+            });
         }
         
-        // ドラッグ&ドロップイベントの再設定
-        this.setupDragAndDrop(columnElement);
-    }
-
-    createCustomerCard(customer) {
-        const urgencyIcons = {
-            '高': '🔴',
-            '中': '🟡',
-            '低': '🟢'
-        };
-
-        const urgencyClasses = {
-            '高': 'urgency-high',
-            '中': 'urgency-medium', 
-            '低': 'urgency-low'
-        };
-
-        // デバイス判定
-        const isMobile = window.innerWidth <= 768;
-
-        // 予算テキスト（モバイルでは短縮表示）
-        let budgetText = '予算未設定';
-        if (customer.preferences?.budgetMin && customer.preferences?.budgetMax) {
-            const minBudget = Math.floor(customer.preferences.budgetMin / 10000);
-            const maxBudget = Math.floor(customer.preferences.budgetMax / 10000);
-            budgetText = isMobile ? 
-                `${minBudget}～${maxBudget}万` : 
-                `${minBudget}万〜${maxBudget}万円`;
-        }
-
-        // エリアテキスト（モバイルでは最初の1つのみ）
-        let areasText = 'エリア未設定';
-        if (customer.preferences?.areas && customer.preferences.areas.length > 0) {
-            areasText = isMobile ? 
-                customer.preferences.areas[0] : 
-                customer.preferences.areas.slice(0, 2).join('、');
-        }
-
-        // 最終更新日
-        const lastUpdated = new Date(customer.updatedAt).toLocaleDateString('ja-JP', 
-            isMobile ? { month: 'numeric', day: 'numeric' } : 
-            { year: 'numeric', month: 'numeric', day: 'numeric' }
-        );
-
-        if (isMobile) {
-            // モバイル用：よりコンパクトなカード
-            return `
-                <div class="pipeline-card" 
-                     draggable="true" 
-                     data-customer-id="${customer.id}">
-                    <div class="card-header">
-                        <div class="customer-name">
-                            ${urgencyIcons[customer.urgency] || '⚪'} ${customer.name}
-                            <span class="urgency-indicator ${urgencyClasses[customer.urgency] || 'urgency-medium'}"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="card-details">
-                        <div class="detail-row">
-                            <span class="detail-icon">💰</span>
-                            <span class="detail-text">${budgetText}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-icon">📍</span>
-                            <span class="detail-text">${areasText}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <span class="update-time">${lastUpdated}</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            // デスクトップ用：詳細表示
-            return `
-                <div class="pipeline-card" 
-                     draggable="true" 
-                     data-customer-id="${customer.id}">
-                    <div class="card-header">
-                        <div class="customer-name">
-                            ${urgencyIcons[customer.urgency] || '⚪'} ${customer.name}
-                        </div>
-                    </div>
-                    
-                    <div class="card-details">
-                        <div class="detail-row">
-                            <span class="detail-icon">💰</span>
-                            <span class="detail-text">${budgetText}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-icon">📍</span>
-                            <span class="detail-text">${areasText}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-icon">📱</span>
-                            <span class="detail-text">${customer.phone || '未登録'}</span>
-                        </div>
-                    </div>
-                    
-                    ${customer.notes ? `
-                        <div class="card-notes">
-                            ${customer.notes.length > 50 ? customer.notes.substring(0, 50) + '...' : customer.notes}
-                        </div>
-                    ` : ''}
-                    
-                    <div class="card-footer">
-                        <span class="update-time">${lastUpdated}</span>
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    setupEventListeners() {
-        // リフレッシュボタン
-        const refreshBtn = document.getElementById('refreshPipeline');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.loadPipeline());
-        }
-
-        // リサイズイベント：画面サイズ変更時にカード再生成
-        window.addEventListener('resize', () => {
-            clearTimeout(this.resizeTimeout);
-            this.resizeTimeout = setTimeout(() => {
-                this.loadPipeline(); // カードを再生成
-            }, 250);
-        });
-    }
-
-    setupDragAndDrop(container) {
-        // カードのドラッグイベント
-        const cards = container.querySelectorAll('.pipeline-card');
-        cards.forEach(card => {
-            // PC版：ドラッグ&ドロップ
-            card.addEventListener('dragstart', (e) => {
-                this.draggedCustomer = {
-                    id: card.dataset.customerId,
-                    element: card
-                };
-                card.classList.add('dragging');
-            });
-
-            card.addEventListener('dragend', () => {
-                if (this.draggedCustomer) {
-                    this.draggedCustomer.element.classList.remove('dragging');
-                    this.draggedCustomer = null;
-                }
-            });
-
-            // スマホ版：長押し処理
-            card.addEventListener('touchstart', (e) => {
-                this.handleTouchStart(e, card.dataset.customerId, card);
-            });
-
-            card.addEventListener('touchend', (e) => {
-                this.handleTouchEnd(e);
-            });
-
-            card.addEventListener('touchcancel', () => {
-                this.clearLongPress();
-            });
-
-            card.addEventListener('touchmove', () => {
-                this.clearLongPress();
-            });
-        });
-
-        // カラムのドロップイベント
-        const columns = document.querySelectorAll('.pipeline-cards');
-        columns.forEach(column => {
-            column.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                column.classList.add('drag-over');
-            });
-
-            column.addEventListener('dragleave', () => {
-                column.classList.remove('drag-over');
-            });
-
-            column.addEventListener('drop', (e) => {
-                e.preventDefault();
-                column.classList.remove('drag-over');
-                
-                if (this.draggedCustomer) {
-                    const targetStatus = column.dataset.column;
-                    this.moveCustomer(this.draggedCustomer.id, targetStatus);
-                }
-            });
-        });
-    }
-
-    async moveCustomer(customerId, newStatus) {
-        try {
-            const customer = this.dataManager.getCustomerById(customerId);
-            if (!customer) {
-                console.error('❌ 顧客が見つかりません:', customerId);
-                return;
-            }
-
-            const oldStatus = customer.pipelineStatus;
-            
-            if (oldStatus === newStatus) {
-                console.log('📈 ステータス変更なし');
-                return;
-            }
-            
-            console.log(`📈 顧客ステータス更新開始: ${customer.name} ${oldStatus} → ${newStatus}`);
-            
-            // ステータス更新（統一データ管理システム使用）
-            const updateSuccess = this.dataManager.updateCustomer(customerId, { 
-                pipelineStatus: newStatus,
-                updatedAt: new Date().toISOString()
-            });
-            
-            if (updateSuccess) {
-                console.log(`✅ 顧客ステータス更新成功: ${customer.name}`);
-                
-                // パイプラインを即座に再読み込み
-                this.loadPipeline();
-                
-                // 成功メッセージ
-                this.showMessage(`${customer.name} を ${newStatus} に移動しました`, 'success');
-                
-                // ダッシュボードのリロード通知（他画面との同期）
-                this.notifyDataChange();
-                
-            } else {
-                console.error('❌ ステータス更新失敗');
-                this.showMessage('ステータス更新に失敗しました', 'error');
-            }
-            
-        } catch (error) {
-            console.error('❌ 顧客移動エラー:', error);
-            this.showMessage('顧客移動中にエラーが発生しました', 'error');
-        }
-    }
-
-    // 他画面への変更通知
-    notifyDataChange() {
-        // カスタムイベントを発火して他画面に変更を通知
-        const event = new CustomEvent('dataChanged', {
-            detail: { source: 'pipeline', timestamp: new Date().toISOString() }
-        });
-        window.dispatchEvent(event);
-        console.log('📡 データ変更イベント送信');
-    }
-
-    // タッチイベント処理（スマートフォン対応・改良版）
-    handleTouchStart(event, customerId, cardElement) {
-        this.touchCustomerId = customerId;
-        this.touchCardElement = cardElement;
+        column.appendChild(cardsContainer);
         
-        // 長押し判定用タイマーを開始
-        this.longPressTimeout = setTimeout(() => {
-            // 長押し成功：ハプティクスフィードバック
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
+        return column;
+    }
+
+    createCard(customer) {
+        const card = document.createElement('div');
+        card.className = 'pipeline-card';
+        card.dataset.customerId = customer.id;
+        
+        card.innerHTML = `
+            <div class="card-name">${customer.name || '名前未設定'}</div>
+            <div class="card-info">📧 ${customer.email || 'メールなし'}</div>
+            <div class="card-info">📱 ${customer.phone || '電話番号なし'}</div>
+            ${customer.preferences?.budgetMin ? `
+                <div class="card-info">💰 ${customer.preferences.budgetMin.toLocaleString()}円 〜 ${customer.preferences.budgetMax?.toLocaleString() || ''}円</div>
+            ` : ''}
+            ${customer.preferences?.areas ? `
+                <div class="card-info">📍 ${customer.preferences.areas.join(', ')}</div>
+            ` : ''}
+            <div class="card-actions">
+                <button class="card-button" onclick="window.location.href='customer-form.html?edit=${customer.id}'">
+                    編集
+                </button>
+            </div>
+        `;
+        
+        // クリックイベント：ステータス変更メニュー表示
+        card.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('card-button')) {
+                this.showStatusChangeMenu(customer);
             }
-            
-            // 視覚的フィードバック
-            cardElement.classList.add('long-press');
-            setTimeout(() => {
-                cardElement.classList.remove('long-press');
-            }, 300);
-            
-            this.showMobileStatusMenuSide(customerId, cardElement);
-        }, this.touchThreshold);
+        });
         
-        console.log(`👆 長押し開始: ${customerId}`);
+        return card;
     }
 
-    handleTouchEnd(event) {
-        this.clearLongPress();
-    }
-
-    clearLongPress() {
-        if (this.longPressTimeout) {
-            clearTimeout(this.longPressTimeout);
-            this.longPressTimeout = null;
-        }
-        this.touchCustomerId = null;
-        this.touchCardElement = null;
-    }
-
-    showMobileStatusMenuSide(customerId, cardElement) {
-        const customer = this.dataManager.getCustomerById(customerId);
-        if (!customer) return;
-
-        const statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
-        const currentStatus = customer.pipelineStatus;
-
-        // カードの位置を取得
-        const cardRect = cardElement.getBoundingClientRect();
-        
-        // メニューを作成
-        this.createMobileStatusMenuSide(customer, statuses, currentStatus, cardRect);
-    }
-
-    createMobileStatusMenuSide(customer, statuses, currentStatus, cardRect) {
+    showStatusChangeMenu(customer) {
         // 既存のメニューを削除
-        const existingMenu = document.getElementById('mobileStatusMenuSide');
+        const existingMenu = document.querySelector('.status-change-menu');
         if (existingMenu) {
             existingMenu.remove();
         }
-
-        // サイドメニューを作成
+        
         const menu = document.createElement('div');
-        menu.id = 'mobileStatusMenuSide';
+        menu.className = 'status-change-menu';
         menu.style.cssText = `
             position: fixed;
-            left: ${cardRect.right + 10}px;
-            top: ${cardRect.top}px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             z-index: 1000;
-            min-width: 140px;
-            max-width: 160px;
-            animation: slideInLeft 0.2s ease;
-            border: 1px solid #e2e8f0;
+            max-width: 400px;
+            width: 90%;
         `;
-
-        // 画面端での位置調整
-        if (cardRect.right + 170 > window.innerWidth) {
-            menu.style.left = `${cardRect.left - 170}px`;
-        }
-        if (cardRect.top + 200 > window.innerHeight) {
-            menu.style.top = `${window.innerHeight - 220}px`;
-        }
-
-        // ヘッダー
-        const header = document.createElement('div');
-        header.style.cssText = `
-            padding: 0.75rem;
-            background: #1e3a8a;
-            color: white;
-            border-radius: 8px 8px 0 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-align: center;
+        
+        menu.innerHTML = `
+            <h3 style="margin: 0 0 15px 0; font-size: 16px;">ステータス変更: ${customer.name}</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${this.statuses.map(status => `
+                    <button 
+                        onclick="pipelineManager.changeStatus('${customer.id}', '${status}')"
+                        style="
+                            padding: 12px;
+                            border: 2px solid ${customer.pipelineStatus === status ? '#3b82f6' : '#e5e7eb'};
+                            background: ${customer.pipelineStatus === status ? '#dbeafe' : 'white'};
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: ${customer.pipelineStatus === status ? '600' : '400'};
+                            transition: all 0.2s;
+                        "
+                        onmouseover="this.style.background='#f3f4f6'"
+                        onmouseout="this.style.background='${customer.pipelineStatus === status ? '#dbeafe' : 'white'}'"
+                    >
+                        ${status} ${customer.pipelineStatus === status ? '✓' : ''}
+                    </button>
+                `).join('')}
+            </div>
+            <button 
+                onclick="document.querySelector('.status-change-menu').remove(); document.querySelector('.status-menu-overlay').remove();"
+                style="
+                    margin-top: 15px;
+                    padding: 10px;
+                    width: 100%;
+                    border: 1px solid #e5e7eb;
+                    background: white;
+                    border-radius: 8px;
+                    cursor: pointer;
+                "
+            >
+                キャンセル
+            </button>
         `;
-        header.textContent = customer.name;
-
-        menu.appendChild(header);
-
-        // ステータスボタン
-        statuses.forEach(status => {
-            const button = document.createElement('button');
-            button.style.cssText = `
-                display: block;
-                width: 100%;
-                padding: 0.5rem;
-                border: none;
-                background: ${status === currentStatus ? '#eff6ff' : 'white'};
-                color: ${status === currentStatus ? '#1e40af' : '#374151'};
-                text-align: left;
-                cursor: pointer;
-                font-size: 0.75rem;
-                font-weight: ${status === currentStatus ? '600' : '400'};
-                border-bottom: 1px solid #f1f5f9;
-                transition: background 0.2s ease;
-            `;
-            
-            button.textContent = status === currentStatus ? `✓ ${status}` : status;
-            
-            button.addEventListener('click', () => {
-                this.selectMobileStatusSide(customer.id, status);
-            });
-            
-            button.addEventListener('mouseover', () => {
-                if (status !== currentStatus) {
-                    button.style.background = '#f9fafb';
-                }
-            });
-            
-            button.addEventListener('mouseout', () => {
-                if (status !== currentStatus) {
-                    button.style.background = 'white';
-                }
-            });
-
-            menu.appendChild(button);
-        });
-
-        // 閉じるボタン
-        const closeButton = document.createElement('button');
-        closeButton.style.cssText = `
-            display: block;
-            width: 100%;
-            padding: 0.5rem;
-            border: none;
-            background: #f9fafb;
-            color: #6b7280;
-            text-align: center;
-            cursor: pointer;
-            font-size: 0.75rem;
-            border-radius: 0 0 8px 8px;
-        `;
-        closeButton.textContent = '閉じる';
-        closeButton.addEventListener('click', () => {
-            this.closeMobileStatusMenuSide();
-        });
-
-        menu.appendChild(closeButton);
-
-        // 背景オーバーレイ
+        
+        // オーバーレイ
         const overlay = document.createElement('div');
+        overlay.className = 'status-menu-overlay';
         overlay.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(0,0,0,0.5);
             z-index: 999;
         `;
+        
         overlay.addEventListener('click', () => {
-            this.closeMobileStatusMenuSide();
+            menu.remove();
+            overlay.remove();
         });
-
+        
         document.body.appendChild(overlay);
         document.body.appendChild(menu);
-
-        console.log('📱 サイドメニュー表示');
     }
 
-    closeMobileStatusMenuSide() {
-        const menu = document.getElementById('mobileStatusMenuSide');
-        const overlay = document.querySelector('div[style*="rgba(0, 0, 0, 0.1)"]');
+    async changeStatus(customerId, newStatus) {
+        console.log(`🔄 ステータス変更: ${customerId} → ${newStatus}`);
         
-        if (menu) menu.remove();
-        if (overlay) overlay.remove();
-    }
-
-    selectMobileStatusSide(customerId, newStatus) {
-        this.closeMobileStatusMenuSide();
-        
-        const customer = this.dataManager.getCustomerById(customerId);
-        if (customer && customer.pipelineStatus !== newStatus) {
-            this.moveCustomer(customerId, newStatus);
+        try {
+            // 顧客データを取得
+            const customer = this.dataManager.getCustomerById(customerId);
+            if (!customer) {
+                console.error('❌ 顧客が見つかりません');
+                return;
+            }
+            
+            // ステータスを更新
+            customer.pipelineStatus = newStatus;
+            customer.updatedAt = new Date().toISOString();
+            
+            // データマネージャーで更新（即座にGoogle Sheetsに同期）
+            await this.dataManager.updateCustomer(customer);
+            
+            // メニューとオーバーレイを閉じる
+            const menu = document.querySelector('.status-change-menu');
+            const overlay = document.querySelector('.status-menu-overlay');
+            if (menu) menu.remove();
+            if (overlay) overlay.remove();
+            
+            // パイプラインを再描画
+            this.renderPipeline();
+            
+            // 成功メッセージ
+            this.showMessage(`✅ ${customer.name}のステータスを「${newStatus}」に変更しました`, 'success');
+            
+            console.log('✅ ステータス変更完了');
+            
+        } catch (error) {
+            console.error('❌ ステータス変更エラー:', error);
+            this.showMessage('❌ ステータス変更に失敗しました', 'error');
         }
     }
 
-    // メッセージ表示
     showMessage(message, type = 'info') {
         const existingMessage = document.querySelector('.floating-message');
         if (existingMessage) {
@@ -569,29 +319,22 @@ class PipelineManager {
     }
 }
 
-// グローバル関数（HTMLから呼び出される）
+// グローバル関数
 function refreshPipeline() {
     if (window.pipelineManager) {
-        window.pipelineManager.loadPipeline();
+        window.pipelineManager.renderPipeline();
     }
 }
 
-// CSS アニメーション追加
-const animationCSS = `
-<style>
-@keyframes slideInLeft {
-    from { transform: translateX(-10px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
+// アニメーションCSS
+const animationCSS = document.createElement('style');
+animationCSS.textContent = `
 @keyframes slideInRight {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
-</style>
 `;
-
-document.head.insertAdjacentHTML('beforeend', animationCSS);
+document.head.appendChild(animationCSS);
 
 // パイプライン管理システムのインスタンス作成
 let pipelineManager = null;
@@ -607,4 +350,4 @@ if (document.readyState === 'loading') {
     window.pipelineManager = pipelineManager;
 }
 
-console.log('✅ 統一対応パイプライン管理スクリプト準備完了（サイドメニュー版）');
+console.log('✅ 統一対応パイプライン管理スクリプト準備完了');
