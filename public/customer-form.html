@@ -179,7 +179,7 @@
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     
-    <!-- RentPipe Core Scripts（正しい順序 - customer.htmlと同じ）-->
+    <!-- RentPipe Core Scripts（正しい順序）-->
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     
@@ -196,67 +196,73 @@
     
     <!-- Customer Form Functions -->
     <script>
+        // グローバル変数
         let isEditMode = false;
         let editingCustomerId = null;
         
-        // ✅ 高速スタート（統合初期化システム使用）
-        console.log('📝 顧客フォームページ読み込み開始...');
-        
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                window.RentPipeApp.quickStart('customer-form');
-            });
-        } else {
-            window.RentPipeApp.quickStart('customer-form');
-        }
-        
-        // 編集モードチェック（初期化完了後に実行）
-        function loadCustomerForEdit(customerId) {
-            console.log('✏️ 編集モード初期化:', customerId);
-            isEditMode = true;
-            editingCustomerId = customerId;
+        // ✅ loadCustomerForEdit関数をグローバルスコープに定義（app-initializer.jsから呼ばれる）
+        window.loadCustomerForEdit = function(customerId) {
+            console.log('✏️ 編集モード: loadCustomerForEdit呼び出し -', customerId);
             
-            // UI更新
-            document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
-            document.getElementById('form-description').textContent = '顧客情報を編集してください';
-            document.getElementById('submit-btn').textContent = '更新する';
-            
-            // 既存データ読み込み
-            try {
-                if (!window.UnifiedDataManager) {
-                    throw new Error('UnifiedDataManagerが利用できません');
-                }
-                
-                const customer = window.UnifiedDataManager.getCustomerById(customerId);
-                
-                if (!customer) {
-                    alert('❌ 顧客データが見つかりませんでした');
+            // 少し待ってからデータを読み込む（UnifiedDataManagerの初期化を待つ）
+            setTimeout(() => {
+                try {
+                    isEditMode = true;
+                    editingCustomerId = customerId;
+                    
+                    // UI更新
+                    document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
+                    document.getElementById('form-description').textContent = '顧客情報を編集してください';
+                    document.getElementById('submit-btn').textContent = '更新する';
+                    
+                    // UnifiedDataManagerの確認
+                    if (!window.UnifiedDataManager) {
+                        throw new Error('UnifiedDataManagerが利用できません');
+                    }
+                    
+                    // 顧客データ取得
+                    const customer = window.UnifiedDataManager.getCustomerById(customerId);
+                    
+                    if (!customer) {
+                        console.error('❌ 顧客が見つかりません:', customerId);
+                        console.log('📋 利用可能な顧客一覧:', window.UnifiedDataManager.getCustomers().map(c => c.id));
+                        alert('❌ 顧客データが見つかりませんでした');
+                        window.location.href = 'customer.html';
+                        return;
+                    }
+                    
+                    console.log('✅ 顧客データ取得成功:', customer);
+                    
+                    // フォームに値を設定
+                    document.getElementById('name').value = customer.name || '';
+                    document.getElementById('email').value = customer.email || '';
+                    document.getElementById('phone').value = customer.phone || '';
+                    document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
+                    document.getElementById('budgetMin').value = customer.preferences?.budgetMin || '';
+                    document.getElementById('budgetMax').value = customer.preferences?.budgetMax || '';
+                    
+                    // エリアの処理（配列またはカンマ区切り文字列）
+                    if (customer.preferences?.areas) {
+                        if (Array.isArray(customer.preferences.areas)) {
+                            document.getElementById('areas').value = customer.preferences.areas.join(', ');
+                        } else {
+                            document.getElementById('areas').value = customer.preferences.areas;
+                        }
+                    }
+                    
+                    document.getElementById('notes').value = customer.notes || '';
+                    
+                    console.log('✅ フォームに値を設定完了');
+                    
+                } catch (error) {
+                    console.error('❌ 顧客データ読み込みエラー:', error);
+                    alert('顧客データの読み込みに失敗しました: ' + error.message);
                     window.location.href = 'customer.html';
-                    return;
                 }
-                
-                console.log('✅ 顧客データ取得成功:', customer);
-                
-                // フォームに値を設定
-                document.getElementById('name').value = customer.name || '';
-                document.getElementById('email').value = customer.email || '';
-                document.getElementById('phone').value = customer.phone || '';
-                document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
-                document.getElementById('budgetMin').value = customer.preferences?.budgetMin || '';
-                document.getElementById('budgetMax').value = customer.preferences?.budgetMax || '';
-                document.getElementById('areas').value = (customer.preferences?.areas || []).join(', ');
-                document.getElementById('notes').value = customer.notes || '';
-                
-                console.log('✅ フォームに値を設定完了');
-                
-            } catch (error) {
-                console.error('❌ 顧客データ読み込みエラー:', error);
-                alert('顧客データの読み込みに失敗しました');
-                window.location.href = 'customer.html';
-            }
-        }
+            }, 500); // 500ms待機してからデータ読み込み
+        };
         
-        // フォーム送信処理（非同期版・await使用）
+        // フォーム送信処理
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -269,6 +275,7 @@
                 submitBtn.textContent = '処理中...';
                 
                 console.log('📝 フォーム送信処理開始');
+                console.log('🔍 編集モード:', isEditMode, '顧客ID:', editingCustomerId);
                 
                 // フォームデータ取得
                 const formData = {
@@ -293,8 +300,8 @@
                     throw new Error('UnifiedDataManagerが利用できません');
                 }
                 
-                if (isEditMode) {
-                    // ✅ 更新処理（統一データマネージャー使用）
+                if (isEditMode && editingCustomerId) {
+                    // ✅ 更新処理
                     console.log('🔄 顧客情報更新中...', editingCustomerId);
                     
                     const success = await window.UnifiedDataManager.updateCustomer(editingCustomerId, formData);
@@ -308,7 +315,7 @@
                     }
                     
                 } else {
-                    // ✅ 新規登録処理（統一データマネージャー使用）
+                    // ✅ 新規登録処理
                     console.log('➕ 新規顧客登録中...');
                     
                     const newCustomer = await window.UnifiedDataManager.addCustomer(formData);
@@ -337,6 +344,17 @@
             if (confirm('入力内容を破棄して戻りますか？')) {
                 window.location.href = 'customer.html';
             }
+        }
+        
+        // ✅ ページ初期化（統合初期化システム使用）
+        console.log('📝 顧客フォームページ読み込み開始...');
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.RentPipeApp.quickStart('customer-form');
+            });
+        } else {
+            window.RentPipeApp.quickStart('customer-form');
         }
         
         console.log('✅ 顧客登録フォーム準備完了（統合初期化システム対応）');
