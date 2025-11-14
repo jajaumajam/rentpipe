@@ -156,7 +156,7 @@
 
         <!-- 認証ステータス -->
         <div id="auth-sync-status" class="auth-status warning">
-            🔧 システム初期化中...
+            ⚡ 読み込み中...
         </div>
 
         <!-- パイプライン -->
@@ -187,35 +187,44 @@
     <!-- ✅ 統合初期化システム -->
     <script src="js/app-initializer.js"></script>
     
-    <!-- ✅ ページ初期化 -->
+    <!-- ✅ 高速スタート -->
     <script>
         console.log('📊 パイプラインページ読み込み開始...');
         
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // 統合初期化システムを使用
-                const result = await window.RentPipeApp.initialize('pipeline');
+        // DOMContentLoadedを待たずに即座実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.RentPipeApp.quickStart('pipeline');
                 
-                if (result.success) {
-                    console.log('✅ パイプラインページ初期化成功');
-                    
-                    // 認証ステータス表示を更新
+                // 認証ステータス表示を定期的に更新
+                setInterval(() => {
                     window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
-                    
-                } else {
-                    console.error('❌ パイプラインページ初期化失敗:', result.error);
-                    
-                    const statusDiv = document.getElementById('auth-sync-status');
-                    if (statusDiv) {
-                        statusDiv.className = 'auth-status error';
-                        statusDiv.textContent = '❌ 初期化エラー: ' + result.error;
-                    }
-                }
+                }, 2000);
                 
-            } catch (error) {
-                console.error('❌ パイプラインページエラー:', error);
-            }
-        });
+                // データ更新イベントをリッスン
+                window.addEventListener('rentpipe-data-updated', () => {
+                    console.log('🔔 データ更新通知受信 - 再描画');
+                    if (window.pipelineManager) {
+                        window.pipelineManager.renderPipeline();
+                    }
+                });
+            });
+        } else {
+            window.RentPipeApp.quickStart('pipeline');
+            
+            // 認証ステータス表示を定期的に更新
+            setInterval(() => {
+                window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+            }, 2000);
+            
+            // データ更新イベントをリッスン
+            window.addEventListener('rentpipe-data-updated', () => {
+                console.log('🔔 データ更新通知受信 - 再描画');
+                if (window.pipelineManager) {
+                    window.pipelineManager.renderPipeline();
+                }
+            });
+        }
     </script>
 </body>
 </html>

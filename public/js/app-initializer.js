@@ -1,14 +1,56 @@
-// RentPipe 統合アプリケーション初期化システム
-// すべてのページで使用する統一初期化処理
-
+// RentPipe 統合アプリケーション初期化システム（LocalStorage優先版）
 window.RentPipeApp = {
     isInitialized: false,
     currentPage: null,
     
-    // 初期化
+    // 高速初期化（LocalStorage優先）
+    quickStart: function(pageName) {
+        console.log(`⚡ 高速スタート: ${pageName}`);
+        this.currentPage = pageName;
+        
+        // 即座にLocalStorageからデータを表示
+        this.displayLocalData(pageName);
+        
+        // バックグラウンドで完全初期化
+        this.initialize(pageName).then(result => {
+            if (result.success) {
+                console.log('✅ バックグラウンド初期化完了');
+                // データを再表示（同期結果を反映）
+                this.refreshPageData(pageName);
+            }
+        });
+    },
+    
+    // LocalStorageから即座表示
+    displayLocalData: function(pageName) {
+        console.log('⚡ LocalStorageから即座表示');
+        
+        switch(pageName) {
+            case 'customer':
+                if (typeof displayCustomers === 'function') {
+                    displayCustomers();
+                }
+                if (typeof updateStats === 'function') {
+                    updateStats();
+                }
+                break;
+            case 'pipeline':
+                if (window.pipelineManager) {
+                    window.pipelineManager.renderPipeline();
+                }
+                break;
+        }
+    },
+    
+    // ページデータの更新
+    refreshPageData: function(pageName) {
+        console.log('🔄 ページデータ更新');
+        this.displayLocalData(pageName);
+    },
+    
+    // 完全初期化（バックグラウンド）
     initialize: async function(pageName) {
         console.log(`🚀 RentPipe アプリケーション初期化開始: ${pageName}`);
-        this.currentPage = pageName;
         
         try {
             // ステップ1: 統合認証マネージャーの初期化
@@ -152,29 +194,14 @@ window.RentPipeApp = {
     // customer.html 固有の初期化
     initializeCustomerPage: async function() {
         console.log('👥 顧客管理ページ初期化中...');
-        
-        // 顧客リストの表示
-        if (typeof displayCustomers === 'function') {
-            displayCustomers();
-        }
-        
-        // 統計の更新
-        if (typeof updateStats === 'function') {
-            updateStats();
-        }
-        
+        // 既にdisplayLocalDataで表示済み
         console.log('✅ 顧客管理ページ初期化完了');
     },
     
     // pipeline.html 固有の初期化
     initializePipelinePage: async function() {
         console.log('📈 パイプラインページ初期化中...');
-        
-        // パイプラインマネージャーの初期化は既に完了しているはず
-        if (window.pipelineManager) {
-            console.log('✅ パイプラインマネージャー準備完了');
-        }
-        
+        // 既にdisplayLocalDataで表示済み
         console.log('✅ パイプラインページ初期化完了');
     },
     
@@ -212,8 +239,15 @@ window.RentPipeApp = {
         const sheetsStatus = this.getSheetsStatus();
         
         if (sheetsStatus?.isEnabled) {
+            const mode = sheetsStatus.syncMode || 'normal';
+            const modeText = {
+                'after-change': '変更後',
+                'normal': '通常',
+                'idle': 'アイドル'
+            }[mode] || mode;
+            
             statusDiv.className = 'auth-status success';
-            statusDiv.textContent = `✅ Google Sheets統合有効 - ${authState?.googleAuth?.user?.email || '認証済み'}`;
+            statusDiv.textContent = `✅ Google Sheets統合有効（${modeText}モード） - ${authState?.googleAuth?.user?.email || '認証済み'}`;
         } else if (authState?.googleAuth?.isSignedIn) {
             statusDiv.className = 'auth-status warning';
             statusDiv.textContent = `⚠️ Google認証済み（Sheets未連携） - ${authState.googleAuth.user.email}`;
@@ -224,4 +258,4 @@ window.RentPipeApp = {
     }
 };
 
-console.log('✅ RentPipe 統合初期化システム準備完了');
+console.log('✅ RentPipe 統合初期化システム準備完了（LocalStorage優先版）');

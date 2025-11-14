@@ -1,4 +1,4 @@
-// 統一データ管理システム（Google Sheets統合版 + 即座同期）
+// 統一データ管理システム（Google Sheets統合版 + 即座同期 + 変更通知）
 window.UnifiedDataManager = {
     STORAGE_KEY: 'rentpipe_demo_customers',
     
@@ -50,6 +50,14 @@ window.UnifiedDataManager = {
         }
     },
     
+    // データ変更通知
+    notifyDataChanged: function() {
+        // UnifiedSheetsManagerに変更を通知（デバウンス同期トリガー）
+        if (window.UnifiedSheetsManager && window.UnifiedSheetsManager.onDataChanged) {
+            window.UnifiedSheetsManager.onDataChanged();
+        }
+    },
+    
     // 新規顧客追加
     addCustomer: async function(customer) {
         const customers = this.getCustomers();
@@ -70,6 +78,9 @@ window.UnifiedDataManager = {
         
         // Google Sheetsへ即座同期
         await this.syncToSheetsImmediately(customers);
+        
+        // 変更通知（デバウンス同期）
+        this.notifyDataChanged();
         
         return customer;
     },
@@ -95,6 +106,9 @@ window.UnifiedDataManager = {
         // Google Sheetsへ即座同期
         await this.syncToSheetsImmediately(customers);
         
+        // 変更通知（デバウンス同期）
+        this.notifyDataChanged();
+        
         return updatedCustomer;
     },
     
@@ -114,6 +128,9 @@ window.UnifiedDataManager = {
         
         // Google Sheetsへ即座同期
         await this.syncToSheetsImmediately(filtered);
+        
+        // 変更通知（デバウンス同期）
+        this.notifyDataChanged();
         
         return true;
     },
@@ -160,4 +177,4 @@ window.UnifiedDataManager = {
 // 初期化実行
 window.UnifiedDataManager.initialize();
 
-console.log('✅ 統一データ管理システム準備完了（Google Sheets統合版 + 即座同期）');
+console.log('✅ 統一データ管理システム準備完了（Google Sheets統合版 + 即座同期 + 変更通知）');

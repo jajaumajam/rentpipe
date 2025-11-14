@@ -218,7 +218,7 @@
 
         <!-- 認証ステータス -->
         <div id="auth-sync-status" class="auth-status warning">
-            🔧 システム初期化中...
+            ⚡ 読み込み中...
         </div>
 
         <!-- 統計 -->
@@ -300,36 +300,38 @@
         let currentFilter = 'all';
         let allCustomers = [];
         
-        // ページ初期化
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // 統合初期化システムを使用
-                const result = await window.RentPipeApp.initialize('customer');
+        // 高速スタート
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.RentPipeApp.quickStart('customer');
                 
-                if (result.success) {
-                    console.log('✅ 顧客管理ページ初期化成功');
-                    
-                    // 認証ステータス表示を更新
+                // 認証ステータス表示を定期的に更新
+                setInterval(() => {
                     window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
-                    
-                    // 顧客データを表示
+                }, 2000);
+                
+                // データ更新イベントをリッスン
+                window.addEventListener('rentpipe-data-updated', () => {
+                    console.log('🔔 データ更新通知受信 - 再表示');
                     displayCustomers();
                     updateStats();
-                    
-                } else {
-                    console.error('❌ 顧客管理ページ初期化失敗:', result.error);
-                    
-                    const statusDiv = document.getElementById('auth-sync-status');
-                    if (statusDiv) {
-                        statusDiv.className = 'auth-status error';
-                        statusDiv.textContent = '❌ 初期化エラー: ' + result.error;
-                    }
-                }
-                
-            } catch (error) {
-                console.error('❌ 顧客管理ページエラー:', error);
-            }
-        });
+                });
+            });
+        } else {
+            window.RentPipeApp.quickStart('customer');
+            
+            // 認証ステータス表示を定期的に更新
+            setInterval(() => {
+                window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+            }, 2000);
+            
+            // データ更新イベントをリッスン
+            window.addEventListener('rentpipe-data-updated', () => {
+                console.log('🔔 データ更新通知受信 - 再表示');
+                displayCustomers();
+                updateStats();
+            });
+        }
         
         // 顧客表示
         function displayCustomers() {
