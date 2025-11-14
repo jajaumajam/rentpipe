@@ -63,6 +63,14 @@ window.UnifiedSheetsManager = {
                     });
                     console.log('✅ アクセストークン設定完了');
                 }
+                
+                // ✅ GoogleDriveAPIv2にも認証情報を設定
+                if (window.GoogleDriveAPIv2) {
+                    console.log('🔑 GoogleDriveAPIv2に認証情報を設定中...');
+                    window.GoogleDriveAPIv2.accessToken = authState.googleAuth.accessToken;
+                    window.GoogleDriveAPIv2.isAuthenticated = true;
+                    console.log('✅ GoogleDriveAPIv2認証設定完了');
+                }
             } else {
                 console.warn('⚠️ Google認証トークンが見つかりません');
             }
@@ -73,6 +81,7 @@ window.UnifiedSheetsManager = {
                 sheetsInitialized: !!window.GoogleSheetsAPI?.isInitialized,
                 sheetsAuthenticated: !!authState?.googleAuth?.isSignedIn,
                 driveAPI: !!window.GoogleDriveAPIv2,
+                driveAuthenticated: !!window.GoogleDriveAPIv2?.isAuthenticated,
                 unifiedDataManager: !!window.UnifiedDataManager
             };
             console.log('🔍 統合確認:', allSystemsReady);
@@ -82,7 +91,7 @@ window.UnifiedSheetsManager = {
             console.log('📂 保存済みスプレッドシートID:', this.spreadsheetId);
             
             // ✅ IDがない場合は既存スプレッドシートを検索または新規作成
-            if (!this.spreadsheetId && allSystemsReady.sheetsAuthenticated && allSystemsReady.driveAPI) {
+            if (!this.spreadsheetId && allSystemsReady.sheetsAuthenticated && allSystemsReady.driveAPI && allSystemsReady.driveAuthenticated) {
                 console.log('🔍 スプレッドシートIDがありません。既存スプレッドシートを検索します...');
                 
                 try {
@@ -136,6 +145,7 @@ window.UnifiedSheetsManager = {
                 allSystemsReady.sheetsInitialized && 
                 allSystemsReady.sheetsAuthenticated && 
                 allSystemsReady.driveAPI && 
+                allSystemsReady.driveAuthenticated &&
                 allSystemsReady.unifiedDataManager &&
                 this.spreadsheetId) {
                 
