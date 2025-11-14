@@ -41,33 +41,43 @@ window.UnifiedSheetsManager = {
             const authState = window.IntegratedAuthManagerV2?.getAuthState();
             console.log('🔐 認証状態確認:', authState);
             
-            if (authState?.google?.isAuthenticated && authState?.google?.accessToken) {
+            // ✅ 修正: googleAuth.accessToken を使用
+            if (authState?.googleAuth?.isSignedIn && authState?.googleAuth?.accessToken) {
                 console.log('✅ Google認証トークン確認完了');
+                console.log('🔑 アクセストークン:', authState.googleAuth.accessToken.substring(0, 20) + '...');
                 
                 // Google Sheets APIにトークンを設定
                 console.log('🔑 Google Sheets APIにアクセストークンを設定中...');
                 if (window.gapi?.client) {
                     window.gapi.client.setToken({
-                        access_token: authState.google.accessToken
+                        access_token: authState.googleAuth.accessToken
                     });
                     console.log('✅ アクセストークン設定完了');
+                } else {
+                    console.warn('⚠️ gapi.clientが利用できません');
                 }
             } else {
                 console.warn('⚠️ Google認証トークンが見つかりません');
+                console.log('📊 認証状態の詳細:', {
+                    hasAuthState: !!authState,
+                    hasGoogleAuth: !!authState?.googleAuth,
+                    isSignedIn: authState?.googleAuth?.isSignedIn,
+                    hasAccessToken: !!authState?.googleAuth?.accessToken
+                });
             }
             
             // 統合確認
             const allSystemsReady = {
                 sheetsAPI: !!window.GoogleSheetsAPI,
                 sheetsInitialized: !!window.GoogleSheetsAPI?.isInitialized,
-                sheetsAuthenticated: !!authState?.google?.isAuthenticated,
+                sheetsAuthenticated: !!authState?.googleAuth?.isSignedIn,
                 driveAPI: !!window.GoogleDriveAPIv2,
                 unifiedDataManager: !!window.UnifiedDataManager
             };
             console.log('🔍 統合確認:', allSystemsReady);
             
-            // スプレッドシートIDの確認
-            this.spreadsheetId = window.GoogleSheetsAPI?.getSpreadsheetId();
+            // ✅ 修正: LocalStorageから直接読み込み
+            this.spreadsheetId = localStorage.getItem('rentpipe_spreadsheet_id');
             console.log('📂 保存済みスプレッドシートID:', this.spreadsheetId);
             
             // すべてのシステムが準備完了している場合のみ有効化
@@ -75,7 +85,8 @@ window.UnifiedSheetsManager = {
                 allSystemsReady.sheetsInitialized && 
                 allSystemsReady.sheetsAuthenticated && 
                 allSystemsReady.driveAPI && 
-                allSystemsReady.unifiedDataManager) {
+                allSystemsReady.unifiedDataManager &&
+                this.spreadsheetId) {
                 
                 this.isEnabled = true;
                 console.log('✅ Google Sheets統合有効化完了');
@@ -84,6 +95,14 @@ window.UnifiedSheetsManager = {
                 this.startAutoSync();
             } else {
                 console.log('ℹ️ LocalStorageモードで動作（一部システムが未準備）');
+                console.log('📊 未準備の項目:', {
+                    sheetsAPI: !allSystemsReady.sheetsAPI,
+                    sheetsInitialized: !allSystemsReady.sheetsInitialized,
+                    sheetsAuthenticated: !allSystemsReady.sheetsAuthenticated,
+                    driveAPI: !allSystemsReady.driveAPI,
+                    unifiedDataManager: !allSystemsReady.unifiedDataManager,
+                    spreadsheetId: !this.spreadsheetId
+                });
             }
             
             console.log('✅ 統合データ管理システム初期化完了');
