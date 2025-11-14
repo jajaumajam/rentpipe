@@ -64,7 +64,14 @@ window.UnifiedSheetsManager = {
                     console.log('✅ アクセストークン設定完了');
                 }
                 
-                // ✅ GoogleDriveAPIv2にも認証情報を設定
+                // ✅ GoogleDriveAPIv2の完全初期化
+                if (window.GoogleDriveAPIv2 && !window.GoogleDriveAPIv2.isInitialized) {
+                    console.log('🔧 GoogleDriveAPIv2完全初期化中...');
+                    await window.GoogleDriveAPIv2.initialize();
+                    console.log('✅ GoogleDriveAPIv2完全初期化完了');
+                }
+                
+                // ✅ GoogleDriveAPIv2に認証情報を設定
                 if (window.GoogleDriveAPIv2) {
                     console.log('🔑 GoogleDriveAPIv2に認証情報を設定中...');
                     window.GoogleDriveAPIv2.accessToken = authState.googleAuth.accessToken;
@@ -81,6 +88,7 @@ window.UnifiedSheetsManager = {
                 sheetsInitialized: !!window.GoogleSheetsAPI?.isInitialized,
                 sheetsAuthenticated: !!authState?.googleAuth?.isSignedIn,
                 driveAPI: !!window.GoogleDriveAPIv2,
+                driveInitialized: !!window.GoogleDriveAPIv2?.isInitialized,
                 driveAuthenticated: !!window.GoogleDriveAPIv2?.isAuthenticated,
                 unifiedDataManager: !!window.UnifiedDataManager
             };
@@ -91,18 +99,23 @@ window.UnifiedSheetsManager = {
             console.log('📂 保存済みスプレッドシートID:', this.spreadsheetId);
             
             // ✅ IDがない場合は既存スプレッドシートを検索または新規作成
-            if (!this.spreadsheetId && allSystemsReady.sheetsAuthenticated && allSystemsReady.driveAPI && allSystemsReady.driveAuthenticated) {
+            if (!this.spreadsheetId && 
+                allSystemsReady.sheetsAuthenticated && 
+                allSystemsReady.driveAPI && 
+                allSystemsReady.driveInitialized &&
+                allSystemsReady.driveAuthenticated) {
+                
                 console.log('🔍 スプレッドシートIDがありません。既存スプレッドシートを検索します...');
                 
                 try {
                     // Google Driveで「RentPipe_Customers」を検索
                     const searchResult = await window.GoogleDriveAPIv2.searchSpreadsheets('RentPipe_Customers');
                     
-                    if (searchResult.files && searchResult.files.length > 0) {
+                    if (searchResult && searchResult.length > 0) {
                         // 既存のスプレッドシートが見つかった
-                        this.spreadsheetId = searchResult.files[0].id;
+                        this.spreadsheetId = searchResult[0].id;
                         console.log('✅ 既存のRentPipe_Customersスプレッドシートを発見:', this.spreadsheetId);
-                        console.log('📊 スプレッドシート名:', searchResult.files[0].name);
+                        console.log('📊 スプレッドシート名:', searchResult[0].name);
                         
                         // LocalStorageに保存
                         localStorage.setItem('rentpipe_spreadsheet_id', this.spreadsheetId);
@@ -145,6 +158,7 @@ window.UnifiedSheetsManager = {
                 allSystemsReady.sheetsInitialized && 
                 allSystemsReady.sheetsAuthenticated && 
                 allSystemsReady.driveAPI && 
+                allSystemsReady.driveInitialized &&
                 allSystemsReady.driveAuthenticated &&
                 allSystemsReady.unifiedDataManager &&
                 this.spreadsheetId) {
