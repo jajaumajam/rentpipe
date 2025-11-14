@@ -181,51 +181,39 @@
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
-    <!-- ✅ Pipeline Specific Script -->
+    <!-- Pipeline Specific Script -->
     <script src="js/pipeline-unified.js"></script>
     
-    <!-- ✅ Google Sheets統合初期化 -->
+    <!-- ✅ 統合初期化システム -->
+    <script src="js/app-initializer.js"></script>
+    
+    <!-- ✅ ページ初期化 -->
     <script>
-        console.log('📊 パイプラインページ: Google Sheets統合初期化開始...');
+        console.log('📊 パイプラインページ読み込み開始...');
         
         window.addEventListener('DOMContentLoaded', async () => {
-            const statusDiv = document.getElementById('auth-sync-status');
-            
             try {
-                // 1. 統合認証マネージャーの初期化
-                if (window.IntegratedAuthManagerV2) {
-                    console.log('🔐 統合認証マネージャー初期化中...');
-                    await window.IntegratedAuthManagerV2.initialize();
-                    console.log('✅ 統合認証マネージャー初期化完了');
-                }
+                // 統合初期化システムを使用
+                const result = await window.RentPipeApp.initialize('pipeline');
                 
-                // 2. Google Sheets統合マネージャーの初期化
-                if (window.UnifiedSheetsManager) {
-                    console.log('📊 Google Sheets統合マネージャー初期化中...');
-                    await window.UnifiedSheetsManager.initialize();
+                if (result.success) {
+                    console.log('✅ パイプラインページ初期化成功');
                     
-                    const status = window.UnifiedSheetsManager.getStatus();
-                    console.log('📊 Google Sheets統合状態:', status);
+                    // 認証ステータス表示を更新
+                    window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
                     
-                    if (status.isEnabled) {
-                        statusDiv.className = 'auth-status success';
-                        statusDiv.textContent = '✅ Google Sheets統合有効 - 自動同期実行中';
-                        console.log('✅ Google Sheets統合有効化完了');
-                    } else {
-                        statusDiv.className = 'auth-status warning';
-                        statusDiv.textContent = '📂 LocalStorageモード（Google Sheets未連携）';
-                        console.log('ℹ️ LocalStorageモードで動作中');
-                    }
                 } else {
-                    statusDiv.className = 'auth-status warning';
-                    statusDiv.textContent = '⚠️ Google Sheets統合マネージャーが利用できません';
-                    console.warn('⚠️ UnifiedSheetsManagerが見つかりません');
+                    console.error('❌ パイプラインページ初期化失敗:', result.error);
+                    
+                    const statusDiv = document.getElementById('auth-sync-status');
+                    if (statusDiv) {
+                        statusDiv.className = 'auth-status error';
+                        statusDiv.textContent = '❌ 初期化エラー: ' + result.error;
+                    }
                 }
                 
             } catch (error) {
-                console.error('❌ 初期化エラー:', error);
-                statusDiv.className = 'auth-status error';
-                statusDiv.textContent = '❌ 初期化エラー: ' + error.message;
+                console.error('❌ パイプラインページエラー:', error);
             }
         });
     </script>

@@ -18,49 +18,30 @@
             margin-top: 8px;
         }
         
-        .sheets-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .sheets-panel h3 {
-            margin: 0 0 15px 0;
-            font-size: 16px;
-            color: #1f2937;
-        }
-        
-        .sheets-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
+        .auth-status {
+            padding: 12px 20px;
             border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
         }
         
-        .sheets-status-disconnected {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-        }
-        
-        .sheets-status-connected {
+        .auth-status.success {
             background: #d1fae5;
+            color: #065f46;
             border: 1px solid #10b981;
         }
         
-        .sheets-status-syncing {
-            background: #dbeafe;
-            border: 1px solid #3b82f6;
+        .auth-status.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
         }
         
-        .sheets-info {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 14px;
+        .auth-status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
         }
         
         .stats-container {
@@ -96,75 +77,6 @@
             font-size: 14px;
         }
         
-        .customer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .customer-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        
-        .customer-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .customer-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-        
-        .customer-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-            margin: 0;
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .status-初回相談 { background: #dbeafe; color: #1e40af; }
-        .status-物件紹介 { background: #e0e7ff; color: #4338ca; }
-        .status-内見 { background: #fef3c7; color: #92400e; }
-        .status-申込 { background: #fed7aa; color: #9a3412; }
-        .status-審査 { background: #fecaca; color: #991b1b; }
-        .status-契約 { background: #d1fae5; color: #065f46; }
-        .status-完了 { background: #d1d5db; color: #374151; }
-        
-        .customer-card-body {
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .customer-card-body p {
-            margin: 5px 0;
-        }
-        
-        .customer-card-footer {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-        
         .search-filter-container {
             background: white;
             padding: 20px;
@@ -179,8 +91,8 @@
         
         .search-box input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 14px;
         }
@@ -193,16 +105,12 @@
         
         .filter-btn {
             padding: 8px 16px;
-            border: 1px solid #d1d5db;
+            border: 2px solid #e5e7eb;
             background: white;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.2s;
-        }
-        
-        .filter-btn:hover {
-            background: #f9fafb;
         }
         
         .filter-btn.active {
@@ -211,30 +119,86 @@
             border-color: #3b82f6;
         }
         
-        .auth-status {
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
+        .customer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .customer-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .customer-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .customer-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .customer-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
             font-weight: 500;
         }
         
-        .auth-status.success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
+        .customer-info {
+            margin-bottom: 8px;
+            color: #6b7280;
+            font-size: 14px;
         }
         
-        .auth-status.warning {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #f59e0b;
+        .customer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
         }
         
-        .auth-status.error {
+        .btn-edit, .btn-delete {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+        
+        .btn-delete {
             background: #fee2e2;
             color: #991b1b;
-            border: 1px solid #ef4444;
+        }
+        
+        .btn-delete:hover {
+            background: #fecaca;
         }
     </style>
 </head>
@@ -247,41 +211,17 @@
         <div class="page-header">
             <div>
                 <h1>👥 顧客管理</h1>
-                <p class="page-description">顧客情報の登録・管理 + Google Sheets自動同期</p>
+                <p class="page-description">すべての顧客情報を一元管理（Google Sheets自動同期）</p>
             </div>
-            <a href="customer-form.html" class="btn btn-primary">
-                <span>➕ 新規顧客登録</span>
-            </a>
+            <a href="customer-form.html" class="btn btn-primary">➕ 新規顧客登録</a>
         </div>
 
         <!-- 認証ステータス -->
         <div id="auth-sync-status" class="auth-status warning">
-            📊 データ読み込み中...
+            🔧 システム初期化中...
         </div>
 
-        <!-- Google Sheets統合パネル -->
-        <div class="sheets-panel" id="sheets-panel" style="display: none;">
-            <h3>📊 Google Sheets データ同期</h3>
-            <div id="sheets-status" class="sheets-status sheets-status-connected">
-                <div>
-                    <strong>ステータス:</strong>
-                    <span id="sheets-status-text">接続中...</span>
-                </div>
-            </div>
-            <div id="sheets-info" class="sheets-info" style="display: none;">
-                <div><strong>スプレッドシート名:</strong> <span id="sheets-spreadsheet-name">RentPipe_Customers</span></div>
-                <div><strong>スプレッドシートID:</strong> <span id="sheets-spreadsheet-id">-</span></div>
-                <div><strong>最終同期:</strong> <span id="sheets-last-sync">-</span></div>
-                <div><strong>同期モード:</strong> <span id="sheets-sync-mode">自動（1分ごと）</span></div>
-                <div style="margin-top: 10px;">
-                    <a id="sheets-link" href="#" target="_blank" class="btn btn-secondary">
-                        🔗 スプレッドシートを開く
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 統計カード -->
+        <!-- 統計 -->
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-icon">👥</div>
@@ -291,7 +231,7 @@
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">📝</div>
+                <div class="stat-icon">🆕</div>
                 <div class="stat-content">
                     <h3 id="stat-new">0</h3>
                     <p>今月の新規</p>
@@ -305,9 +245,9 @@
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🔄</div>
+                <div class="stat-icon">📊</div>
                 <div class="stat-content">
-                    <h3 id="stat-progress">0</h3>
+                    <h3 id="stat-active">0</h3>
                     <p>対応中</p>
                 </div>
             </div>
@@ -343,328 +283,204 @@
     <!-- RentPipe Core Scripts -->
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
+    
+    <!-- Google Integration Scripts -->
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-sheets-api.js"></script>
+    
+    <!-- Data Management -->
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
+    <!-- ✅ 統合初期化システム -->
+    <script src="js/app-initializer.js"></script>
+    
+    <!-- Customer Management Functions -->
     <script>
-        // グローバル変数
+        let currentFilter = 'all';
         let allCustomers = [];
-        let filteredCustomers = [];
-        let currentAuthState = null;
-        let systemInitialized = false;
         
-        // 固定スプレッドシート名
-        const SPREADSHEET_NAME = 'RentPipe_Customers';
-        
-        console.log('📄 顧客管理ページ初期化開始');
-        
-        // 認証ステータス表示
-        function showAuthStatus(message, type) {
-            const statusDiv = document.getElementById('auth-sync-status');
-            if (statusDiv) {
-                statusDiv.textContent = message;
-                statusDiv.className = `auth-status ${type}`;
-            }
-            console.log(`[認証] ${message}`);
-        }
-        
-        // 🆕 Google Sheets統合の自動初期化（バックグラウンド版）
-        async function autoInitializeGoogleSheets() {
+        // ページ初期化
+        window.addEventListener('DOMContentLoaded', async () => {
             try {
-                console.log('📊 === Google Sheets自動初期化開始（バックグラウンド）===');
+                // 統合初期化システムを使用
+                const result = await window.RentPipeApp.initialize('customer');
                 
-                // 認証状態の再確認
-                if (!currentAuthState?.googleAuth?.isSignedIn || !currentAuthState?.googleAuth?.accessToken) {
-                    console.log('ℹ️ Google認証情報が不足しています - LocalStorageモードで動作');
-                    return;
-                }
-                
-                console.log('✅ Google認証情報確認完了');
-                
-                // Google Sheets API初期化（タイムアウトを短縮）
-                if (!window.GoogleSheetsAPI?.isInitialized) {
-                    console.log('⏳ Google Sheets API初期化中...');
-                    await Promise.race([
-                        window.GoogleSheetsAPI.initialize(),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('初期化タイムアウト')), 5000))
-                    ]);
-                }
-                
-                // アクセストークン設定
-                await window.GoogleSheetsAPI.setAccessToken(currentAuthState.googleAuth.accessToken);
-                
-                // 認証完了を短時間待機（最大5秒）
-                let retries = 0;
-                while (!window.GoogleSheetsAPI.isAuthenticated && retries < 10) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    retries++;
-                }
-                
-                if (!window.GoogleSheetsAPI.isAuthenticated) {
-                    console.log('⚠️ 認証タイムアウト - LocalStorageモードで継続');
-                    return;
-                }
-                
-                // スプレッドシートID確認・検索
-                const savedId = window.GoogleSheetsAPI.loadSpreadsheetId();
-                
-                if (savedId) {
-                    console.log('📂 既存スプレッドシートに接続:', savedId);
-                    await connectToExistingSpreadsheet(savedId);
+                if (result.success) {
+                    console.log('✅ 顧客管理ページ初期化成功');
+                    
+                    // 認証ステータス表示を更新
+                    window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+                    
+                    // 顧客データを表示
+                    displayCustomers();
+                    updateStats();
+                    
                 } else {
-                    console.log('🔍 スプレッドシート検索中...');
+                    console.error('❌ 顧客管理ページ初期化失敗:', result.error);
                     
-                    if (!window.GoogleDriveAPIv2?.isInitialized) {
-                        await window.GoogleDriveAPIv2.initialize();
-                    }
-                    
-                    window.GoogleDriveAPIv2.accessToken = currentAuthState.googleAuth.accessToken;
-                    window.GoogleDriveAPIv2.isAuthenticated = true;
-                    
-                    const existingSheets = await window.GoogleDriveAPIv2.searchSpreadsheets(SPREADSHEET_NAME);
-                    
-                    if (existingSheets && existingSheets.length > 0) {
-                        await connectToExistingSpreadsheet(existingSheets[0].id);
-                    } else {
-                        await createNewSpreadsheet();
+                    const statusDiv = document.getElementById('auth-sync-status');
+                    if (statusDiv) {
+                        statusDiv.className = 'auth-status error';
+                        statusDiv.textContent = '❌ 初期化エラー: ' + result.error;
                     }
                 }
                 
-                console.log('📊 === Google Sheets自動初期化完了 ===');
-                
             } catch (error) {
-                console.error('❌ Google Sheets初期化エラー（バックグラウンド）:', error);
-                showAuthStatus('ℹ️ LocalStorageモード - データはブラウザに保存されています', 'warning');
+                console.error('❌ 顧客管理ページエラー:', error);
             }
-        }
-        
-        // 既存スプレッドシートに接続
-        async function connectToExistingSpreadsheet(spreadsheetId) {
-            try {
-                await window.UnifiedSheetsManager.enableSheetsIntegration(spreadsheetId);
-                showAuthStatus('✅ Google Sheets統合有効 - 1分ごとに自動同期', 'success');
-                
-                const panel = document.getElementById('sheets-panel');
-                if (panel) panel.style.display = 'block';
-                
-                showSheetsInfo(spreadsheetId);
-                
-            } catch (error) {
-                console.error('❌ 既存スプレッドシート接続エラー:', error);
-                throw error;
-            }
-        }
-        
-        // 新規スプレッドシート作成
-        async function createNewSpreadsheet() {
-            try {
-                const result = await window.GoogleSheetsAPI.createSpreadsheet(SPREADSHEET_NAME);
-                await window.UnifiedSheetsManager.enableSheetsIntegration(result.spreadsheetId);
-                
-                showAuthStatus('✅ Google Sheets統合有効 - 1分ごとに自動同期', 'success');
-                
-                const panel = document.getElementById('sheets-panel');
-                if (panel) panel.style.display = 'block';
-                
-                showSheetsInfo(result.spreadsheetId);
-                
-            } catch (error) {
-                console.error('❌ スプレッドシート作成エラー:', error);
-                showAuthStatus('ℹ️ LocalStorageモード', 'warning');
-            }
-        }
-        
-        // スプレッドシート情報表示
-        function showSheetsInfo(spreadsheetId) {
-            const infoDiv = document.getElementById('sheets-info');
-            const idSpan = document.getElementById('sheets-spreadsheet-id');
-            const link = document.getElementById('sheets-link');
-            const statusText = document.getElementById('sheets-status-text');
-            
-            if (idSpan) idSpan.textContent = spreadsheetId;
-            if (link) link.href = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
-            if (infoDiv) infoDiv.style.display = 'block';
-            if (statusText) statusText.textContent = '✅ 接続済み - 1分ごとに自動同期';
-            
-            updateLastSyncTime();
-        }
-        
-        // 最終同期時刻更新
-        function updateLastSyncTime() {
-            const status = window.UnifiedSheetsManager?.getStatus();
-            const lastSyncSpan = document.getElementById('sheets-last-sync');
-            
-            if (lastSyncSpan && status) {
-                if (status.lastSyncTime) {
-                    lastSyncSpan.textContent = status.lastSyncTime.toLocaleString('ja-JP');
-                } else {
-                    lastSyncSpan.textContent = '未同期';
-                }
-            }
-        }
-        
-        // 顧客データ読み込み
-        async function loadCustomers() {
-            try {
-                allCustomers = window.UnifiedDataManager.getCustomers();
-                filteredCustomers = allCustomers;
-                
-                displayCustomers(filteredCustomers);
-                updateStats();
-                
-            } catch (error) {
-                console.error('❌ 顧客データ読み込みエラー:', error);
-            }
-        }
+        });
         
         // 顧客表示
-        function displayCustomers(customers) {
-            const customerList = document.getElementById('customer-list');
+        function displayCustomers() {
+            allCustomers = window.UnifiedDataManager.getCustomers();
+            console.log('📊 顧客データ表示:', allCustomers.length, '件');
             
-            if (!customers || customers.length === 0) {
-                showEmptyState();
+            const container = document.getElementById('customer-list');
+            container.innerHTML = '';
+            
+            // フィルター適用
+            let filteredCustomers = allCustomers;
+            if (currentFilter !== 'all') {
+                filteredCustomers = allCustomers.filter(c => c.pipelineStatus === currentFilter);
+            }
+            
+            if (filteredCustomers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">顧客データがありません</p>';
                 return;
             }
             
-            customerList.innerHTML = customers.map(customer => `
-                <div class="customer-card">
-                    <div class="customer-card-header">
-                        <h3>${customer.name}</h3>
-                        <span class="status-badge status-${customer.pipelineStatus}">${customer.pipelineStatus}</span>
-                    </div>
-                    <div class="customer-card-body">
-                        <p>📧 ${customer.email}</p>
-                        <p>📱 ${customer.phone}</p>
-                        <p>💰 ${(customer.preferences?.budgetMin || 0).toLocaleString()}〜${(customer.preferences?.budgetMax || 0).toLocaleString()}円</p>
-                        <p>📍 ${(customer.preferences?.areas || []).join('、') || '未設定'}</p>
-                    </div>
-                    <div class="customer-card-footer">
-                        <button class="btn btn-sm" onclick="editCustomer('${customer.id}')">編集</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.id}')">削除</button>
+            filteredCustomers.forEach(customer => {
+                const card = createCustomerCard(customer);
+                container.appendChild(card);
+            });
+        }
+        
+        // 顧客カード作成
+        function createCustomerCard(customer) {
+            const card = document.createElement('div');
+            card.className = 'customer-card';
+            
+            const statusColors = {
+                '初回相談': '#fef3c7',
+                '物件紹介': '#dbeafe',
+                '内見': '#e0e7ff',
+                '申込': '#fce7f3',
+                '審査': '#fed7aa',
+                '契約': '#d1fae5',
+                '完了': '#d1fae5'
+            };
+            
+            card.innerHTML = `
+                <div class="customer-header">
+                    <div class="customer-name">${customer.name || '名前未設定'}</div>
+                    <div class="customer-status" style="background: ${statusColors[customer.pipelineStatus] || '#f3f4f6'}">
+                        ${customer.pipelineStatus || '未設定'}
                     </div>
                 </div>
-            `).join('');
+                <div class="customer-info">📧 ${customer.email || 'メールなし'}</div>
+                <div class="customer-info">📱 ${customer.phone || '電話番号なし'}</div>
+                ${customer.preferences?.budgetMin ? `
+                    <div class="customer-info">💰 ${customer.preferences.budgetMin.toLocaleString()}円 〜 ${customer.preferences.budgetMax?.toLocaleString() || ''}円</div>
+                ` : ''}
+                ${customer.preferences?.areas ? `
+                    <div class="customer-info">📍 ${customer.preferences.areas.join(', ')}</div>
+                ` : ''}
+                <div class="customer-actions">
+                    <button class="btn-edit" onclick="window.location.href='customer-form.html?edit=${customer.id}'">
+                        編集
+                    </button>
+                    <button class="btn-delete" onclick="deleteCustomer('${customer.id}')">
+                        削除
+                    </button>
+                </div>
+            `;
+            
+            return card;
         }
         
         // 統計更新
         function updateStats() {
-            const total = allCustomers.length;
-            const thisMonth = allCustomers.filter(c => {
-                const created = new Date(c.createdAt);
-                const now = new Date();
-                return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-            }).length;
-            const completed = allCustomers.filter(c => c.pipelineStatus === '完了').length;
-            const inProgress = allCustomers.filter(c => c.pipelineStatus !== '完了' && c.pipelineStatus !== '初回相談').length;
+            const customers = window.UnifiedDataManager.getCustomers();
             
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-new').textContent = thisMonth;
+            document.getElementById('stat-total').textContent = customers.length;
+            
+            // 今月の新規
+            const thisMonth = new Date().getMonth();
+            const thisYear = new Date().getFullYear();
+            const newThisMonth = customers.filter(c => {
+                const created = new Date(c.createdAt);
+                return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
+            }).length;
+            document.getElementById('stat-new').textContent = newThisMonth;
+            
+            // 成約済み
+            const completed = customers.filter(c => c.pipelineStatus === '完了').length;
             document.getElementById('stat-completed').textContent = completed;
-            document.getElementById('stat-progress').textContent = inProgress;
-        }
-        
-        // 空状態表示
-        function showEmptyState() {
-            const customerList = document.getElementById('customer-list');
-            customerList.innerHTML = `
-                <div style="text-align: center; padding: 60px 20px; color: #64748b; grid-column: 1 / -1;">
-                    <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">👥</div>
-                    <h3>まだ顧客が登録されていません</h3>
-                    <p>新しい顧客を登録して、効率的な顧客管理を始めましょう。</p>
-                    <a href="customer-form.html" class="btn btn-primary">📝 最初の顧客を登録</a>
-                </div>
-            `;
+            
+            // 対応中
+            const active = customers.filter(c => c.pipelineStatus !== '完了').length;
+            document.getElementById('stat-active').textContent = active;
         }
         
         // 検索
         function searchCustomers() {
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             
-            filteredCustomers = allCustomers.filter(customer => {
-                return customer.name.toLowerCase().includes(searchTerm) ||
-                       customer.email.toLowerCase().includes(searchTerm) ||
-                       customer.phone.includes(searchTerm);
+            if (!searchTerm) {
+                displayCustomers();
+                return;
+            }
+            
+            const filtered = allCustomers.filter(c => {
+                return (c.name && c.name.toLowerCase().includes(searchTerm)) ||
+                       (c.email && c.email.toLowerCase().includes(searchTerm)) ||
+                       (c.phone && c.phone.includes(searchTerm));
             });
             
-            displayCustomers(filteredCustomers);
+            const container = document.getElementById('customer-list');
+            container.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">該当する顧客が見つかりません</p>';
+                return;
+            }
+            
+            filtered.forEach(customer => {
+                const card = createCustomerCard(customer);
+                container.appendChild(card);
+            });
         }
         
-        // フィルター
+        // ステータスフィルター
         function filterByStatus(status) {
+            currentFilter = status;
+            
+            // ボタンのアクティブ状態更新
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
             
-            if (status === 'all') {
-                filteredCustomers = allCustomers;
-            } else {
-                filteredCustomers = allCustomers.filter(c => c.pipelineStatus === status);
-            }
-            
-            displayCustomers(filteredCustomers);
+            displayCustomers();
         }
         
-        // 編集
-        function editCustomer(customerId) {
-            window.location.href = `customer-form.html?edit=${customerId}`;
-        }
-        
-        // 削除（非同期版）
+        // 顧客削除
         async function deleteCustomer(customerId) {
-            if (!confirm('この顧客を削除しますか？この操作は取り消しできません。')) {
+            if (!confirm('この顧客を削除してもよろしいですか？')) {
                 return;
             }
             
             try {
-                if (await window.UnifiedDataManager.deleteCustomer(customerId)) {
-                    await loadCustomers();
-                    alert('✅ 顧客を削除しました');
-                } else {
-                    alert('❌ 顧客の削除に失敗しました');
-                }
+                await window.UnifiedDataManager.deleteCustomer(customerId);
+                displayCustomers();
+                updateStats();
+                alert('✅ 顧客を削除しました');
             } catch (error) {
-                console.error('❌ 顧客削除エラー:', error);
-                alert('❌ 顧客削除中にエラーが発生しました');
+                console.error('❌ 削除エラー:', error);
+                alert('❌ 削除に失敗しました');
             }
         }
-        
-        // 🆕 高速初期化（並列処理）
-        async function initialize() {
-            try {
-                console.log('🚀 === 高速初期化開始 ===');
-                
-                // ステップ1：認証マネージャー初期化（軽量）
-                if (window.IntegratedAuthManagerV2) {
-                    await window.IntegratedAuthManagerV2.initialize();
-                    currentAuthState = window.IntegratedAuthManagerV2.getAuthState();
-                }
-                
-                // ステップ2：顧客データを即座に表示（LocalStorageから）
-                await loadCustomers();
-                showAuthStatus('✅ データ表示完了 - Google Sheets接続中...', 'warning');
-                
-                // ステップ3：Google Sheets統合をバックグラウンドで実行
-                // UIブロックせずに非同期で実行
-                autoInitializeGoogleSheets().then(() => {
-                    console.log('✅ バックグラウンド初期化完了');
-                });
-                
-                systemInitialized = true;
-                console.log('🚀 === 高速初期化完了（表示） ===');
-                
-            } catch (error) {
-                console.error('❌ 初期化エラー:', error);
-                showAuthStatus('❌ 初期化エラー: ' + error.message, 'error');
-            }
-        }
-        
-        // ページ読み込み時に高速初期化
-        window.addEventListener('DOMContentLoaded', initialize);
-        
-        console.log('✅ 顧客管理ページ準備完了');
     </script>
 </body>
 </html>
