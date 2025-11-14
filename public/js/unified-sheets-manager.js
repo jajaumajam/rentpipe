@@ -1,24 +1,23 @@
-// 統合データ管理システム（可変同期間隔版）
+// RentPipe 統合データ同期管理システム（可変同期間隔版）
 window.UnifiedSheetsManager = {
     isEnabled: false,
     spreadsheetId: null,
-    lastSyncTime: null,
     isSyncing: false,
-    syncInterval: null,
-    
-    // 可変同期間隔の設定
+    lastSyncTime: null,
+    syncIntervalId: null,
     syncMode: 'normal', // 'after-change', 'normal', 'idle'
-    lastChangeTime: null,
     lastUserActionTime: Date.now(),
-    debounceTimer: null,
+    debounceTimeoutId: null,
     
-    // 同期間隔（ミリ秒）
-    INTERVALS: {
-        afterChange: 15000,    // 15秒（変更後）
-        normal: 120000,        // 2分（通常）
-        idle: 300000          // 5分（アイドル）
+    // 同期間隔設定（ミリ秒）
+    SYNC_INTERVALS: {
+        AFTER_CHANGE: 15000,    // 変更直後: 15秒後（デバウンス）
+        NORMAL: 120000,         // 通常: 2分
+        IDLE: 300000            // アイドル: 5分（10分間操作なし）
     },
-    IDLE_THRESHOLD: 600000,   // 10分（アイドル判定）
+    
+    // アイドル判定時間（10分）
+    IDLE_THRESHOLD: 600000,
     
     // 初期化
     initialize: async function() {
@@ -78,9 +77,59 @@ window.UnifiedSheetsManager = {
             };
             console.log('🔍 統合確認:', allSystemsReady);
             
-            // スプレッドシートIDの確認
+            // ✅ スプレッドシートIDの確認と自動検索・作成
             this.spreadsheetId = localStorage.getItem('rentpipe_spreadsheet_id');
             console.log('📂 保存済みスプレッドシートID:', this.spreadsheetId);
+            
+            // ✅ IDがない場合は既存スプレッドシートを検索または新規作成
+            if (!this.spreadsheetId && allSystemsReady.sheetsAuthenticated && allSystemsReady.driveAPI) {
+                console.log('🔍 スプレッドシートIDがありません。既存スプレッドシートを検索します...');
+                
+                try {
+                    // Google Driveで「RentPipe_Customers」を検索
+                    const searchResult = await window.GoogleDriveAPIv2.searchSpreadsheets('RentPipe_Customers');
+                    
+                    if (searchResult.files && searchResult.files.length > 0) {
+                        // 既存のスプレッドシートが見つかった
+                        this.spreadsheetId = searchResult.files[0].id;
+                        console.log('✅ 既存のRentPipe_Customersスプレッドシートを発見:', this.spreadsheetId);
+                        console.log('📊 スプレッドシート名:', searchResult.files[0].name);
+                        
+                        // LocalStorageに保存
+                        localStorage.setItem('rentpipe_spreadsheet_id', this.spreadsheetId);
+                        console.log('💾 スプレッドシートIDをLocalStorageに保存しました');
+                        
+                    } else {
+                        // 既存のスプレッドシートが見つからない → 新規作成
+                        console.log('📝 既存スプレッドシートが見つかりません。新規作成します...');
+                        
+                        const newSpreadsheet = await window.GoogleSheetsAPI.createSpreadsheet('RentPipe_Customers');
+                        
+                        if (newSpreadsheet && newSpreadsheet.spreadsheetId) {
+                            this.spreadsheetId = newSpreadsheet.spreadsheetId;
+                            console.log('✅ 新規スプレッドシート作成成功:', this.spreadsheetId);
+                            console.log('📊 スプレッドシートURL:', newSpreadsheet.spreadsheetUrl);
+                            
+                            // LocalStorageに保存
+                            localStorage.setItem('rentpipe_spreadsheet_id', this.spreadsheetId);
+                            console.log('💾 スプレッドシートIDをLocalStorageに保存しました');
+                            
+                            // ヘッダー行を作成
+                            console.log('📋 ヘッダー行を作成中...');
+                            const headers = [
+                                ['id', 'name', 'email', 'phone', 'pipelineStatus', 'preferences', 'notes', 'createdAt', 'updatedAt']
+                            ];
+                            await window.GoogleSheetsAPI.writeData(headers, 'A1');
+                            console.log('✅ ヘッダー行作成完了');
+                        } else {
+                            console.error('❌ 新規スプレッドシート作成に失敗しました');
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ スプレッドシート検索・作成エラー:', error);
+                    console.log('ℹ️ LocalStorageモードで動作を継続します');
+                }
+            }
             
             // すべてのシステムが準備完了している場合のみ有効化
             if (allSystemsReady.sheetsAPI && 
@@ -113,157 +162,124 @@ window.UnifiedSheetsManager = {
     
     // ユーザーアクション監視
     setupUserActionTracking: function() {
-        const updateUserAction = () => {
-            this.lastUserActionTime = Date.now();
-            this.updateSyncMode();
-        };
+        const events = ['click', 'keydown', 'scroll', 'mousemove'];
         
-        document.addEventListener('click', updateUserAction);
-        document.addEventListener('scroll', updateUserAction);
-        document.addEventListener('keypress', updateUserAction);
-        document.addEventListener('touchstart', updateUserAction);
+        events.forEach(eventType => {
+            document.addEventListener(eventType, () => {
+                this.lastUserActionTime = Date.now();
+            }, { passive: true });
+        });
         
-        console.log('👆 ユーザーアクション監視開始');
+        console.log('👀 ユーザーアクション監視開始');
     },
     
-    // 同期モードの更新
-    updateSyncMode: function() {
-        const now = Date.now();
-        const timeSinceUserAction = now - this.lastUserActionTime;
-        const timeSinceChange = this.lastChangeTime ? now - this.lastChangeTime : Infinity;
+    // 同期モード判定
+    determineSyncMode: function() {
+        const timeSinceLastAction = Date.now() - this.lastUserActionTime;
         
-        let newMode = this.syncMode;
-        
-        // アイドル判定
-        if (timeSinceUserAction > this.IDLE_THRESHOLD) {
-            newMode = 'idle';
+        if (timeSinceLastAction > this.IDLE_THRESHOLD) {
+            return 'idle';
+        } else {
+            return 'normal';
         }
-        // 変更直後判定（最後の変更から1分以内）
-        else if (timeSinceChange < 60000) {
-            newMode = 'after-change';
-        }
-        // 通常モード
-        else {
-            newMode = 'normal';
-        }
-        
-        // モード変更時のログ
-        if (newMode !== this.syncMode) {
-            console.log(`🔄 同期モード変更: ${this.syncMode} → ${newMode}`);
-            this.syncMode = newMode;
-            
-            // 同期間隔を再設定
-            this.restartSync();
-        }
-    },
-    
-    // データ変更時の呼び出し（デバウンス同期）
-    onDataChanged: function() {
-        console.log('📝 データ変更検知 - デバウンス同期スケジュール');
-        
-        this.lastChangeTime = Date.now();
-        this.syncMode = 'after-change';
-        
-        // 既存のデバウンスタイマーをクリア
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-        }
-        
-        // 15秒後に同期（デバウンス）
-        this.debounceTimer = setTimeout(async () => {
-            console.log('⏰ デバウンス同期実行');
-            await this.syncFromSheetsToLocal();
-            this.debounceTimer = null;
-            
-            // 通常モードに戻る
-            this.updateSyncMode();
-        }, this.INTERVALS.afterChange);
     },
     
     // 可変同期開始
     startAdaptiveSync: function() {
         console.log('🔄 可変同期システム開始');
         
-        // 初回同期
+        // 初回同期実行
         this.syncFromSheetsToLocal();
         
-        // 定期同期開始
-        this.restartSync();
+        // 定期的にモード判定して同期
+        this.syncIntervalId = setInterval(() => {
+            const newMode = this.determineSyncMode();
+            
+            if (newMode !== this.syncMode) {
+                console.log(`🔄 同期モード変更: ${this.syncMode} → ${newMode}`);
+                this.syncMode = newMode;
+            }
+            
+            // 現在のモードに応じた間隔で同期
+            const currentInterval = this.SYNC_INTERVALS[this.syncMode.toUpperCase().replace('-', '_')];
+            
+            if (this.lastSyncTime === null || (Date.now() - this.lastSyncTime >= currentInterval)) {
+                this.syncFromSheetsToLocal();
+            }
+            
+        }, 10000); // 10秒ごとにチェック
         
-        // 5秒ごとにモードチェック
-        setInterval(() => {
-            this.updateSyncMode();
-        }, 5000);
+        console.log('✅ 可変同期システム起動完了');
     },
     
-    // 同期再開
-    restartSync: function() {
-        // 既存のインターバルをクリア
-        if (this.syncInterval) {
-            clearInterval(this.syncInterval);
+    // 変更通知受信（UnifiedDataManagerから呼ばれる）
+    notifyDataChanged: function() {
+        console.log('📢 データ変更通知受信 - デバウンス同期スケジュール');
+        
+        // 既存のデバウンスタイマーをクリア
+        if (this.debounceTimeoutId) {
+            clearTimeout(this.debounceTimeoutId);
         }
         
-        const interval = this.INTERVALS[this.syncMode];
-        console.log(`⏱️ 同期間隔設定: ${interval / 1000}秒（${this.syncMode}モード）`);
+        // 15秒後に同期実行
+        this.debounceTimeoutId = setTimeout(() => {
+            console.log('⏰ デバウンス時間経過 - 同期実行');
+            this.syncFromSheetsToLocal();
+        }, this.SYNC_INTERVALS.AFTER_CHANGE);
         
-        this.syncInterval = setInterval(async () => {
-            console.log(`⏰ 定期同期実行（${this.syncMode}モード）`);
-            await this.syncFromSheetsToLocal();
-        }, interval);
+        console.log(`⏳ ${this.SYNC_INTERVALS.AFTER_CHANGE / 1000}秒後に同期実行予定`);
     },
     
     // Google Sheets → LocalStorage 同期
     syncFromSheetsToLocal: async function() {
-        if (this.isSyncing) {
-            console.log('⏳ 既に同期処理中...');
-            return;
-        }
-        
-        if (!this.isEnabled) {
-            console.log('ℹ️ Google Sheets統合が無効です');
+        if (!this.isEnabled || this.isSyncing) {
             return;
         }
         
         this.isSyncing = true;
-        console.log('🔽 Google Sheets → LocalStorage 同期開始');
+        console.log('📥 Google Sheets → LocalStorage 同期開始...');
         
         try {
-            // LocalStorageから読み込み
-            const localData = localStorage.getItem('rentpipe_demo_customers');
-            const localCustomers = localData ? JSON.parse(localData) : [];
-            console.log('📂 LocalStorageデータ:', localCustomers.length, '件');
+            // Google Sheetsからデータ読み込み
+            const sheetData = await window.GoogleSheetsAPI.readData('A2:I');
             
-            // Google Sheetsから読み込み
-            const sheetsCustomers = await window.GoogleSheetsAPI.readData();
-            console.log('☁️ Google Sheetsデータ:', sheetsCustomers.length, '件');
-            
-            // Google Sheets優先でマージ
-            const mergedCustomers = [];
-            const processedIds = new Set();
-            
-            // 1. Google Sheetsのデータを優先
-            for (const sheetsCustomer of sheetsCustomers) {
-                mergedCustomers.push(sheetsCustomer);
-                processedIds.add(sheetsCustomer.id);
+            if (!sheetData || sheetData.length === 0) {
+                console.log('ℹ️ Google Sheetsにデータがありません');
+                this.lastSyncTime = Date.now();
+                return;
             }
             
-            // 2. LocalStorage独自のデータを追加
-            for (const localCustomer of localCustomers) {
-                if (!processedIds.has(localCustomer.id)) {
-                    mergedCustomers.push(localCustomer);
+            // データ変換
+            const customers = sheetData.map(row => {
+                try {
+                    return {
+                        id: row[0],
+                        name: row[1],
+                        email: row[2],
+                        phone: row[3],
+                        pipelineStatus: row[4],
+                        preferences: row[5] ? JSON.parse(row[5]) : {},
+                        notes: row[6] || '',
+                        createdAt: row[7],
+                        updatedAt: row[8]
+                    };
+                } catch (error) {
+                    console.error('❌ 行データ変換エラー:', error, row);
+                    return null;
                 }
-            }
+            }).filter(c => c !== null);
             
-            console.log('✅ マージ完了:', mergedCustomers.length, '件');
+            // LocalStorageに保存
+            localStorage.setItem('rentpipe_demo_customers', JSON.stringify(customers));
+            console.log(`✅ 同期完了: ${customers.length}件の顧客データ`);
             
-            // LocalStorageを更新
-            localStorage.setItem('rentpipe_demo_customers', JSON.stringify(mergedCustomers));
+            // 同期時刻を記録
+            this.lastSyncTime = Date.now();
             
-            this.lastSyncTime = new Date();
-            console.log('✅ 同期完了');
-            
-            // ページに変更を通知
-            window.dispatchEvent(new CustomEvent('rentpipe-data-updated'));
+            // データ更新イベントを発火
+            window.dispatchEvent(new CustomEvent('rentpipe-data-updated', { 
+                detail: { source: 'sheets-sync', count: customers.length }
+            }));
             
         } catch (error) {
             console.error('❌ 同期エラー:', error);
@@ -272,26 +288,7 @@ window.UnifiedSheetsManager = {
         }
     },
     
-    // 自動同期停止
-    stopAutoSync: function() {
-        if (this.syncInterval) {
-            clearInterval(this.syncInterval);
-            this.syncInterval = null;
-        }
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-            this.debounceTimer = null;
-        }
-        console.log('⏹️ 自動同期停止');
-    },
-    
-    // 手動同期
-    manualSync: async function() {
-        console.log('🔄 手動同期実行');
-        await this.syncFromSheetsToLocal();
-    },
-    
-    // ステータス取得
+    // 状態取得
     getStatus: function() {
         return {
             isEnabled: this.isEnabled,
@@ -299,20 +296,15 @@ window.UnifiedSheetsManager = {
             lastSyncTime: this.lastSyncTime,
             isSyncing: this.isSyncing,
             syncMode: this.syncMode,
-            nextSyncIn: this.getNextSyncTime()
+            timeSinceLastAction: Date.now() - this.lastUserActionTime
         };
     },
     
-    // 次回同期までの時間
-    getNextSyncTime: function() {
-        if (!this.isEnabled) return null;
-        
-        const interval = this.INTERVALS[this.syncMode];
-        const elapsed = Date.now() - (this.lastSyncTime?.getTime() || Date.now());
-        const remaining = Math.max(0, interval - elapsed);
-        
-        return Math.round(remaining / 1000); // 秒単位
+    // 手動同期
+    manualSync: async function() {
+        console.log('🔄 手動同期実行');
+        await this.syncFromSheetsToLocal();
     }
 };
 
-console.log('✅ 統合データ管理システム準備完了（可変同期版）');
+console.log('✅ 統合データ同期管理システム（可変同期版）準備完了');
