@@ -53,18 +53,26 @@ window.UnifiedDataManager = {
     // データ変更通知
     notifyDataChanged: function() {
         // UnifiedSheetsManagerに変更を通知（デバウンス同期トリガー）
-        if (window.UnifiedSheetsManager && window.UnifiedSheetsManager.onDataChanged) {
-            window.UnifiedSheetsManager.onDataChanged();
+        if (window.UnifiedSheetsManager && window.UnifiedSheetsManager.notifyDataChanged) {
+            window.UnifiedSheetsManager.notifyDataChanged();
         }
+    },
+    
+    // ✅ 本番環境対応の顧客ID生成
+    generateCustomerId: function() {
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 9);
+        return `customer_${timestamp}_${randomStr}`;
     },
     
     // 新規顧客追加
     addCustomer: async function(customer) {
         const customers = this.getCustomers();
         
-        // IDが未設定の場合は生成
+        // ✅ IDが未設定の場合は本番環境対応のIDを生成
         if (!customer.id) {
-            customer.id = 'unified-demo-' + Date.now();
+            customer.id = this.generateCustomerId();
+            console.log('✅ 顧客ID生成:', customer.id);
         }
         
         // タイムスタンプ設定
@@ -86,22 +94,32 @@ window.UnifiedDataManager = {
     },
     
     // 顧客更新
-    updateCustomer: async function(updatedCustomer) {
+    updateCustomer: async function(customerId, updatedData) {
+        console.log('🔄 顧客更新開始:', customerId);
+        
         const customers = this.getCustomers();
-        const index = customers.findIndex(c => c.id === updatedCustomer.id);
+        const index = customers.findIndex(c => c.id === customerId);
         
         if (index === -1) {
-            console.error('❌ 顧客が見つかりません:', updatedCustomer.id);
-            throw new Error('顧客が見つかりません');
+            console.error('❌ 顧客が見つかりません:', customerId);
+            console.log('📋 既存の顧客ID一覧:', customers.map(c => c.id));
+            return false;
         }
         
-        // タイムスタンプ更新
-        updatedCustomer.updatedAt = new Date().toISOString();
+        // 既存データを保持しつつ、更新データをマージ
+        const existingCustomer = customers[index];
+        const updatedCustomer = {
+            ...existingCustomer,
+            ...updatedData,
+            id: customerId, // IDは変更しない
+            createdAt: existingCustomer.createdAt, // 作成日時は変更しない
+            updatedAt: new Date().toISOString() // 更新日時のみ更新
+        };
         
         customers[index] = updatedCustomer;
         this.saveCustomers(customers);
         
-        console.log('✅ 顧客更新完了:', updatedCustomer.id);
+        console.log('✅ 顧客更新完了:', customerId);
         
         // Google Sheetsへ即座同期
         await this.syncToSheetsImmediately(customers);
@@ -109,7 +127,7 @@ window.UnifiedDataManager = {
         // 変更通知（デバウンス同期）
         this.notifyDataChanged();
         
-        return updatedCustomer;
+        return true;
     },
     
     // 顧客削除
@@ -119,7 +137,7 @@ window.UnifiedDataManager = {
         
         if (customers.length === filtered.length) {
             console.error('❌ 顧客が見つかりません:', customerId);
-            throw new Error('顧客が見つかりません');
+            return false;
         }
         
         this.saveCustomers(filtered);
@@ -135,42 +153,9 @@ window.UnifiedDataManager = {
         return true;
     },
     
-    // ステータス別顧客取得
-    getCustomersByStatus: function(status) {
-        const customers = this.getCustomers();
-        return customers.filter(c => c.pipelineStatus === status);
-    },
-    
-    // 検索
-    searchCustomers: function(searchTerm) {
-        const customers = this.getCustomers();
-        const term = searchTerm.toLowerCase();
-        
-        return customers.filter(c => {
-            return (c.name && c.name.toLowerCase().includes(term)) ||
-                   (c.email && c.email.toLowerCase().includes(term)) ||
-                   (c.phone && c.phone.includes(term));
-        });
-    },
-    
-    // 統計取得
-    getStats: function() {
-        const customers = this.getCustomers();
-        
-        // 今月の新規
-        const thisMonth = new Date().getMonth();
-        const thisYear = new Date().getFullYear();
-        const newThisMonth = customers.filter(c => {
-            const created = new Date(c.createdAt);
-            return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
-        }).length;
-        
-        return {
-            total: customers.length,
-            newThisMonth: newThisMonth,
-            completed: customers.filter(c => c.pipelineStatus === '完了').length,
-            active: customers.filter(c => c.pipelineStatus !== '完了').length
-        };
+    // パイプラインステータス更新
+    updateCustomerStatus: async function(customerId, newStatus) {
+        return await this.updateCustomer(customerId, { pipelineStatus: newStatus });
     }
 };
 
