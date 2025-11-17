@@ -87,9 +87,72 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        
+        /* ローディング状態 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
+    
+    <!-- ✅ URLパラメータを即座にチェックして編集モードのUIを設定 -->
+    <script>
+        // ページ読み込み前にURLパラメータをチェック
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            
+            if (editId) {
+                // 編集モードの場合、ページタイトルを変更
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
+                    document.getElementById('form-description').textContent = '顧客情報を編集してください';
+                    document.getElementById('submit-btn').textContent = '更新する';
+                });
+            }
+        })();
+    </script>
 </head>
 <body>
+    <!-- ローディングオーバーレイ -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>データを読み込み中...</p>
+        </div>
+    </div>
+    
     <!-- ナビゲーション -->
     <div id="navigation"></div>
     
@@ -200,20 +263,21 @@
         let isEditMode = false;
         let editingCustomerId = null;
         
-        // ✅ loadCustomerForEdit関数をグローバルスコープに定義（app-initializer.jsから呼ばれる）
+        // ✅ loadCustomerForEdit関数をグローバルスコープに定義
         window.loadCustomerForEdit = function(customerId) {
             console.log('✏️ 編集モード: loadCustomerForEdit呼び出し -', customerId);
             
-            // 少し待ってからデータを読み込む（UnifiedDataManagerの初期化を待つ）
+            // ✅ ローディング表示
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('active');
+            }
+            
+            // ✅ 待機時間を100msに短縮（UnifiedDataManagerの初期化を最小限待つ）
             setTimeout(() => {
                 try {
                     isEditMode = true;
                     editingCustomerId = customerId;
-                    
-                    // UI更新
-                    document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
-                    document.getElementById('form-description').textContent = '顧客情報を編集してください';
-                    document.getElementById('submit-btn').textContent = '更新する';
                     
                     // UnifiedDataManagerの確認
                     if (!window.UnifiedDataManager) {
@@ -254,12 +318,23 @@
                     
                     console.log('✅ フォームに値を設定完了');
                     
+                    // ローディング非表示
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.remove('active');
+                    }
+                    
                 } catch (error) {
                     console.error('❌ 顧客データ読み込みエラー:', error);
+                    
+                    // ローディング非表示
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.remove('active');
+                    }
+                    
                     alert('顧客データの読み込みに失敗しました: ' + error.message);
                     window.location.href = 'customer.html';
                 }
-            }, 500); // 500ms待機してからデータ読み込み
+            }, 100); // ✅ 500ms → 100msに短縮
         };
         
         // フォーム送信処理
