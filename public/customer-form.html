@@ -314,12 +314,15 @@
                 }
                 
                 if (isEditMode && editingCustomerId) {
-                    // ✅ 更新処理
+                    // ✅ 更新処理（修正：IDをformDataに追加）
                     console.log('🔄 顧客情報更新中...', editingCustomerId);
                     
-                    const success = await window.UnifiedDataManager.updateCustomer(editingCustomerId, formData);
+                    // IDをformDataに追加
+                    formData.id = editingCustomerId;
                     
-                    if (success) {
+                    const updatedCustomer = await window.UnifiedDataManager.updateCustomer(formData);
+                    
+                    if (updatedCustomer) {
                         console.log('✅ 顧客情報更新成功（Google Sheets同期完了）');
                         alert('✅ 顧客情報を更新しました');
                         window.location.href = 'customer.html';
