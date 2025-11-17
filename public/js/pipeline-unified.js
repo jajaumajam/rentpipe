@@ -1,90 +1,105 @@
-// RentPipe パイプライン管理機能（完全版 + データ更新対応）
+// パイプライン管理システム（統合版 + アクティブ顧客のみ表示）
 class PipelineManager {
     constructor() {
+        console.log('🎯 パイプライン管理システム初期化開始（アクティブのみ表示）');
+        
+        this.statuses = [
+            '初回相談',
+            '物件紹介',
+            '内見',
+            '申込',
+            '審査中',
+            '契約手続き',
+            '完了'
+        ];
+        
         this.dataManager = null;
-        this.statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
-        this.isUpdating = false; // 自分自身の更新中フラグ
-        this.init();
+        this.isUpdating = false;
+        
+        this.initialize();
     }
 
-    async init() {
-        console.log('📈 統一パイプライン管理システム初期化中...');
+    async initialize() {
+        console.log('⚙️ 初期化処理開始...');
         
-        // 統一データ管理システムの準備を待つ
-        await this.waitForDataManager();
+        try {
+            // 認証確認
+            await this.checkAuth();
+            
+            // データマネージャーの準備待機
+            await this.waitForDataManager();
+            
+            // パイプライン描画
+            this.renderPipeline();
+            
+            // データ変更イベントのリスナー登録
+            window.addEventListener('rentpipe-data-updated', () => {
+                if (!this.isUpdating) {
+                    console.log('📢 データ更新検知 - パイプライン再描画');
+                    this.renderPipeline();
+                }
+            });
+            
+            console.log('✅ パイプライン管理システム初期化完了');
+            
+        } catch (error) {
+            console.error('❌ 初期化エラー:', error);
+            this.showError(error.message);
+        }
+    }
+
+    async checkAuth() {
+        const authData = localStorage.getItem('rentpipe_auth');
+        const statusDiv = document.getElementById('auth-sync-status');
         
-        // パイプラインの表示
-        this.renderPipeline();
+        if (!authData) {
+            statusDiv.className = 'auth-status error';
+            statusDiv.textContent = '❌ 未認証 - ログインしてください';
+            throw new Error('認証が必要です');
+        }
         
-        // 認証状態の更新
-        this.updateAuthStatus();
-        
-        // 🆕 データ更新イベントをリッスン
-        window.addEventListener('rentpipe-data-updated', () => {
-            // 自分自身の更新中は再描画しない（無限ループ防止）
-            if (!this.isUpdating) {
-                console.log('🔔 データ更新通知受信 - パイプライン再描画');
-                this.renderPipeline();
-            }
-        });
-        
-        console.log('✅ 統一対応パイプライン管理システム準備完了');
+        statusDiv.className = 'auth-status success';
+        statusDiv.textContent = '✅ 認証済み';
     }
 
     async waitForDataManager() {
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                if (window.UnifiedDataManager) {
-                    this.dataManager = window.UnifiedDataManager;
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 100);
-            
-            // タイムアウト（5秒）
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                if (!this.dataManager) {
-                    console.error('❌ 統一データ管理システムが利用できません');
-                }
-                resolve();
-            }, 5000);
-        });
+        console.log('⏳ データマネージャーの準備を待機中...');
+        
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        while (!window.UnifiedDataManager && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!window.UnifiedDataManager) {
+            throw new Error('データ管理システムが利用できません');
+        }
+        
+        this.dataManager = window.UnifiedDataManager;
+        console.log('✅ データマネージャー準備完了');
     }
 
-    updateAuthStatus() {
+    showError(message) {
         const statusDiv = document.getElementById('auth-sync-status');
-        if (!statusDiv) return;
-        
-        const authState = window.IntegratedAuthManagerV2?.getAuthState();
-        
-        if (authState?.isAuthenticated) {
-            const email = authState.email || 'ユーザー';
-            const sheetsEnabled = window.UnifiedSheetsManager?.isEnabled;
-            
-            if (sheetsEnabled) {
-                statusDiv.className = 'auth-status success';
-                statusDiv.textContent = `✅ Google Sheets連携中 (${email})`;
-            } else {
-                statusDiv.className = 'auth-status warning';
-                statusDiv.textContent = `⚠️ ローカルモード (${email}) - Google Sheets未接続`;
-            }
-        } else {
+        if (statusDiv) {
             statusDiv.className = 'auth-status error';
-            statusDiv.textContent = '❌ 未認証 - ログインしてください';
+            statusDiv.textContent = '❌ ' + message;
         }
     }
 
     renderPipeline() {
-        console.log('🎨 パイプライン描画開始');
+        console.log('🎨 パイプライン描画開始（アクティブ顧客のみ）');
         
         if (!this.dataManager) {
             console.error('❌ データ管理システムが利用できません');
             return;
         }
 
-        const customers = this.dataManager.getCustomers();
-        console.log('📊 顧客データ取得:', customers.length, '件');
+        // アクティブ顧客のみ取得
+        const customers = this.dataManager.getActiveCustomers();
+        console.log('📊 アクティブ顧客データ取得:', customers.length, '件');
         
         const container = document.getElementById('pipeline-container');
         if (!container) {
@@ -184,7 +199,7 @@ class PipelineManager {
         }
 
         try {
-            // 🆕 更新中フラグを立てる
+            // 更新中フラグを立てる
             this.isUpdating = true;
             
             const customer = this.dataManager.getCustomerById(customerId);
@@ -200,16 +215,21 @@ class PipelineManager {
             
             console.log('✅ ステータス変更成功:', customerId, '→', selectedStatus);
             
+            // 完了ステータスに変更された場合の通知
+            if (selectedStatus === '完了') {
+                alert(`✅ ステータスを「完了」に変更しました\n自動的に非アクティブ化されました`);
+            } else {
+                alert(`✅ ステータスを「${selectedStatus}」に変更しました`);
+            }
+            
             // パイプライン再描画
             this.renderPipeline();
-            
-            alert(`✅ ステータスを「${selectedStatus}」に変更しました`);
             
         } catch (error) {
             console.error('❌ ステータス変更エラー:', error);
             alert('ステータス変更に失敗しました: ' + error.message);
         } finally {
-            // 🆕 更新中フラグを解除
+            // 更新中フラグを解除
             this.isUpdating = false;
         }
     }
@@ -224,4 +244,4 @@ if (document.readyState === 'loading') {
     window.pipelineManager = new PipelineManager();
 }
 
-console.log('✅ パイプライン管理システム準備完了');
+console.log('✅ パイプライン管理システム準備完了（アクティブのみ表示版）');

@@ -1,10 +1,10 @@
-// 統一データ管理システム（Google Sheets統合版 + 即座同期 + 変更通知）
+// 統一データ管理システム（アクティブ/非アクティブ管理対応版）
 window.UnifiedDataManager = {
     STORAGE_KEY: 'rentpipe_demo_customers',
     
     // 初期化
     initialize: function() {
-        console.log('✅ 統一データ管理システム初期化（Google Sheets統合版）');
+        console.log('✅ 統一データ管理システム初期化（アクティブ管理対応版）');
         
         // 既存データの確認
         const existingData = localStorage.getItem(this.STORAGE_KEY);
@@ -21,6 +21,18 @@ window.UnifiedDataManager = {
     getCustomers: function() {
         const data = localStorage.getItem(this.STORAGE_KEY);
         return data ? JSON.parse(data) : [];
+    },
+    
+    // アクティブ顧客のみ取得
+    getActiveCustomers: function() {
+        const customers = this.getCustomers();
+        return customers.filter(c => c.isActive !== false);
+    },
+    
+    // 非アクティブ顧客のみ取得
+    getInactiveCustomers: function() {
+        const customers = this.getCustomers();
+        return customers.filter(c => c.isActive === false);
     },
     
     // 顧客をIDで取得
@@ -41,6 +53,11 @@ window.UnifiedDataManager = {
         customer.createdAt = customer.createdAt || new Date().toISOString();
         customer.updatedAt = new Date().toISOString();
         
+        // デフォルトでアクティブ
+        if (customer.isActive === undefined) {
+            customer.isActive = true;
+        }
+        
         customers.push(customer);
         this.saveCustomers(customers);
         
@@ -56,20 +73,24 @@ window.UnifiedDataManager = {
     
     // 顧客更新
     updateCustomer: async function(updatedCustomer) {
-        console.log('🔄 顧客更新開始:', updatedCustomer.id, updatedCustomer);
+        console.log('🔄 顧客更新開始:', updatedCustomer.id);
         
         const customers = this.getCustomers();
-        console.log('📋 全顧客データ:', customers.length, '件');
-        console.log('📋 既存の顧客ID一覧:', customers.map(c => c.id));
-        
-        const index = customers.findIndex(c => {
-            console.log('🔍 比較中:', c.id, '===', updatedCustomer.id, '結果:', c.id === updatedCustomer.id);
-            return c.id === updatedCustomer.id;
-        });
+        const index = customers.findIndex(c => c.id === updatedCustomer.id);
         
         if (index !== -1) {
             console.log('✅ 顧客発見:', index, '番目');
             updatedCustomer.updatedAt = new Date().toISOString();
+            
+            // 完了ステータスの場合、自動的に非アクティブ化
+            if (updatedCustomer.pipelineStatus === '完了' && updatedCustomer.isActive !== false) {
+                console.log('🎯 完了ステータス検知 - 自動非アクティブ化');
+                updatedCustomer.isActive = false;
+                updatedCustomer.inactiveReason = 'completed';
+                updatedCustomer.inactiveDate = new Date().toISOString();
+                updatedCustomer.inactiveNote = updatedCustomer.inactiveNote || '成約完了';
+            }
+            
             customers[index] = { ...customers[index], ...updatedCustomer };
             this.saveCustomers(customers);
             
@@ -85,9 +106,60 @@ window.UnifiedDataManager = {
             return customers[index];
         } else {
             console.error('❌ 顧客が見つかりません:', updatedCustomer);
-            console.log('📋 全顧客一覧:', JSON.stringify(customers, null, 2));
             throw new Error('顧客が見つかりません');
         }
+    },
+    
+    // 顧客を非アクティブ化
+    deactivateCustomer: async function(customerId, reason, note) {
+        console.log('🔄 非アクティブ化開始:', customerId, reason);
+        
+        const customer = this.getCustomerById(customerId);
+        if (!customer) {
+            throw new Error('顧客が見つかりません');
+        }
+        
+        customer.isActive = false;
+        customer.inactiveReason = reason;
+        customer.inactiveDate = new Date().toISOString();
+        customer.inactiveNote = note || '';
+        customer.updatedAt = new Date().toISOString();
+        
+        // 理由に応じてステータスも更新
+        if (reason === 'completed') {
+            customer.pipelineStatus = '完了';
+        }
+        
+        await this.updateCustomer(customer);
+        
+        console.log('✅ 非アクティブ化完了:', customerId);
+        return customer;
+    },
+    
+    // 顧客を再アクティブ化
+    reactivateCustomer: async function(customerId, newStatus) {
+        console.log('🔄 再アクティブ化開始:', customerId);
+        
+        const customer = this.getCustomerById(customerId);
+        if (!customer) {
+            throw new Error('顧客が見つかりません');
+        }
+        
+        customer.isActive = true;
+        customer.inactiveReason = null;
+        customer.inactiveDate = null;
+        customer.inactiveNote = null;
+        customer.updatedAt = new Date().toISOString();
+        
+        // 新しいステータスを設定（指定があれば）
+        if (newStatus) {
+            customer.pipelineStatus = newStatus;
+        }
+        
+        await this.updateCustomer(customer);
+        
+        console.log('✅ 再アクティブ化完了:', customerId);
+        return customer;
     },
     
     // 顧客削除
@@ -143,6 +215,22 @@ window.UnifiedDataManager = {
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 9);
         return `customer_${timestamp}_${randomStr}`;
+    },
+    
+    // 統計情報取得
+    getStats: function() {
+        const customers = this.getCustomers();
+        const active = customers.filter(c => c.isActive !== false);
+        const inactive = customers.filter(c => c.isActive === false);
+        
+        return {
+            total: customers.length,
+            active: active.length,
+            inactive: inactive.length,
+            completed: inactive.filter(c => c.inactiveReason === 'completed').length,
+            lost: inactive.filter(c => c.inactiveReason === 'lost').length,
+            onHold: inactive.filter(c => c.inactiveReason === 'on-hold').length
+        };
     }
 };
 
@@ -155,4 +243,4 @@ if (document.readyState === 'loading') {
     window.UnifiedDataManager.initialize();
 }
 
-console.log('✅ 統一データ管理システム準備完了');
+console.log('✅ 統一データ管理システム準備完了（アクティブ管理対応版）');
