@@ -87,72 +87,68 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-        
-        /* ローディング状態 */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        
-        .loading-overlay.active {
-            display: flex;
-        }
-        
-        .loading-content {
-            text-align: center;
-        }
-        
-        .spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
     
-    <!-- ✅ URLパラメータを即座にチェックして編集モードのUIを設定 -->
+    <!-- ✅ URLパラメータを即座にチェックしてLocalStorageから直接データを読み込み -->
     <script>
-        // ページ読み込み前にURLパラメータをチェック
+        // ページ読み込み前に即座に実行
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
             
             if (editId) {
-                // 編集モードの場合、ページタイトルを変更
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
-                    document.getElementById('form-description').textContent = '顧客情報を編集してください';
-                    document.getElementById('submit-btn').textContent = '更新する';
-                });
+                console.log('✏️ 編集モード検出:', editId);
+                
+                // LocalStorageから即座にデータを取得
+                try {
+                    const customersData = localStorage.getItem('rentpipe_demo_customers');
+                    if (customersData) {
+                        const customers = JSON.parse(customersData);
+                        const customer = customers.find(c => c.id === editId);
+                        
+                        if (customer) {
+                            console.log('✅ LocalStorageから顧客データ取得:', customer);
+                            
+                            // DOMが読み込まれたら即座にフォームに値を設定
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // UIをすぐに編集モードに変更
+                                document.getElementById('form-title').textContent = '✏️ 顧客情報編集';
+                                document.getElementById('form-description').textContent = '顧客情報を編集してください';
+                                document.getElementById('submit-btn').textContent = '更新する';
+                                
+                                // フォームに値を即座に設定
+                                document.getElementById('name').value = customer.name || '';
+                                document.getElementById('email').value = customer.email || '';
+                                document.getElementById('phone').value = customer.phone || '';
+                                document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
+                                document.getElementById('budgetMin').value = customer.preferences?.budgetMin || '';
+                                document.getElementById('budgetMax').value = customer.preferences?.budgetMax || '';
+                                
+                                // エリアの処理
+                                if (customer.preferences?.areas) {
+                                    if (Array.isArray(customer.preferences.areas)) {
+                                        document.getElementById('areas').value = customer.preferences.areas.join(', ');
+                                    } else {
+                                        document.getElementById('areas').value = customer.preferences.areas;
+                                    }
+                                }
+                                
+                                document.getElementById('notes').value = customer.notes || '';
+                                
+                                console.log('✅ フォームに値を即座設定完了');
+                            });
+                        } else {
+                            console.warn('⚠️ 顧客が見つかりません:', editId);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ LocalStorageデータ読み込みエラー:', error);
+                }
             }
         })();
     </script>
 </head>
 <body>
-    <!-- ローディングオーバーレイ -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>データを読み込み中...</p>
-        </div>
-    </div>
-    
     <!-- ナビゲーション -->
     <div id="navigation"></div>
     
@@ -263,78 +259,20 @@
         let isEditMode = false;
         let editingCustomerId = null;
         
-        // ✅ loadCustomerForEdit関数をグローバルスコープに定義
+        // URLパラメータから編集モードを判定
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit');
+        
+        if (editId) {
+            isEditMode = true;
+            editingCustomerId = editId;
+            console.log('✏️ 編集モード設定:', editingCustomerId);
+        }
+        
+        // ✅ loadCustomerForEdit関数（app-initializer.jsから呼ばれる用）
         window.loadCustomerForEdit = function(customerId) {
-            console.log('✏️ 編集モード: loadCustomerForEdit呼び出し -', customerId);
-            
-            // ✅ ローディング表示
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) {
-                loadingOverlay.classList.add('active');
-            }
-            
-            // ✅ 待機時間を100msに短縮（UnifiedDataManagerの初期化を最小限待つ）
-            setTimeout(() => {
-                try {
-                    isEditMode = true;
-                    editingCustomerId = customerId;
-                    
-                    // UnifiedDataManagerの確認
-                    if (!window.UnifiedDataManager) {
-                        throw new Error('UnifiedDataManagerが利用できません');
-                    }
-                    
-                    // 顧客データ取得
-                    const customer = window.UnifiedDataManager.getCustomerById(customerId);
-                    
-                    if (!customer) {
-                        console.error('❌ 顧客が見つかりません:', customerId);
-                        console.log('📋 利用可能な顧客一覧:', window.UnifiedDataManager.getCustomers().map(c => c.id));
-                        alert('❌ 顧客データが見つかりませんでした');
-                        window.location.href = 'customer.html';
-                        return;
-                    }
-                    
-                    console.log('✅ 顧客データ取得成功:', customer);
-                    
-                    // フォームに値を設定
-                    document.getElementById('name').value = customer.name || '';
-                    document.getElementById('email').value = customer.email || '';
-                    document.getElementById('phone').value = customer.phone || '';
-                    document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
-                    document.getElementById('budgetMin').value = customer.preferences?.budgetMin || '';
-                    document.getElementById('budgetMax').value = customer.preferences?.budgetMax || '';
-                    
-                    // エリアの処理（配列またはカンマ区切り文字列）
-                    if (customer.preferences?.areas) {
-                        if (Array.isArray(customer.preferences.areas)) {
-                            document.getElementById('areas').value = customer.preferences.areas.join(', ');
-                        } else {
-                            document.getElementById('areas').value = customer.preferences.areas;
-                        }
-                    }
-                    
-                    document.getElementById('notes').value = customer.notes || '';
-                    
-                    console.log('✅ フォームに値を設定完了');
-                    
-                    // ローディング非表示
-                    if (loadingOverlay) {
-                        loadingOverlay.classList.remove('active');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ 顧客データ読み込みエラー:', error);
-                    
-                    // ローディング非表示
-                    if (loadingOverlay) {
-                        loadingOverlay.classList.remove('active');
-                    }
-                    
-                    alert('顧客データの読み込みに失敗しました: ' + error.message);
-                    window.location.href = 'customer.html';
-                }
-            }, 100); // ✅ 500ms → 100msに短縮
+            console.log('✏️ loadCustomerForEdit呼び出し（既にデータは設定済み）:', customerId);
+            // データは既にDOMContentLoadedで設定済みなので何もしない
         };
         
         // フォーム送信処理
