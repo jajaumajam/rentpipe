@@ -254,7 +254,7 @@ window.UnifiedSheetsManager = {
         console.log(`⏳ ${this.SYNC_INTERVALS.AFTER_CHANGE / 1000}秒後に同期実行予定`);
     },
     
-    // Google Sheets → LocalStorage 同期
+    // ✅ Google Sheets → LocalStorage 同期（オブジェクト形式対応）
     syncFromSheetsToLocal: async function() {
         if (!this.isEnabled || this.isSyncing) {
             return;
@@ -273,25 +273,53 @@ window.UnifiedSheetsManager = {
                 return;
             }
             
-            // データ変換
+            console.log('📋 読み込んだデータ形式:', typeof sheetData[0], sheetData[0]);
+            
+            // ✅ データ変換（オブジェクト形式と配列形式の両方に対応）
             const customers = sheetData.map(row => {
                 try {
-                    return {
-                        id: row[0],
-                        name: row[1],
-                        email: row[2],
-                        phone: row[3],
-                        pipelineStatus: row[4],
-                        preferences: row[5] ? JSON.parse(row[5]) : {},
-                        notes: row[6] || '',
-                        createdAt: row[7],
-                        updatedAt: row[8]
-                    };
+                    // オブジェクト形式の場合（readDataがオブジェクトを返す場合）
+                    if (row && typeof row === 'object' && !Array.isArray(row)) {
+                        return {
+                            id: row.id || row[0],
+                            name: row.name || row[1],
+                            email: row.email || row[2],
+                            phone: row.phone || row[3],
+                            pipelineStatus: row.pipelineStatus || row[4] || '初回相談',
+                            preferences: row.preferences ? (typeof row.preferences === 'string' ? JSON.parse(row.preferences) : row.preferences) : (row[5] ? JSON.parse(row[5]) : {}),
+                            notes: row.notes || row[6] || '',
+                            createdAt: row.createdAt || row[7],
+                            updatedAt: row.updatedAt || row[8]
+                        };
+                    }
+                    // 配列形式の場合（従来の形式）
+                    else if (Array.isArray(row)) {
+                        return {
+                            id: row[0],
+                            name: row[1],
+                            email: row[2],
+                            phone: row[3],
+                            pipelineStatus: row[4] || '初回相談',
+                            preferences: row[5] ? JSON.parse(row[5]) : {},
+                            notes: row[6] || '',
+                            createdAt: row[7],
+                            updatedAt: row[8]
+                        };
+                    }
+                    else {
+                        console.warn('⚠️ 不明なデータ形式:', row);
+                        return null;
+                    }
                 } catch (error) {
                     console.error('❌ 行データ変換エラー:', error, row);
                     return null;
                 }
-            }).filter(c => c !== null);
+            }).filter(c => c !== null && c.id); // idがあるもののみ
+            
+            console.log('✅ 変換後の顧客データ:', customers.length, '件');
+            if (customers.length > 0) {
+                console.log('📋 サンプルデータ:', customers[0]);
+            }
             
             // LocalStorageに保存
             localStorage.setItem('rentpipe_demo_customers', JSON.stringify(customers));
