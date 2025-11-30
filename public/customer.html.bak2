@@ -412,6 +412,7 @@
     <script src="js/google-sheets-api.js"></script>
     
     <!-- Data Management -->
+    <script src="js/data-migration.js"></script>
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
@@ -432,7 +433,6 @@
         function hideLoading() {
             document.getElementById('loading-overlay').classList.remove('active');
         }
-        
         
         // アプリケーション初期化後の処理
         document.addEventListener('DOMContentLoaded', async () => {
@@ -480,6 +480,7 @@
             }
         });
         
+        // 顧客表示
         // 顧客表示
         function displayCustomers() {
             allCustomers = window.UnifiedDataManager.getCustomers();
