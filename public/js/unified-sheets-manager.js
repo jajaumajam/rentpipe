@@ -1,222 +1,335 @@
-// Google Sheets統合管理（可変同期間隔 + 完全連携 + アクティブ/非アクティブ対応 + 修正版）
-window.UnifiedSheetsManager = {
-    isEnabled: false,
+/**
+ * 統合Google Sheetsマネージャー (拡張版)
+ * 顧客入力項目拡充に対応
+ */
+
+const UnifiedSheetsManager = {
+    SPREADSHEET_NAME: 'RentPipe顧客管理',
+    SHEET_NAME: 'customers',
     spreadsheetId: null,
-    sheetName: 'Customers',
-    lastSyncTime: null,
-    syncTimer: null,
-    debounceTimer: null,
-    currentSyncInterval: 120000, // 2分
-    
-    // ステータス取得関数
-    getStatus: function() {
-        return {
-            isEnabled: this.isEnabled,
-            spreadsheetId: this.spreadsheetId,
-            lastSyncTime: this.lastSyncTime,
-            currentSyncInterval: this.currentSyncInterval
-        };
-    },
-    
-    async initialize() {
-        console.log('🔧 Google Sheets統合マネージャー初期化開始...');
-        
-        const checkInterval = setInterval(async () => {
-            const allSystemsReady = {
-                sheetsAPI: window.GoogleSheetsAPI !== undefined,
-                sheetsInitialized: window.GoogleSheetsAPI?.isInitialized === true,
-                sheetsAuthenticated: window.GoogleSheetsAPI?.isAuthenticated === true,
-                driveAPI: window.GoogleDriveAPIv2 !== undefined,
-                driveInitialized: window.GoogleDriveAPIv2?.isInitialized === true,
-                driveAuthenticated: window.GoogleDriveAPIv2?.isAuthenticated === true,
-                unifiedDataManager: window.UnifiedDataManager !== undefined
-            };
-            
-            console.log('🔍 システム準備状態:', allSystemsReady);
-            
-            if (Object.values(allSystemsReady).every(v => v === true)) {
-                clearInterval(checkInterval);
-                console.log('✅ すべてのシステム準備完了');
-                
-                this.spreadsheetId = localStorage.getItem('rentpipe_spreadsheet_id');
-                
-                if (!this.spreadsheetId) {
-                    console.log('⚠️ スプレッドシートIDが見つかりません。検索または作成します...');
-                    
-                    try {
-                        const spreadsheets = await window.GoogleDriveAPIv2.searchSpreadsheets('RentPipe_Customers');
-                        
-                        if (spreadsheets && spreadsheets.length > 0) {
-                            this.spreadsheetId = spreadsheets[0].id;
-                            console.log('✅ 既存スプレッドシート発見:', this.spreadsheetId);
-                            localStorage.setItem('rentpipe_spreadsheet_id', this.spreadsheetId);
-                        } else {
-                            console.log('ℹ️ 既存スプレッドシートが見つかりません。新規作成します...');
-                            const newSpreadsheet = await window.GoogleSheetsAPI.createSpreadsheet('RentPipe_Customers');
-                            
-                            if (newSpreadsheet && newSpreadsheet.spreadsheetId) {
-                                this.spreadsheetId = newSpreadsheet.spreadsheetId;
-                                console.log('✅ 新規スプレッドシート作成成功:', this.spreadsheetId);
-                                localStorage.setItem('rentpipe_spreadsheet_id', this.spreadsheetId);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('❌ スプレッドシート検索・作成エラー:', error);
-                    }
-                }
-                
-                if (allSystemsReady.sheetsAPI && 
-                    allSystemsReady.sheetsInitialized && 
-                    allSystemsReady.sheetsAuthenticated && 
-                    allSystemsReady.driveAPI && 
-                    allSystemsReady.driveInitialized &&
-                    allSystemsReady.driveAuthenticated &&
-                    allSystemsReady.unifiedDataManager &&
-                    this.spreadsheetId) {
-                    
-                    this.isEnabled = true;
-                    console.log('✅ Google Sheets統合有効化完了');
-                    
-                    this.startPeriodicSync();
-                    await this.syncFromSheetsToLocal();
-                } else {
-                    console.log('⚠️ 一部システムが準備できていないため、LocalStorageモードで動作します');
-                }
-            }
-        }, 500);
-        
-        setTimeout(() => {
-            clearInterval(checkInterval);
-            if (!this.isEnabled) {
-                console.log('⏱️ 初期化タイムアウト - LocalStorageモードで動作します');
-            }
-        }, 30000);
-    },
-    
-    // 🔧 Google Sheetsからデータ読み込み（修正版）
-    async syncFromSheetsToLocal() {
-        if (!this.isEnabled) {
-            console.log('ℹ️ Google Sheets統合が無効です');
-            return;
-        }
-        
+
+    /**
+     * スプレッドシートを初期化
+     */
+    initSpreadsheet: async function() {
         try {
-            console.log('☁️ Google Sheetsからデータ読み込み中...');
-            
-            // データを読み込み（A1:K を指定して全データ取得）
-            const rows = await window.GoogleSheetsAPI.readData('A1:K');
-            
-            if (!rows || rows.length === 0) {
-                console.log('ℹ️ Google Sheetsにデータがありません');
-                return;
+            // 既存のスプレッドシートを検索
+            const response = await gapi.client.drive.files.list({
+                q: `name='${this.SPREADSHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+                fields: 'files(id, name)',
+                spaces: 'drive'
+            });
+
+            if (response.result.files && response.result.files.length > 0) {
+                this.spreadsheetId = response.result.files[0].id;
+                console.log('既存のスプレッドシートを使用:', this.spreadsheetId);
+                
+                // ヘッダー行を確認・更新
+                await this.ensureHeaders();
+                
+                return { success: true, spreadsheetId: this.spreadsheetId };
+            } else {
+                // 新規作成
+                return await this.createSpreadsheet();
             }
-            
-            console.log('📥 Google Sheetsから', rows.length, '行取得（ヘッダー含む）');
-            
-            // 🔧 ヘッダー行を取得（1行目）
-            const headers = rows[0];
-            console.log('📋 ヘッダー:', headers);
-            
-            // 🔧 データ行（2行目以降）をオブジェクトに変換
-            const customers = rows.slice(1).map((row, index) => {
-                try {
-                    // preferences のパース
-                    let preferences = {};
-                    if (row[5]) {
-                        try {
-                            preferences = JSON.parse(row[5]);
-                        } catch (e) {
-                            console.warn('preferences パースエラー:', row[5]);
-                        }
-                    }
-                    
-                    // isActiveの変換
-                    let isActive = true;
-                    if (row[7] === 'FALSE' || row[7] === false) {
-                        isActive = false;
-                    }
-                    
-                    const customer = {
-                        id: row[0] || '',
-                        name: row[1] || '',
-                        email: row[2] || '',
-                        phone: row[3] || '',
-                        pipelineStatus: row[4] || '初回相談',
-                        preferences: preferences,
-                        notes: row[6] || '',
-                        isActive: isActive,
-                        archivedAt: row[8] || null,
-                        createdAt: row[9] || '',
-                        updatedAt: row[10] || ''
-                    };
-                    
-                    console.log(`🔍 顧客データ変換 [${index + 1}]:`, {
-                        id: customer.id,
-                        name: customer.name,
-                        isActive: customer.isActive
-                    });
-                    
-                    return customer;
-                } catch (error) {
-                    console.error('❌ データ変換エラー:', error, row);
-                    return null;
-                }
-            }).filter(c => c !== null && c.id); // idが存在するもののみ
-            
-            console.log('✅ 変換完了:', customers.length, '件');
-            
-            // LocalStorageに保存
-            window.UnifiedDataManager.saveCustomers(customers);
-            
-            this.lastSyncTime = new Date();
-            console.log('✅ Google Sheets → LocalStorage 同期完了:', customers.length, '件');
-            
-            // データ更新イベント発火
-            window.UnifiedDataManager.notifyDataChanged();
-            
         } catch (error) {
-            console.error('❌ Google Sheets読み込みエラー:', error);
+            console.error('スプレッドシート初期化エラー:', error);
+            return { success: false, error: error.message };
         }
     },
-    
-    // 定期同期開始
-    startPeriodicSync() {
-        if (this.syncTimer) {
-            clearInterval(this.syncTimer);
+
+    /**
+     * 新規スプレッドシートを作成
+     */
+    createSpreadsheet: async function() {
+        try {
+            const response = await gapi.client.sheets.spreadsheets.create({
+                properties: {
+                    title: this.SPREADSHEET_NAME
+                },
+                sheets: [{
+                    properties: {
+                        title: this.SHEET_NAME
+                    }
+                }]
+            });
+
+            this.spreadsheetId = response.result.spreadsheetId;
+            console.log('新規スプレッドシート作成:', this.spreadsheetId);
+
+            // ヘッダー行を設定
+            await this.setupHeaders();
+
+            return { success: true, spreadsheetId: this.spreadsheetId };
+        } catch (error) {
+            console.error('スプレッドシート作成エラー:', error);
+            return { success: false, error: error.message };
         }
-        
-        console.log(`⏰ 定期同期開始（${this.currentSyncInterval / 1000}秒間隔）`);
-        
-        this.syncTimer = setInterval(async () => {
-            console.log('🔄 定期同期実行');
-            await this.syncFromSheetsToLocal();
-        }, this.currentSyncInterval);
     },
-    
-    // デバウンス同期スケジュール
-    scheduleDebouncedSync() {
-        if (!this.isEnabled) return;
-        
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
+
+    /**
+     * ヘッダー行を設定（新規作成時）
+     */
+    setupHeaders: async function() {
+        const headers = [
+            'id',
+            'name',
+            'nameKana',
+            'email',
+            'phone',
+            'basicInfo',
+            'preferences',
+            'equipment',
+            'additionalInfo',
+            'agentMemo',
+            'pipelineStatus',
+            'isActive',
+            'archivedAt',
+            'createdAt',
+            'updatedAt'
+        ];
+
+        try {
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: this.spreadsheetId,
+                range: `${this.SHEET_NAME}!A1:O1`,
+                valueInputOption: 'RAW',
+                resource: {
+                    values: [headers]
+                }
+            });
+
+            console.log('ヘッダー行を設定しました');
+            return { success: true };
+        } catch (error) {
+            console.error('ヘッダー設定エラー:', error);
+            return { success: false, error: error.message };
         }
-        
-        console.log('📅 15秒後に逆同期をスケジュール');
-        
-        this.debounceTimer = setTimeout(async () => {
-            console.log('🔄 デバウンス同期実行（Google Sheets → LocalStorage）');
-            await this.syncFromSheetsToLocal();
-        }, 15000);
+    },
+
+    /**
+     * ヘッダー行を確認・更新（既存シート用）
+     */
+    ensureHeaders: async function() {
+        try {
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: this.spreadsheetId,
+                range: `${this.SHEET_NAME}!A1:O1`
+            });
+
+            const currentHeaders = response.result.values ? response.result.values[0] : [];
+            const expectedHeaders = [
+                'id',
+                'name',
+                'nameKana',
+                'email',
+                'phone',
+                'basicInfo',
+                'preferences',
+                'equipment',
+                'additionalInfo',
+                'agentMemo',
+                'pipelineStatus',
+                'isActive',
+                'archivedAt',
+                'createdAt',
+                'updatedAt'
+            ];
+
+            // ヘッダーが古い形式の場合は更新
+            if (JSON.stringify(currentHeaders) !== JSON.stringify(expectedHeaders)) {
+                console.log('ヘッダー行を更新します');
+                await this.setupHeaders();
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('ヘッダー確認エラー:', error);
+            // ヘッダーがない場合は新規作成
+            await this.setupHeaders();
+            return { success: true };
+        }
+    },
+
+    /**
+     * 顧客データをシートに同期
+     */
+    syncToSheets: async function(customers) {
+        if (!this.spreadsheetId) {
+            const initResult = await this.initSpreadsheet();
+            if (!initResult.success) {
+                return initResult;
+            }
+        }
+
+        try {
+            // データマイグレーション
+            if (window.DataMigration) {
+                customers = DataMigration.migrateAllCustomers(customers);
+            }
+
+            // データを行形式に変換
+            const rows = customers.map(customer => this.customerToRow(customer));
+
+            // ヘッダー行 + データ行
+            const values = [
+                [
+                    'id',
+                    'name',
+                    'nameKana',
+                    'email',
+                    'phone',
+                    'basicInfo',
+                    'preferences',
+                    'equipment',
+                    'additionalInfo',
+                    'agentMemo',
+                    'pipelineStatus',
+                    'isActive',
+                    'archivedAt',
+                    'createdAt',
+                    'updatedAt'
+                ],
+                ...rows
+            ];
+
+            // シート全体をクリアして書き込み
+            await gapi.client.sheets.spreadsheets.values.clear({
+                spreadsheetId: this.spreadsheetId,
+                range: this.SHEET_NAME
+            });
+
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: this.spreadsheetId,
+                range: `${this.SHEET_NAME}!A1`,
+                valueInputOption: 'RAW',
+                resource: { values }
+            });
+
+            console.log(`✅ ${customers.length}件の顧客データを同期しました`);
+            return { success: true, count: customers.length };
+        } catch (error) {
+            console.error('同期エラー:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * シートからデータを読み込み
+     */
+    loadFromSheets: async function() {
+        if (!this.spreadsheetId) {
+            const initResult = await this.initSpreadsheet();
+            if (!initResult.success) {
+                return initResult;
+            }
+        }
+
+        try {
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: this.spreadsheetId,
+                range: this.SHEET_NAME
+            });
+
+            const rows = response.result.values;
+            if (!rows || rows.length <= 1) {
+                console.log('データが存在しません');
+                return { success: true, customers: [] };
+            }
+
+            // ヘッダー行をスキップしてデータ行を変換
+            const customers = rows.slice(1).map(row => this.rowToCustomer(row));
+
+            // データマイグレーション
+            const migratedCustomers = window.DataMigration 
+                ? DataMigration.migrateAllCustomers(customers)
+                : customers;
+
+            console.log(`✅ ${migratedCustomers.length}件の顧客データを読み込みました`);
+            return { success: true, customers: migratedCustomers };
+        } catch (error) {
+            console.error('読み込みエラー:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * 顧客オブジェクトを行データに変換
+     */
+    customerToRow: function(customer) {
+        return [
+            customer.id || '',
+            customer.basicInfo?.name || '',
+            customer.basicInfo?.nameKana || '',
+            customer.basicInfo?.email || '',
+            customer.basicInfo?.phone || '',
+            JSON.stringify(customer.basicInfo || {}),
+            JSON.stringify(customer.preferences || {}),
+            JSON.stringify(customer.equipment || {}),
+            JSON.stringify(customer.additionalInfo || {}),
+            customer.agentMemo || '',
+            customer.pipelineStatus || '初回相談',
+            customer.isActive !== false ? 'TRUE' : 'FALSE',
+            customer.archivedAt || '',
+            customer.createdAt || '',
+            customer.updatedAt || ''
+        ];
+    },
+
+    /**
+     * 行データを顧客オブジェクトに変換
+     */
+    rowToCustomer: function(row) {
+        try {
+            const customer = {
+                id: row[0] || '',
+                basicInfo: this.parseJSON(row[5], {
+                    name: row[1] || '',
+                    nameKana: row[2] || '',
+                    email: row[3] || '',
+                    phone: row[4] || ''
+                }),
+                preferences: this.parseJSON(row[6], {}),
+                equipment: this.parseJSON(row[7], {}),
+                additionalInfo: this.parseJSON(row[8], {}),
+                agentMemo: row[9] || '',
+                pipelineStatus: row[10] || '初回相談',
+                isActive: row[11] !== 'FALSE',
+                archivedAt: row[12] || null,
+                createdAt: row[13] || new Date().toISOString(),
+                updatedAt: row[14] || new Date().toISOString()
+            };
+
+            return customer;
+        } catch (error) {
+            console.error('行変換エラー:', error, row);
+            return null;
+        }
+    },
+
+    /**
+     * JSON文字列を安全にパース
+     */
+    parseJSON: function(str, defaultValue = {}) {
+        if (!str) return defaultValue;
+        try {
+            return JSON.parse(str);
+        } catch (error) {
+            console.warn('JSON parse error:', error, str);
+            return defaultValue;
+        }
+    },
+
+    /**
+     * スプレッドシートのURLを取得
+     */
+    getSpreadsheetUrl: function() {
+        if (!this.spreadsheetId) return null;
+        return `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/edit`;
     }
 };
 
-// 初期化
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.UnifiedSheetsManager.initialize();
-    });
-} else {
-    window.UnifiedSheetsManager.initialize();
-}
+// グローバルに公開
+window.UnifiedSheetsManager = UnifiedSheetsManager;
 
-console.log('✅ Google Sheets統合マネージャー準備完了');
+console.log('✅ UnifiedSheetsManager (拡張版) loaded');
