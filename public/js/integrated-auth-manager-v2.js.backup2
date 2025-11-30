@@ -264,36 +264,3 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 console.log('✅ 統合認証マネージャー v2 準備完了');
-
-// ========================================
-// app-initializer.js 互換性のための追加関数
-// ========================================
-
-// 認証状態をチェック（app-initializer互換）
-window.IntegratedAuthManagerV2.checkAuthStatus = async function() {
-    if (!this.isInitialized) {
-        await this.initialize();
-    }
-    return this.authState.isAuthenticated;
-};
-
-// ユーザーメールアドレスを取得（app-initializer互換）
-window.IntegratedAuthManagerV2.getUserEmail = function() {
-    if (this.authState.rentpipeAuth.isLoggedIn && this.authState.rentpipeAuth.user) {
-        return this.authState.rentpipeAuth.user.email;
-    }
-    if (this.authState.googleAuth.isSignedIn && this.authState.googleAuth.user) {
-        return this.authState.googleAuth.user.email;
-    }
-    return null;
-};
-
-// 認証状態の簡易チェック
-window.IntegratedAuthManagerV2.isAuthenticated = function() {
-    return this.authState.isAuthenticated;
-};
-
-// 後方互換性のため、IntegratedAuthManager としても公開
-window.IntegratedAuthManager = window.IntegratedAuthManagerV2;
-
-console.log('✅ IntegratedAuthManager 互換性レイヤー追加完了');
