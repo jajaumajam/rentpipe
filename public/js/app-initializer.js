@@ -27,9 +27,9 @@ const AppInitializer = {
      */
     _doInitialize: async function(options = {}) {
         try {
-            // 1. Google API の読み込みを待機
-            await this.waitForGoogleAPI();
-            console.log('✅ Google API 準備完了');
+            // 1. Google Sheets API の初期化を待機
+            await this.waitForGoogleSheetsAPI();
+            console.log('✅ Google Sheets API 準備完了');
 
             // 2. 認証状態を確認
             const authResult = await this.checkAuthentication();
@@ -78,40 +78,43 @@ const AppInitializer = {
     },
 
     /**
-     * Google API の読み込みを待機（延長版）
+     * Google Sheets API の初期化を待機
+     * google-sheets-api.js が完全に初期化されるのを待つ
      */
-    waitForGoogleAPI: function() {
+    waitForGoogleSheetsAPI: function() {
         return new Promise((resolve, reject) => {
-            // Google Sheets API が既に初期化されているかチェック
+            // 既に初期化済みの場合は即座に解決
             if (window.GoogleSheetsAPI && window.GoogleSheetsAPI.isInitialized) {
                 console.log('✅ Google Sheets API は既に初期化済み');
                 resolve();
                 return;
             }
 
+            console.log('⏳ Google Sheets API の初期化を待機中...');
+            
             let attempts = 0;
-            const maxAttempts = 100; // 50秒に延長（500ms × 100）
+            const maxAttempts = 60; // 30秒（500ms × 60）
 
             const checkAPI = () => {
                 attempts++;
 
-                // Google Sheets API の初期化完了をチェック
+                // GoogleSheetsAPI の初期化完了を確認
                 if (window.GoogleSheetsAPI && window.GoogleSheetsAPI.isInitialized) {
-                    console.log('✅ Google Sheets API 初期化確認（試行回数: ' + attempts + '）');
-                    resolve();
-                    return;
-                }
-
-                // 基本的な gapi チェック
-                if (typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
-                    console.log('✅ gapi.client.sheets 確認（試行回数: ' + attempts + '）');
+                    console.log(`✅ Google Sheets API 初期化確認（${attempts}回目の試行で成功）`);
                     resolve();
                     return;
                 }
 
                 if (attempts >= maxAttempts) {
-                    reject(new Error('Google API の読み込みがタイムアウトしました（50秒経過）'));
+                    console.error('❌ Google Sheets API の初期化がタイムアウト');
+                    console.log('デバッグ情報:');
+                    console.log('  - window.GoogleSheetsAPI:', typeof window.GoogleSheetsAPI);
+                    console.log('  - GoogleSheetsAPI.isInitialized:', window.GoogleSheetsAPI?.isInitialized);
+                    reject(new Error('Google Sheets API の初期化がタイムアウトしました'));
                 } else {
+                    if (attempts % 10 === 0) {
+                        console.log(`⏳ 待機中... (${attempts}/${maxAttempts})`);
+                    }
                     setTimeout(checkAPI, 500);
                 }
             };
@@ -209,7 +212,7 @@ const AppInitializer = {
             hasSheetsManager: typeof window.UnifiedSheetsManager !== 'undefined',
             hasAuthManager: typeof window.IntegratedAuthManager !== 'undefined',
             isAuthenticated: window.IntegratedAuthManager ? 
-                IntegratedAuthManager.isAuthenticated : false
+                IntegratedAuthManager.isAuthenticated() : false
         };
     }
 };
@@ -242,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('ログインページにリダイレクトします...');
             setTimeout(() => {
                 window.location.href = 'login.html';
-            }, 2000); // 2秒に延長してエラーログを確認できるように
+            }, 2000);
         }
     }
 });
