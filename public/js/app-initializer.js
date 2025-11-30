@@ -78,22 +78,41 @@ const AppInitializer = {
     },
 
     /**
-     * Google API の読み込みを待機
+     * Google API の読み込みを待機（延長版）
      */
     waitForGoogleAPI: function() {
         return new Promise((resolve, reject) => {
+            // Google Sheets API が既に初期化されているかチェック
+            if (window.GoogleSheetsAPI && window.GoogleSheetsAPI.isInitialized) {
+                console.log('✅ Google Sheets API は既に初期化済み');
+                resolve();
+                return;
+            }
+
             let attempts = 0;
-            const maxAttempts = 50;
+            const maxAttempts = 100; // 50秒に延長（500ms × 100）
 
             const checkAPI = () => {
                 attempts++;
 
-                if (typeof gapi !== 'undefined' && gapi.client) {
+                // Google Sheets API の初期化完了をチェック
+                if (window.GoogleSheetsAPI && window.GoogleSheetsAPI.isInitialized) {
+                    console.log('✅ Google Sheets API 初期化確認（試行回数: ' + attempts + '）');
                     resolve();
-                } else if (attempts >= maxAttempts) {
-                    reject(new Error('Google API の読み込みがタイムアウトしました'));
+                    return;
+                }
+
+                // 基本的な gapi チェック
+                if (typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
+                    console.log('✅ gapi.client.sheets 確認（試行回数: ' + attempts + '）');
+                    resolve();
+                    return;
+                }
+
+                if (attempts >= maxAttempts) {
+                    reject(new Error('Google API の読み込みがタイムアウトしました（50秒経過）'));
                 } else {
-                    setTimeout(checkAPI, 100);
+                    setTimeout(checkAPI, 500);
                 }
             };
 
@@ -223,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('ログインページにリダイレクトします...');
             setTimeout(() => {
                 window.location.href = 'login.html';
-            }, 1000);
+            }, 2000); // 2秒に延長してエラーログを確認できるように
         }
     }
 });
