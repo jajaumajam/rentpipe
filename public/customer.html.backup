@@ -412,7 +412,6 @@
     <script src="js/google-sheets-api.js"></script>
     
     <!-- Data Management -->
-    <script src="js/data-migration.js"></script>
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     
@@ -434,39 +433,15 @@
             document.getElementById('loading-overlay').classList.remove('active');
         }
         
-        // アプリケーション初期化後の処理
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // AppInitializerは自動的に初期化されるので、完了を待つ
-                if (window.AppInitializer && window.AppInitializer.initializationPromise) {
-                    await window.AppInitializer.initializationPromise;
-                }
+        // 高速スタート
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.RentPipeApp.quickStart('customer');
                 
-                // データ表示
-                displayCustomers();
-                updateStats();
-                
-                // 認証ステータス表示を更新
-                function updateAuthStatusDisplay() {
-                    const statusElement = document.getElementById('auth-sync-status');
-                    if (!statusElement) return;
-                    
-                    const status = AppInitializer.getInitializationStatus();
-                    
-                    if (status.isInitialized && status.isAuthenticated) {
-                        statusElement.innerHTML = '✅ 同期済み';
-                        statusElement.className = 'auth-status synced';
-                    } else {
-                        statusElement.innerHTML = '⚠️ 未同期';
-                        statusElement.className = 'auth-status not-synced';
-                    }
-                }
-                
-                // 初回表示
-                updateAuthStatusDisplay();
-                
-                // 定期的に更新
-                setInterval(updateAuthStatusDisplay, 5000);
+                // 認証ステータス表示を定期的に更新
+                setInterval(() => {
+                    window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+                }, 2000);
                 
                 // データ更新イベントをリッスン
                 window.addEventListener('rentpipe-data-updated', () => {
@@ -474,14 +449,19 @@
                     displayCustomers();
                     updateStats();
                 });
-                
-            } catch (error) {
-                console.error('customer.html 初期化エラー:', error);
-            }
-        });
-        
-        // 顧客表示
-        function displayCustomers() {
+            });
+        } else {
+            window.RentPipeApp.quickStart('customer');
+            
+            // 認証ステータス表示を定期的に更新
+            setInterval(() => {
+                window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+            }, 2000);
+            
+            // データ更新イベントをリッスン
+            window.addEventListener('rentpipe-data-updated', () => {
+                console.log('🔔 データ更新通知受信 - 再表示');
+                displayCustomers();
                 updateStats();
             });
         }

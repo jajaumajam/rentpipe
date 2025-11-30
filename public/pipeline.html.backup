@@ -315,40 +315,15 @@
             }
         }
         
-        // アプリケーション初期化後の処理
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // AppInitializerは自動的に初期化されるので、完了を待つ
-                if (window.AppInitializer && window.AppInitializer.initializationPromise) {
-                    await window.AppInitializer.initializationPromise;
-                }
+        // DOMContentLoadedを待たずに即座実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.RentPipeApp.quickStart('pipeline');
                 
-                // パイプライン描画
-                if (window.pipelineManager) {
-                    window.pipelineManager.renderPipeline();
-                }
-                
-                // 認証ステータス表示を更新
-                function updateAuthStatusDisplay() {
-                    const statusElement = document.getElementById('auth-sync-status');
-                    if (!statusElement) return;
-                    
-                    const status = AppInitializer.getInitializationStatus();
-                    
-                    if (status.isInitialized && status.isAuthenticated) {
-                        statusElement.innerHTML = '✅ 同期済み';
-                        statusElement.className = 'auth-status synced';
-                    } else {
-                        statusElement.innerHTML = '⚠️ 未同期';
-                        statusElement.className = 'auth-status not-synced';
-                    }
-                }
-                
-                // 初回表示
-                updateAuthStatusDisplay();
-                
-                // 定期的に更新
-                setInterval(updateAuthStatusDisplay, 5000);
+                // 認証ステータス表示を定期的に更新
+                setInterval(() => {
+                    window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+                }, 2000);
                 
                 // データ更新イベントをリッスン
                 window.addEventListener('rentpipe-data-updated', () => {
@@ -356,7 +331,7 @@
                     if (window.pipelineManager) {
                         window.pipelineManager.renderPipeline();
                         
-                        // デバッグ: データ更新後の状態を確認
+                        // 🆕 デバッグ: データ更新後の状態を確認
                         const allCustomers = window.UnifiedDataManager.getCustomers();
                         console.log('📊 データ更新後の状態:');
                         console.log('  - 全顧客数:', allCustomers.length);
@@ -365,11 +340,24 @@
                         });
                     }
                 });
-                
-            } catch (error) {
-                console.error('pipeline.html 初期化エラー:', error);
-            }
-        });
+            });
+        } else {
+            window.RentPipeApp.quickStart('pipeline');
+            
+            // 認証ステータス表示を定期的に更新
+            setInterval(() => {
+                window.RentPipeApp.updateAuthStatusDisplay('auth-sync-status');
+            }, 2000);
+            
+            // データ更新イベントをリッスン
+            window.addEventListener('rentpipe-data-updated', () => {
+                console.log('🔔 データ更新通知受信 - 再描画');
+                if (window.pipelineManager) {
+                    window.pipelineManager.renderPipeline();
+                    
+                    // 🆕 デバッグ: データ更新後の状態を確認
+                    const allCustomers = window.UnifiedDataManager.getCustomers();
+                    console.log('📊 データ更新後の状態:');
                     console.log('  - 全顧客数:', allCustomers.length);
                     allCustomers.slice(0, 3).forEach((c, i) => {
                         console.log(`  - 顧客 ${i + 1}: ${c.name}, isActive: ${c.isActive}`);
