@@ -1,4 +1,4 @@
-// 📊 Google Sheets API 管理システム（完全初期化対応版）
+// 📊 Google Sheets API 管理システム（完全初期化対応版 + isActive/archivedAt対応）
 console.log('📊 Google Sheets API 初期化中...');
 
 window.GoogleSheetsAPI = {
@@ -207,7 +207,7 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // スプレッドシート作成（待機強化版 + 英語シート名）
+    // スプレッドシート作成（待機強化版 + 英語シート名 + isActive/archivedAt対応）
     createSpreadsheet: async function(title) {
         try {
             console.log('📄 スプレッドシート作成中:', title);
@@ -256,6 +256,21 @@ window.GoogleSheetsAPI = {
             this.spreadsheetId = spreadsheetId;
             
             console.log('✅ スプレッドシート作成成功:', spreadsheetId);
+            
+            // 🔧 ヘッダー行を作成（isActive, archivedAt対応）
+            console.log('📋 ヘッダー行を作成中...');
+            const headers = [
+                ['id', 'name', 'email', 'phone', 'pipelineStatus', 'preferences', 'notes', 'isActive', 'archivedAt', 'createdAt', 'updatedAt']
+            ];
+            await window.gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: spreadsheetId,
+                range: `${this.SHEET_NAME}!A1`,
+                valueInputOption: 'RAW',
+                resource: {
+                    values: headers
+                }
+            });
+            console.log('✅ ヘッダー行作成完了');
             
             return {
                 spreadsheetId: spreadsheetId,
@@ -317,7 +332,7 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // データ書き込み（シート名自動修正付き）
+    // データ書き込み（シート名自動修正付き + isActive/archivedAt対応）
     writeData: async function(customers) {
         try {
             if (!this.spreadsheetId) {
@@ -329,10 +344,10 @@ window.GoogleSheetsAPI = {
             
             console.log('📝 Google Sheetsにデータ書き込み中:', customers.length, '件');
             
-            // ヘッダー行
-            const headers = ['id', 'name', 'email', 'phone', 'pipelineStatus', 'preferences', 'notes', 'urgency', 'contactTime', 'createdAt', 'updatedAt'];
+            // 🔧 ヘッダー行（isActive, archivedAt対応）
+            const headers = ['id', 'name', 'email', 'phone', 'pipelineStatus', 'preferences', 'notes', 'isActive', 'archivedAt', 'createdAt', 'updatedAt'];
             
-            // データ行
+            // 🔧 データ行（isActive, archivedAt対応）
             const rows = customers.map(customer => [
                 customer.id || '',
                 customer.name || '',
@@ -341,8 +356,8 @@ window.GoogleSheetsAPI = {
                 customer.pipelineStatus || '',
                 JSON.stringify(customer.preferences || {}),
                 customer.notes || '',
-                customer.urgency || '',
-                customer.contactTime || '',
+                customer.isActive !== false ? 'TRUE' : 'FALSE', // 🔧 Boolean → 文字列
+                customer.archivedAt || '', // 🔧 日時またはnull
                 customer.createdAt || '',
                 customer.updatedAt || ''
             ]);
@@ -386,4 +401,4 @@ window.GoogleSheetsAPI = {
     }
 };
 
-console.log('✅ Google Sheets API 準備完了（シート名自動修正機能付き）');
+console.log('✅ Google Sheets API 準備完了（シート名自動修正機能 + isActive/archivedAt対応）');

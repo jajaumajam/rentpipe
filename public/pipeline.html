@@ -47,6 +47,51 @@
             border: 1px solid #ef4444;
         }
         
+        /* 🆕 フィルターボタンエリア */
+        .filter-controls {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
         .pipeline-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -61,7 +106,7 @@
             min-height: 400px;
         }
         
-        .pipeline-header {
+        .column-header {
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 15px;
@@ -70,15 +115,27 @@
             border-radius: 8px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .pipeline-cards {
+        .count {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .column-content {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
         
-        .pipeline-card {
+        .customer-card {
             background: white;
             padding: 15px;
             border-radius: 8px;
@@ -88,31 +145,41 @@
             border-left: 4px solid #3b82f6;
         }
         
-        .pipeline-card:hover {
+        .customer-card:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transform: translateY(-2px);
         }
         
-        .card-name {
+        .card-header h4 {
             font-weight: 600;
-            margin-bottom: 8px;
+            margin: 0 0 8px 0;
             color: #1f2937;
             font-size: 15px;
+        }
+        
+        .card-body {
+            margin-bottom: 10px;
         }
         
         .card-info {
             margin: 4px 0;
             font-size: 13px;
             color: #6b7280;
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
         
         .card-actions {
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
         }
         
         .card-button {
+            flex: 1;
             padding: 6px 12px;
             font-size: 12px;
             border: none;
@@ -122,6 +189,9 @@
             color: white;
             font-weight: 500;
             transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
         
         .card-button:hover {
@@ -140,6 +210,11 @@
             .pipeline-container {
                 grid-template-columns: 1fr;
             }
+            
+            .filter-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -151,12 +226,25 @@
     <div class="main-content">
         <div class="page-header">
             <h1>📊 パイプライン管理</h1>
-            <p>顧客の進捗状況を可視化・管理（Google Sheets自動同期）</p>
+            <p>顧客の進捗状況を可視化・管理(Google Sheets自動同期)</p>
         </div>
 
         <!-- 認証ステータス -->
         <div id="auth-sync-status" class="auth-status warning">
             ⚡ 読み込み中...
+        </div>
+
+        <!-- 🆕 フィルターコントロール -->
+        <div class="filter-controls">
+            <span class="filter-label">表示対象:</span>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterPipeline('active')">
+                    ✅ アクティブのみ
+                </button>
+                <button class="filter-btn" onclick="filterPipeline('all')">
+                    📋 すべて表示
+                </button>
+            </div>
         </div>
 
         <!-- パイプライン -->
@@ -187,9 +275,45 @@
     <!-- ✅ 統合初期化システム -->
     <script src="js/app-initializer.js"></script>
     
-    <!-- ✅ 高速スタート -->
+    <!-- ✅ 高速スタート + フィルター制御 -->
     <script>
         console.log('📊 パイプラインページ読み込み開始...');
+        
+        // 🆕 フィルター切り替え関数
+        function filterPipeline(mode) {
+            console.log('🔄 フィルター切り替え:', mode);
+            
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // パイプラインマネージャーのフィルターを変更
+            if (window.pipelineManager) {
+                const showActiveOnly = (mode === 'active');
+                window.pipelineManager.setFilter(showActiveOnly);
+                
+                // 🆕 デバッグ情報
+                console.log('📊 フィルター適用後:');
+                console.log('  - showActiveOnly:', showActiveOnly);
+                const allCustomers = window.UnifiedDataManager.getCustomers();
+                console.log('  - 全顧客数:', allCustomers.length);
+                console.log('  - アクティブ顧客数:', allCustomers.filter(c => c.isActive !== false).length);
+                console.log('  - 非アクティブ顧客数:', allCustomers.filter(c => c.isActive === false).length);
+                
+                // isActiveフィールドの状態を確認
+                const customersWithIsActive = allCustomers.filter(c => c.hasOwnProperty('isActive'));
+                console.log('  - isActiveフィールドを持つ顧客数:', customersWithIsActive.length);
+                
+                // サンプル表示（最初の3件）
+                allCustomers.slice(0, 3).forEach((c, i) => {
+                    console.log(`  - 顧客 ${i + 1}: ${c.name}, isActive: ${c.isActive}, type: ${typeof c.isActive}`);
+                });
+            } else {
+                console.error('❌ pipelineManager が見つかりません');
+            }
+        }
         
         // DOMContentLoadedを待たずに即座実行
         if (document.readyState === 'loading') {
@@ -206,6 +330,14 @@
                     console.log('🔔 データ更新通知受信 - 再描画');
                     if (window.pipelineManager) {
                         window.pipelineManager.renderPipeline();
+                        
+                        // 🆕 デバッグ: データ更新後の状態を確認
+                        const allCustomers = window.UnifiedDataManager.getCustomers();
+                        console.log('📊 データ更新後の状態:');
+                        console.log('  - 全顧客数:', allCustomers.length);
+                        allCustomers.slice(0, 3).forEach((c, i) => {
+                            console.log(`  - 顧客 ${i + 1}: ${c.name}, isActive: ${c.isActive}`);
+                        });
                     }
                 });
             });
@@ -222,6 +354,14 @@
                 console.log('🔔 データ更新通知受信 - 再描画');
                 if (window.pipelineManager) {
                     window.pipelineManager.renderPipeline();
+                    
+                    // 🆕 デバッグ: データ更新後の状態を確認
+                    const allCustomers = window.UnifiedDataManager.getCustomers();
+                    console.log('📊 データ更新後の状態:');
+                    console.log('  - 全顧客数:', allCustomers.length);
+                    allCustomers.slice(0, 3).forEach((c, i) => {
+                        console.log(`  - 顧客 ${i + 1}: ${c.name}, isActive: ${c.isActive}`);
+                    });
                 }
             });
         }
