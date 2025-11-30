@@ -41,9 +41,9 @@ const AppInitializer = {
 
             console.log('✅ 認証確認完了');
 
-            // 2. Google Sheets API を初期化
-            await this.initializeGoogleSheetsAPI();
-            console.log('✅ Google Sheets API 初期化完了');
+            // 2. Google APIs を初期化
+            await this.initializeGoogleAPIs();
+            console.log('✅ Google APIs 初期化完了');
 
             // 3. Google Sheets を初期化
             const sheetsResult = await this.initializeSheets();
@@ -78,33 +78,50 @@ const AppInitializer = {
     },
 
     /**
-     * Google Sheets API を初期化
+     * Google APIs を初期化
      */
-    initializeGoogleSheetsAPI: async function() {
-        if (!window.GoogleSheetsAPI) {
-            throw new Error('GoogleSheetsAPI が利用できません');
-        }
+    initializeGoogleAPIs: async function() {
+        const authState = window.IntegratedAuthManager.getAuthState();
+        const accessToken = authState?.googleAuth?.accessToken;
 
-        // 既に初期化済みの場合はスキップ
-        if (window.GoogleSheetsAPI.isInitialized) {
-            console.log('✅ Google Sheets API は既に初期化済み');
+        if (!accessToken) {
+            console.warn('⚠️ アクセストークンがありません');
             return;
         }
 
-        console.log('⏳ Google Sheets API 初期化中...');
-        const result = await window.GoogleSheetsAPI.initialize();
-        
-        if (!result) {
-            throw new Error('Google Sheets API の初期化に失敗しました');
+        // Google Drive API を初期化
+        if (window.GoogleDriveAPIv2) {
+            if (!window.GoogleDriveAPIv2.isInitialized) {
+                console.log('⏳ Google Drive API 初期化中...');
+                await window.GoogleDriveAPIv2.initialize();
+            }
+
+            if (!window.GoogleDriveAPIv2.isAuthenticated) {
+                console.log('🔑 Google Drive API にトークンを設定中...');
+                window.GoogleDriveAPIv2.accessToken = accessToken;
+                window.GoogleDriveAPIv2.isAuthenticated = true;
+            }
+
+            console.log('✅ Google Drive API 準備完了');
         }
 
-        // アクセストークンを設定
-        const authState = window.IntegratedAuthManager.getAuthState();
-        const accessToken = authState?.googleAuth?.accessToken;
-        
-        if (accessToken && !window.GoogleSheetsAPI.isAuthenticated) {
-            console.log('🔑 Google Sheets API にトークンを設定中...');
-            await window.GoogleSheetsAPI.setAccessToken(accessToken);
+        // Google Sheets API を初期化
+        if (window.GoogleSheetsAPI) {
+            if (!window.GoogleSheetsAPI.isInitialized) {
+                console.log('⏳ Google Sheets API 初期化中...');
+                const result = await window.GoogleSheetsAPI.initialize();
+                
+                if (!result) {
+                    throw new Error('Google Sheets API の初期化に失敗しました');
+                }
+            }
+
+            if (!window.GoogleSheetsAPI.isAuthenticated) {
+                console.log('🔑 Google Sheets API にトークンを設定中...');
+                await window.GoogleSheetsAPI.setAccessToken(accessToken);
+            }
+
+            console.log('✅ Google Sheets API 準備完了');
         }
     },
 
