@@ -1,4 +1,4 @@
-// 📊 Google Sheets API 管理システム（完全初期化対応版 + isActive/archivedAt対応）
+// 📊 Google Sheets API 管理システム（完全初期化対応版 + isActive/archivedAt対応 + 修正版）
 console.log('📊 Google Sheets API 初期化中...');
 
 window.GoogleSheetsAPI = {
@@ -283,8 +283,8 @@ window.GoogleSheetsAPI = {
         }
     },
     
-    // データ読み込み（シート名自動修正付き）
-    readData: async function() {
+    // 🔧 データ読み込み（修正版 - 範囲指定対応）
+    readData: async function(range = 'A:K') {
         try {
             if (!this.spreadsheetId) {
                 const savedId = this.loadSpreadsheetId();
@@ -297,34 +297,19 @@ window.GoogleSheetsAPI = {
             // シート名を修正（旧シート名があれば）
             await this.fixSheetName(this.spreadsheetId);
             
-            console.log('📖 Google Sheetsからデータ読み込み中...');
+            console.log('📖 Google Sheetsからデータ読み込み中...', `${this.SHEET_NAME}!${range}`);
             
             const response = await window.gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A:Z`
+                range: `${this.SHEET_NAME}!${range}`
             });
             
             const rows = response.result.values || [];
             
-            if (rows.length === 0) {
-                console.log('ℹ️ スプレッドシートが空です');
-                return [];
-            }
+            console.log('✅ データ読み込み完了:', rows.length, '行（ヘッダー含む）');
             
-            // ヘッダー行を取得
-            const headers = rows[0];
-            
-            // データ行をオブジェクトに変換
-            const customers = rows.slice(1).map(row => {
-                const customer = {};
-                headers.forEach((header, index) => {
-                    customer[header] = row[index] || '';
-                });
-                return customer;
-            }).filter(c => c.id);
-            
-            console.log('✅ データ読み込み完了:', customers.length, '件');
-            return customers;
+            // 🔧 生データをそのまま返す（配列の配列）
+            return rows;
             
         } catch (error) {
             console.error('❌ データ読み込みエラー:', error);
