@@ -97,7 +97,7 @@ window.RentPipeApp = {
         console.log('✅ 認証システム初期化完了');
     },
     
-    // ステップ2: Google APIs 初期化（修正版）
+    // ステップ2: Google APIs 初期化（修正版 - プロパティ直接代入）
     initializeGoogleAPIs: async function() {
         console.log('📊 Google APIs 初期化中...');
         
@@ -116,10 +116,11 @@ window.RentPipeApp = {
                 await window.GoogleDriveAPIv2.initialize();
             }
             
-            // 認証トークンを設定
+            // 🔧 認証情報をプロパティに直接設定（関数ではなくプロパティ）
             if (!window.GoogleDriveAPIv2.isAuthenticated) {
-                console.log('🔑 Google Drive APIにトークン設定中...');
-                await window.GoogleDriveAPIv2.setAuthToken(accessToken);
+                console.log('🔑 Google Drive APIに認証情報を設定中...');
+                window.GoogleDriveAPIv2.accessToken = accessToken;
+                window.GoogleDriveAPIv2.isAuthenticated = true;
             }
             
             console.log('✅ Google Drive API 準備完了:', {
