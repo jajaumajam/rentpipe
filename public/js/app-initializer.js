@@ -27,11 +27,7 @@ const AppInitializer = {
      */
     _doInitialize: async function(options = {}) {
         try {
-            // 1. Google Sheets API の初期化を待機
-            await this.waitForGoogleSheetsAPI();
-            console.log('✅ Google Sheets API 準備完了');
-
-            // 2. 認証状態を確認
+            // 1. 認証状態を確認
             const authResult = await this.checkAuthentication();
             
             if (!authResult.isAuthenticated) {
@@ -44,6 +40,10 @@ const AppInitializer = {
             }
 
             console.log('✅ 認証確認完了');
+
+            // 2. Google Sheets API を初期化
+            await this.initializeGoogleSheetsAPI();
+            console.log('✅ Google Sheets API 初期化完了');
 
             // 3. Google Sheets を初期化
             const sheetsResult = await this.initializeSheets();
@@ -78,49 +78,34 @@ const AppInitializer = {
     },
 
     /**
-     * Google Sheets API の初期化を待機
-     * google-sheets-api.js が完全に初期化されるのを待つ
+     * Google Sheets API を初期化
      */
-    waitForGoogleSheetsAPI: function() {
-        return new Promise((resolve, reject) => {
-            // 既に初期化済みの場合は即座に解決
-            if (window.GoogleSheetsAPI && window.GoogleSheetsAPI.isInitialized) {
-                console.log('✅ Google Sheets API は既に初期化済み');
-                resolve();
-                return;
-            }
+    initializeGoogleSheetsAPI: async function() {
+        if (!window.GoogleSheetsAPI) {
+            throw new Error('GoogleSheetsAPI が利用できません');
+        }
 
-            console.log('⏳ Google Sheets API の初期化を待機中...');
-            
-            let attempts = 0;
-            const maxAttempts = 60; // 30秒（500ms × 60）
+        // 既に初期化済みの場合はスキップ
+        if (window.GoogleSheetsAPI.isInitialized) {
+            console.log('✅ Google Sheets API は既に初期化済み');
+            return;
+        }
 
-            const checkAPI = () => {
-                attempts++;
+        console.log('⏳ Google Sheets API 初期化中...');
+        const result = await window.GoogleSheetsAPI.initialize();
+        
+        if (!result) {
+            throw new Error('Google Sheets API の初期化に失敗しました');
+        }
 
-                // GoogleSheetsAPI の初期化完了を確認
-                if (window.GoogleSheetsAPI && window.GoogleSheetsAPI.isInitialized) {
-                    console.log(`✅ Google Sheets API 初期化確認（${attempts}回目の試行で成功）`);
-                    resolve();
-                    return;
-                }
-
-                if (attempts >= maxAttempts) {
-                    console.error('❌ Google Sheets API の初期化がタイムアウト');
-                    console.log('デバッグ情報:');
-                    console.log('  - window.GoogleSheetsAPI:', typeof window.GoogleSheetsAPI);
-                    console.log('  - GoogleSheetsAPI.isInitialized:', window.GoogleSheetsAPI?.isInitialized);
-                    reject(new Error('Google Sheets API の初期化がタイムアウトしました'));
-                } else {
-                    if (attempts % 10 === 0) {
-                        console.log(`⏳ 待機中... (${attempts}/${maxAttempts})`);
-                    }
-                    setTimeout(checkAPI, 500);
-                }
-            };
-
-            checkAPI();
-        });
+        // アクセストークンを設定
+        const authState = window.IntegratedAuthManager.getAuthState();
+        const accessToken = authState?.googleAuth?.accessToken;
+        
+        if (accessToken && !window.GoogleSheetsAPI.isAuthenticated) {
+            console.log('🔑 Google Sheets API にトークンを設定中...');
+            await window.GoogleSheetsAPI.setAccessToken(accessToken);
+        }
     },
 
     /**
