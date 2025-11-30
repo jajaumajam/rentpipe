@@ -1,4 +1,4 @@
-// RentPipe 統合アプリケーション初期化システム（LocalStorage優先版）
+// RentPipe 統合アプリケーション初期化システム（LocalStorage優先版 + 修正版）
 window.RentPipeApp = {
     isInitialized: false,
     currentPage: null,
@@ -97,24 +97,54 @@ window.RentPipeApp = {
         console.log('✅ 認証システム初期化完了');
     },
     
-    // ステップ2: Google APIs 初期化
+    // ステップ2: Google APIs 初期化（修正版）
     initializeGoogleAPIs: async function() {
         console.log('📊 Google APIs 初期化中...');
         
-        // Google Sheets API の初期化
-        if (window.GoogleSheetsAPI && !window.GoogleSheetsAPI.isInitialized) {
-            console.log('⏳ Google Sheets API 初期化待機中...');
-            
-            let attempts = 0;
-            while (!window.GoogleSheetsAPI.isInitialized && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
+        const authState = window.IntegratedAuthManagerV2.getAuthState();
+        const accessToken = authState?.googleAuth?.accessToken;
+        
+        if (!accessToken) {
+            console.warn('⚠️ アクセストークンがありません - API初期化スキップ');
+            return;
+        }
+        
+        // 🔧 Google Drive APIの初期化
+        if (window.GoogleDriveAPIv2) {
+            if (!window.GoogleDriveAPIv2.isInitialized) {
+                console.log('⏳ Google Drive API 初期化中...');
+                await window.GoogleDriveAPIv2.initialize();
             }
             
+            // 認証トークンを設定
+            if (!window.GoogleDriveAPIv2.isAuthenticated) {
+                console.log('🔑 Google Drive APIにトークン設定中...');
+                await window.GoogleDriveAPIv2.setAuthToken(accessToken);
+            }
+            
+            console.log('✅ Google Drive API 準備完了:', {
+                initialized: window.GoogleDriveAPIv2.isInitialized,
+                authenticated: window.GoogleDriveAPIv2.isAuthenticated
+            });
+        }
+        
+        // 🔧 Google Sheets API の初期化
+        if (window.GoogleSheetsAPI) {
             if (!window.GoogleSheetsAPI.isInitialized) {
-                console.log('🔧 Google Sheets API 強制初期化...');
+                console.log('⏳ Google Sheets API 初期化中...');
                 await window.GoogleSheetsAPI.initialize();
             }
+            
+            // 認証トークンを設定
+            if (!window.GoogleSheetsAPI.isAuthenticated) {
+                console.log('🔑 Google Sheets APIにトークン設定中...');
+                await window.GoogleSheetsAPI.setAccessToken(accessToken);
+            }
+            
+            console.log('✅ Google Sheets API 準備完了:', {
+                initialized: window.GoogleSheetsAPI.isInitialized,
+                authenticated: window.GoogleSheetsAPI.isAuthenticated
+            });
         }
         
         console.log('✅ Google APIs 初期化完了');
@@ -140,34 +170,10 @@ window.RentPipeApp = {
             throw new Error('UnifiedSheetsManager が見つかりません');
         }
         
-        // 認証トークンを取得
-        const authState = window.IntegratedAuthManagerV2.getAuthState();
-        
-        if (authState?.googleAuth?.isSignedIn && authState?.googleAuth?.accessToken) {
-            console.log('🔑 アクセストークン設定中...');
-            
-            // Google Sheets APIにトークンを設定
-            if (window.gapi?.client) {
-                window.gapi.client.setToken({
-                    access_token: authState.googleAuth.accessToken
-                });
-                console.log('✅ アクセストークン設定完了');
-            }
-            
-            // UnifiedSheetsManager の初期化
-            await window.UnifiedSheetsManager.initialize();
-            
-            const status = window.UnifiedSheetsManager.getStatus();
-            console.log('📊 Google Sheets統合状態:', status);
-            
-            if (status.isEnabled) {
-                console.log('✅ Google Sheets統合有効');
-            } else {
-                console.log('ℹ️ LocalStorageモードで動作');
-            }
-        } else {
-            console.log('⚠️ Google認証なし - LocalStorageモードで動作');
-        }
+        // UnifiedSheetsManager は自動的に initialize() を呼び出すので、
+        // ここでは状態確認のみ
+        const status = window.UnifiedSheetsManager.getStatus();
+        console.log('📊 Google Sheets統合状態:', status);
         
         console.log('✅ Google Sheets統合初期化完了');
     },
@@ -239,15 +245,8 @@ window.RentPipeApp = {
         const sheetsStatus = this.getSheetsStatus();
         
         if (sheetsStatus?.isEnabled) {
-            const mode = sheetsStatus.syncMode || 'normal';
-            const modeText = {
-                'after-change': '変更後',
-                'normal': '通常',
-                'idle': 'アイドル'
-            }[mode] || mode;
-            
             statusDiv.className = 'auth-status success';
-            statusDiv.textContent = `✅ Google Sheets統合有効（${modeText}モード） - ${authState?.googleAuth?.user?.email || '認証済み'}`;
+            statusDiv.textContent = `✅ Google Sheets統合有効 - ${authState?.googleAuth?.user?.email || '認証済み'}`;
         } else if (authState?.googleAuth?.isSignedIn) {
             statusDiv.className = 'auth-status warning';
             statusDiv.textContent = `⚠️ Google認証済み（Sheets未連携） - ${authState.googleAuth.user.email}`;
