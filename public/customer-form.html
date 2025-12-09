@@ -220,7 +220,7 @@
     <script>
         console.log('📝 顧客フォームページ読み込み開始...');
         
-        // フォーム送信処理
+        // フォーム送信処理（新しいデータ構造に対応）
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -231,18 +231,72 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = '登録中...';
                 
-                // フォームデータを収集
+                // 新しいデータ構造でフォームデータを収集
                 const customerData = {
-                    name: document.getElementById('name').value.trim(),
-                    email: document.getElementById('email').value.trim(),
-                    phone: document.getElementById('phone').value.trim(),
-                    pipelineStatus: document.getElementById('pipelineStatus').value,
+                    basicInfo: {
+                        name: document.getElementById('name').value.trim(),
+                        nameKana: "",
+                        email: document.getElementById('email').value.trim(),
+                        phone: document.getElementById('phone').value.trim(),
+                        birthday: "",
+                        gender: "no_answer",
+                        currentAddress: "",
+                        currentHousing: "",
+                        occupation: "",
+                        companyName: "",
+                        yearsEmployed: 0,
+                        annualIncome: 0,
+                        movingReason: "",
+                        numberOfOccupants: 1
+                    },
                     preferences: {
-                        budgetMin: parseFloat(document.getElementById('budgetMin').value) * 10000 || 0,
-                        budgetMax: parseFloat(document.getElementById('budgetMax').value) * 10000 || 0,
+                        budget: {
+                            min: (parseFloat(document.getElementById('budgetMin').value) || 0) * 10000,
+                            max: (parseFloat(document.getElementById('budgetMax').value) || 0) * 10000,
+                            note: ""
+                        },
+                        moveInDate: "",
+                        moveInDateNote: "",
                         areas: document.getElementById('areas').value.trim(),
+                        areasNote: "",
+                        layout: "",
+                        layoutNote: "",
+                        roomSize: 0,
+                        roomSizeNote: "",
+                        stationWalk: 0,
+                        stationWalkNote: "",
+                        buildingAge: {
+                            value: 999,
+                            type: "any",
+                            note: ""
+                        },
+                        floor: 1,
+                        floorNote: ""
+                    },
+                    equipment: {
+                        autoLock: false,
+                        separateBath: false,
+                        separateWashroom: false,
+                        indoorWashing: false,
+                        twoGasStove: false,
+                        flooring: false,
+                        noTatami: false,
+                        elevator: false,
+                        deliveryBox: false,
+                        internet: false,
+                        parking: false,
+                        bike: false,
+                        bicycle: false,
+                        petAllowed: false,
+                        instrumentAllowed: false,
+                        sohoAllowed: false,
+                        equipmentNote: ""
+                    },
+                    additionalInfo: {
                         notes: document.getElementById('notes').value.trim()
-                    }
+                    },
+                    agentMemo: "",
+                    pipelineStatus: document.getElementById('pipelineStatus').value
                 };
                 
                 console.log('📤 顧客データ送信:', customerData);
