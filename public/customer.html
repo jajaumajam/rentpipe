@@ -536,22 +536,30 @@
                 ? '<span class="active-badge inactive">⏸️ 非アクティブ</span>'
                 : '<span class="active-badge active">✅ アクティブ</span>';
             
+            // 新しいデータ構造に対応
+            const name = customer.basicInfo?.name || customer.name || '名前未設定';
+            const email = customer.basicInfo?.email || customer.email || 'メールなし';
+            const phone = customer.basicInfo?.phone || customer.phone || '電話番号なし';
+            const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 0;
+            const budgetMax = customer.preferences?.budget?.max || customer.preferences?.budgetMax || 0;
+            const areas = customer.preferences?.areas || '';
+            
             card.innerHTML = `
                 <div class="customer-header">
                     <div>
-                        <div class="customer-name">${customer.name || '名前未設定'}${activeBadge}</div>
+                        <div class="customer-name">${name} ${activeBadge}</div>
                     </div>
                     <div class="customer-status" style="background: ${statusColors[customer.pipelineStatus] || '#f3f4f6'}">
                         ${customer.pipelineStatus || '未設定'}
                     </div>
                 </div>
-                <div class="customer-info">📧 ${customer.email || 'メールなし'}</div>
-                <div class="customer-info">📱 ${customer.phone || '電話番号なし'}</div>
-                ${customer.preferences?.budgetMin ? `
-                    <div class="customer-info">💰 ${customer.preferences.budgetMin.toLocaleString()}円 〜 ${customer.preferences.budgetMax?.toLocaleString() || ''}円</div>
+                <div class="customer-info">📧 ${email}</div>
+                <div class="customer-info">📱 ${phone}</div>
+                ${budgetMin ? `
+                    <div class="customer-info">💰 ${budgetMin.toLocaleString()}円 〜 ${budgetMax ? budgetMax.toLocaleString() + '円' : ''}</div>
                 ` : ''}
-                ${customer.preferences?.areas ? `
-                    <div class="customer-info">📍 ${customer.preferences.areas.join(', ')}</div>
+                ${areas ? `
+                    <div class="customer-info">📍 ${areas}</div>
                 ` : ''}
                 <div class="customer-actions">
                     <button class="btn-edit" onclick="window.location.href='customer-form.html?edit=${customer.id}'">
@@ -561,14 +569,12 @@
                         ? `<button class="btn-activate" onclick="activateCustomer('${customer.id}')">▶️ 再アクティブ化</button>`
                         : `<button class="btn-deactivate" onclick="deactivateCustomer('${customer.id}')">⏸️ 非アクティブ化</button>`
                     }
-                    <button class="btn-delete" onclick="deleteCustomer('${customer.id}')">
-                        🗑️ 削除
-                    </button>
                 </div>
             `;
             
             return card;
         }
+
         
         // 統計更新
         function updateStats() {
