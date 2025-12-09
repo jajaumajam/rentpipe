@@ -6,9 +6,6 @@
     <title>顧客登録 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <style>
-        /* ナビゲーションバーは main.css のスタイルを使用 */
-    </style>
-    <style>
         .form-container {
             max-width: 800px;
             margin: 0 auto;
@@ -132,17 +129,8 @@
     </style>
 </head>
 <body>
-    <!-- ナビゲーション -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="customer.html" class="logo">RentPipe</a>
-            <div class="nav-links">
-                <a href="customer.html">顧客管理</a>
-                <a href="pipeline.html">パイプライン</a>
-                <span id="userEmail" class="user-email"></span>
-            </div>
-        </div>
-    </nav>
+    <!-- ナビゲーション（動的生成） -->
+    <div id="navigation"></div>
 
     <div class="form-container">
         <div class="form-card">
