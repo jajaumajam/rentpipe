@@ -135,11 +135,13 @@
     <div class="form-container">
         <div class="form-card">
             <div class="form-header">
-                <h1>新規顧客登録</h1>
-                <p>お客様の基本情報を入力してください</p>
+                <h1 id="formTitle">新規顧客登録</h1>
+                <p id="formDescription">お客様の基本情報を入力してください</p>
             </div>
 
             <form id="customerForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="customerId">
+                
                 <div class="form-group">
                     <label>お名前 <span class="required">*</span></label>
                     <input type="text" id="name" placeholder="山田太郎" required>
@@ -211,7 +213,71 @@
     <script>
         console.log('📝 顧客フォームページ読み込み開始...');
         
-        // フォーム送信処理（新しいデータ構造に対応）
+        let isEditMode = false;
+        let editingCustomerId = null;
+        
+        // ページ初期化完了後に編集モードをチェック
+        document.addEventListener('DOMContentLoaded', async () => {
+            // URLパラメータから編集対象の顧客IDを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const customerId = urlParams.get('edit');
+            
+            if (customerId) {
+                // 編集モード
+                isEditMode = true;
+                editingCustomerId = customerId;
+                
+                // タイトル変更
+                document.getElementById('formTitle').textContent = '顧客情報編集';
+                document.getElementById('formDescription').textContent = '顧客情報を更新してください';
+                document.getElementById('submitBtn').textContent = '更新する';
+                
+                // AppInitializerの初期化を待つ
+                if (window.AppInitializer && window.AppInitializer.initializationPromise) {
+                    await window.AppInitializer.initializationPromise;
+                }
+                
+                // 顧客データを読み込み
+                await loadCustomerData(customerId);
+            }
+        });
+        
+        // 顧客データ読み込み
+        async function loadCustomerData(customerId) {
+            try {
+                console.log('📥 顧客データ読み込み中:', customerId);
+                
+                const customer = window.UnifiedDataManager.getCustomerById(customerId);
+                
+                if (!customer) {
+                    throw new Error('顧客が見つかりません');
+                }
+                
+                console.log('✅ 顧客データ取得成功:', customer);
+                
+                // フォームにデータを設定
+                document.getElementById('customerId').value = customer.id;
+                document.getElementById('name').value = customer.basicInfo?.name || customer.name || '';
+                document.getElementById('email').value = customer.basicInfo?.email || customer.email || '';
+                document.getElementById('phone').value = customer.basicInfo?.phone || customer.phone || '';
+                document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
+                
+                const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 0;
+                const budgetMax = customer.preferences?.budget?.max || customer.preferences?.budgetMax || 0;
+                
+                document.getElementById('budgetMin').value = budgetMin ? (budgetMin / 10000).toFixed(1) : '';
+                document.getElementById('budgetMax').value = budgetMax ? (budgetMax / 10000).toFixed(1) : '';
+                document.getElementById('areas').value = customer.preferences?.areas || '';
+                document.getElementById('notes').value = customer.additionalInfo?.notes || customer.preferences?.notes || '';
+                
+            } catch (error) {
+                console.error('❌ 顧客データ読み込みエラー:', error);
+                alert('顧客データの読み込みに失敗しました: ' + error.message);
+                window.location.href = 'customer.html';
+            }
+        }
+        
+        // フォーム送信処理
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -220,9 +286,9 @@
             
             try {
                 submitBtn.disabled = true;
-                submitBtn.textContent = '登録中...';
+                submitBtn.textContent = isEditMode ? '更新中...' : '登録中...';
                 
-                // 新しいデータ構造でフォームデータを収集
+                // フォームデータを収集
                 const customerData = {
                     basicInfo: {
                         name: document.getElementById('name').value.trim(),
@@ -290,20 +356,43 @@
                     pipelineStatus: document.getElementById('pipelineStatus').value
                 };
                 
-                console.log('📤 顧客データ送信:', customerData);
+                let result;
                 
-                // UnifiedDataManagerで顧客を追加
-                const result = await UnifiedDataManager.addCustomer(customerData);
+                if (isEditMode) {
+                    // 編集モード: 既存顧客を更新
+                    customerData.id = editingCustomerId;
+                    
+                    // 既存の顧客データを取得してマージ
+                    const existingCustomer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                    if (existingCustomer) {
+                        // 既存のデータを保持しつつ、フォームの入力で上書き
+                        Object.assign(existingCustomer.basicInfo, customerData.basicInfo);
+                        Object.assign(existingCustomer.preferences, customerData.preferences);
+                        Object.assign(existingCustomer.equipment, customerData.equipment);
+                        Object.assign(existingCustomer.additionalInfo, customerData.additionalInfo);
+                        existingCustomer.pipelineStatus = customerData.pipelineStatus;
+                        
+                        result = await window.UnifiedDataManager.updateCustomer(existingCustomer);
+                    } else {
+                        throw new Error('更新対象の顧客が見つかりません');
+                    }
+                    
+                    console.log('📤 顧客データ更新:', customerData);
+                } else {
+                    // 新規登録モード
+                    result = await window.UnifiedDataManager.addCustomer(customerData);
+                    console.log('📤 顧客データ登録:', customerData);
+                }
                 
                 if (result.success) {
-                    alert('✅ 顧客を登録しました！');
+                    alert(isEditMode ? '✅ 顧客情報を更新しました！' : '✅ 顧客を登録しました！');
                     window.location.href = 'customer.html';
                 } else {
-                    throw new Error(result.error || '登録に失敗しました');
+                    throw new Error(result.error || (isEditMode ? '更新に失敗しました' : '登録に失敗しました'));
                 }
                 
             } catch (error) {
-                console.error('❌ 登録エラー:', error);
+                console.error('❌ エラー:', error);
                 alert('❌ エラー: ' + error.message);
                 
                 submitBtn.disabled = false;

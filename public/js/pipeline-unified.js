@@ -1,10 +1,9 @@
-// RentPipe パイプライン管理機能（完全版 + データ更新対応 + アクティブ/非アクティブフィルター）
+// RentPipe パイプライン管理機能（完全版 + データ更新対応 + 新データ構造対応）
 class PipelineManager {
     constructor() {
         this.dataManager = null;
         this.statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
         this.isUpdating = false; // 自分自身の更新中フラグ
-        this.showActiveOnly = true; // 🆕 デフォルト: アクティブのみ表示
         this.init();
     }
 
@@ -29,7 +28,7 @@ class PipelineManager {
             }
         });
         
-        console.log('✅ 統一対応パイプライン管理システム準備完了（アクティブ/非アクティブフィルター対応）');
+        console.log('✅ 統一対応パイプライン管理システム準備完了');
     }
 
     async waitForDataManager() {
@@ -84,12 +83,8 @@ class PipelineManager {
             return;
         }
 
-        // 🆕 フィルター設定に応じて顧客を取得
-        const customers = this.showActiveOnly 
-            ? this.dataManager.getActiveCustomers() 
-            : this.dataManager.getCustomers();
-        
-        console.log('📊 顧客データ取得:', customers.length, '件', this.showActiveOnly ? '(アクティブのみ)' : '(すべて)');
+        const customers = this.dataManager.getCustomers();
+        console.log('📊 顧客データ取得:', customers.length, '件');
         
         const container = document.getElementById('pipeline-container');
         if (!container) {
@@ -125,29 +120,30 @@ class PipelineManager {
     }
 
     createCustomerCard(customer) {
-        // 🆕 アクティブ/非アクティブバッジを追加
-        const activeBadge = customer.isActive === false 
-            ? '<span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 8px; font-size: 11px; margin-left: 8px;">⏸️ 非アクティブ</span>'
-            : '';
+        // 新しいデータ構造に対応（旧データ構造との後方互換性も維持）
+        const name = customer.basicInfo?.name || customer.name || '名前未設定';
+        const email = customer.basicInfo?.email || customer.email || '-';
+        const phone = customer.basicInfo?.phone || customer.phone || '-';
+        const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 0;
         
         return `
             <div class="customer-card" data-customer-id="${customer.id}">
                 <div class="card-header">
-                    <h4>${customer.name || '名前未設定'}${activeBadge}</h4>
+                    <h4>${name}</h4>
                 </div>
                 <div class="card-body">
                     <div class="card-info">
                         <span>📧</span>
-                        <span>${customer.email || '-'}</span>
+                        <span>${email}</span>
                     </div>
                     <div class="card-info">
                         <span>📱</span>
-                        <span>${customer.phone || '-'}</span>
+                        <span>${phone}</span>
                     </div>
-                    ${customer.preferences?.budgetMin ? `
+                    ${budgetMin ? `
                         <div class="card-info">
                             <span>💰</span>
-                            <span>${customer.preferences.budgetMin.toLocaleString()}円〜</span>
+                            <span>${budgetMin.toLocaleString()}円〜</span>
                         </div>
                     ` : ''}
                 </div>
@@ -161,13 +157,6 @@ class PipelineManager {
                 </div>
             </div>
         `;
-    }
-
-    // 🆕 フィルター切り替え
-    setFilter(showActiveOnly) {
-        console.log('🔄 フィルター切り替え:', showActiveOnly ? 'アクティブのみ' : 'すべて表示');
-        this.showActiveOnly = showActiveOnly;
-        this.renderPipeline();
     }
 
     async changeStatus(customerId, currentStatus) {
@@ -241,4 +230,4 @@ if (document.readyState === 'loading') {
     window.pipelineManager = new PipelineManager();
 }
 
-console.log('✅ パイプライン管理システム準備完了（アクティブ/非アクティブフィルター対応）');
+console.log('✅ パイプライン管理システム準備完了');
