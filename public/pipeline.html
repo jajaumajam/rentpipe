@@ -254,28 +254,18 @@
     </div>
 
     <!-- Google API Client & Identity Services -->
-    <script src="https://accounts.google.com/gsi/client"></script>
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
-    
-    <!-- RentPipe Core Scripts（正しい順序）-->
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
-    
-    <!-- Google Integration Scripts -->
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-sheets-api.js"></script>
-    
-    <!-- Data Management -->
+    <script src="js/data-migration.js"></script>
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
-    
-    <!-- Pipeline Specific Script -->
+    <script src="js/app-initializer.js"></script>
     <script src="js/pipeline-unified.js"></script>
     
-    <!-- ✅ 統合初期化システム -->
-    <script src="js/app-initializer.js"></script>
-    
-    <!-- ✅ 高速スタート + フィルター制御 -->
     <script>
         console.log('📊 パイプラインページ読み込み開始...');
         

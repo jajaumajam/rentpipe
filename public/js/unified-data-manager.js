@@ -155,9 +155,24 @@ const UnifiedDataManager = {
     /**
      * 顧客情報を更新
      */
-    updateCustomer: async function(customerId, updates) {
+    updateCustomer: async function(customerIdOrObject, updates) {
         try {
             const customers = this.getCustomers();
+            let customerId, customerUpdates;
+            
+            // 引数の形式を判定
+            if (typeof customerIdOrObject === 'string') {
+                // 従来の形式: updateCustomer(customerId, updates)
+                customerId = customerIdOrObject;
+                customerUpdates = updates;
+            } else if (typeof customerIdOrObject === 'object' && customerIdOrObject.id) {
+                // 新しい形式: updateCustomer(customer)
+                customerId = customerIdOrObject.id;
+                customerUpdates = customerIdOrObject;
+            } else {
+                return { success: false, error: '無効な引数です' };
+            }
+            
             const index = customers.findIndex(c => c.id === customerId);
 
             if (index === -1) {
@@ -167,29 +182,29 @@ const UnifiedDataManager = {
             // 更新データをマージ
             const customer = customers[index];
             
-            if (updates.basicInfo) {
-                customer.basicInfo = { ...customer.basicInfo, ...updates.basicInfo };
+            if (customerUpdates.basicInfo) {
+                customer.basicInfo = { ...customer.basicInfo, ...customerUpdates.basicInfo };
             }
-            if (updates.preferences) {
-                customer.preferences = { ...customer.preferences, ...updates.preferences };
+            if (customerUpdates.preferences) {
+                customer.preferences = { ...customer.preferences, ...customerUpdates.preferences };
             }
-            if (updates.equipment) {
-                customer.equipment = { ...customer.equipment, ...updates.equipment };
+            if (customerUpdates.equipment) {
+                customer.equipment = { ...customer.equipment, ...customerUpdates.equipment };
             }
-            if (updates.additionalInfo) {
-                customer.additionalInfo = { ...customer.additionalInfo, ...updates.additionalInfo };
+            if (customerUpdates.additionalInfo) {
+                customer.additionalInfo = { ...customer.additionalInfo, ...customerUpdates.additionalInfo };
             }
-            if (updates.agentMemo !== undefined) {
-                customer.agentMemo = updates.agentMemo;
+            if (customerUpdates.agentMemo !== undefined) {
+                customer.agentMemo = customerUpdates.agentMemo;
             }
-            if (updates.pipelineStatus) {
-                customer.pipelineStatus = updates.pipelineStatus;
+            if (customerUpdates.pipelineStatus) {
+                customer.pipelineStatus = customerUpdates.pipelineStatus;
             }
-            if (updates.isActive !== undefined) {
-                customer.isActive = updates.isActive;
+            if (customerUpdates.isActive !== undefined) {
+                customer.isActive = customerUpdates.isActive;
             }
-            if (updates.archivedAt !== undefined) {
-                customer.archivedAt = updates.archivedAt;
+            if (customerUpdates.archivedAt !== undefined) {
+                customer.archivedAt = customerUpdates.archivedAt;
             }
 
             customer.updatedAt = new Date().toISOString();
@@ -208,6 +223,7 @@ const UnifiedDataManager = {
             return { success: false, error: error.message };
         }
     },
+
 
     /**
      * 顧客を削除
