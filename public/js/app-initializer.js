@@ -171,6 +171,9 @@ const AppInitializer = {
     /**
      * データを同期（Sheets → Local）
      */
+    /**
+     * データを同期（Sheets → Local）
+     */
     syncData: async function() {
         if (!window.UnifiedDataManager) {
             return { success: false, error: 'DataManager not available' };
@@ -182,6 +185,11 @@ const AppInitializer = {
             
             if (result.success) {
                 console.log(`📥 ${result.customers?.length || 0}件のデータを同期しました`);
+                
+                // 🆕 データ更新イベントを発火
+                window.dispatchEvent(new CustomEvent('rentpipe-data-updated', {
+                    detail: { source: 'initial-sync', count: result.customers?.length || 0 }
+                }));
             }
             
             return result;
@@ -189,7 +197,7 @@ const AppInitializer = {
             console.error('データ同期エラー:', error);
             return { success: false, error: error.message };
         }
-    },
+    },,
 
     /**
      * ユーザー情報を表示

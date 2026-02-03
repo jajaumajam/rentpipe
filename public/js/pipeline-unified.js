@@ -16,8 +16,13 @@ class PipelineManager {
         // パイプラインの表示
         this.renderPipeline();
         
-        // 認証状態の更新
+        // 認証状態の更新（初回）
         this.updateAuthStatus();
+        
+        // 🆕 少し遅延して再度認証状態を更新（UnifiedSheetsManager.isEnabledが確実に設定されるまで待つ）
+        setTimeout(() => {
+            this.updateAuthStatus();
+        }, 1000);
         
         // 🆕 データ更新イベントをリッスン
         window.addEventListener('rentpipe-data-updated', () => {
@@ -25,8 +30,12 @@ class PipelineManager {
             if (!this.isUpdating) {
                 console.log('🔔 データ更新通知受信 - パイプライン再描画');
                 this.renderPipeline();
-                this.updateAuthStatus();  // 🆕 認証ステータスも更新
+                this.updateAuthStatus();  // 認証ステータスも更新
             }
+        });
+        
+        console.log('✅ 統一対応パイプライン管理システム準備完了');
+    }
         });
         
         console.log('✅ 統一対応パイプライン管理システム準備完了');
