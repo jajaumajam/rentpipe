@@ -7,6 +7,7 @@ const UnifiedSheetsManager = {
     SPREADSHEET_NAME: 'RentPipe顧客管理',
     SHEET_NAME: 'customers',
     spreadsheetId: null,
+    isEnabled: false,  // Google Sheets連携が有効かどうか
 
     /**
      * スプレッドシートを初期化
@@ -22,6 +23,7 @@ const UnifiedSheetsManager = {
 
             if (response.result.files && response.result.files.length > 0) {
                 this.spreadsheetId = response.result.files[0].id;
+                this.isEnabled = true;  // 初期化成功
                 console.log('既存のスプレッドシートを使用:', this.spreadsheetId);
                 
                 // ヘッダー行を確認・更新
@@ -34,6 +36,7 @@ const UnifiedSheetsManager = {
             }
         } catch (error) {
             console.error('スプレッドシート初期化エラー:', error);
+            this.isEnabled = false;  // 初期化失敗
             return { success: false, error: error.message };
         }
     },
@@ -47,6 +50,28 @@ const UnifiedSheetsManager = {
                 properties: {
                     title: this.SPREADSHEET_NAME
                 },
+                sheets: [{
+                    properties: {
+                        title: this.SHEET_NAME
+                    }
+                }]
+            });
+
+            this.spreadsheetId = response.result.spreadsheetId;
+            this.isEnabled = true;  // 作成成功
+            console.log('新規スプレッドシート作成:', this.spreadsheetId);
+
+            // ヘッダー行を設定
+            await this.setupHeaders();
+
+            return { success: true, spreadsheetId: this.spreadsheetId };
+        } catch (error) {
+            console.error('スプレッドシート作成エラー:', error);
+            this.isEnabled = false;  // 作成失敗
+            return { success: false, error: error.message };
+        }
+    },
+
                 sheets: [{
                     properties: {
                         title: this.SHEET_NAME

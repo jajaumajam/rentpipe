@@ -435,14 +435,9 @@
         
         
         // アプリケーション初期化後の処理
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                // AppInitializerは自動的に初期化されるので、完了を待つ
-                if (window.AppInitializer && window.AppInitializer.initializationPromise) {
-                    await window.AppInitializer.initializationPromise;
-                }
-                
-                // データ表示
+                // 🚀 即座にローカルストレージのデータを表示（同期を待たない）
                 displayCustomers();
                 updateStats();
                 
@@ -457,8 +452,8 @@
                         statusElement.innerHTML = '✅ 同期済み';
                         statusElement.className = 'auth-status synced';
                     } else {
-                        statusElement.innerHTML = '⚠️ 未同期';
-                        statusElement.className = 'auth-status not-synced';
+                        statusElement.innerHTML = '⏳ 同期中...';
+                        statusElement.className = 'auth-status syncing';
                     }
                 }
                 
@@ -466,14 +461,20 @@
                 updateAuthStatusDisplay();
                 
                 // 定期的に更新
-                setInterval(updateAuthStatusDisplay, 5000);
+                setInterval(updateAuthStatusDisplay, 2000);
                 
-                // データ更新イベントをリッスン
+                // データ更新イベントをリッスン（バックグラウンド同期完了時）
                 window.addEventListener('rentpipe-data-updated', () => {
                     console.log('🔔 データ更新通知受信 - 再表示');
                     displayCustomers();
                     updateStats();
+                    updateAuthStatusDisplay();
                 });
+                
+            } catch (error) {
+                console.error('customer.html 初期化エラー:', error);
+            }
+        });
                 
             } catch (error) {
                 console.error('customer.html 初期化エラー:', error);
