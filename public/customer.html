@@ -730,29 +730,31 @@
                 return;
             }
             
-            if (!confirm(`${customer.name}さんを再アクティブ化しますか?`)) {
+            const customerName = customer.basicInfo?.name || customer.name || '名前未設定';
+            
+            if (!confirm(`${customerName}さんを再アクティブ化しますか?`)) {
                 return;
             }
             
             try {
-                // 🔧 ローディング表示
+                // ローディング表示
                 showLoading();
                 
                 console.log('▶️ 再アクティブ化処理開始:', customerId);
                 
-                // 🔧 同期完了を確実に待つ
-                await window.UnifiedDataManager.activateCustomer(customerId);
+                // reactivateCustomerを使用
+                await window.UnifiedDataManager.reactivateCustomer(customerId);
                 
                 console.log('✅ 再アクティブ化処理完了');
                 
-                // 🔧 UI更新
+                // UI更新
                 displayCustomers();
                 updateStats();
                 
-                // 🔧 ローディング非表示
+                // ローディング非表示
                 hideLoading();
                 
-                alert(`✅ ${customer.name}さんを再アクティブ化しました`);
+                alert(`✅ ${customerName}さんを再アクティブ化しました`);
                 
             } catch (error) {
                 console.error('❌ 再アクティブ化エラー:', error);
