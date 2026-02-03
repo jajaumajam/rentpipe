@@ -140,6 +140,11 @@ const UnifiedDataManager = {
             customers.push(customer);
             this.saveCustomers(customers);
 
+            // データ更新イベントを発火
+            window.dispatchEvent(new CustomEvent('rentpipe-data-updated', {
+                detail: { source: 'add-customer', customerId: customer.id }
+            }));
+
             // Google Sheetsに同期
             if (window.UnifiedSheetsManager) {
                 await UnifiedSheetsManager.syncToSheets(customers);
@@ -211,6 +216,11 @@ const UnifiedDataManager = {
             customers[index] = customer;
 
             this.saveCustomers(customers);
+
+            // データ更新イベントを発火
+            window.dispatchEvent(new CustomEvent('rentpipe-data-updated', {
+                detail: { source: 'update-customer', customerId: customer.id }
+            }));
 
             // Google Sheetsに同期
             if (window.UnifiedSheetsManager) {

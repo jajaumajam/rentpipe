@@ -89,8 +89,10 @@ class PipelineManager {
             return;
         }
 
-        const customers = this.dataManager.getCustomers();
-        console.log('📊 顧客データ取得:', customers.length, '件');
+        // アクティブ顧客のみ取得
+        const allCustomers = this.dataManager.getCustomers();
+        const customers = allCustomers.filter(c => c.isActive !== false);
+        console.log('📊 顧客データ取得:', customers.length, '件（アクティブのみ）');
         
         const container = document.getElementById('pipeline-container');
         if (!container) {
