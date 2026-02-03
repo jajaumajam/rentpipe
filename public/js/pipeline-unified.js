@@ -25,6 +25,7 @@ class PipelineManager {
             if (!this.isUpdating) {
                 console.log('🔔 データ更新通知受信 - パイプライン再描画');
                 this.renderPipeline();
+                this.updateAuthStatus();  // 🆕 認証ステータスも更新
             }
         });
         
