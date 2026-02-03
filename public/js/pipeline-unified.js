@@ -66,7 +66,7 @@ class PipelineManager {
         const statusDiv = document.getElementById('auth-sync-status');
         if (!statusDiv) return;
         
-        const authState = window.IntegratedAuthManagerV2?.getAuthState();
+        const authState = window.IntegratedAuthManager?.getAuthState();
         
         if (authState?.isAuthenticated) {
             const email = authState.email || 'ユーザー';
