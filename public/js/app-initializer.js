@@ -197,7 +197,7 @@ const AppInitializer = {
             console.error('データ同期エラー:', error);
             return { success: false, error: error.message };
         }
-    },,
+    },
 
     /**
      * ユーザー情報を表示
