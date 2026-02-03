@@ -19,23 +19,19 @@ class PipelineManager {
         // 認証状態の更新（初回）
         this.updateAuthStatus();
         
-        // 🆕 少し遅延して再度認証状態を更新（UnifiedSheetsManager.isEnabledが確実に設定されるまで待つ）
+        // 少し遅延して再度認証状態を更新（UnifiedSheetsManager.isEnabledが確実に設定されるまで待つ）
         setTimeout(() => {
             this.updateAuthStatus();
         }, 1000);
         
-        // 🆕 データ更新イベントをリッスン
+        // データ更新イベントをリッスン
         window.addEventListener('rentpipe-data-updated', () => {
             // 自分自身の更新中は再描画しない（無限ループ防止）
             if (!this.isUpdating) {
                 console.log('🔔 データ更新通知受信 - パイプライン再描画');
                 this.renderPipeline();
-                this.updateAuthStatus();  // 認証ステータスも更新
+                this.updateAuthStatus();
             }
-        });
-        
-        console.log('✅ 統一対応パイプライン管理システム準備完了');
-    }
         });
         
         console.log('✅ 統一対応パイプライン管理システム準備完了');
@@ -200,7 +196,7 @@ class PipelineManager {
         }
 
         try {
-            // 🆕 更新中フラグを立てる
+            // 更新中フラグを立てる
             this.isUpdating = true;
             
             const customer = this.dataManager.getCustomerById(customerId);
@@ -225,7 +221,7 @@ class PipelineManager {
             console.error('❌ ステータス変更エラー:', error);
             alert('ステータス変更に失敗しました: ' + error.message);
         } finally {
-            // 🆕 更新中フラグを解除
+            // 更新中フラグを解除
             this.isUpdating = false;
         }
     }
