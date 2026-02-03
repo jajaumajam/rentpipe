@@ -171,9 +171,6 @@ const AppInitializer = {
     /**
      * データを同期（Sheets → Local）
      */
-    /**
-     * データを同期（Sheets → Local）
-     */
     syncData: async function() {
         if (!window.UnifiedDataManager) {
             return { success: false, error: 'DataManager not available' };
