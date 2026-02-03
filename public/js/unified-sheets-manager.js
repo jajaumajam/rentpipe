@@ -72,26 +72,6 @@ const UnifiedSheetsManager = {
         }
     },
 
-                sheets: [{
-                    properties: {
-                        title: this.SHEET_NAME
-                    }
-                }]
-            });
-
-            this.spreadsheetId = response.result.spreadsheetId;
-            console.log('新規スプレッドシート作成:', this.spreadsheetId);
-
-            // ヘッダー行を設定
-            await this.setupHeaders();
-
-            return { success: true, spreadsheetId: this.spreadsheetId };
-        } catch (error) {
-            console.error('スプレッドシート作成エラー:', error);
-            return { success: false, error: error.message };
-        }
-    },
-
     /**
      * ヘッダー行を設定（新規作成時）
      */
