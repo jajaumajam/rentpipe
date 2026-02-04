@@ -11,47 +11,100 @@
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .form-card {
             background: white;
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        
+
         .form-header {
             margin-bottom: 30px;
+            text-align: center;
         }
-        
+
         .form-header h1 {
             font-size: 28px;
             margin: 0 0 10px 0;
         }
-        
+
         .form-header p {
             color: #6b7280;
             margin: 0;
         }
-        
+
+        .form-header .time-estimate {
+            display: inline-block;
+            background: #f0f9ff;
+            color: #0369a1;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* セクション */
+        .form-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .icon {
+            font-size: 20px;
+        }
+
+        /* フォームグループ */
         .form-group {
             margin-bottom: 20px;
         }
-        
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
         .form-group label {
             display: block;
             font-weight: 500;
             margin-bottom: 8px;
             color: #1f2937;
         }
-        
+
         .form-group label .required {
             color: #ef4444;
         }
-        
+
+        .form-group label .optional {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
         .form-group input[type="text"],
         .form-group input[type="email"],
         .form-group input[type="tel"],
         .form-group input[type="number"],
+        .form-group input[type="date"],
         .form-group select,
         .form-group textarea {
             width: 100%;
@@ -60,8 +113,9 @@
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.2s;
+            box-sizing: border-box;
         }
-        
+
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
@@ -69,18 +123,209 @@
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        
+
         .form-group textarea {
             min-height: 100px;
             resize: vertical;
         }
-        
+
+        .form-group .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* 予算範囲選択 */
+        .budget-range {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .budget-range select {
+            flex: 1;
+        }
+
+        .budget-range .separator {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* スライダー */
+        .slider-container {
+            padding: 10px 0;
+        }
+
+        .slider-container input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #e5e7eb;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-value {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* 築年数の特殊UI */
+        .building-age-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .building-age-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .building-age-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .building-age-slider {
+            flex: 1;
+        }
+
+        /* チェックボックスグループ */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: #f3f4f6;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        /* 間取りチェックボックス */
+        .layout-checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .layout-checkbox-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .layout-checkbox-item:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .layout-checkbox-item.checked {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .layout-checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .layout-checkbox-item span {
+            font-weight: 500;
+        }
+
+        /* 設備カテゴリ */
+        .equipment-category {
+            margin-bottom: 20px;
+        }
+
+        .equipment-category-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 10px;
+            padding-left: 4px;
+        }
+
+        /* ラジオボタングループ */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ボタン */
         .button-group {
             display: flex;
             gap: 12px;
             margin-top: 30px;
         }
-        
+
         .btn {
             flex: 1;
             padding: 14px 24px;
@@ -91,39 +336,61 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
+
         .btn-primary {
             background: #3b82f6;
             color: white;
         }
-        
+
         .btn-primary:hover {
             background: #2563eb;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
-        
+
         .btn-secondary {
             background: #f3f4f6;
             color: #4b5563;
         }
-        
+
         .btn-secondary:hover {
             background: #e5e7eb;
         }
-        
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
+        /* レスポンシブ */
         @media (max-width: 768px) {
             .form-card {
                 padding: 20px;
             }
-            
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
             .button-group {
                 flex-direction: column;
+            }
+
+            .budget-range {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .budget-range .separator {
+                text-align: center;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .layout-checkbox-group {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -135,59 +402,458 @@
     <div class="form-container">
         <div class="form-card">
             <div class="form-header">
-                <h1 id="formTitle">新規顧客登録</h1>
-                <p id="formDescription">お客様の基本情報を入力してください</p>
+                <h1 id="formTitle">📱 お部屋探しアンケート</h1>
+                <p id="formDescription">まずは基本的な情報を教えてください</p>
+                <span class="time-estimate">所要時間: 約5分</span>
             </div>
 
             <form id="customerForm" onsubmit="handleSubmit(event)">
                 <input type="hidden" id="customerId">
-                
-                <div class="form-group">
-                    <label>お名前 <span class="required">*</span></label>
-                    <input type="text" id="name" placeholder="山田太郎" required>
+
+                <!-- ========================================
+                     セクション1: 基本情報
+                ========================================= -->
+                <div class="form-section">
+                    <h2 class="section-title"><span class="icon">👤</span> 基本情報</h2>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>お名前 <span class="required">*</span></label>
+                            <input type="text" id="name" placeholder="山田太郎" required>
+                        </div>
+                        <div class="form-group">
+                            <label>フリガナ <span class="required">*</span></label>
+                            <input type="text" id="nameKana" placeholder="ヤマダタロウ" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>メールアドレス <span class="required">*</span></label>
+                            <input type="email" id="email" placeholder="yamada@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>電話番号 <span class="required">*</span></label>
+                            <input type="tel" id="phone" placeholder="090-1234-5678" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>生年月日 <span class="required">*</span></label>
+                            <input type="date" id="birthday" required>
+                        </div>
+                        <div class="form-group">
+                            <label>性別</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="genderMale" name="gender" value="male">
+                                    <label for="genderMale">男性</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="genderFemale" name="gender" value="female">
+                                    <label for="genderFemale">女性</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="genderOther" name="gender" value="other">
+                                    <label for="genderOther">その他</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="genderNoAnswer" name="gender" value="no_answer" checked>
+                                    <label for="genderNoAnswer">回答しない</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>現住所 <span class="required">*</span></label>
+                        <input type="text" id="currentAddress" placeholder="東京都渋谷区〇〇1-2-3" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>現在の住居形態 <span class="required">*</span></label>
+                            <select id="currentHousing" required>
+                                <option value="">選択してください</option>
+                                <option value="賃貸">賃貸</option>
+                                <option value="持家">持家</option>
+                                <option value="実家">実家</option>
+                                <option value="社宅・寮">社宅・寮</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>入居人数 <span class="required">*</span></label>
+                            <select id="numberOfOccupants" required>
+                                <option value="1">1人</option>
+                                <option value="2">2人</option>
+                                <option value="3">3人</option>
+                                <option value="4">4人</option>
+                                <option value="5">5人以上</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>ご職業 <span class="required">*</span></label>
+                        <input type="text" id="occupation" placeholder="例: 会社員（IT関連）、フリーランス（デザイナー）" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>会社名 <span class="optional">（任意）</span></label>
+                            <input type="text" id="companyName" placeholder="株式会社〇〇">
+                        </div>
+                        <div class="form-group">
+                            <label>勤続年数 <span class="required">*</span></label>
+                            <select id="yearsEmployed" required>
+                                <option value="0">1年未満</option>
+                                <option value="1">1年</option>
+                                <option value="2">2年</option>
+                                <option value="3">3年</option>
+                                <option value="5">5年</option>
+                                <option value="10">10年以上</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>年収（税込） <span class="required">*</span></label>
+                        <select id="annualIncome" required>
+                            <option value="">選択してください</option>
+                            <option value="2000000">200万円未満</option>
+                            <option value="3000000">200万円〜300万円</option>
+                            <option value="4000000">300万円〜400万円</option>
+                            <option value="5000000">400万円〜500万円</option>
+                            <option value="6000000">500万円〜600万円</option>
+                            <option value="7000000">600万円〜700万円</option>
+                            <option value="8000000">700万円〜800万円</option>
+                            <option value="10000000">800万円〜1000万円</option>
+                            <option value="12000000">1000万円以上</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>引越しの理由 <span class="required">*</span></label>
+                        <input type="text" id="movingReason" placeholder="例: 転勤、結婚、更新時期、今の部屋が手狭" required>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>メールアドレス <span class="required">*</span></label>
-                    <input type="email" id="email" placeholder="yamada@example.com" required>
+                <!-- ========================================
+                     セクション2: 希望条件
+                ========================================= -->
+                <div class="form-section">
+                    <h2 class="section-title"><span class="icon">🏠</span> 希望条件</h2>
+
+                    <div class="form-group">
+                        <label>ご予算（管理費込み） <span class="required">*</span></label>
+                        <div class="budget-range">
+                            <select id="budgetMin" required>
+                                <option value="30000">3万円</option>
+                                <option value="35000">3.5万円</option>
+                                <option value="40000">4万円</option>
+                                <option value="45000">4.5万円</option>
+                                <option value="50000">5万円</option>
+                                <option value="55000">5.5万円</option>
+                                <option value="60000">6万円</option>
+                                <option value="65000">6.5万円</option>
+                                <option value="70000">7万円</option>
+                                <option value="75000">7.5万円</option>
+                                <option value="80000" selected>8万円</option>
+                                <option value="85000">8.5万円</option>
+                                <option value="90000">9万円</option>
+                                <option value="95000">9.5万円</option>
+                                <option value="100000">10万円</option>
+                                <option value="110000">11万円</option>
+                                <option value="120000">12万円</option>
+                                <option value="130000">13万円</option>
+                                <option value="140000">14万円</option>
+                                <option value="150000">15万円</option>
+                                <option value="200000">20万円</option>
+                                <option value="300000">30万円</option>
+                                <option value="500000">50万円</option>
+                                <option value="1000000">100万円以上</option>
+                            </select>
+                            <span class="separator">〜</span>
+                            <select id="budgetMax" required>
+                                <option value="30000">3万円</option>
+                                <option value="35000">3.5万円</option>
+                                <option value="40000">4万円</option>
+                                <option value="45000">4.5万円</option>
+                                <option value="50000">5万円</option>
+                                <option value="55000">5.5万円</option>
+                                <option value="60000">6万円</option>
+                                <option value="65000">6.5万円</option>
+                                <option value="70000">7万円</option>
+                                <option value="75000">7.5万円</option>
+                                <option value="80000">8万円</option>
+                                <option value="85000">8.5万円</option>
+                                <option value="90000">9万円</option>
+                                <option value="95000">9.5万円</option>
+                                <option value="100000" selected>10万円</option>
+                                <option value="110000">11万円</option>
+                                <option value="120000">12万円</option>
+                                <option value="130000">13万円</option>
+                                <option value="140000">14万円</option>
+                                <option value="150000">15万円</option>
+                                <option value="200000">20万円</option>
+                                <option value="300000">30万円</option>
+                                <option value="500000">50万円</option>
+                                <option value="1000000">100万円以上</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>入居希望時期 <span class="required">*</span></label>
+                        <input type="text" id="moveInDate" placeholder="例: 2025年4月上旬〜中旬、即入居可、3ヶ月以内" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>希望エリア <span class="required">*</span></label>
+                        <textarea id="areas" placeholder="例: 渋谷駅まで30分以内、目黒区・世田谷区、〇〇線沿線" required></textarea>
+                        <p class="help-text">駅名、路線、地域名、通勤先からの所要時間など、できるだけ具体的にお書きください</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>希望間取り <span class="required">*</span></label>
+                        <div class="layout-checkbox-group" id="layoutCheckboxes">
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="1R">
+                                <span>1R</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="1K">
+                                <span>1K</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="1DK">
+                                <span>1DK</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="1LDK">
+                                <span>1LDK</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="2K">
+                                <span>2K</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="2DK">
+                                <span>2DK</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="2LDK">
+                                <span>2LDK</span>
+                            </label>
+                            <label class="layout-checkbox-item" onclick="toggleLayoutCheckbox(this)">
+                                <input type="checkbox" name="layout" value="3K以上">
+                                <span>3K以上</span>
+                            </label>
+                        </div>
+                        <p class="help-text">複数選択可能です</p>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>部屋の広さ <span class="required">*</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="roomSize" min="15" max="100" value="25" oninput="updateSliderValue('roomSize', '㎡以上')">
+                                <div class="slider-labels">
+                                    <span>15㎡</span>
+                                    <span>100㎡</span>
+                                </div>
+                            </div>
+                            <span class="slider-value" id="roomSizeValue">25㎡以上</span>
+                        </div>
+                        <div class="form-group">
+                            <label>駅からの徒歩時間 <span class="required">*</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="stationWalk" min="1" max="30" value="10" oninput="updateSliderValue('stationWalk', '分以内')">
+                                <div class="slider-labels">
+                                    <span>1分</span>
+                                    <span>30分</span>
+                                </div>
+                            </div>
+                            <span class="slider-value" id="stationWalkValue">10分以内</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>築年数</label>
+                        <div class="building-age-container">
+                            <div class="building-age-option">
+                                <input type="radio" id="buildingAgeAny" name="buildingAgeType" value="any" checked onchange="toggleBuildingAgeSlider()">
+                                <label for="buildingAgeAny">こだわらない</label>
+                            </div>
+                            <div class="building-age-option">
+                                <input type="radio" id="buildingAgeSpecific" name="buildingAgeType" value="specific" onchange="toggleBuildingAgeSlider()">
+                                <label for="buildingAgeSpecific">指定する:</label>
+                                <div class="building-age-slider" id="buildingAgeSliderContainer" style="opacity: 0.5;">
+                                    <input type="range" id="buildingAge" min="0" max="40" value="15" oninput="updateBuildingAgeValue()" disabled>
+                                    <span class="slider-value" id="buildingAgeValue">15年以内</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>希望階数</label>
+                        <div class="slider-container">
+                            <input type="range" id="floor" min="1" max="10" value="1" oninput="updateFloorValue()">
+                            <div class="slider-labels">
+                                <span>1階（こだわらない）</span>
+                                <span>10階以上</span>
+                            </div>
+                        </div>
+                        <span class="slider-value" id="floorValue">こだわらない</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>電話番号 <span class="required">*</span></label>
-                    <input type="tel" id="phone" placeholder="090-1234-5678" required>
+                <!-- ========================================
+                     セクション3: 設備・条件
+                ========================================= -->
+                <div class="form-section">
+                    <h2 class="section-title"><span class="icon">⚙️</span> 設備・こだわり条件</h2>
+                    <p style="color: #6b7280; margin-bottom: 20px;">必要な設備があればチェックしてください（任意）</p>
+
+                    <div class="equipment-category">
+                        <h3 class="equipment-category-title">🔐 セキュリティ</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="autoLock">
+                                <label for="autoLock">オートロック</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-category">
+                        <h3 class="equipment-category-title">🚿 水回り</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="separateBath">
+                                <label for="separateBath">バストイレ別</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="separateWashroom">
+                                <label for="separateWashroom">洗面所独立</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="indoorWashing">
+                                <label for="indoorWashing">室内洗濯機置場</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="twoGasStove">
+                                <label for="twoGasStove">2口以上コンロ</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-category">
+                        <h3 class="equipment-category-title">🏠 内装</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="flooring">
+                                <label for="flooring">フローリング</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="noTatami">
+                                <label for="noTatami">畳NG（洋室希望）</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-category">
+                        <h3 class="equipment-category-title">🏢 共用設備</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="elevator">
+                                <label for="elevator">エレベーター</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="deliveryBox">
+                                <label for="deliveryBox">宅配ボックス</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="internet">
+                                <label for="internet">インターネット無料</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-category">
+                        <h3 class="equipment-category-title">🚗 駐車・駐輪</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="parking">
+                                <label for="parking">駐車場</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="bike">
+                                <label for="bike">バイク置場</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="bicycle">
+                                <label for="bicycle">駐輪場</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-category">
+                        <h3 class="equipment-category-title">✨ 特殊条件</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="petAllowed">
+                                <label for="petAllowed">ペット可</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="instrumentAllowed">
+                                <label for="instrumentAllowed">楽器可</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="sohoAllowed">
+                                <label for="sohoAllowed">SOHO・事務所利用可</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>パイプライン状態 <span class="required">*</span></label>
-                    <select id="pipelineStatus" required>
-                        <option value="初回相談">初回相談</option>
-                        <option value="物件紹介">物件紹介</option>
-                        <option value="内見調整">内見調整</option>
-                        <option value="申込準備">申込準備</option>
-                        <option value="審査中">審査中</option>
-                        <option value="契約手続き">契約手続き</option>
-                        <option value="完了">完了</option>
-                    </select>
+                <!-- ========================================
+                     セクション4: その他
+                ========================================= -->
+                <div class="form-section">
+                    <h2 class="section-title"><span class="icon">📝</span> その他</h2>
+
+                    <div class="form-group">
+                        <label>その他ご要望・ご質問</label>
+                        <textarea id="notes" placeholder="その他のご要望やご質問があればご自由にお書きください&#10;&#10;例:&#10;・ペットを飼う予定があります&#10;・リモートワークが多いので静かな環境希望&#10;・収納が多い物件を探しています"></textarea>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>予算（下限・万円）</label>
-                    <input type="number" id="budgetMin" placeholder="8" min="0" step="0.1">
-                </div>
+                <!-- ========================================
+                     セクション5: パイプライン状態（管理者用）
+                ========================================= -->
+                <div class="form-section" id="adminSection" style="display: none;">
+                    <h2 class="section-title"><span class="icon">📊</span> 管理者設定</h2>
 
-                <div class="form-group">
-                    <label>予算（上限・万円）</label>
-                    <input type="number" id="budgetMax" placeholder="12" min="0" step="0.1">
-                </div>
+                    <div class="form-group">
+                        <label>パイプライン状態</label>
+                        <select id="pipelineStatus">
+                            <option value="初回相談">初回相談</option>
+                            <option value="物件紹介">物件紹介</option>
+                            <option value="内見調整">内見調整</option>
+                            <option value="申込準備">申込準備</option>
+                            <option value="審査中">審査中</option>
+                            <option value="契約手続き">契約手続き</option>
+                            <option value="完了">完了</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label>希望エリア</label>
-                    <input type="text" id="areas" placeholder="例: 渋谷駅まで30分以内">
-                </div>
-
-                <div class="form-group">
-                    <label>備考・特記事項</label>
-                    <textarea id="notes" placeholder="その他、ご要望やご質問などがあればご記入ください"></textarea>
+                    <div class="form-group">
+                        <label>エージェントメモ</label>
+                        <textarea id="agentMemo" placeholder="【初回ヒアリング】&#10;・絶対条件:&#10;・妥協可能:&#10;・その他メモ:" style="min-height: 150px;"></textarea>
+                    </div>
                 </div>
 
                 <div class="button-group">
@@ -209,204 +875,343 @@
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/app-initializer.js"></script>
-    
+
     <script>
         console.log('📝 顧客フォームページ読み込み開始...');
-        
+
         let isEditMode = false;
         let editingCustomerId = null;
-        
+
+        // スライダー値更新
+        function updateSliderValue(id, suffix) {
+            const value = document.getElementById(id).value;
+            document.getElementById(id + 'Value').textContent = value + suffix;
+        }
+
+        // 築年数スライダー値更新
+        function updateBuildingAgeValue() {
+            const value = document.getElementById('buildingAge').value;
+            const text = value === '0' ? '新築のみ' : value + '年以内';
+            document.getElementById('buildingAgeValue').textContent = text;
+        }
+
+        // 築年数スライダー切り替え
+        function toggleBuildingAgeSlider() {
+            const isSpecific = document.getElementById('buildingAgeSpecific').checked;
+            const slider = document.getElementById('buildingAge');
+            const container = document.getElementById('buildingAgeSliderContainer');
+
+            slider.disabled = !isSpecific;
+            container.style.opacity = isSpecific ? '1' : '0.5';
+        }
+
+        // 階数スライダー値更新
+        function updateFloorValue() {
+            const value = document.getElementById('floor').value;
+            const text = value === '1' ? 'こだわらない' : value + '階以上';
+            document.getElementById('floorValue').textContent = text;
+        }
+
+        // 間取りチェックボックス切り替え
+        function toggleLayoutCheckbox(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('checked', checkbox.checked);
+        }
+
+        // 選択された間取りを取得
+        function getSelectedLayouts() {
+            const checkboxes = document.querySelectorAll('input[name="layout"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
         // ページ初期化完了後に編集モードをチェック
         document.addEventListener('DOMContentLoaded', async () => {
             // URLパラメータから編集対象の顧客IDを取得
             const urlParams = new URLSearchParams(window.location.search);
             const customerId = urlParams.get('edit');
-            
+
             if (customerId) {
                 // 編集モード
                 isEditMode = true;
                 editingCustomerId = customerId;
-                
+
                 // タイトル変更
-                document.getElementById('formTitle').textContent = '顧客情報編集';
+                document.getElementById('formTitle').textContent = '✏️ 顧客情報編集';
                 document.getElementById('formDescription').textContent = '顧客情報を更新してください';
+                document.querySelector('.time-estimate').style.display = 'none';
                 document.getElementById('submitBtn').textContent = '更新する';
-                
+
+                // 管理者セクションを表示
+                document.getElementById('adminSection').style.display = 'block';
+
                 // AppInitializerの初期化を待つ
                 if (window.AppInitializer && window.AppInitializer.initializationPromise) {
                     await window.AppInitializer.initializationPromise;
                 }
-                
+
                 // 顧客データを読み込み
                 await loadCustomerData(customerId);
             }
         });
-        
-        // 顧客データ読み込み
+
+        // 顧客データ読み込み（編集時）
         async function loadCustomerData(customerId) {
             try {
                 console.log('📥 顧客データ読み込み中:', customerId);
-                
+
                 const customer = window.UnifiedDataManager.getCustomerById(customerId);
-                
+
                 if (!customer) {
                     throw new Error('顧客が見つかりません');
                 }
-                
+
                 console.log('✅ 顧客データ取得成功:', customer);
-                
-                // フォームにデータを設定
+
+                // 基本情報
                 document.getElementById('customerId').value = customer.id;
                 document.getElementById('name').value = customer.basicInfo?.name || customer.name || '';
+                document.getElementById('nameKana').value = customer.basicInfo?.nameKana || '';
                 document.getElementById('email').value = customer.basicInfo?.email || customer.email || '';
                 document.getElementById('phone').value = customer.basicInfo?.phone || customer.phone || '';
-                document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
-                
-                const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 0;
-                const budgetMax = customer.preferences?.budget?.max || customer.preferences?.budgetMax || 0;
-                
-                document.getElementById('budgetMin').value = budgetMin ? (budgetMin / 10000).toFixed(1) : '';
-                document.getElementById('budgetMax').value = budgetMax ? (budgetMax / 10000).toFixed(1) : '';
+                document.getElementById('birthday').value = customer.basicInfo?.birthday || '';
+                document.getElementById('currentAddress').value = customer.basicInfo?.currentAddress || '';
+                document.getElementById('currentHousing').value = customer.basicInfo?.currentHousing || '';
+                document.getElementById('numberOfOccupants').value = customer.basicInfo?.numberOfOccupants || '1';
+                document.getElementById('occupation').value = customer.basicInfo?.occupation || '';
+                document.getElementById('companyName').value = customer.basicInfo?.companyName || '';
+                document.getElementById('yearsEmployed').value = customer.basicInfo?.yearsEmployed || '0';
+                document.getElementById('annualIncome').value = customer.basicInfo?.annualIncome || '';
+                document.getElementById('movingReason').value = customer.basicInfo?.movingReason || '';
+
+                // 性別
+                const gender = customer.basicInfo?.gender || 'no_answer';
+                const genderRadio = document.querySelector(`input[name="gender"][value="${gender}"]`);
+                if (genderRadio) genderRadio.checked = true;
+
+                // 希望条件
+                const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 80000;
+                const budgetMax = customer.preferences?.budget?.max || customer.preferences?.budgetMax || 100000;
+                document.getElementById('budgetMin').value = budgetMin;
+                document.getElementById('budgetMax').value = budgetMax;
+
+                document.getElementById('moveInDate').value = customer.preferences?.moveInDate || '';
                 document.getElementById('areas').value = customer.preferences?.areas || '';
+
+                // 間取り（チェックボックス）
+                const layouts = customer.preferences?.layout || '';
+                if (layouts) {
+                    const layoutArray = typeof layouts === 'string' ? layouts.split(',').map(l => l.trim()) : layouts;
+                    layoutArray.forEach(layout => {
+                        const checkbox = document.querySelector(`input[name="layout"][value="${layout}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            checkbox.closest('.layout-checkbox-item').classList.add('checked');
+                        }
+                    });
+                }
+
+                // スライダー値
+                const roomSize = customer.preferences?.roomSize || 25;
+                document.getElementById('roomSize').value = roomSize;
+                updateSliderValue('roomSize', '㎡以上');
+
+                const stationWalk = customer.preferences?.stationWalk || 10;
+                document.getElementById('stationWalk').value = stationWalk;
+                updateSliderValue('stationWalk', '分以内');
+
+                // 築年数
+                const buildingAge = customer.preferences?.buildingAge;
+                if (buildingAge?.type === 'any' || buildingAge?.value === 999) {
+                    document.getElementById('buildingAgeAny').checked = true;
+                } else {
+                    document.getElementById('buildingAgeSpecific').checked = true;
+                    document.getElementById('buildingAge').value = buildingAge?.value || 15;
+                    toggleBuildingAgeSlider();
+                    updateBuildingAgeValue();
+                }
+
+                // 階数
+                const floor = customer.preferences?.floor || 1;
+                document.getElementById('floor').value = floor;
+                updateFloorValue();
+
+                // 設備
+                const equipment = customer.equipment || {};
+                document.getElementById('autoLock').checked = equipment.autoLock || false;
+                document.getElementById('separateBath').checked = equipment.separateBath || false;
+                document.getElementById('separateWashroom').checked = equipment.separateWashroom || false;
+                document.getElementById('indoorWashing').checked = equipment.indoorWashing || false;
+                document.getElementById('twoGasStove').checked = equipment.twoGasStove || false;
+                document.getElementById('flooring').checked = equipment.flooring || false;
+                document.getElementById('noTatami').checked = equipment.noTatami || false;
+                document.getElementById('elevator').checked = equipment.elevator || false;
+                document.getElementById('deliveryBox').checked = equipment.deliveryBox || false;
+                document.getElementById('internet').checked = equipment.internet || false;
+                document.getElementById('parking').checked = equipment.parking || false;
+                document.getElementById('bike').checked = equipment.bike || false;
+                document.getElementById('bicycle').checked = equipment.bicycle || false;
+                document.getElementById('petAllowed').checked = equipment.petAllowed || false;
+                document.getElementById('instrumentAllowed').checked = equipment.instrumentAllowed || false;
+                document.getElementById('sohoAllowed').checked = equipment.sohoAllowed || false;
+
+                // その他
                 document.getElementById('notes').value = customer.additionalInfo?.notes || customer.preferences?.notes || '';
-                
+
+                // 管理者設定
+                document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
+                document.getElementById('agentMemo').value = customer.agentMemo || '';
+
             } catch (error) {
                 console.error('❌ 顧客データ読み込みエラー:', error);
                 alert('顧客データの読み込みに失敗しました: ' + error.message);
                 window.location.href = 'customer.html';
             }
         }
-        
+
         // フォーム送信処理
         async function handleSubmit(event) {
             event.preventDefault();
-            
+
+            // 間取りのバリデーション
+            const selectedLayouts = getSelectedLayouts();
+            if (selectedLayouts.length === 0) {
+                alert('希望間取りを1つ以上選択してください');
+                return;
+            }
+
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.textContent;
-            
+
             try {
                 submitBtn.disabled = true;
                 submitBtn.textContent = isEditMode ? '更新中...' : '登録中...';
-                
+
+                // 築年数の値を取得
+                const buildingAgeType = document.querySelector('input[name="buildingAgeType"]:checked').value;
+                const buildingAgeValue = buildingAgeType === 'any' ? 999 : parseInt(document.getElementById('buildingAge').value);
+
                 // フォームデータを収集
                 const customerData = {
                     basicInfo: {
                         name: document.getElementById('name').value.trim(),
-                        nameKana: "",
+                        nameKana: document.getElementById('nameKana').value.trim(),
                         email: document.getElementById('email').value.trim(),
                         phone: document.getElementById('phone').value.trim(),
-                        birthday: "",
-                        gender: "no_answer",
-                        currentAddress: "",
-                        currentHousing: "",
-                        occupation: "",
-                        companyName: "",
-                        yearsEmployed: 0,
-                        annualIncome: 0,
-                        movingReason: "",
-                        numberOfOccupants: 1
+                        birthday: document.getElementById('birthday').value,
+                        gender: document.querySelector('input[name="gender"]:checked')?.value || 'no_answer',
+                        currentAddress: document.getElementById('currentAddress').value.trim(),
+                        currentHousing: document.getElementById('currentHousing').value,
+                        occupation: document.getElementById('occupation').value.trim(),
+                        companyName: document.getElementById('companyName').value.trim(),
+                        yearsEmployed: parseInt(document.getElementById('yearsEmployed').value) || 0,
+                        annualIncome: parseInt(document.getElementById('annualIncome').value) || 0,
+                        movingReason: document.getElementById('movingReason').value.trim(),
+                        numberOfOccupants: parseInt(document.getElementById('numberOfOccupants').value) || 1
                     },
                     preferences: {
                         budget: {
-                            min: (parseFloat(document.getElementById('budgetMin').value) || 0) * 10000,
-                            max: (parseFloat(document.getElementById('budgetMax').value) || 0) * 10000,
+                            min: parseInt(document.getElementById('budgetMin').value),
+                            max: parseInt(document.getElementById('budgetMax').value),
                             note: ""
                         },
-                        moveInDate: "",
+                        moveInDate: document.getElementById('moveInDate').value.trim(),
                         moveInDateNote: "",
                         areas: document.getElementById('areas').value.trim(),
                         areasNote: "",
-                        layout: "",
+                        layout: selectedLayouts.join(', '),
                         layoutNote: "",
-                        roomSize: 0,
+                        roomSize: parseInt(document.getElementById('roomSize').value),
                         roomSizeNote: "",
-                        stationWalk: 0,
+                        stationWalk: parseInt(document.getElementById('stationWalk').value),
                         stationWalkNote: "",
                         buildingAge: {
-                            value: 999,
-                            type: "any",
+                            value: buildingAgeValue,
+                            type: buildingAgeType,
                             note: ""
                         },
-                        floor: 1,
+                        floor: parseInt(document.getElementById('floor').value),
                         floorNote: ""
                     },
                     equipment: {
-                        autoLock: false,
-                        separateBath: false,
-                        separateWashroom: false,
-                        indoorWashing: false,
-                        twoGasStove: false,
-                        flooring: false,
-                        noTatami: false,
-                        elevator: false,
-                        deliveryBox: false,
-                        internet: false,
-                        parking: false,
-                        bike: false,
-                        bicycle: false,
-                        petAllowed: false,
-                        instrumentAllowed: false,
-                        sohoAllowed: false,
+                        autoLock: document.getElementById('autoLock').checked,
+                        separateBath: document.getElementById('separateBath').checked,
+                        separateWashroom: document.getElementById('separateWashroom').checked,
+                        indoorWashing: document.getElementById('indoorWashing').checked,
+                        twoGasStove: document.getElementById('twoGasStove').checked,
+                        flooring: document.getElementById('flooring').checked,
+                        noTatami: document.getElementById('noTatami').checked,
+                        elevator: document.getElementById('elevator').checked,
+                        deliveryBox: document.getElementById('deliveryBox').checked,
+                        internet: document.getElementById('internet').checked,
+                        parking: document.getElementById('parking').checked,
+                        bike: document.getElementById('bike').checked,
+                        bicycle: document.getElementById('bicycle').checked,
+                        petAllowed: document.getElementById('petAllowed').checked,
+                        instrumentAllowed: document.getElementById('instrumentAllowed').checked,
+                        sohoAllowed: document.getElementById('sohoAllowed').checked,
                         equipmentNote: ""
                     },
                     additionalInfo: {
                         notes: document.getElementById('notes').value.trim()
                     },
-                    agentMemo: "",
-                    pipelineStatus: document.getElementById('pipelineStatus').value
+                    agentMemo: document.getElementById('agentMemo')?.value?.trim() || "",
+                    pipelineStatus: document.getElementById('pipelineStatus').value,
+                    isActive: true,
+                    archivedAt: null
                 };
-                
+
                 let result;
-                
+
                 if (isEditMode) {
                     // 編集モード: 既存顧客を更新
                     customerData.id = editingCustomerId;
-                    
+
                     // 既存の顧客データを取得してマージ
                     const existingCustomer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
                     if (existingCustomer) {
-                        // 既存のデータを保持しつつ、フォームの入力で上書き
-                        Object.assign(existingCustomer.basicInfo, customerData.basicInfo);
-                        Object.assign(existingCustomer.preferences, customerData.preferences);
-                        Object.assign(existingCustomer.equipment, customerData.equipment);
-                        Object.assign(existingCustomer.additionalInfo, customerData.additionalInfo);
-                        existingCustomer.pipelineStatus = customerData.pipelineStatus;
-                        
-                        result = await window.UnifiedDataManager.updateCustomer(existingCustomer);
+                        // 既存のisActive/archivedAtを保持
+                        customerData.isActive = existingCustomer.isActive !== undefined ? existingCustomer.isActive : true;
+                        customerData.archivedAt = existingCustomer.archivedAt || null;
+
+                        // 既存のcreatedAtを保持
+                        customerData.createdAt = existingCustomer.createdAt;
+
+                        result = await window.UnifiedDataManager.updateCustomer(customerData);
                     } else {
                         throw new Error('更新対象の顧客が見つかりません');
                     }
-                    
+
                     console.log('📤 顧客データ更新:', customerData);
                 } else {
                     // 新規登録モード
                     result = await window.UnifiedDataManager.addCustomer(customerData);
                     console.log('📤 顧客データ登録:', customerData);
                 }
-                
+
                 if (result.success) {
                     alert(isEditMode ? '✅ 顧客情報を更新しました！' : '✅ 顧客を登録しました！');
                     window.location.href = 'customer.html';
                 } else {
                     throw new Error(result.error || (isEditMode ? '更新に失敗しました' : '登録に失敗しました'));
                 }
-                
+
             } catch (error) {
                 console.error('❌ エラー:', error);
                 alert('❌ エラー: ' + error.message);
-                
+
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
             }
         }
-        
+
         // キャンセル処理
         function handleCancel() {
             if (confirm('入力内容を破棄して戻りますか？')) {
                 window.location.href = 'customer.html';
             }
         }
-        
+
         console.log('✅ 顧客登録フォーム準備完了');
     </script>
 </body>

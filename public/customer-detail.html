@@ -28,14 +28,29 @@
 
         .customer-info h1 {
             color: #1e3a8a;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-size: 28px;
+        }
+
+        .customer-info .name-kana {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
 
         .customer-meta {
             color: #64748b;
             font-size: 14px;
             margin-bottom: 15px;
+        }
+
+        .customer-meta a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .customer-meta a:hover {
+            text-decoration: underline;
         }
 
         .status-badge {
@@ -50,10 +65,10 @@
 
         .status-初回相談 { background: #6366f1; }
         .status-物件紹介 { background: #8b5cf6; }
-        .status-内見 { background: #06b6d4; }
-        .status-申込 { background: #10b981; }
-        .status-審査 { background: #f59e0b; }
-        .status-契約 { background: #ef4444; }
+        .status-内見調整 { background: #06b6d4; }
+        .status-申込準備 { background: #10b981; }
+        .status-審査中 { background: #f59e0b; }
+        .status-契約手続き { background: #ef4444; }
         .status-完了 { background: #22c55e; }
 
         .detail-actions {
@@ -74,6 +89,10 @@
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .detail-card.full-width {
+            grid-column: 1 / -1;
         }
 
         .detail-card h3 {
@@ -104,25 +123,45 @@
             text-align: right;
         }
 
-        .preferences-list {
+        /* 設備タグ */
+        .equipment-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
         }
 
-        .preference-tag {
-            background: #f1f5f9;
-            padding: 4px 12px;
+        .equipment-tag {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .equipment-tag.inactive {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        /* 間取りタグ */
+        .layout-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .layout-tag {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 12px;
-            color: #1e3a8a;
+            font-size: 13px;
+            font-weight: 500;
         }
 
-        .notes-section {
-            grid-column: 1 / -1;
-        }
-
+        /* メモセクション */
         .notes-content {
             background: #f8fafc;
             padding: 15px;
@@ -133,41 +172,35 @@
             white-space: pre-wrap;
         }
 
-        .status-change-section {
+        .agent-memo-content {
             background: #fef3c7;
-            border: 1px solid #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+            margin-top: 10px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* ステータス変更 */
+        .status-change-section {
+            background: #f0f9ff;
+            border: 1px solid #3b82f6;
             border-radius: 8px;
             padding: 15px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .status-select {
             width: 100%;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             margin: 10px 0;
+            font-size: 14px;
         }
 
-        .history-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .history-date {
-            font-size: 12px;
-            color: #6b7280;
-            min-width: 140px;
-        }
-
-        .history-action {
-            flex: 1;
-            color: #374151;
-        }
-
+        /* エラー・ローディング状態 */
         .error-state {
             background: #fee2e2;
             border: 1px solid #ef4444;
@@ -184,6 +217,18 @@
             padding: 30px;
             text-align: center;
             color: #1e40af;
+        }
+
+        /* 非アクティブバッジ */
+        .inactive-badge {
+            display: inline-block;
+            background: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
         }
 
         @media (max-width: 768px) {
@@ -244,10 +289,11 @@
             <!-- 顧客詳細ヘッダー -->
             <div class="detail-header">
                 <div class="customer-info">
-                    <h1 id="customerName">顧客名</h1>
+                    <h1 id="customerName">顧客名<span id="inactiveBadge" class="inactive-badge" style="display: none;">非アクティブ</span></h1>
+                    <div class="name-kana" id="customerNameKana"></div>
                     <div class="customer-meta">
-                        <span id="customerEmail">メール</span> •
-                        <span id="customerPhone">電話番号</span>
+                        📧 <a id="customerEmailLink" href="mailto:"><span id="customerEmail">メール</span></a> •
+                        📞 <a id="customerPhoneLink" href="tel:"><span id="customerPhone">電話番号</span></a>
                     </div>
                     <div id="statusBadge" class="status-badge">ステータス</div>
                     <div class="customer-meta">
@@ -273,45 +319,111 @@
             <div class="detail-grid">
                 <!-- 基本情報 -->
                 <div class="detail-card">
-                    <h3>📋 基本情報</h3>
+                    <h3>👤 基本情報</h3>
                     <div class="info-row">
                         <span class="info-label">年齢</span>
                         <span class="info-value" id="customerAge">-</span>
                     </div>
                     <div class="info-row">
+                        <span class="info-label">性別</span>
+                        <span class="info-value" id="customerGender">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">現住所</span>
+                        <span class="info-value" id="customerAddress">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">現住居形態</span>
+                        <span class="info-value" id="customerHousing">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">入居人数</span>
+                        <span class="info-value" id="customerOccupants">-</span>
+                    </div>
+                </div>
+
+                <!-- 職業・収入情報 -->
+                <div class="detail-card">
+                    <h3>💼 職業・収入</h3>
+                    <div class="info-row">
                         <span class="info-label">職業</span>
                         <span class="info-value" id="customerOccupation">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">会社名</span>
+                        <span class="info-value" id="customerCompany">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">勤続年数</span>
+                        <span class="info-value" id="customerYearsEmployed">-</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">年収</span>
                         <span class="info-value" id="customerIncome">-</span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-label">引越し理由</span>
+                        <span class="info-value" id="customerMovingReason">-</span>
+                    </div>
                 </div>
 
                 <!-- 希望条件 -->
                 <div class="detail-card">
-                    <h3>🏡 希望条件</h3>
+                    <h3>🏠 希望条件</h3>
                     <div class="info-row">
                         <span class="info-label">予算</span>
                         <span class="info-value" id="customerBudget">-</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">間取り</span>
-                        <span class="info-value" id="customerRoomType">-</span>
+                        <span class="info-label">入居希望時期</span>
+                        <span class="info-value" id="customerMoveIn">-</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">希望エリア</span>
                         <span class="info-value" id="customerAreas">-</span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-label">希望間取り</span>
+                        <span class="info-value" id="customerLayout">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">部屋の広さ</span>
+                        <span class="info-value" id="customerRoomSize">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">駅徒歩</span>
+                        <span class="info-value" id="customerStationWalk">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">築年数</span>
+                        <span class="info-value" id="customerBuildingAge">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">希望階数</span>
+                        <span class="info-value" id="customerFloor">-</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- メモ・履歴セクション -->
-            <div class="detail-grid">
-                <!-- メモ -->
-                <div class="detail-card notes-section">
-                    <h3>📝 メモ・特記事項</h3>
+                <!-- 設備・条件 -->
+                <div class="detail-card">
+                    <h3>⚙️ 希望設備</h3>
+                    <div id="equipmentTags" class="equipment-tags">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+
+                <!-- 顧客メモ -->
+                <div class="detail-card full-width">
+                    <h3>📝 お客様のご要望</h3>
                     <div id="customerNotes" class="notes-content">
+                        メモはありません
+                    </div>
+                </div>
+
+                <!-- エージェントメモ -->
+                <div class="detail-card full-width" id="agentMemoSection">
+                    <h3>🗒️ エージェントメモ</h3>
+                    <div id="agentMemo" class="agent-memo-content">
                         メモはありません
                     </div>
                 </div>
@@ -326,10 +438,10 @@
                         <option value="">ステータスを選択</option>
                         <option value="初回相談">初回相談</option>
                         <option value="物件紹介">物件紹介</option>
-                        <option value="内見">内見</option>
-                        <option value="申込">申込</option>
-                        <option value="審査">審査</option>
-                        <option value="契約">契約</option>
+                        <option value="内見調整">内見調整</option>
+                        <option value="申込準備">申込準備</option>
+                        <option value="審査中">審査中</option>
+                        <option value="契約手続き">契約手続き</option>
                         <option value="完了">完了</option>
                     </select>
                     <button onclick="changeStatus()" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
@@ -357,9 +469,36 @@
         let currentCustomer = null;
         let customerId = null;
 
+        // 設備項目の定義
+        const equipmentLabels = {
+            autoLock: 'オートロック',
+            separateBath: 'バストイレ別',
+            separateWashroom: '洗面所独立',
+            indoorWashing: '室内洗濯機置場',
+            twoGasStove: '2口以上コンロ',
+            flooring: 'フローリング',
+            noTatami: '畳NG',
+            elevator: 'エレベーター',
+            deliveryBox: '宅配ボックス',
+            internet: 'ネット無料',
+            parking: '駐車場',
+            bike: 'バイク置場',
+            bicycle: '駐輪場',
+            petAllowed: 'ペット可',
+            instrumentAllowed: '楽器可',
+            sohoAllowed: 'SOHO可'
+        };
+
+        // 性別の表示名
+        const genderLabels = {
+            male: '男性',
+            female: '女性',
+            other: 'その他',
+            no_answer: '回答なし'
+        };
+
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async function() {
-            // AppInitializerの初期化を待つ
             if (window.AppInitializer && window.AppInitializer.initializationPromise) {
                 try {
                     await window.AppInitializer.initializationPromise;
@@ -368,7 +507,6 @@
                 }
             }
 
-            // ナビゲーション生成完了を待ってから初期化
             setTimeout(() => {
                 initializePage();
                 forceCustomerNavActive();
@@ -380,7 +518,6 @@
             console.log('🔍 顧客詳細ページ初期化開始...');
 
             try {
-                // URLパラメータから顧客IDを取得
                 const urlParams = new URLSearchParams(window.location.search);
                 customerId = urlParams.get('id');
 
@@ -388,7 +525,6 @@
                     throw new Error('顧客IDがURLパラメータで指定されていません');
                 }
 
-                // 顧客詳細の読み込み
                 loadCustomerDetail();
 
             } catch (error) {
@@ -402,7 +538,6 @@
             console.log(`📋 顧客詳細読み込み開始: ID=${customerId}`);
 
             try {
-                // UnifiedDataManagerから顧客データを取得
                 if (!window.UnifiedDataManager) {
                     throw new Error('データ管理システムが利用できません');
                 }
@@ -448,47 +583,107 @@
             }
 
             try {
-                // ローディング状態を隠す
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('detailContent').style.display = 'block';
 
-                // 新しいデータ構造に対応
-                const name = currentCustomer.basicInfo?.name || currentCustomer.name || '名前未設定';
-                const email = currentCustomer.basicInfo?.email || currentCustomer.email || '未設定';
-                const phone = currentCustomer.basicInfo?.phone || currentCustomer.phone || '未設定';
+                const basicInfo = currentCustomer.basicInfo || {};
+                const preferences = currentCustomer.preferences || {};
+                const equipment = currentCustomer.equipment || {};
 
-                // 基本情報表示
-                document.getElementById('customerName').textContent = name;
+                // ヘッダー情報
+                const name = basicInfo.name || currentCustomer.name || '名前未設定';
+                document.getElementById('customerName').innerHTML = name +
+                    (currentCustomer.isActive === false ? '<span class="inactive-badge">非アクティブ</span>' : '');
+                document.getElementById('customerNameKana').textContent = basicInfo.nameKana || '';
+
+                const email = basicInfo.email || currentCustomer.email || '未設定';
+                const phone = basicInfo.phone || currentCustomer.phone || '未設定';
                 document.getElementById('customerEmail').textContent = email;
                 document.getElementById('customerPhone').textContent = phone;
+                document.getElementById('customerEmailLink').href = `mailto:${email}`;
+                document.getElementById('customerPhoneLink').href = `tel:${phone}`;
 
-                // ステータスバッジ
+                // ステータス
                 const status = currentCustomer.pipelineStatus || '未設定';
                 const statusBadge = document.getElementById('statusBadge');
                 statusBadge.textContent = status;
                 statusBadge.className = `status-badge status-${status}`;
 
-                // 日付表示
+                // 日付
                 document.getElementById('createdAt').textContent = currentCustomer.createdAt ? formatDate(currentCustomer.createdAt) : '未設定';
                 document.getElementById('updatedAt').textContent = currentCustomer.updatedAt ? formatDate(currentCustomer.updatedAt) : '未設定';
 
-                // 詳細情報
-                document.getElementById('customerAge').textContent = currentCustomer.basicInfo?.birthday ? calculateAge(currentCustomer.basicInfo.birthday) + '歳' : '未設定';
-                document.getElementById('customerOccupation').textContent = currentCustomer.basicInfo?.occupation || '未設定';
-                document.getElementById('customerIncome').textContent = currentCustomer.basicInfo?.annualIncome ? `${currentCustomer.basicInfo.annualIncome.toLocaleString()}万円` : '未設定';
+                // 基本情報
+                document.getElementById('customerAge').textContent = basicInfo.birthday ? calculateAge(basicInfo.birthday) + '歳' : '未設定';
+                document.getElementById('customerGender').textContent = genderLabels[basicInfo.gender] || '未設定';
+                document.getElementById('customerAddress').textContent = basicInfo.currentAddress || '未設定';
+                document.getElementById('customerHousing').textContent = basicInfo.currentHousing || '未設定';
+                document.getElementById('customerOccupants').textContent = basicInfo.numberOfOccupants ? basicInfo.numberOfOccupants + '人' : '未設定';
+
+                // 職業・収入
+                document.getElementById('customerOccupation').textContent = basicInfo.occupation || '未設定';
+                document.getElementById('customerCompany').textContent = basicInfo.companyName || '未設定';
+                document.getElementById('customerYearsEmployed').textContent = basicInfo.yearsEmployed !== undefined ? basicInfo.yearsEmployed + '年' : '未設定';
+                document.getElementById('customerIncome').textContent = basicInfo.annualIncome ? formatIncome(basicInfo.annualIncome) : '未設定';
+                document.getElementById('customerMovingReason').textContent = basicInfo.movingReason || '未設定';
 
                 // 希望条件
-                const budgetMin = currentCustomer.preferences?.budget?.min || 0;
-                const budgetMax = currentCustomer.preferences?.budget?.max || 0;
+                const budgetMin = preferences.budget?.min || 0;
+                const budgetMax = preferences.budget?.max || 0;
                 const budgetText = budgetMin || budgetMax
                     ? `${budgetMin ? (budgetMin / 10000).toFixed(0) : '0'}〜${budgetMax ? (budgetMax / 10000).toFixed(0) : ''}万円`
                     : '未設定';
                 document.getElementById('customerBudget').textContent = budgetText;
-                document.getElementById('customerRoomType').textContent = currentCustomer.preferences?.layout || '未設定';
-                document.getElementById('customerAreas').textContent = currentCustomer.preferences?.areas || '未設定';
+                document.getElementById('customerMoveIn').textContent = preferences.moveInDate || '未設定';
+                document.getElementById('customerAreas').textContent = preferences.areas || '未設定';
+                document.getElementById('customerLayout').textContent = preferences.layout || '未設定';
+                document.getElementById('customerRoomSize').textContent = preferences.roomSize ? preferences.roomSize + '㎡以上' : '未設定';
+                document.getElementById('customerStationWalk').textContent = preferences.stationWalk ? preferences.stationWalk + '分以内' : '未設定';
 
-                // メモ表示
-                document.getElementById('customerNotes').textContent = currentCustomer.additionalInfo?.notes || currentCustomer.agentMemo || 'メモはありません';
+                // 築年数
+                const buildingAge = preferences.buildingAge;
+                let buildingAgeText = '未設定';
+                if (buildingAge) {
+                    if (buildingAge.type === 'any' || buildingAge.value === 999) {
+                        buildingAgeText = 'こだわらない';
+                    } else if (buildingAge.value === 0) {
+                        buildingAgeText = '新築のみ';
+                    } else {
+                        buildingAgeText = buildingAge.value + '年以内';
+                    }
+                }
+                document.getElementById('customerBuildingAge').textContent = buildingAgeText;
+
+                // 階数
+                const floor = preferences.floor;
+                document.getElementById('customerFloor').textContent = floor === 1 || !floor ? 'こだわらない' : floor + '階以上';
+
+                // 設備タグ生成
+                const equipmentContainer = document.getElementById('equipmentTags');
+                equipmentContainer.innerHTML = '';
+                let hasEquipment = false;
+
+                for (const [key, label] of Object.entries(equipmentLabels)) {
+                    if (equipment[key]) {
+                        const tag = document.createElement('span');
+                        tag.className = 'equipment-tag';
+                        tag.textContent = label;
+                        equipmentContainer.appendChild(tag);
+                        hasEquipment = true;
+                    }
+                }
+
+                if (!hasEquipment) {
+                    equipmentContainer.innerHTML = '<span style="color: #6b7280;">特に希望なし</span>';
+                }
+
+                // メモ
+                const notes = currentCustomer.additionalInfo?.notes || '';
+                document.getElementById('customerNotes').textContent = notes || 'メモはありません';
+
+                // エージェントメモ
+                const agentMemo = currentCustomer.agentMemo || '';
+                document.getElementById('agentMemo').textContent = agentMemo || 'メモはありません';
 
                 console.log('✅ 顧客詳細表示完了');
 
@@ -509,6 +704,13 @@
                 age--;
             }
             return age;
+        }
+
+        // 年収フォーマット
+        function formatIncome(income) {
+            if (!income) return '未設定';
+            const man = income / 10000;
+            return man.toLocaleString() + '万円';
         }
 
         // ステータス変更処理
