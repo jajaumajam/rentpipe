@@ -434,14 +434,12 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>メールアドレス <span class="required">*</span></label>
+                            <label>メールアドレス</label>
                             <input type="email" id="email" placeholder="yamada@example.com">
-                            <p class="help-text">※メールか電話番号、どちらか必須</p>
                         </div>
                         <div class="form-group">
                             <label>電話番号 <span class="required">*</span></label>
-                            <input type="tel" id="phone" placeholder="090-1234-5678">
-                            <p class="help-text">※メールか電話番号、どちらか必須</p>
+                            <input type="tel" id="phone" placeholder="090-1234-5678" required>
                         </div>
                     </div>
 
@@ -1091,9 +1089,9 @@
                 return;
             }
 
-            if (!email && !phone) {
-                alert('メールアドレスまたは電話番号のどちらかを入力してください');
-                document.getElementById('email').focus();
+            if (!phone) {
+                alert('電話番号を入力してください');
+                document.getElementById('phone').focus();
                 return;
             }
 

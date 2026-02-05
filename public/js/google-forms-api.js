@@ -15,11 +15,11 @@ const GoogleFormsManager = {
         { field: 'name', title: 'お名前', type: 'text', required: true },
         { field: 'nameKana', title: 'フリガナ', type: 'text' },
         { field: 'email', title: 'メールアドレス', type: 'text' },
-        { field: 'phone', title: '電話番号', type: 'text' },
+        { field: 'phone', title: '電話番号', type: 'text', required: true },
         { field: 'gender', title: '性別', type: 'choice', options: ['男性', '女性', 'その他', '回答しない'] },
         { field: 'currentAddress', title: '現住所', type: 'text' },
         { field: 'currentHousing', title: '現在の住居形態', type: 'choice', options: ['賃貸', '持家', '実家', '社宅・寮', 'その他'] },
-        { field: 'numberOfOccupants', title: '入居人数', type: 'choice', options: ['1人', '2人', '3人', '4人', '5人以上'] },
+        { field: 'numberOfOccupants', title: '入居人数（人）', type: 'text', description: '半角数字で入力してください（例: 2）' },
         { field: 'occupation', title: 'ご職業', type: 'text' },
         { field: 'companyName', title: '会社名', type: 'text' },
         { field: 'yearsEmployed', title: '勤続年数', type: 'choice', options: ['1年未満', '1年', '2年', '3年', '5年', '10年以上'] },
@@ -30,10 +30,10 @@ const GoogleFormsManager = {
         { field: 'moveInDate', title: '入居希望時期', type: 'text', description: '例: 2025年4月、即入居可' },
         { field: 'areas', title: '希望エリア', type: 'paragraph', description: '駅名、路線、地域名など' },
         { field: 'layout', title: '希望間取り', type: 'checkbox', options: ['1R', '1K', '1DK', '1LDK', '2K', '2DK', '2LDK', '3K以上'] },
-        { field: 'roomSize', title: '希望の広さ（㎡）', type: 'text', description: '半角数字で入力してください（例: 25）' },
-        { field: 'stationWalk', title: '駅徒歩（分）', type: 'text', description: '半角数字で入力してください（例: 10）' },
+        { field: 'roomSize', title: '希望の広さ（㎡以上）', type: 'text', description: '半角数字で入力してください（例: 25）※この広さ以上を希望' },
+        { field: 'stationWalk', title: '駅徒歩（分以内）', type: 'text', description: '半角数字で入力してください（例: 10）※この時間以内を希望' },
         { field: 'buildingAge', title: '築年数の上限（年）', type: 'text', description: '半角数字で入力、こだわりなしは空欄' },
-        { field: 'floor', title: '希望階数', type: 'choice', options: ['1階希望', '2階以上', '3階以上', '5階以上', '10階以上', 'こだわらない'] },
+        { field: 'floor', title: '希望階数（階以上）', type: 'text', description: '半角数字で入力してください（例: 2）※この階以上を希望' },
         { field: 'equipment1', title: '希望設備（セキュリティ・水回り）', type: 'checkbox', options: ['オートロック', 'バストイレ別', '洗面所独立', '室内洗濯機置場', '2口以上コンロ'] },
         { field: 'equipment2', title: '希望設備（内装・共用）', type: 'checkbox', options: ['フローリング', '畳NG', 'エレベーター', '宅配ボックス', 'インターネット無料'] },
         { field: 'equipment3', title: '希望設備（駐車・特殊）', type: 'checkbox', options: ['駐車場', 'バイク置場', '駐輪場', 'ペット可', '楽器可', 'SOHO可'] },
@@ -376,16 +376,18 @@ const GoogleFormsManager = {
             console.log(`  ${fieldName}: ${value}`);
         }
 
-        // 数値変換ヘルパー（万円を円に変換）
-        const parseManYen = (val, defaultVal) => {
-            const num = parseFloat((val || '').replace(/[^0-9.]/g, ''));
-            return isNaN(num) ? defaultVal : num * 10000;
+        // 数値変換ヘルパー（万円を円に変換、空はnull）
+        const parseManYen = (val) => {
+            if (!val || val.trim() === '') return null;
+            const num = parseFloat(val.replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? null : num * 10000;
         };
 
-        // 数値変換ヘルパー（そのまま）
-        const parseNum = (val, defaultVal) => {
-            const num = parseFloat((val || '').replace(/[^0-9.]/g, ''));
-            return isNaN(num) ? defaultVal : num;
+        // 数値変換ヘルパー（そのまま、空はnull）
+        const parseNum = (val) => {
+            if (!val || val.trim() === '') return null;
+            const num = parseFloat(val.replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? null : num;
         };
 
         const genderMap = {
@@ -396,26 +398,22 @@ const GoogleFormsManager = {
             '1年未満': 0, '1年': 1, '2年': 2, '3年': 3, '5年': 5, '10年以上': 10
         };
 
-        const floorMap = {
-            '1階希望': 1, '2階以上': 2, '3階以上': 3, '5階以上': 5, '10階以上': 10, 'こだわらない': 1
-        };
-
-        const occupantsMap = {
-            '1人': 1, '2人': 2, '3人': 3, '4人': 4, '5人以上': 5
-        };
-
         // 設備のパース
         const equipment1 = (fieldValues.equipment1 || '').split(', ').filter(v => v);
         const equipment2 = (fieldValues.equipment2 || '').split(', ').filter(v => v);
         const equipment3 = (fieldValues.equipment3 || '').split(', ').filter(v => v);
 
         // 築年数の処理
-        const buildingAgeValue = parseNum(fieldValues.buildingAge, null);
+        const buildingAgeValue = parseNum(fieldValues.buildingAge);
         const buildingAge = {
-            value: buildingAgeValue !== null ? buildingAgeValue : 999,
+            value: buildingAgeValue,
             type: buildingAgeValue !== null ? 'specific' : 'any',
             note: ''
         };
+
+        // 予算の処理
+        const budgetMin = parseManYen(fieldValues.budgetMin);
+        const budgetMax = parseManYen(fieldValues.budgetMax);
 
         return {
             basicInfo: {
@@ -427,26 +425,26 @@ const GoogleFormsManager = {
                 gender: genderMap[fieldValues.gender] || 'no_answer',
                 currentAddress: fieldValues.currentAddress || '',
                 currentHousing: fieldValues.currentHousing || '',
-                numberOfOccupants: occupantsMap[fieldValues.numberOfOccupants] || 1,
+                numberOfOccupants: parseNum(fieldValues.numberOfOccupants),
                 occupation: fieldValues.occupation || '',
                 companyName: fieldValues.companyName || '',
-                yearsEmployed: yearsMap[fieldValues.yearsEmployed] || 0,
-                annualIncome: parseManYen(fieldValues.annualIncome, 0),
+                yearsEmployed: fieldValues.yearsEmployed ? (yearsMap[fieldValues.yearsEmployed] ?? null) : null,
+                annualIncome: parseManYen(fieldValues.annualIncome),
                 movingReason: fieldValues.movingReason || ''
             },
             preferences: {
                 budget: {
-                    min: parseManYen(fieldValues.budgetMin, 80000),
-                    max: parseManYen(fieldValues.budgetMax, 100000),
+                    min: budgetMin,
+                    max: budgetMax,
                     note: ''
                 },
                 moveInDate: fieldValues.moveInDate || '',
                 areas: fieldValues.areas || '',
                 layout: fieldValues.layout || '',
-                roomSize: parseNum(fieldValues.roomSize, 25),
-                stationWalk: parseNum(fieldValues.stationWalk, 10),
+                roomSize: parseNum(fieldValues.roomSize),
+                stationWalk: parseNum(fieldValues.stationWalk),
                 buildingAge: buildingAge,
-                floor: floorMap[fieldValues.floor] || 1
+                floor: parseNum(fieldValues.floor)
             },
             equipment: {
                 autoLock: equipment1.includes('オートロック'),
@@ -501,9 +499,9 @@ const GoogleFormsManager = {
                     continue;
                 }
 
-                // 連絡先がない場合はスキップ
-                if (!customerData.basicInfo.email && !customerData.basicInfo.phone) {
-                    errors.push(`回答ID ${response.responseId}: 連絡先が入力されていません`);
+                // 電話番号がない場合はスキップ
+                if (!customerData.basicInfo.phone) {
+                    errors.push(`回答ID ${response.responseId}: 電話番号が入力されていません`);
                     continue;
                 }
 

@@ -733,20 +733,21 @@
             addLog('URLをクリップボードにコピーしました', 'success');
         }
 
-        // QRコード生成（Google Charts APIを使用）
+        // QRコード生成（QR Server APIを使用）
         function generateQRCode(url) {
             if (!url) return;
 
             const qrImg = document.getElementById('qrCode');
             const encodedUrl = encodeURIComponent(url);
-            // Google Charts APIでQRコード生成
-            const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodedUrl}&choe=UTF-8`;
+            // QR Server API（無料で利用可能）
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}`;
 
             qrImg.src = qrUrl;
             qrImg.style.display = 'block';
             qrImg.onerror = () => {
-                // Google Charts APIが使えない場合は代替表示
+                // APIが使えない場合は代替表示
                 qrImg.style.display = 'none';
+                qrImg.parentElement.innerHTML = '<p style="color: #6b7280; font-size: 14px;">QRコードを生成できませんでした。<br>URLを直接コピーしてご利用ください。</p>';
                 console.warn('QRコード生成に失敗しました');
             };
         }
