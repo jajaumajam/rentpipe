@@ -90,10 +90,45 @@
             margin-top: 20px;
         }
 
+        .url-qr-container {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .url-part {
+            flex: 1;
+        }
+
         .url-display {
             display: flex;
             gap: 10px;
             align-items: center;
+        }
+
+        .qr-part {
+            text-align: center;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            display: inline-block;
+        }
+
+        .qr-container img {
+            width: 150px;
+            height: 150px;
+            display: block;
+        }
+
+        .qr-help {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 10px 0 0 0;
         }
 
         .url-input {
@@ -333,6 +368,14 @@
             .url-display {
                 flex-direction: column;
             }
+
+            .url-qr-container {
+                grid-template-columns: 1fr;
+            }
+
+            .qr-part {
+                margin-top: 20px;
+            }
         }
     </style>
 </head>
@@ -382,10 +425,21 @@
 
             <!-- URLコピーセクション（フォーム作成後に表示） -->
             <div id="urlSection" class="url-section" style="display: none;">
-                <label><strong>フォームURL:</strong></label>
-                <div class="url-display">
-                    <input type="text" id="formUrl" class="url-input" readonly>
-                    <button class="copy-btn" onclick="copyFormUrl()">📋 コピー</button>
+                <div class="url-qr-container">
+                    <div class="url-part">
+                        <label><strong>フォームURL:</strong></label>
+                        <div class="url-display">
+                            <input type="text" id="formUrl" class="url-input" readonly>
+                            <button class="copy-btn" onclick="copyFormUrl()">📋 コピー</button>
+                        </div>
+                    </div>
+                    <div class="qr-part">
+                        <label><strong>QRコード:</strong></label>
+                        <div class="qr-container">
+                            <img id="qrCode" src="" alt="QRコード" style="display: none;">
+                            <p class="qr-help">スマートフォンで読み取ってください</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -549,6 +603,9 @@
                 document.getElementById('urlSection').style.display = 'block';
                 document.getElementById('formUrl').value = config.responderUri || '';
 
+                // QRコード生成
+                generateQRCode(config.responderUri);
+
                 // 統計表示
                 document.getElementById('statsSection').style.display = 'grid';
                 document.getElementById('importedCount').textContent = (config.fetchedResponseIds || []).length;
@@ -674,6 +731,24 @@
             }, 2000);
 
             addLog('URLをクリップボードにコピーしました', 'success');
+        }
+
+        // QRコード生成（Google Charts APIを使用）
+        function generateQRCode(url) {
+            if (!url) return;
+
+            const qrImg = document.getElementById('qrCode');
+            const encodedUrl = encodeURIComponent(url);
+            // Google Charts APIでQRコード生成
+            const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodedUrl}&choe=UTF-8`;
+
+            qrImg.src = qrUrl;
+            qrImg.style.display = 'block';
+            qrImg.onerror = () => {
+                // Google Charts APIが使えない場合は代替表示
+                qrImg.style.display = 'none';
+                console.warn('QRコード生成に失敗しました');
+            };
         }
 
         // フォームリセット

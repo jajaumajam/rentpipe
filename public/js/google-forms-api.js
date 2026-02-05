@@ -1,7 +1,7 @@
 /**
  * Google Forms API マネージャー
  * フォームの自動生成と回答取得を管理
- * 質問IDマッピングによる正確なデータ変換
+ * タイトルベースの正確なフィールドマッピング
  */
 
 const GoogleFormsManager = {
@@ -10,13 +10,12 @@ const GoogleFormsManager = {
     // フォーム設定を保存
     formConfig: null,
 
-    // 質問フィールド定義（順序と名前）
+    // 質問フィールド定義（タイトルとフィールド名の対応）
     QUESTION_FIELDS: [
         { field: 'name', title: 'お名前', type: 'text', required: true },
         { field: 'nameKana', title: 'フリガナ', type: 'text' },
         { field: 'email', title: 'メールアドレス', type: 'text' },
         { field: 'phone', title: '電話番号', type: 'text' },
-        { field: 'birthday', title: '生年月日', type: 'date' },
         { field: 'gender', title: '性別', type: 'choice', options: ['男性', '女性', 'その他', '回答しない'] },
         { field: 'currentAddress', title: '現住所', type: 'text' },
         { field: 'currentHousing', title: '現在の住居形態', type: 'choice', options: ['賃貸', '持家', '実家', '社宅・寮', 'その他'] },
@@ -24,21 +23,21 @@ const GoogleFormsManager = {
         { field: 'occupation', title: 'ご職業', type: 'text' },
         { field: 'companyName', title: '会社名', type: 'text' },
         { field: 'yearsEmployed', title: '勤続年数', type: 'choice', options: ['1年未満', '1年', '2年', '3年', '5年', '10年以上'] },
-        { field: 'annualIncome', title: '年収（税込）', type: 'choice', options: ['200万円未満', '200万円〜300万円', '300万円〜400万円', '400万円〜500万円', '500万円〜600万円', '600万円〜700万円', '700万円〜800万円', '800万円〜1000万円', '1000万円以上'] },
+        { field: 'annualIncome', title: '年収（税込・万円）', type: 'text', description: '半角数字で入力してください（例: 500）' },
         { field: 'movingReason', title: '引越しの理由', type: 'text' },
-        { field: 'budgetMin', title: 'ご予算（下限）', type: 'choice', options: ['3万円', '4万円', '5万円', '6万円', '7万円', '8万円', '9万円', '10万円', '12万円', '15万円', '20万円', '30万円以上'] },
-        { field: 'budgetMax', title: 'ご予算（上限）', type: 'choice', options: ['5万円', '6万円', '7万円', '8万円', '9万円', '10万円', '12万円', '15万円', '20万円', '30万円', '50万円', '上限なし'] },
-        { field: 'moveInDate', title: '入居希望時期', type: 'text' },
-        { field: 'areas', title: '希望エリア', type: 'paragraph' },
+        { field: 'budgetMin', title: 'ご予算下限（万円）', type: 'text', description: '半角数字で入力してください（例: 8）' },
+        { field: 'budgetMax', title: 'ご予算上限（万円）', type: 'text', description: '半角数字で入力してください（例: 12）' },
+        { field: 'moveInDate', title: '入居希望時期', type: 'text', description: '例: 2025年4月、即入居可' },
+        { field: 'areas', title: '希望エリア', type: 'paragraph', description: '駅名、路線、地域名など' },
         { field: 'layout', title: '希望間取り', type: 'checkbox', options: ['1R', '1K', '1DK', '1LDK', '2K', '2DK', '2LDK', '3K以上'] },
-        { field: 'roomSize', title: '部屋の広さ', type: 'choice', options: ['15㎡以上', '20㎡以上', '25㎡以上', '30㎡以上', '40㎡以上', '50㎡以上', 'こだわらない'] },
-        { field: 'stationWalk', title: '駅からの徒歩', type: 'choice', options: ['5分以内', '7分以内', '10分以内', '15分以内', '20分以内', 'こだわらない'] },
-        { field: 'buildingAge', title: '築年数', type: 'choice', options: ['新築のみ', '5年以内', '10年以内', '15年以内', '20年以内', 'こだわらない'] },
+        { field: 'roomSize', title: '希望の広さ（㎡）', type: 'text', description: '半角数字で入力してください（例: 25）' },
+        { field: 'stationWalk', title: '駅徒歩（分）', type: 'text', description: '半角数字で入力してください（例: 10）' },
+        { field: 'buildingAge', title: '築年数の上限（年）', type: 'text', description: '半角数字で入力、こだわりなしは空欄' },
         { field: 'floor', title: '希望階数', type: 'choice', options: ['1階希望', '2階以上', '3階以上', '5階以上', '10階以上', 'こだわらない'] },
         { field: 'equipment1', title: '希望設備（セキュリティ・水回り）', type: 'checkbox', options: ['オートロック', 'バストイレ別', '洗面所独立', '室内洗濯機置場', '2口以上コンロ'] },
         { field: 'equipment2', title: '希望設備（内装・共用）', type: 'checkbox', options: ['フローリング', '畳NG', 'エレベーター', '宅配ボックス', 'インターネット無料'] },
         { field: 'equipment3', title: '希望設備（駐車・特殊）', type: 'checkbox', options: ['駐車場', 'バイク置場', '駐輪場', 'ペット可', '楽器可', 'SOHO可'] },
-        { field: 'notes', title: 'その他ご要望・ご質問', type: 'paragraph' }
+        { field: 'notes', title: 'その他ご要望', type: 'paragraph' }
     ],
 
     /**
@@ -139,10 +138,9 @@ const GoogleFormsManager = {
             throw new Error(`質問の追加に失敗しました: ${error.error?.message || 'Unknown error'}`);
         }
 
-        const updateResult = await updateResponse.json();
-        console.log('✅ 質問追加成功:', updateResult);
+        console.log('✅ 質問追加成功');
 
-        // 3. フォームの詳細を取得して質問IDを保存
+        // 3. フォームの詳細を取得して質問IDを保存（タイトルベースでマッピング）
         const formDetailsResponse = await fetch(`https://forms.googleapis.com/v1/forms/${form.formId}`, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
@@ -154,19 +152,24 @@ const GoogleFormsManager = {
         const formDetails = await formDetailsResponse.json();
         console.log('📋 フォーム詳細:', formDetails);
 
-        // 質問IDとフィールドのマッピングを作成
+        // 質問IDとフィールドのマッピングをタイトルベースで作成
         const questionMapping = {};
         if (formDetails.items) {
-            formDetails.items.forEach((item, index) => {
-                if (index < this.QUESTION_FIELDS.length) {
-                    const fieldDef = this.QUESTION_FIELDS[index];
-                    const questionId = item.questionItem?.question?.questionId;
-                    if (questionId) {
+            for (const item of formDetails.items) {
+                const questionId = item.questionItem?.question?.questionId;
+                const title = item.title;
+
+                if (questionId && title) {
+                    // タイトルでフィールドを検索
+                    const fieldDef = this.QUESTION_FIELDS.find(f => f.title === title);
+                    if (fieldDef) {
                         questionMapping[questionId] = fieldDef.field;
-                        console.log(`  マッピング: ${questionId} -> ${fieldDef.field} (${item.title})`);
+                        console.log(`  マッピング: "${title}" (${questionId}) -> ${fieldDef.field}`);
+                    } else {
+                        console.warn(`  未知のタイトル: "${title}"`);
                     }
                 }
-            });
+            }
         }
 
         // 4. フォーム設定を保存
@@ -196,13 +199,10 @@ const GoogleFormsManager = {
 
             switch (fieldDef.type) {
                 case 'text':
-                    request = this.createTextQuestion(index, fieldDef.title, fieldDef.required || false);
+                    request = this.createTextQuestion(index, fieldDef.title, fieldDef.description, fieldDef.required || false);
                     break;
                 case 'paragraph':
-                    request = this.createParagraphQuestion(index, fieldDef.title, fieldDef.required || false);
-                    break;
-                case 'date':
-                    request = this.createDateQuestion(index, fieldDef.title, fieldDef.required || false);
+                    request = this.createParagraphQuestion(index, fieldDef.title, fieldDef.description, fieldDef.required || false);
                     break;
                 case 'choice':
                     request = this.createChoiceQuestion(index, fieldDef.title, fieldDef.options, fieldDef.required || false);
@@ -223,11 +223,12 @@ const GoogleFormsManager = {
     /**
      * テキスト質問を作成
      */
-    createTextQuestion(index, title, required) {
+    createTextQuestion(index, title, description, required) {
         return {
             createItem: {
                 item: {
                     title: title,
+                    description: description || '',
                     questionItem: {
                         question: {
                             required: required,
@@ -243,38 +244,16 @@ const GoogleFormsManager = {
     /**
      * 段落質問を作成
      */
-    createParagraphQuestion(index, title, required) {
+    createParagraphQuestion(index, title, description, required) {
         return {
             createItem: {
                 item: {
                     title: title,
+                    description: description || '',
                     questionItem: {
                         question: {
                             required: required,
                             textQuestion: { paragraph: true }
-                        }
-                    }
-                },
-                location: { index: index }
-            }
-        };
-    },
-
-    /**
-     * 日付質問を作成
-     */
-    createDateQuestion(index, title, required) {
-        return {
-            createItem: {
-                item: {
-                    title: title,
-                    questionItem: {
-                        question: {
-                            required: required,
-                            dateQuestion: {
-                                includeYear: true,
-                                includeTime: false
-                            }
                         }
                     }
                 },
@@ -397,18 +376,16 @@ const GoogleFormsManager = {
             console.log(`  ${fieldName}: ${value}`);
         }
 
-        // 変換マップ
-        const budgetMap = {
-            '3万円': 30000, '4万円': 40000, '5万円': 50000, '6万円': 60000,
-            '7万円': 70000, '8万円': 80000, '9万円': 90000, '10万円': 100000,
-            '12万円': 120000, '15万円': 150000, '20万円': 200000, '30万円以上': 300000,
-            '30万円': 300000, '50万円': 500000, '上限なし': 1000000
+        // 数値変換ヘルパー（万円を円に変換）
+        const parseManYen = (val, defaultVal) => {
+            const num = parseFloat((val || '').replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? defaultVal : num * 10000;
         };
 
-        const incomeMap = {
-            '200万円未満': 2000000, '200万円〜300万円': 3000000, '300万円〜400万円': 4000000,
-            '400万円〜500万円': 5000000, '500万円〜600万円': 6000000, '600万円〜700万円': 7000000,
-            '700万円〜800万円': 8000000, '800万円〜1000万円': 10000000, '1000万円以上': 12000000
+        // 数値変換ヘルパー（そのまま）
+        const parseNum = (val, defaultVal) => {
+            const num = parseFloat((val || '').replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? defaultVal : num;
         };
 
         const genderMap = {
@@ -417,19 +394,6 @@ const GoogleFormsManager = {
 
         const yearsMap = {
             '1年未満': 0, '1年': 1, '2年': 2, '3年': 3, '5年': 5, '10年以上': 10
-        };
-
-        const roomSizeMap = {
-            '15㎡以上': 15, '20㎡以上': 20, '25㎡以上': 25, '30㎡以上': 30,
-            '40㎡以上': 40, '50㎡以上': 50, 'こだわらない': 15
-        };
-
-        const walkMap = {
-            '5分以内': 5, '7分以内': 7, '10分以内': 10, '15分以内': 15, '20分以内': 20, 'こだわらない': 30
-        };
-
-        const ageMap = {
-            '新築のみ': 0, '5年以内': 5, '10年以内': 10, '15年以内': 15, '20年以内': 20, 'こだわらない': 999
         };
 
         const floorMap = {
@@ -445,13 +409,21 @@ const GoogleFormsManager = {
         const equipment2 = (fieldValues.equipment2 || '').split(', ').filter(v => v);
         const equipment3 = (fieldValues.equipment3 || '').split(', ').filter(v => v);
 
+        // 築年数の処理
+        const buildingAgeValue = parseNum(fieldValues.buildingAge, null);
+        const buildingAge = {
+            value: buildingAgeValue !== null ? buildingAgeValue : 999,
+            type: buildingAgeValue !== null ? 'specific' : 'any',
+            note: ''
+        };
+
         return {
             basicInfo: {
                 name: fieldValues.name || '',
                 nameKana: fieldValues.nameKana || '',
                 email: fieldValues.email || '',
                 phone: fieldValues.phone || '',
-                birthday: fieldValues.birthday || '',
+                birthday: '',
                 gender: genderMap[fieldValues.gender] || 'no_answer',
                 currentAddress: fieldValues.currentAddress || '',
                 currentHousing: fieldValues.currentHousing || '',
@@ -459,25 +431,21 @@ const GoogleFormsManager = {
                 occupation: fieldValues.occupation || '',
                 companyName: fieldValues.companyName || '',
                 yearsEmployed: yearsMap[fieldValues.yearsEmployed] || 0,
-                annualIncome: incomeMap[fieldValues.annualIncome] || 0,
+                annualIncome: parseManYen(fieldValues.annualIncome, 0),
                 movingReason: fieldValues.movingReason || ''
             },
             preferences: {
                 budget: {
-                    min: budgetMap[fieldValues.budgetMin] || 80000,
-                    max: budgetMap[fieldValues.budgetMax] || 100000,
+                    min: parseManYen(fieldValues.budgetMin, 80000),
+                    max: parseManYen(fieldValues.budgetMax, 100000),
                     note: ''
                 },
                 moveInDate: fieldValues.moveInDate || '',
                 areas: fieldValues.areas || '',
                 layout: fieldValues.layout || '',
-                roomSize: roomSizeMap[fieldValues.roomSize] || 25,
-                stationWalk: walkMap[fieldValues.stationWalk] || 10,
-                buildingAge: {
-                    value: ageMap[fieldValues.buildingAge] || 999,
-                    type: fieldValues.buildingAge === 'こだわらない' ? 'any' : 'specific',
-                    note: ''
-                },
+                roomSize: parseNum(fieldValues.roomSize, 25),
+                stationWalk: parseNum(fieldValues.stationWalk, 10),
+                buildingAge: buildingAge,
                 floor: floorMap[fieldValues.floor] || 1
             },
             equipment: {
