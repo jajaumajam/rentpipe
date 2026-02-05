@@ -16,6 +16,9 @@ window.createNavigation = function() {
                         <a href="pipeline.html" class="nav-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
                             <span>📊 パイプライン</span>
                         </a>
+                        <a href="forms.html" class="nav-link ${currentPage === 'forms.html' ? 'active' : ''}">
+                            <span>📋 フォーム</span>
+                        </a>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
