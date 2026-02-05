@@ -49,11 +49,13 @@ const GoogleFormsManager = {
      * アクセストークンを取得
      */
     getAccessToken() {
+        // GoogleDriveAPIv2から取得（メイン認証マネージャー）
+        if (window.GoogleDriveAPIv2 && window.GoogleDriveAPIv2.accessToken) {
+            return window.GoogleDriveAPIv2.accessToken;
+        }
+        // フォールバック: IntegratedAuthManager
         if (window.IntegratedAuthManager && window.IntegratedAuthManager.accessToken) {
             return window.IntegratedAuthManager.accessToken;
-        }
-        if (window.GoogleDriveAPI && window.GoogleDriveAPI.accessToken) {
-            return window.GoogleDriveAPI.accessToken;
         }
         return null;
     },
