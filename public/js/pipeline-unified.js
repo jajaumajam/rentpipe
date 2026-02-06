@@ -160,7 +160,7 @@ class PipelineManager {
                     <button class="card-button" onclick="window.pipelineManager.changeStatus('${customer.id}', '${customer.pipelineStatus}')">
                         ステータス変更
                     </button>
-                    <a href="customer-form.html?edit=${customer.id}" class="card-button" style="text-decoration: none; text-align: center;">
+                    <a href="customer-form.html?edit=${customer.id}&from=pipeline" class="card-button" style="text-decoration: none; text-align: center;">
                         編集
                     </a>
                 </div>
