@@ -241,6 +241,37 @@
                 console.error('pipeline.html 初期化エラー:', error);
             }
         });
+
+        // ページがフォーカスを得たとき（タブ切り替え等）に自動更新
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log('👁️ ページがフォーカスを得ました - パイプライン再描画');
+                if (window.pipelineManager) {
+                    window.pipelineManager.renderPipeline();
+                    window.pipelineManager.updateAuthStatus();
+                }
+            }
+        });
+
+        // 他のタブ/ウィンドウでlocalStorageが変更されたときに自動更新
+        window.addEventListener('storage', (event) => {
+            if (event.key && event.key.includes('rentpipe')) {
+                console.log('💾 ストレージ変更検出 - パイプライン再描画');
+                if (window.pipelineManager) {
+                    window.pipelineManager.renderPipeline();
+                }
+            }
+        });
+
+        // ページにフォーカスが戻ったときにも更新（window.onfocus）
+        window.addEventListener('focus', () => {
+            console.log('🎯 ウィンドウがフォーカスを得ました - パイプライン再描画');
+            setTimeout(() => {
+                if (window.pipelineManager) {
+                    window.pipelineManager.renderPipeline();
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>

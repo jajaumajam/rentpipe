@@ -2,7 +2,7 @@
 class PipelineManager {
     constructor() {
         this.dataManager = null;
-        this.statuses = ['初回相談', '物件紹介', '内見', '申込', '審査', '契約', '完了'];
+        this.statuses = ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き', '完了'];
         this.isUpdating = false; // 自分自身の更新中フラグ
         this.init();
     }
