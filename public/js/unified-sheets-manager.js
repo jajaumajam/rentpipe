@@ -93,6 +93,7 @@ const UnifiedSheetsManager = {
             'pipelineStatus',
             'isActive',
             'archivedAt',
+            'archiveReason',
             'createdAt',
             'updatedAt'
         ];
@@ -100,7 +101,7 @@ const UnifiedSheetsManager = {
         try {
             await gapi.client.sheets.spreadsheets.values.update({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A1:R1`,
+                range: `${this.SHEET_NAME}!A1:S1`,
                 valueInputOption: 'RAW',
                 resource: {
                     values: [headers]
@@ -122,7 +123,7 @@ const UnifiedSheetsManager = {
         try {
             const response = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A1:R1`
+                range: `${this.SHEET_NAME}!A1:S1`
             });
 
             const currentHeaders = response.result.values ? response.result.values[0] : [];
@@ -143,6 +144,7 @@ const UnifiedSheetsManager = {
                 'pipelineStatus',
                 'isActive',
                 'archivedAt',
+                'archiveReason',
                 'createdAt',
                 'updatedAt'
             ];
@@ -201,6 +203,7 @@ const UnifiedSheetsManager = {
                     'pipelineStatus',
                     'isActive',
                     'archivedAt',
+                    'archiveReason',
                     'createdAt',
                     'updatedAt'
                 ],
@@ -288,6 +291,7 @@ const UnifiedSheetsManager = {
             customer.pipelineStatus || '初回相談',
             customer.isActive !== false ? 'TRUE' : 'FALSE',
             customer.archivedAt || '',
+            customer.archiveReason || '',
             customer.createdAt || '',
             customer.updatedAt || ''
         ];
@@ -316,8 +320,9 @@ const UnifiedSheetsManager = {
                 pipelineStatus: row[13] || '初回相談',
                 isActive: row[14] !== 'FALSE',
                 archivedAt: row[15] || null,
-                createdAt: row[16] || new Date().toISOString(),
-                updatedAt: row[17] || new Date().toISOString()
+                archiveReason: row[16] || null,
+                createdAt: row[17] || new Date().toISOString(),
+                updatedAt: row[18] || new Date().toISOString()
             };
 
             return customer;

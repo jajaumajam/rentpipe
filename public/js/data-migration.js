@@ -116,6 +116,7 @@ const DataMigration = {
             pipelineStatus: oldCustomer.pipelineStatus || "初回相談",
             isActive: oldCustomer.isActive !== false,
             archivedAt: oldCustomer.archivedAt || null,
+            archiveReason: oldCustomer.archiveReason || null,  // "成約" | "失注" | "その他"
             createdAt: oldCustomer.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };

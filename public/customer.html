@@ -315,24 +315,24 @@
         <!-- 統計 -->
         <div class="stats-container">
             <div class="stat-card">
-                <div class="stat-icon">👥</div>
-                <div class="stat-content">
-                    <h3 id="stat-total">0</h3>
-                    <p>総顧客数</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">✅</div>
+                <div class="stat-icon">📋</div>
                 <div class="stat-content">
                     <h3 id="stat-active">0</h3>
-                    <p>アクティブ</p>
+                    <p>進行中</p>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">⏸️</div>
+                <div class="stat-icon">🎉</div>
                 <div class="stat-content">
-                    <h3 id="stat-inactive">0</h3>
-                    <p>非アクティブ</p>
+                    <h3 id="stat-closed">0</h3>
+                    <p>成約済み</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-content">
+                    <h3 id="stat-lost">0</h3>
+                    <p>失注</p>
                 </div>
             </div>
             <div class="stat-card">
@@ -350,28 +350,28 @@
                 <input type="text" id="search-input" placeholder="🔍 顧客名、メール、電話番号で検索..." onkeyup="searchCustomers()">
             </div>
 
-            <!-- アクティブ/非アクティブフィルター -->
+            <!-- 表示対象フィルター -->
             <div class="filter-section">
                 <div class="filter-section-title">表示対象</div>
                 <div class="filter-buttons">
-                    <button class="filter-btn active" id="filter-active" onclick="filterByActiveStatus('active')">✅ アクティブのみ</button>
-                    <button class="filter-btn" id="filter-all" onclick="filterByActiveStatus('all')">📋 すべて表示</button>
-                    <button class="filter-btn" id="filter-inactive" onclick="filterByActiveStatus('inactive')">⏸️ 非アクティブのみ</button>
+                    <button class="filter-btn active" id="filter-active" onclick="filterByActiveStatus('active')">📋 進行中</button>
+                    <button class="filter-btn" id="filter-closed" onclick="filterByActiveStatus('closed')">🎉 成約済み</button>
+                    <button class="filter-btn" id="filter-lost" onclick="filterByActiveStatus('lost')">❌ 失注</button>
+                    <button class="filter-btn" id="filter-all" onclick="filterByActiveStatus('all')">🗂️ すべて</button>
                 </div>
             </div>
 
-            <!-- パイプラインステータスフィルター -->
-            <div class="filter-section">
+            <!-- パイプラインステータスフィルター（進行中のみ表示） -->
+            <div class="filter-section" id="status-filter-section">
                 <div class="filter-section-title">パイプラインステータス</div>
                 <div class="filter-buttons" id="status-filters">
                     <button class="filter-btn active" data-status="all" onclick="filterByStatus('all')">すべて</button>
                     <button class="filter-btn" data-status="初回相談" onclick="filterByStatus('初回相談')">初回相談</button>
                     <button class="filter-btn" data-status="物件紹介" onclick="filterByStatus('物件紹介')">物件紹介</button>
-                    <button class="filter-btn" data-status="内見" onclick="filterByStatus('内見')">内見</button>
-                    <button class="filter-btn" data-status="申込" onclick="filterByStatus('申込')">申込</button>
-                    <button class="filter-btn" data-status="審査" onclick="filterByStatus('審査')">審査</button>
-                    <button class="filter-btn" data-status="契約" onclick="filterByStatus('契約')">契約</button>
-                    <button class="filter-btn" data-status="完了" onclick="filterByStatus('完了')">完了</button>
+                    <button class="filter-btn" data-status="内見調整" onclick="filterByStatus('内見調整')">内見調整</button>
+                    <button class="filter-btn" data-status="申込準備" onclick="filterByStatus('申込準備')">申込準備</button>
+                    <button class="filter-btn" data-status="審査中" onclick="filterByStatus('審査中')">審査中</button>
+                    <button class="filter-btn" data-status="契約手続き" onclick="filterByStatus('契約手続き')">契約手続き</button>
                 </div>
             </div>
         </div>
@@ -437,11 +437,16 @@
 
             if (currentActiveFilter === 'active') {
                 filteredCustomers = filteredCustomers.filter(c => c.isActive !== false);
-            } else if (currentActiveFilter === 'inactive') {
-                filteredCustomers = filteredCustomers.filter(c => c.isActive === false);
+            } else if (currentActiveFilter === 'closed') {
+                // 成約済み（archiveReason === '成約'）
+                filteredCustomers = filteredCustomers.filter(c => c.isActive === false && c.archiveReason === '成約');
+            } else if (currentActiveFilter === 'lost') {
+                // 失注（archiveReason !== '成約' または archiveReason がない非アクティブ）
+                filteredCustomers = filteredCustomers.filter(c => c.isActive === false && c.archiveReason !== '成約');
             }
 
-            if (currentStatusFilter !== 'all') {
+            // ステータスフィルターは進行中の場合のみ適用
+            if (currentActiveFilter === 'active' && currentStatusFilter !== 'all') {
                 filteredCustomers = filteredCustomers.filter(c => c.pipelineStatus === currentStatusFilter);
             }
 
@@ -472,9 +477,17 @@
                 '完了': '#d1fae5'
             };
 
-            const activeBadge = isInactive
-                ? '<span class="active-badge inactive">⏸️ 非アクティブ</span>'
-                : '';
+            let activeBadge = '';
+            if (isInactive) {
+                const archiveReason = customer.archiveReason;
+                if (archiveReason === '成約') {
+                    activeBadge = '<span class="active-badge" style="background: #d1fae5; color: #065f46;">🎉 成約済み</span>';
+                } else if (archiveReason === '失注') {
+                    activeBadge = '<span class="active-badge" style="background: #fee2e2; color: #991b1b;">❌ 失注</span>';
+                } else {
+                    activeBadge = '<span class="active-badge inactive">⏸️ 非アクティブ</span>';
+                }
+            }
 
             // 新しいデータ構造に対応
             const name = customer.basicInfo?.name || customer.name || '名前未設定';
@@ -517,11 +530,24 @@
 
         // 統計更新
         function updateStats() {
-            const stats = PageInitializer.getCustomerStats();
-            document.getElementById('stat-total').textContent = stats.total;
-            document.getElementById('stat-active').textContent = stats.active;
-            document.getElementById('stat-inactive').textContent = stats.inactive;
-            document.getElementById('stat-new').textContent = stats.newThisMonth;
+            const customers = window.UnifiedDataManager ? window.UnifiedDataManager.getCustomers() : [];
+
+            const active = customers.filter(c => c.isActive !== false).length;
+            const closed = customers.filter(c => c.isActive === false && c.archiveReason === '成約').length;
+            const lost = customers.filter(c => c.isActive === false && c.archiveReason !== '成約').length;
+
+            // 今月の新規
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const newThisMonth = customers.filter(c => {
+                const created = new Date(c.createdAt);
+                return created >= startOfMonth;
+            }).length;
+
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-closed').textContent = closed;
+            document.getElementById('stat-lost').textContent = lost;
+            document.getElementById('stat-new').textContent = newThisMonth;
         }
 
         // 検索
@@ -556,14 +582,20 @@
             });
         }
 
-        // アクティブ/非アクティブフィルター
+        // 表示対象フィルター
         function filterByActiveStatus(filter) {
             currentActiveFilter = filter;
 
-            document.querySelectorAll('#filter-active, #filter-all, #filter-inactive').forEach(btn => {
+            document.querySelectorAll('#filter-active, #filter-closed, #filter-lost, #filter-all').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.getElementById('filter-' + filter).classList.add('active');
+
+            // パイプラインステータスフィルターは進行中のみ表示
+            const statusFilterSection = document.getElementById('status-filter-section');
+            if (statusFilterSection) {
+                statusFilterSection.style.display = filter === 'active' ? 'block' : 'none';
+            }
 
             displayCustomers();
         }

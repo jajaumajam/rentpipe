@@ -2,7 +2,8 @@
 class PipelineManager {
     constructor() {
         this.dataManager = null;
-        this.statuses = ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き', '完了'];
+        // 「完了」を削除（成約時は自動でアーカイブ）
+        this.statuses = ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き'];
         this.isUpdating = false; // 自分自身の更新中フラグ
         this.init();
     }
@@ -159,8 +160,8 @@ class PipelineManager {
                     <button class="card-button" onclick="window.pipelineManager.changeStatus('${customer.id}', '${customer.pipelineStatus}')">
                         ステータス変更
                     </button>
-                    <a href="customer-detail.html?id=${customer.id}" class="card-button" style="text-decoration: none; text-align: center;">
-                        詳細
+                    <a href="customer-form.html?edit=${customer.id}" class="card-button" style="text-decoration: none; text-align: center;">
+                        編集
                     </a>
                 </div>
             </div>
@@ -169,12 +170,19 @@ class PipelineManager {
 
     async changeStatus(customerId, currentStatus) {
         console.log('🔄 ステータス変更開始:', customerId, currentStatus);
-        
-        // ステータス選択ダイアログ
+
+        // ステータス選択ダイアログ（アーカイブオプション付き）
+        const options = [
+            ...this.statuses.map((s, i) => `${i + 1}. ${s}${s === currentStatus ? ' (現在)' : ''}`),
+            '---',
+            `${this.statuses.length + 1}. 🎉 成約（アーカイブ）`,
+            `${this.statuses.length + 2}. ❌ 失注（アーカイブ）`
+        ];
+
         const newStatus = prompt(
             `新しいステータスを選択してください:\n\n` +
-            this.statuses.map((s, i) => `${i + 1}. ${s}${s === currentStatus ? ' (現在)' : ''}`).join('\n') +
-            `\n\n番号を入力してください (1-${this.statuses.length}):`,
+            options.join('\n') +
+            `\n\n番号を入力してください (1-${this.statuses.length + 2}):`,
             this.statuses.indexOf(currentStatus) + 1
         );
 
@@ -184,14 +192,26 @@ class PipelineManager {
         }
 
         const statusIndex = parseInt(newStatus) - 1;
-        
+
+        // 成約アーカイブ
+        if (statusIndex === this.statuses.length) {
+            await this.archiveCustomer(customerId, '成約');
+            return;
+        }
+
+        // 失注アーカイブ
+        if (statusIndex === this.statuses.length + 1) {
+            await this.archiveCustomer(customerId, '失注');
+            return;
+        }
+
         if (statusIndex < 0 || statusIndex >= this.statuses.length) {
             alert('無効な番号です');
             return;
         }
 
         const selectedStatus = this.statuses[statusIndex];
-        
+
         if (selectedStatus === currentStatus) {
             alert('同じステータスです');
             return;
@@ -200,30 +220,67 @@ class PipelineManager {
         try {
             // 更新中フラグを立てる
             this.isUpdating = true;
-            
+
             const customer = this.dataManager.getCustomerById(customerId);
-            
+
             if (!customer) {
                 throw new Error('顧客が見つかりません');
             }
 
             // ステータス更新
             customer.pipelineStatus = selectedStatus;
-            
+
             await this.dataManager.updateCustomer(customer);
-            
+
             console.log('✅ ステータス変更成功:', customerId, '→', selectedStatus);
-            
+
             // パイプライン再描画
             this.renderPipeline();
-            
+
             alert(`✅ ステータスを「${selectedStatus}」に変更しました`);
-            
+
         } catch (error) {
             console.error('❌ ステータス変更エラー:', error);
             alert('ステータス変更に失敗しました: ' + error.message);
         } finally {
             // 更新中フラグを解除
+            this.isUpdating = false;
+        }
+    }
+
+    async archiveCustomer(customerId, reason) {
+        const reasonLabel = reason === '成約' ? '🎉 成約' : '❌ 失注';
+
+        if (!confirm(`この顧客を「${reasonLabel}」としてアーカイブしますか？\n\nアーカイブされた顧客は顧客一覧の「アーカイブ」タブから確認できます。`)) {
+            return;
+        }
+
+        try {
+            this.isUpdating = true;
+
+            const customer = this.dataManager.getCustomerById(customerId);
+            if (!customer) {
+                throw new Error('顧客が見つかりません');
+            }
+
+            // アーカイブ処理
+            customer.isActive = false;
+            customer.archivedAt = new Date().toISOString();
+            customer.archiveReason = reason;
+            customer.pipelineStatus = '完了';
+
+            await this.dataManager.updateCustomer(customer);
+
+            console.log(`✅ 顧客をアーカイブ: ${customerId} (${reason})`);
+
+            this.renderPipeline();
+
+            alert(`✅ 顧客を「${reasonLabel}」としてアーカイブしました`);
+
+        } catch (error) {
+            console.error('❌ アーカイブエラー:', error);
+            alert('アーカイブに失敗しました: ' + error.message);
+        } finally {
             this.isUpdating = false;
         }
     }

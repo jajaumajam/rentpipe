@@ -145,6 +145,7 @@ const UnifiedDataManager = {
                 pipelineStatus: customerData.pipelineStatus || "初回相談",
                 isActive: customerData.isActive !== false,
                 archivedAt: customerData.archivedAt || null,
+                archiveReason: customerData.archiveReason || null,  // "成約" | "失注" | "その他" | null
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
@@ -231,6 +232,9 @@ const UnifiedDataManager = {
             }
             if (customerUpdates.archivedAt !== undefined) {
                 customer.archivedAt = customerUpdates.archivedAt;
+            }
+            if (customerUpdates.archiveReason !== undefined) {
+                customer.archiveReason = customerUpdates.archiveReason;
             }
             // 契約情報の更新
             if (customerUpdates.contractInfo) {

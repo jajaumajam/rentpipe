@@ -910,7 +910,7 @@
 
                     <div class="form-group">
                         <label>パイプライン状態</label>
-                        <select id="pipelineStatus">
+                        <select id="pipelineStatus" onchange="updateContractSectionVisibility()">
                             <option value="初回相談">初回相談</option>
                             <option value="物件紹介">物件紹介</option>
                             <option value="内見調整">内見調整</option>
@@ -1151,7 +1151,7 @@
 
                 // 管理者セクションを表示
                 document.getElementById('adminSection').style.display = 'block';
-                document.getElementById('contractSection').style.display = 'block';
+                // 契約セクションはステータスによって後で表示制御
 
                 // AppInitializerの初期化を待つ
                 if (window.AppInitializer && window.AppInitializer.initializationPromise) {
@@ -1300,6 +1300,9 @@
                 // フォローアップ設定
                 const followUpSettings = customer.followUpSettings || {};
                 document.getElementById('followUpEnabled').checked = followUpSettings.enabled !== false;
+
+                // 契約セクションの表示制御（ステータスに依存）
+                updateContractSectionVisibility();
 
                 // カレンダーボタンの表示更新
                 setTimeout(() => updateCalendarButtonVisibility(), 100);
@@ -1485,6 +1488,21 @@
         function handleCancel() {
             if (confirm('入力内容を破棄して戻りますか？')) {
                 window.location.href = 'customer.html';
+            }
+        }
+
+        // 契約セクションの表示制御（ステータスに依存）
+        function updateContractSectionVisibility() {
+            const status = document.getElementById('pipelineStatus')?.value;
+            const contractSection = document.getElementById('contractSection');
+
+            if (contractSection && isEditMode) {
+                // 「契約手続き」または「完了」の場合のみ契約セクションを表示
+                if (status === '契約手続き' || status === '完了') {
+                    contractSection.style.display = 'block';
+                } else {
+                    contractSection.style.display = 'none';
+                }
             }
         }
 
