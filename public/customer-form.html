@@ -46,7 +46,6 @@
 
         /* セクション */
         .form-section {
-            display: block !important;
             margin-bottom: 40px;
             padding-bottom: 30px;
             border-bottom: 1px solid #e5e7eb;
@@ -54,6 +53,11 @@
             box-shadow: none;
             padding: 0;
             border-radius: 0;
+        }
+
+        /* 管理者専用セクション（編集モード時のみ表示） */
+        #adminSection, #contractSection {
+            /* JavaScriptで表示制御 */
         }
 
         .form-section:last-of-type {
