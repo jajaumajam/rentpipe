@@ -19,6 +19,9 @@ window.createNavigation = function() {
                         <a href="forms.html" class="nav-link ${currentPage === 'forms.html' ? 'active' : ''}">
                             <span>📋 フォーム</span>
                         </a>
+                        <a href="settings.html" class="nav-link ${currentPage === 'settings.html' ? 'active' : ''}">
+                            <span>⚙️ 設定</span>
+                        </a>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">

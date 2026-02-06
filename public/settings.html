@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+        }
+
+        .settings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .settings-section h2 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* 認証ステータス */
+        .auth-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .auth-status.authenticated {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+
+        .auth-status.not-authenticated {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .auth-icon {
+            font-size: 24px;
+        }
+
+        .auth-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+        }
+
+        .auth-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        /* フォーム設定 */
+        .form-config-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-config-status.has-form {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+        }
+
+        .form-config-status.no-form {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+        }
+
+        .config-icon {
+            font-size: 28px;
+        }
+
+        .config-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            color: #1f2937;
+        }
+
+        .config-info p {
+            margin: 0;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* ボタン */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        .action-btn.secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .action-btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .action-btn.danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .action-btn.danger:hover {
+            background: #dc2626;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 注意書き */
+        .notice {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .notice h4 {
+            margin: 0 0 10px 0;
+            color: #92400e;
+            font-size: 14px;
+        }
+
+        .notice ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #78350f;
+            font-size: 13px;
+        }
+
+        .notice li {
+            margin-bottom: 5px;
+        }
+
+        /* モーダル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .modal h3 {
+            margin: 0 0 15px 0;
+            color: #1f2937;
+        }
+
+        .modal p {
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* データ管理 */
+        .data-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .data-stat {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .data-stat .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .data-stat .label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <div id="navigation"></div>
+
+    <!-- メインコンテンツ -->
+    <div class="settings-container">
+        <div class="page-header">
+            <h1>⚙️ 設定</h1>
+            <p>アプリケーションの各種設定を管理します</p>
+        </div>
+
+        <!-- Google認証セクション -->
+        <div class="settings-section">
+            <h2>🔐 Google認証</h2>
+            <p class="section-description">Google DriveとSheetsへのアクセスに使用する認証です</p>
+
+            <div id="authStatus" class="auth-status not-authenticated">
+                <span class="auth-icon">⏳</span>
+                <div class="auth-info">
+                    <h3>確認中...</h3>
+                    <p>認証状態を確認しています</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="signInBtn" class="action-btn primary" onclick="signInGoogle()" style="display: none;">
+                    🔑 Googleでログイン
+                </button>
+                <button id="refreshAuthBtn" class="action-btn secondary" onclick="refreshAuth()">
+                    🔄 認証を更新
+                </button>
+            </div>
+        </div>
+
+        <!-- フォーム設定セクション -->
+        <div class="settings-section">
+            <h2>📝 アンケートフォーム設定</h2>
+            <p class="section-description">
+                お客様がスマートフォン等で入力できるアンケートフォームを作成・管理します。<br>
+                一度作成すれば、フォームページで回答を取り込めるようになります。
+            </p>
+
+            <div id="formConfigStatus" class="form-config-status no-form">
+                <span class="config-icon">📋</span>
+                <div class="config-info">
+                    <h3>フォーム未作成</h3>
+                    <p>フォームを生成してください</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="createFormBtn" class="action-btn primary" onclick="createForm()">
+                    ✨ フォームを生成
+                </button>
+                <button id="resetFormBtn" class="action-btn danger" onclick="confirmResetForm()" style="display: none;">
+                    🗑️ フォームをリセット
+                </button>
+            </div>
+
+            <div class="notice">
+                <h4>💡 フォームについて</h4>
+                <ul>
+                    <li>フォームを生成すると、Googleドライブにフォームが作成されます</li>
+                    <li>作成後は「フォーム」ページでURLとQRコードを確認できます</li>
+                    <li>リセットすると設定が消えますが、Googleドライブ上のフォームは残ります</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- データ管理セクション -->
+        <div class="settings-section">
+            <h2>📊 データ管理</h2>
+            <p class="section-description">顧客データの状態と同期を管理します</p>
+
+            <div class="data-info">
+                <div class="data-stat">
+                    <div class="value" id="totalCustomers">-</div>
+                    <div class="label">顧客数</div>
+                </div>
+                <div class="data-stat">
+                    <div class="value" id="activeCustomers">-</div>
+                    <div class="label">アクティブ</div>
+                </div>
+                <div class="data-stat">
+                    <div class="value" id="lastSync">-</div>
+                    <div class="label">最終同期</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn secondary" onclick="syncData()">
+                    🔄 データを同期
+                </button>
+                <button class="action-btn danger" onclick="confirmClearData()">
+                    🗑️ ローカルデータをクリア
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 確認モーダル -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <h3 id="modalTitle">確認</h3>
+            <p id="modalMessage">本当に実行しますか？</p>
+            <div class="modal-buttons">
+                <button class="action-btn secondary" onclick="closeModal()">キャンセル</button>
+                <button class="action-btn danger" id="modalConfirmBtn" onclick="executeAction()">実行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    <script src="js/data-migration.js"></script>
+    <script src="js/unified-sheets-manager.js"></script>
+    <script src="js/unified-data-manager.js"></script>
+    <script src="js/google-forms-api.js"></script>
+    <script src="js/app-initializer.js"></script>
+
+    <script>
+        console.log('⚙️ 設定ページ読み込み開始...');
+
+        let pendingAction = null;
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // IntegratedAuthManagerを先に初期化
+                if (window.IntegratedAuthManager && !window.IntegratedAuthManager.isInitialized) {
+                    await window.IntegratedAuthManager.initialize();
+                }
+
+                // AppInitializerの初期化を待つ
+                if (window.AppInitializer) {
+                    try {
+                        await window.AppInitializer.initialize({ requireAuth: false });
+                    } catch (e) {
+                        console.warn('AppInitializer初期化エラー:', e);
+                    }
+                }
+
+                // 認証を確実に引き継ぐ
+                await ensureAuthentication();
+
+                // GoogleFormsManagerを初期化
+                if (window.GoogleFormsManager) {
+                    await GoogleFormsManager.initialize();
+                }
+
+                // 各種状態を更新
+                updateAuthStatus();
+                updateFormStatus();
+                updateDataStats();
+
+            } catch (error) {
+                console.error('設定ページ初期化エラー:', error);
+            }
+        });
+
+        // 認証を確実に引き継ぐ
+        async function ensureAuthentication() {
+            // localStorageから直接トークンを取得
+            let accessToken = null;
+            let email = '';
+
+            try {
+                const googleAuthData = localStorage.getItem('google_auth_data');
+                if (googleAuthData) {
+                    const authData = JSON.parse(googleAuthData);
+                    if (authData.accessToken) {
+                        accessToken = authData.accessToken;
+                        email = authData.user?.email || '';
+                    }
+                }
+            } catch (e) {
+                console.warn('localStorage読み取りエラー:', e);
+            }
+
+            // IntegratedAuthManagerからも取得を試みる
+            if (!accessToken) {
+                const authState = window.IntegratedAuthManager?.getAuthState();
+                accessToken = authState?.googleAuth?.accessToken;
+            }
+
+            if (accessToken) {
+                // GoogleDriveAPIv2にトークンを設定
+                if (window.GoogleDriveAPIv2) {
+                    if (!window.GoogleDriveAPIv2.isInitialized) {
+                        await window.GoogleDriveAPIv2.initialize();
+                    }
+                    window.GoogleDriveAPIv2.accessToken = accessToken;
+                    window.GoogleDriveAPIv2.isAuthenticated = true;
+                    console.log('✅ 認証トークンを設定しました');
+                }
+            }
+        }
+
+        // 認証状態を更新
+        function updateAuthStatus() {
+            const statusEl = document.getElementById('authStatus');
+            const signInBtn = document.getElementById('signInBtn');
+
+            // 複数のソースから認証状態を確認
+            let isAuthenticated = false;
+            let email = '';
+
+            // 1. GoogleDriveAPIv2から確認
+            if (window.GoogleDriveAPIv2?.isAuthenticated) {
+                isAuthenticated = true;
+            }
+
+            // 2. IntegratedAuthManagerから確認
+            if (!isAuthenticated) {
+                const authState = window.IntegratedAuthManager?.getAuthState();
+                if (authState?.googleAuth?.accessToken) {
+                    isAuthenticated = true;
+                }
+            }
+
+            // 3. localStorageから直接確認（フォールバック）
+            if (!isAuthenticated) {
+                try {
+                    const googleAuthData = localStorage.getItem('google_auth_data');
+                    if (googleAuthData) {
+                        const authData = JSON.parse(googleAuthData);
+                        if (authData.accessToken) {
+                            isAuthenticated = true;
+                            email = authData.user?.email || '';
+                        }
+                    }
+                } catch (e) {
+                    console.warn('localStorage読み取りエラー:', e);
+                }
+            }
+
+            // メールアドレスを取得
+            if (!email) {
+                email = window.IntegratedAuthManager?.getUserEmail() || '';
+            }
+            if (!email) {
+                try {
+                    const googleAuthData = localStorage.getItem('google_auth_data');
+                    if (googleAuthData) {
+                        const authData = JSON.parse(googleAuthData);
+                        email = authData.user?.email || authData.email || '';
+                    }
+                } catch (e) {}
+            }
+
+            if (isAuthenticated) {
+                statusEl.className = 'auth-status authenticated';
+                statusEl.innerHTML = `
+                    <span class="auth-icon">✅</span>
+                    <div class="auth-info">
+                        <h3>認証済み</h3>
+                        <p>${email}</p>
+                    </div>
+                `;
+                signInBtn.style.display = 'none';
+            } else {
+                statusEl.className = 'auth-status not-authenticated';
+                statusEl.innerHTML = `
+                    <span class="auth-icon">⚠️</span>
+                    <div class="auth-info">
+                        <h3>未認証</h3>
+                        <p>Googleでログインしてください</p>
+                    </div>
+                `;
+                signInBtn.style.display = 'inline-flex';
+            }
+        }
+
+        // Googleログイン
+        async function signInGoogle() {
+            try {
+                if (window.GoogleDriveAPIv2) {
+                    await GoogleDriveAPIv2.initialize();
+                    await GoogleDriveAPIv2.signIn();
+                }
+                updateAuthStatus();
+                updateFormStatus();
+                alert('✅ Googleにログインしました');
+            } catch (error) {
+                console.error('Google認証エラー:', error);
+                alert('❌ Google認証に失敗しました: ' + error.message);
+            }
+        }
+
+        // 認証を更新
+        async function refreshAuth() {
+            try {
+                const btn = document.querySelector('#refreshAuthBtn');
+                btn.disabled = true;
+                btn.textContent = '🔄 更新中...';
+
+                // トークンを再設定
+                const authState = window.IntegratedAuthManager?.getAuthState();
+                const accessToken = authState?.googleAuth?.accessToken;
+
+                if (accessToken && window.GoogleDriveAPIv2) {
+                    window.GoogleDriveAPIv2.accessToken = accessToken;
+                    window.GoogleDriveAPIv2.isAuthenticated = true;
+                    console.log('✅ 認証トークンを更新しました');
+                }
+
+                updateAuthStatus();
+                alert('✅ 認証を更新しました');
+            } catch (error) {
+                console.error('認証更新エラー:', error);
+                alert('❌ 認証更新に失敗しました: ' + error.message);
+            } finally {
+                const btn = document.querySelector('#refreshAuthBtn');
+                btn.disabled = false;
+                btn.textContent = '🔄 認証を更新';
+            }
+        }
+
+        // フォーム状態を更新
+        function updateFormStatus() {
+            const statusEl = document.getElementById('formConfigStatus');
+            const createBtn = document.getElementById('createFormBtn');
+            const resetBtn = document.getElementById('resetFormBtn');
+
+            const config = window.GoogleFormsManager?.formConfig;
+
+            if (config && config.formId) {
+                const createdAt = new Date(config.createdAt).toLocaleString('ja-JP');
+                statusEl.className = 'form-config-status has-form';
+                statusEl.innerHTML = `
+                    <span class="config-icon">✅</span>
+                    <div class="config-info">
+                        <h3>フォーム作成済み</h3>
+                        <p>作成日: ${createdAt}</p>
+                    </div>
+                `;
+                createBtn.style.display = 'none';
+                resetBtn.style.display = 'inline-flex';
+            } else {
+                statusEl.className = 'form-config-status no-form';
+                statusEl.innerHTML = `
+                    <span class="config-icon">📋</span>
+                    <div class="config-info">
+                        <h3>フォーム未作成</h3>
+                        <p>「フォームを生成」ボタンで作成してください</p>
+                    </div>
+                `;
+                createBtn.style.display = 'inline-flex';
+                resetBtn.style.display = 'none';
+            }
+        }
+
+        // フォーム生成
+        async function createForm() {
+            const btn = document.getElementById('createFormBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                // 認証チェック
+                const isAuthenticated = window.GoogleDriveAPIv2?.isAuthenticated ||
+                                        window.IntegratedAuthManager?.getAuthState()?.googleAuth?.accessToken;
+                if (!isAuthenticated) {
+                    alert('⚠️ 先にGoogleでログインしてください');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '⏳ 生成中...';
+
+                const config = await window.GoogleFormsManager.createForm();
+                console.log('フォーム生成完了:', config);
+
+                updateFormStatus();
+                alert('✅ アンケートフォームを生成しました！\n\n「フォーム」ページでURLとQRコードを確認できます。');
+
+            } catch (error) {
+                console.error('フォーム生成エラー:', error);
+                alert('❌ フォーム生成に失敗しました: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // フォームリセット確認
+        function confirmResetForm() {
+            pendingAction = 'resetForm';
+            document.getElementById('modalTitle').textContent = 'フォームをリセット';
+            document.getElementById('modalMessage').textContent =
+                'フォーム設定をリセットしますか？\n（Googleドライブ上のフォームは削除されません）';
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        // データクリア確認
+        function confirmClearData() {
+            pendingAction = 'clearData';
+            document.getElementById('modalTitle').textContent = 'ローカルデータをクリア';
+            document.getElementById('modalMessage').textContent =
+                'ローカルに保存された顧客データをクリアしますか？\n（Google Sheets上のデータは保持されます）';
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        // モーダルを閉じる
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingAction = null;
+        }
+
+        // アクション実行
+        async function executeAction() {
+            if (pendingAction === 'resetForm') {
+                await window.GoogleFormsManager.resetFormConfig();
+                updateFormStatus();
+                alert('✅ フォーム設定をリセットしました');
+            } else if (pendingAction === 'clearData') {
+                localStorage.removeItem('rentpipe_customers');
+                updateDataStats();
+                alert('✅ ローカルデータをクリアしました');
+            }
+            closeModal();
+        }
+
+        // データ統計を更新
+        function updateDataStats() {
+            try {
+                const customers = window.UnifiedDataManager?.getCustomers() || [];
+                const active = customers.filter(c => c.isActive !== false);
+
+                document.getElementById('totalCustomers').textContent = customers.length;
+                document.getElementById('activeCustomers').textContent = active.length;
+
+                // 最終同期時刻
+                const lastSyncTime = localStorage.getItem('rentpipe_last_sync');
+                if (lastSyncTime) {
+                    const date = new Date(lastSyncTime);
+                    const now = new Date();
+                    const diff = Math.floor((now - date) / 1000 / 60);
+                    if (diff < 1) {
+                        document.getElementById('lastSync').textContent = '今';
+                    } else if (diff < 60) {
+                        document.getElementById('lastSync').textContent = diff + '分前';
+                    } else {
+                        document.getElementById('lastSync').textContent = date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                    }
+                } else {
+                    document.getElementById('lastSync').textContent = '-';
+                }
+            } catch (error) {
+                console.error('データ統計更新エラー:', error);
+            }
+        }
+
+        // データ同期
+        async function syncData() {
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.textContent = '🔄 同期中...';
+
+                if (window.UnifiedDataManager) {
+                    const result = await UnifiedDataManager.syncFromSheetsImmediately();
+                    if (result.success) {
+                        localStorage.setItem('rentpipe_last_sync', new Date().toISOString());
+                        updateDataStats();
+                        alert('✅ データを同期しました');
+                    } else {
+                        throw new Error(result.error || '同期に失敗しました');
+                    }
+                }
+            } catch (error) {
+                console.error('データ同期エラー:', error);
+                alert('❌ 同期に失敗しました: ' + error.message);
+            } finally {
+                const btn = event.target;
+                btn.disabled = false;
+                btn.textContent = '🔄 データを同期';
+            }
+        }
+
+        console.log('✅ 設定ページ準備完了');
+    </script>
+</body>
+</html>

@@ -87,6 +87,9 @@ const UnifiedSheetsManager = {
             'equipment',
             'additionalInfo',
             'agentMemo',
+            'contractInfo',
+            'followUpSettings',
+            'followUpHistory',
             'pipelineStatus',
             'isActive',
             'archivedAt',
@@ -97,7 +100,7 @@ const UnifiedSheetsManager = {
         try {
             await gapi.client.sheets.spreadsheets.values.update({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A1:O1`,
+                range: `${this.SHEET_NAME}!A1:R1`,
                 valueInputOption: 'RAW',
                 resource: {
                     values: [headers]
@@ -119,7 +122,7 @@ const UnifiedSheetsManager = {
         try {
             const response = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.SHEET_NAME}!A1:O1`
+                range: `${this.SHEET_NAME}!A1:R1`
             });
 
             const currentHeaders = response.result.values ? response.result.values[0] : [];
@@ -134,6 +137,9 @@ const UnifiedSheetsManager = {
                 'equipment',
                 'additionalInfo',
                 'agentMemo',
+                'contractInfo',
+                'followUpSettings',
+                'followUpHistory',
                 'pipelineStatus',
                 'isActive',
                 'archivedAt',
@@ -189,6 +195,9 @@ const UnifiedSheetsManager = {
                     'equipment',
                     'additionalInfo',
                     'agentMemo',
+                    'contractInfo',
+                    'followUpSettings',
+                    'followUpHistory',
                     'pipelineStatus',
                     'isActive',
                     'archivedAt',
@@ -273,6 +282,9 @@ const UnifiedSheetsManager = {
             JSON.stringify(customer.equipment || {}),
             JSON.stringify(customer.additionalInfo || {}),
             customer.agentMemo || '',
+            JSON.stringify(customer.contractInfo || {}),
+            JSON.stringify(customer.followUpSettings || {}),
+            JSON.stringify(customer.followUpHistory || []),
             customer.pipelineStatus || '初回相談',
             customer.isActive !== false ? 'TRUE' : 'FALSE',
             customer.archivedAt || '',
@@ -298,11 +310,14 @@ const UnifiedSheetsManager = {
                 equipment: this.parseJSON(row[7], {}),
                 additionalInfo: this.parseJSON(row[8], {}),
                 agentMemo: row[9] || '',
-                pipelineStatus: row[10] || '初回相談',
-                isActive: row[11] !== 'FALSE',
-                archivedAt: row[12] || null,
-                createdAt: row[13] || new Date().toISOString(),
-                updatedAt: row[14] || new Date().toISOString()
+                contractInfo: this.parseJSON(row[10], {}),
+                followUpSettings: this.parseJSON(row[11], { enabled: true }),
+                followUpHistory: this.parseJSON(row[12], []),
+                pipelineStatus: row[13] || '初回相談',
+                isActive: row[14] !== 'FALSE',
+                archivedAt: row[15] || null,
+                createdAt: row[16] || new Date().toISOString(),
+                updatedAt: row[17] || new Date().toISOString()
             };
 
             return customer;
@@ -331,10 +346,207 @@ const UnifiedSheetsManager = {
     getSpreadsheetUrl: function() {
         if (!this.spreadsheetId) return null;
         return `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/edit`;
+    },
+
+    // ========================================
+    // 設定シート管理機能
+    // ========================================
+    SETTINGS_SHEET_NAME: 'settings',
+
+    /**
+     * 設定シートを初期化（存在しない場合は作成）
+     */
+    ensureSettingsSheet: async function() {
+        if (!this.spreadsheetId) {
+            console.warn('スプレッドシートが初期化されていません');
+            return { success: false, error: 'Spreadsheet not initialized' };
+        }
+
+        try {
+            // スプレッドシートの情報を取得
+            const response = await gapi.client.sheets.spreadsheets.get({
+                spreadsheetId: this.spreadsheetId
+            });
+
+            const sheets = response.result.sheets || [];
+            const settingsSheet = sheets.find(s => s.properties.title === this.SETTINGS_SHEET_NAME);
+
+            if (!settingsSheet) {
+                // 設定シートを作成
+                await gapi.client.sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: this.spreadsheetId,
+                    resource: {
+                        requests: [{
+                            addSheet: {
+                                properties: {
+                                    title: this.SETTINGS_SHEET_NAME
+                                }
+                            }
+                        }]
+                    }
+                });
+
+                // ヘッダーを設定
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: this.spreadsheetId,
+                    range: `${this.SETTINGS_SHEET_NAME}!A1:B1`,
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [['key', 'value']]
+                    }
+                });
+
+                console.log('✅ 設定シートを作成しました');
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('設定シート初期化エラー:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * 設定を保存
+     */
+    saveSetting: async function(key, value) {
+        if (!this.spreadsheetId) {
+            const initResult = await this.initSpreadsheet();
+            if (!initResult.success) {
+                return initResult;
+            }
+        }
+
+        try {
+            await this.ensureSettingsSheet();
+
+            // 既存の設定を取得
+            const settings = await this.loadAllSettings();
+
+            // 設定を更新
+            settings[key] = value;
+
+            // 全設定を書き込み
+            const rows = [['key', 'value']];
+            for (const [k, v] of Object.entries(settings)) {
+                rows.push([k, typeof v === 'object' ? JSON.stringify(v) : String(v)]);
+            }
+
+            // シートをクリアして書き込み
+            await gapi.client.sheets.spreadsheets.values.clear({
+                spreadsheetId: this.spreadsheetId,
+                range: this.SETTINGS_SHEET_NAME
+            });
+
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: this.spreadsheetId,
+                range: `${this.SETTINGS_SHEET_NAME}!A1`,
+                valueInputOption: 'RAW',
+                resource: { values: rows }
+            });
+
+            console.log(`✅ 設定を保存: ${key}`);
+            return { success: true };
+        } catch (error) {
+            console.error('設定保存エラー:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * 設定を読み込み
+     */
+    loadSetting: async function(key) {
+        const settings = await this.loadAllSettings();
+        return settings[key] || null;
+    },
+
+    /**
+     * 全設定を読み込み
+     */
+    loadAllSettings: async function() {
+        if (!this.spreadsheetId) {
+            const initResult = await this.initSpreadsheet();
+            if (!initResult.success) {
+                return {};
+            }
+        }
+
+        try {
+            await this.ensureSettingsSheet();
+
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: this.spreadsheetId,
+                range: this.SETTINGS_SHEET_NAME
+            });
+
+            const rows = response.result.values;
+            if (!rows || rows.length <= 1) {
+                return {};
+            }
+
+            const settings = {};
+            for (let i = 1; i < rows.length; i++) {
+                const key = rows[i][0];
+                let value = rows[i][1];
+
+                // JSONとして解析を試みる
+                if (value && (value.startsWith('{') || value.startsWith('['))) {
+                    try {
+                        value = JSON.parse(value);
+                    } catch (e) {
+                        // JSONでなければそのまま
+                    }
+                }
+
+                if (key) {
+                    settings[key] = value;
+                }
+            }
+
+            return settings;
+        } catch (error) {
+            console.error('設定読み込みエラー:', error);
+            return {};
+        }
+    },
+
+    /**
+     * 設定を削除
+     */
+    deleteSetting: async function(key) {
+        try {
+            const settings = await this.loadAllSettings();
+            delete settings[key];
+
+            // 全設定を再書き込み
+            const rows = [['key', 'value']];
+            for (const [k, v] of Object.entries(settings)) {
+                rows.push([k, typeof v === 'object' ? JSON.stringify(v) : String(v)]);
+            }
+
+            await gapi.client.sheets.spreadsheets.values.clear({
+                spreadsheetId: this.spreadsheetId,
+                range: this.SETTINGS_SHEET_NAME
+            });
+
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: this.spreadsheetId,
+                range: `${this.SETTINGS_SHEET_NAME}!A1`,
+                valueInputOption: 'RAW',
+                resource: { values: rows }
+            });
+
+            console.log(`✅ 設定を削除: ${key}`);
+            return { success: true };
+        } catch (error) {
+            console.error('設定削除エラー:', error);
+            return { success: false, error: error.message };
+        }
     }
 };
 
 // グローバルに公開
 window.UnifiedSheetsManager = UnifiedSheetsManager;
 
-console.log('✅ UnifiedSheetsManager (拡張版) loaded');
+console.log('✅ UnifiedSheetsManager (拡張版 + 設定シート) loaded');

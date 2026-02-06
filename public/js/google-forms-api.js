@@ -22,7 +22,7 @@ const GoogleFormsManager = {
         { field: 'numberOfOccupants', title: '入居人数（人）', type: 'text', description: '半角数字で入力してください（例: 2）' },
         { field: 'occupation', title: 'ご職業', type: 'text' },
         { field: 'companyName', title: '会社名', type: 'text' },
-        { field: 'yearsEmployed', title: '勤続年数', type: 'choice', options: ['1年未満', '1年', '2年', '3年', '5年', '10年以上'] },
+        { field: 'yearsEmployed', title: '勤続年数（年）', type: 'text', description: '半角数字で入力してください（例: 3）' },
         { field: 'annualIncome', title: '年収（税込・万円）', type: 'text', description: '半角数字で入力してください（例: 500）' },
         { field: 'movingReason', title: '引越しの理由', type: 'text' },
         { field: 'budgetMin', title: 'ご予算下限（万円）', type: 'text', description: '半角数字で入力してください（例: 8）' },
@@ -45,20 +45,36 @@ const GoogleFormsManager = {
      */
     async initialize() {
         console.log('📋 GoogleFormsManager 初期化中...');
-        this.loadFormConfig();
+        await this.loadFormConfig();
         console.log('✅ GoogleFormsManager 初期化完了');
         return true;
     },
 
     /**
-     * フォーム設定を読み込み
+     * フォーム設定を読み込み（Google Sheets優先、localStorageフォールバック）
      */
-    loadFormConfig() {
+    async loadFormConfig() {
         try {
-            const saved = localStorage.getItem(this.STORAGE_KEY);
-            if (saved) {
-                this.formConfig = JSON.parse(saved);
-                console.log('📋 保存済みフォーム設定:', this.formConfig);
+            // 1. まずlocalStorageから読み込み（キャッシュとして）
+            const localSaved = localStorage.getItem(this.STORAGE_KEY);
+            if (localSaved) {
+                this.formConfig = JSON.parse(localSaved);
+                console.log('📋 localStorage から設定読み込み:', this.formConfig?.formId);
+            }
+
+            // 2. Google Sheetsから読み込み（認証済みの場合）
+            if (window.UnifiedSheetsManager?.isEnabled || window.UnifiedSheetsManager?.spreadsheetId) {
+                try {
+                    const sheetConfig = await window.UnifiedSheetsManager.loadSetting('formConfig');
+                    if (sheetConfig && sheetConfig.formId) {
+                        this.formConfig = sheetConfig;
+                        // localStorageにもキャッシュ
+                        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sheetConfig));
+                        console.log('📋 Google Sheets から設定読み込み:', this.formConfig.formId);
+                    }
+                } catch (e) {
+                    console.warn('Google Sheets からの読み込みスキップ:', e.message);
+                }
             }
         } catch (error) {
             console.error('フォーム設定読み込みエラー:', error);
@@ -66,11 +82,24 @@ const GoogleFormsManager = {
     },
 
     /**
-     * フォーム設定を保存
+     * フォーム設定を保存（localStorage + Google Sheets両方）
      */
-    saveFormConfig(config) {
+    async saveFormConfig(config) {
         this.formConfig = config;
+
+        // 1. localStorageに保存（即座にアクセス可能）
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(config));
+        console.log('💾 localStorage に設定保存');
+
+        // 2. Google Sheetsにも保存（永続化）
+        if (window.UnifiedSheetsManager) {
+            try {
+                await window.UnifiedSheetsManager.saveSetting('formConfig', config);
+                console.log('💾 Google Sheets に設定保存');
+            } catch (e) {
+                console.warn('Google Sheets への保存失敗:', e.message);
+            }
+        }
     },
 
     /**
@@ -182,7 +211,7 @@ const GoogleFormsManager = {
             fetchedResponseIds: [],
             questionMapping: questionMapping
         };
-        this.saveFormConfig(config);
+        await this.saveFormConfig(config);
 
         console.log('✅ フォーム設定保存完了:', config);
         return config;
@@ -394,9 +423,6 @@ const GoogleFormsManager = {
             '男性': 'male', '女性': 'female', 'その他': 'other', '回答しない': 'no_answer'
         };
 
-        const yearsMap = {
-            '1年未満': 0, '1年': 1, '2年': 2, '3年': 3, '5年': 5, '10年以上': 10
-        };
 
         // 設備のパース
         const equipment1 = (fieldValues.equipment1 || '').split(', ').filter(v => v);
@@ -428,7 +454,7 @@ const GoogleFormsManager = {
                 numberOfOccupants: parseNum(fieldValues.numberOfOccupants),
                 occupation: fieldValues.occupation || '',
                 companyName: fieldValues.companyName || '',
-                yearsEmployed: fieldValues.yearsEmployed ? (yearsMap[fieldValues.yearsEmployed] ?? null) : null,
+                yearsEmployed: parseNum(fieldValues.yearsEmployed),
                 annualIncome: parseManYen(fieldValues.annualIncome),
                 movingReason: fieldValues.movingReason || ''
             },
@@ -527,7 +553,7 @@ const GoogleFormsManager = {
 
         // 設定を保存
         this.formConfig.lastFetchedAt = new Date().toISOString();
-        this.saveFormConfig(this.formConfig);
+        await this.saveFormConfig(this.formConfig);
 
         return {
             success: true,
@@ -549,11 +575,24 @@ const GoogleFormsManager = {
     },
 
     /**
-     * フォーム設定をリセット
+     * フォーム設定をリセット（localStorage + Google Sheets両方）
      */
-    resetFormConfig() {
+    async resetFormConfig() {
         this.formConfig = null;
+
+        // 1. localStorageから削除
         localStorage.removeItem(this.STORAGE_KEY);
+        console.log('🗑️ localStorage からフォーム設定削除');
+
+        // 2. Google Sheetsからも削除
+        if (window.UnifiedSheetsManager) {
+            try {
+                await window.UnifiedSheetsManager.deleteSetting('formConfig');
+                console.log('🗑️ Google Sheets からフォーム設定削除');
+            } catch (e) {
+                console.warn('Google Sheets からの削除失敗:', e.message);
+            }
+        }
     }
 };
 

@@ -118,9 +118,30 @@ const UnifiedDataManager = {
                 additionalInfo: {
                     notes: customerData.additionalInfo?.notes || ""
                 },
-                
+
                 agentMemo: customerData.agentMemo || "",
-                
+
+                // 成約・契約情報
+                contractInfo: {
+                    contractDate: customerData.contractInfo?.contractDate || null,           // 成約日
+                    contractType: customerData.contractInfo?.contractType || "普通借家",      // 契約種別（普通借家/定期借家）
+                    contractPeriodMonths: customerData.contractInfo?.contractPeriodMonths || 24,  // 契約期間（月数）
+                    contractEndDate: customerData.contractInfo?.contractEndDate || null,     // 契約終了日
+                    propertyAddress: customerData.contractInfo?.propertyAddress || "",       // 成約物件住所
+                    monthlyRent: customerData.contractInfo?.monthlyRent || null,             // 月額賃料
+                    moveInDate: customerData.contractInfo?.moveInDate || null                // 入居日
+                },
+
+                // フォローアップ設定
+                followUpSettings: {
+                    enabled: customerData.followUpSettings?.enabled !== false,               // フォローアップ有効/無効
+                    calendarEventsCreated: customerData.followUpSettings?.calendarEventsCreated || false,  // カレンダー予定作成済み
+                    calendarEventIds: customerData.followUpSettings?.calendarEventIds || []  // 作成した予定のID配列
+                },
+
+                // フォローアップ履歴
+                followUpHistory: customerData.followUpHistory || [],
+
                 pipelineStatus: customerData.pipelineStatus || "初回相談",
                 isActive: customerData.isActive !== false,
                 archivedAt: customerData.archivedAt || null,
@@ -210,6 +231,20 @@ const UnifiedDataManager = {
             }
             if (customerUpdates.archivedAt !== undefined) {
                 customer.archivedAt = customerUpdates.archivedAt;
+            }
+            // 契約情報の更新
+            if (customerUpdates.contractInfo) {
+                customer.contractInfo = { ...customer.contractInfo, ...customerUpdates.contractInfo };
+            }
+
+            // フォローアップ設定の更新
+            if (customerUpdates.followUpSettings) {
+                customer.followUpSettings = { ...customer.followUpSettings, ...customerUpdates.followUpSettings };
+            }
+
+            // フォローアップ履歴の更新
+            if (customerUpdates.followUpHistory) {
+                customer.followUpHistory = customerUpdates.followUpHistory;
             }
 
             customer.updatedAt = new Date().toISOString();

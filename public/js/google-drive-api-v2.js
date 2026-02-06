@@ -12,9 +12,13 @@ window.GoogleDriveAPIv2 = {
             'https://www.googleapis.com/auth/userinfo.email',
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/forms.body',
-            'https://www.googleapis.com/auth/forms.responses.readonly'
+            'https://www.googleapis.com/auth/forms.responses.readonly',
+            'https://www.googleapis.com/auth/calendar'
         ],
-        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+        discoveryDocs: [
+            'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+            'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
+        ]
     },
     
     // 状態管理

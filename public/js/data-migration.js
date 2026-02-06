@@ -89,8 +89,29 @@ const DataMigration = {
             },
             
             // エージェントメモ(新規)
-            agentMemo: "",
-            
+            agentMemo: oldCustomer.agentMemo || "",
+
+            // 契約・成約情報
+            contractInfo: {
+                contractDate: oldCustomer.contractInfo?.contractDate || oldCustomer.contractStartDate || null,
+                contractType: oldCustomer.contractInfo?.contractType || "普通借家",
+                contractPeriodMonths: oldCustomer.contractInfo?.contractPeriodMonths || 24,
+                contractEndDate: oldCustomer.contractInfo?.contractEndDate || null,
+                propertyAddress: oldCustomer.contractInfo?.propertyAddress || "",
+                monthlyRent: oldCustomer.contractInfo?.monthlyRent || null,
+                moveInDate: oldCustomer.contractInfo?.moveInDate || null
+            },
+
+            // フォローアップ設定
+            followUpSettings: {
+                enabled: oldCustomer.followUpSettings?.enabled !== false,
+                calendarEventsCreated: oldCustomer.followUpSettings?.calendarEventsCreated || false,
+                calendarEventIds: oldCustomer.followUpSettings?.calendarEventIds || []
+            },
+
+            // フォローアップ履歴
+            followUpHistory: oldCustomer.followUpHistory || [],
+
             // パイプライン情報
             pipelineStatus: oldCustomer.pipelineStatus || "初回相談",
             isActive: oldCustomer.isActive !== false,
@@ -104,9 +125,11 @@ const DataMigration = {
      * 新形式かどうか判定
      */
     isNewFormat: function(customer) {
-        return customer.basicInfo && 
+        // 新形式の必須条件：basicInfoとcontractInfoが存在すること
+        return customer.basicInfo &&
                typeof customer.basicInfo === 'object' &&
-               customer.basicInfo.nameKana !== undefined;
+               customer.basicInfo.nameKana !== undefined &&
+               customer.contractInfo !== undefined;
     },
 
     /**

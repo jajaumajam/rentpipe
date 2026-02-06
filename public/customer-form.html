@@ -199,6 +199,36 @@
             margin-top: 4px;
         }
 
+        /* 任意スライダーのトグル */
+        .optional-slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .slider-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .slider-wrapper {
+            transition: opacity 0.2s;
+        }
+
+        .slider-value.not-set {
+            background: #9ca3af;
+        }
+
         /* 築年数の特殊UI */
         .building-age-container {
             display: flex;
@@ -424,22 +454,22 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>お名前 <span class="required">*</span></label>
-                            <input type="text" id="name" placeholder="山田太郎" required>
+                            <input type="text" id="name" required>
                         </div>
                         <div class="form-group">
                             <label>フリガナ</label>
-                            <input type="text" id="nameKana" placeholder="ヤマダタロウ">
+                            <input type="text" id="nameKana">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>メールアドレス</label>
-                            <input type="email" id="email" placeholder="yamada@example.com">
+                            <input type="email" id="email">
                         </div>
                         <div class="form-group">
                             <label>電話番号 <span class="required">*</span></label>
-                            <input type="tel" id="phone" placeholder="090-1234-5678" required>
+                            <input type="tel" id="phone" required>
                         </div>
                     </div>
 
@@ -473,7 +503,7 @@
 
                     <div class="form-group">
                         <label>現住所</label>
-                        <input type="text" id="currentAddress" placeholder="東京都渋谷区〇〇1-2-3">
+                        <input type="text" id="currentAddress">
                     </div>
 
                     <div class="form-row">
@@ -502,24 +532,32 @@
 
                     <div class="form-group">
                         <label>ご職業</label>
-                        <input type="text" id="occupation" placeholder="例: 会社員（IT関連）、フリーランス（デザイナー）">
+                        <input type="text" id="occupation">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>会社名</label>
-                            <input type="text" id="companyName" placeholder="株式会社〇〇">
+                            <input type="text" id="companyName">
                         </div>
                         <div class="form-group">
                             <label>勤続年数</label>
-                            <select id="yearsEmployed">
-                                <option value="0">1年未満</option>
-                                <option value="1">1年</option>
-                                <option value="2">2年</option>
-                                <option value="3">3年</option>
-                                <option value="5">5年</option>
-                                <option value="10">10年以上</option>
-                            </select>
+                            <div class="optional-slider-container">
+                                <label class="slider-toggle">
+                                    <input type="checkbox" id="yearsEmployedEnabled" onchange="toggleOptionalSlider('yearsEmployed')">
+                                    <span>指定する</span>
+                                </label>
+                                <div class="slider-wrapper" id="yearsEmployedWrapper" style="opacity: 0.4;">
+                                    <div class="slider-container">
+                                        <input type="range" id="yearsEmployed" min="0" max="30" value="3" oninput="updateSliderValue('yearsEmployed', '年')" disabled>
+                                        <div class="slider-labels">
+                                            <span>0年</span>
+                                            <span>30年</span>
+                                        </div>
+                                    </div>
+                                    <span class="slider-value" id="yearsEmployedValue">未入力</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -541,7 +579,7 @@
 
                     <div class="form-group">
                         <label>引越しの理由</label>
-                        <input type="text" id="movingReason" placeholder="例: 転勤、結婚、更新時期、今の部屋が手狭">
+                        <input type="text" id="movingReason">
                     </div>
                 </div>
 
@@ -612,12 +650,12 @@
 
                     <div class="form-group">
                         <label>入居希望時期</label>
-                        <input type="text" id="moveInDate" placeholder="例: 2025年4月上旬〜中旬、即入居可、3ヶ月以内">
+                        <input type="text" id="moveInDate">
                     </div>
 
                     <div class="form-group">
                         <label>希望エリア</label>
-                        <textarea id="areas" placeholder="例: 渋谷駅まで30分以内、目黒区・世田谷区、〇〇線沿線"></textarea>
+                        <textarea id="areas"></textarea>
                         <p class="help-text">駅名、路線、地域名、通勤先からの所要時間など、できるだけ具体的にお書きください</p>
                     </div>
 
@@ -662,26 +700,42 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>部屋の広さ <span class="required">*</span></label>
-                            <div class="slider-container">
-                                <input type="range" id="roomSize" min="15" max="100" value="25" oninput="updateSliderValue('roomSize', '㎡以上')">
-                                <div class="slider-labels">
-                                    <span>15㎡</span>
-                                    <span>100㎡</span>
+                            <label>部屋の広さ（㎡以上）</label>
+                            <div class="optional-slider-container">
+                                <label class="slider-toggle">
+                                    <input type="checkbox" id="roomSizeEnabled" onchange="toggleOptionalSlider('roomSize')">
+                                    <span>指定する</span>
+                                </label>
+                                <div class="slider-wrapper" id="roomSizeWrapper" style="opacity: 0.4;">
+                                    <div class="slider-container">
+                                        <input type="range" id="roomSize" min="15" max="100" value="25" oninput="updateSliderValue('roomSize', '㎡以上')" disabled>
+                                        <div class="slider-labels">
+                                            <span>15㎡</span>
+                                            <span>100㎡</span>
+                                        </div>
+                                    </div>
+                                    <span class="slider-value not-set" id="roomSizeValue">未入力</span>
                                 </div>
                             </div>
-                            <span class="slider-value" id="roomSizeValue">25㎡以上</span>
                         </div>
                         <div class="form-group">
-                            <label>駅からの徒歩時間 <span class="required">*</span></label>
-                            <div class="slider-container">
-                                <input type="range" id="stationWalk" min="1" max="30" value="10" oninput="updateSliderValue('stationWalk', '分以内')">
-                                <div class="slider-labels">
-                                    <span>1分</span>
-                                    <span>30分</span>
+                            <label>駅からの徒歩（分以内）</label>
+                            <div class="optional-slider-container">
+                                <label class="slider-toggle">
+                                    <input type="checkbox" id="stationWalkEnabled" onchange="toggleOptionalSlider('stationWalk')">
+                                    <span>指定する</span>
+                                </label>
+                                <div class="slider-wrapper" id="stationWalkWrapper" style="opacity: 0.4;">
+                                    <div class="slider-container">
+                                        <input type="range" id="stationWalk" min="1" max="30" value="10" oninput="updateSliderValue('stationWalk', '分以内')" disabled>
+                                        <div class="slider-labels">
+                                            <span>1分</span>
+                                            <span>30分</span>
+                                        </div>
+                                    </div>
+                                    <span class="slider-value not-set" id="stationWalkValue">未入力</span>
                                 </div>
                             </div>
-                            <span class="slider-value" id="stationWalkValue">10分以内</span>
                         </div>
                     </div>
 
@@ -704,15 +758,23 @@
                     </div>
 
                     <div class="form-group">
-                        <label>希望階数</label>
-                        <div class="slider-container">
-                            <input type="range" id="floor" min="1" max="10" value="1" oninput="updateFloorValue()">
-                            <div class="slider-labels">
-                                <span>1階（こだわらない）</span>
-                                <span>10階以上</span>
+                        <label>希望階数（階以上）</label>
+                        <div class="optional-slider-container">
+                            <label class="slider-toggle">
+                                <input type="checkbox" id="floorEnabled" onchange="toggleOptionalSlider('floor')">
+                                <span>指定する</span>
+                            </label>
+                            <div class="slider-wrapper" id="floorWrapper" style="opacity: 0.4;">
+                                <div class="slider-container">
+                                    <input type="range" id="floor" min="1" max="20" value="2" oninput="updateSliderValue('floor', '階以上')" disabled>
+                                    <div class="slider-labels">
+                                        <span>1階</span>
+                                        <span>20階</span>
+                                    </div>
+                                </div>
+                                <span class="slider-value not-set" id="floorValue">未入力</span>
                             </div>
                         </div>
-                        <span class="slider-value" id="floorValue">こだわらない</span>
                     </div>
                 </div>
 
@@ -832,7 +894,7 @@
 
                     <div class="form-group">
                         <label>その他ご要望・ご質問</label>
-                        <textarea id="notes" placeholder="その他のご要望やご質問があればご自由にお書きください&#10;&#10;例:&#10;・ペットを飼う予定があります&#10;・リモートワークが多いので静かな環境希望&#10;・収納が多い物件を探しています"></textarea>
+                        <textarea id="notes"></textarea>
                     </div>
                 </div>
 
@@ -861,6 +923,79 @@
                     </div>
                 </div>
 
+                <!-- ========================================
+                     セクション6: 契約・成約情報（管理者用）
+                ========================================= -->
+                <div class="form-section" id="contractSection" style="display: none;">
+                    <h2 class="section-title"><span class="icon">📝</span> 契約・成約情報</h2>
+                    <p style="color: #6b7280; margin-bottom: 20px;">成約時に入力してください。フォローアップ機能で使用されます。</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>成約日</label>
+                            <input type="date" id="contractDate" onchange="updateContractEndDate()">
+                        </div>
+                        <div class="form-group">
+                            <label>入居日</label>
+                            <input type="date" id="contractMoveInDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>契約種別</label>
+                            <select id="contractType" onchange="updateContractEndDate()">
+                                <option value="普通借家">普通借家（更新型）</option>
+                                <option value="定期借家">定期借家（期間満了型）</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>契約期間</label>
+                            <select id="contractPeriodMonths" onchange="updateContractEndDate()">
+                                <option value="12">1年（12ヶ月）</option>
+                                <option value="24" selected>2年（24ヶ月）</option>
+                                <option value="36">3年（36ヶ月）</option>
+                                <option value="48">4年（48ヶ月）</option>
+                                <option value="60">5年（60ヶ月）</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>契約終了予定日（自動計算）</label>
+                            <input type="date" id="contractEndDate" readonly style="background: #f3f4f6;">
+                            <p class="help-text">成約日と契約期間から自動計算されます</p>
+                        </div>
+                        <div class="form-group">
+                            <label>月額賃料（税込）</label>
+                            <input type="number" id="monthlyRent" placeholder="例: 85000">
+                            <p class="help-text">管理費込みの金額</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>成約物件住所</label>
+                        <input type="text" id="contractPropertyAddress" placeholder="例: 東京都渋谷区〇〇1-2-3 △△マンション 101号室">
+                    </div>
+
+                    <div class="form-group" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #86efac;">
+                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 0; cursor: pointer;">
+                            <input type="checkbox" id="followUpEnabled" checked style="width: 18px; height: 18px;">
+                            <span>🔔 フォローアップを有効にする</span>
+                        </label>
+                        <p class="help-text" style="margin-top: 8px; margin-left: 28px;">契約終了前に自動でリマインドを設定します（Google Calendar連携時）</p>
+                    </div>
+
+                    <div class="form-group" id="calendarButtonGroup" style="display: none; margin-top: 20px;">
+                        <div id="calendarStatus" style="margin-bottom: 10px;"></div>
+                        <button type="button" id="createCalendarEventsBtn" class="btn btn-primary" onclick="createFollowUpCalendarEvents()" style="background: #10b981; width: auto; padding: 12px 24px;">
+                            📅 Googleカレンダーにフォローアップ予定を作成
+                        </button>
+                        <p class="help-text" style="margin-top: 8px;">契約終了前のフォローアップ予定をGoogleカレンダーに自動作成します</p>
+                    </div>
+                </div>
+
                 <div class="button-group">
                     <button type="button" class="btn btn-secondary" onclick="handleCancel()">キャンセル</button>
                     <button type="submit" class="btn btn-primary" id="submitBtn">登録する</button>
@@ -879,6 +1014,7 @@
     <script src="js/data-migration.js"></script>
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
+    <script src="js/google-calendar-api.js"></script>
     <script src="js/app-initializer.js"></script>
 
     <script>
@@ -889,8 +1025,45 @@
 
         // スライダー値更新
         function updateSliderValue(id, suffix) {
-            const value = document.getElementById(id).value;
-            document.getElementById(id + 'Value').textContent = value + suffix;
+            const slider = document.getElementById(id);
+            const valueEl = document.getElementById(id + 'Value');
+            if (slider && valueEl) {
+                valueEl.textContent = slider.value + suffix;
+                valueEl.classList.remove('not-set');
+            }
+        }
+
+        // 任意スライダーのトグル
+        function toggleOptionalSlider(id) {
+            const checkbox = document.getElementById(id + 'Enabled');
+            const wrapper = document.getElementById(id + 'Wrapper');
+            const slider = document.getElementById(id);
+            const valueEl = document.getElementById(id + 'Value');
+
+            if (checkbox.checked) {
+                wrapper.style.opacity = '1';
+                slider.disabled = false;
+                // 現在の値を表示
+                const suffix = getSuffix(id);
+                valueEl.textContent = slider.value + suffix;
+                valueEl.classList.remove('not-set');
+            } else {
+                wrapper.style.opacity = '0.4';
+                slider.disabled = true;
+                valueEl.textContent = '未入力';
+                valueEl.classList.add('not-set');
+            }
+        }
+
+        // スライダーIDからサフィックスを取得
+        function getSuffix(id) {
+            const suffixMap = {
+                'roomSize': '㎡以上',
+                'stationWalk': '分以内',
+                'floor': '階以上',
+                'yearsEmployed': '年'
+            };
+            return suffixMap[id] || '';
         }
 
         // 築年数スライダー値更新
@@ -915,6 +1088,31 @@
             const value = document.getElementById('floor').value;
             const text = value === '1' ? 'こだわらない' : value + '階以上';
             document.getElementById('floorValue').textContent = text;
+        }
+
+        // 契約終了日を自動計算
+        function updateContractEndDate() {
+            const contractDateInput = document.getElementById('contractDate');
+            const periodMonthsSelect = document.getElementById('contractPeriodMonths');
+            const endDateInput = document.getElementById('contractEndDate');
+
+            if (!contractDateInput.value) {
+                endDateInput.value = '';
+                return;
+            }
+
+            const contractDate = new Date(contractDateInput.value);
+            const periodMonths = parseInt(periodMonthsSelect.value) || 24;
+
+            // 契約終了日を計算（契約日 + 契約期間）
+            const endDate = new Date(contractDate);
+            endDate.setMonth(endDate.getMonth() + periodMonths);
+
+            // YYYY-MM-DD形式に変換
+            const year = endDate.getFullYear();
+            const month = String(endDate.getMonth() + 1).padStart(2, '0');
+            const day = String(endDate.getDate()).padStart(2, '0');
+            endDateInput.value = `${year}-${month}-${day}`;
         }
 
         // 間取りチェックボックス切り替え
@@ -949,6 +1147,7 @@
 
                 // 管理者セクションを表示
                 document.getElementById('adminSection').style.display = 'block';
+                document.getElementById('contractSection').style.display = 'block';
 
                 // AppInitializerの初期化を待つ
                 if (window.AppInitializer && window.AppInitializer.initializationPromise) {
@@ -985,7 +1184,13 @@
                 document.getElementById('numberOfOccupants').value = customer.basicInfo?.numberOfOccupants || '1';
                 document.getElementById('occupation').value = customer.basicInfo?.occupation || '';
                 document.getElementById('companyName').value = customer.basicInfo?.companyName || '';
-                document.getElementById('yearsEmployed').value = customer.basicInfo?.yearsEmployed || '0';
+                // 勤続年数（任意スライダー）
+                const yearsEmployed = customer.basicInfo?.yearsEmployed;
+                if (yearsEmployed !== null && yearsEmployed !== undefined && yearsEmployed !== '') {
+                    document.getElementById('yearsEmployedEnabled').checked = true;
+                    document.getElementById('yearsEmployed').value = yearsEmployed;
+                    toggleOptionalSlider('yearsEmployed');
+                }
                 document.getElementById('annualIncome').value = customer.basicInfo?.annualIncome || '';
                 document.getElementById('movingReason').value = customer.basicInfo?.movingReason || '';
 
@@ -1016,14 +1221,20 @@
                     });
                 }
 
-                // スライダー値
-                const roomSize = customer.preferences?.roomSize || 25;
-                document.getElementById('roomSize').value = roomSize;
-                updateSliderValue('roomSize', '㎡以上');
+                // スライダー値（任意スライダー）
+                const roomSize = customer.preferences?.roomSize;
+                if (roomSize !== null && roomSize !== undefined && roomSize !== '') {
+                    document.getElementById('roomSizeEnabled').checked = true;
+                    document.getElementById('roomSize').value = roomSize;
+                    toggleOptionalSlider('roomSize');
+                }
 
-                const stationWalk = customer.preferences?.stationWalk || 10;
-                document.getElementById('stationWalk').value = stationWalk;
-                updateSliderValue('stationWalk', '分以内');
+                const stationWalk = customer.preferences?.stationWalk;
+                if (stationWalk !== null && stationWalk !== undefined && stationWalk !== '') {
+                    document.getElementById('stationWalkEnabled').checked = true;
+                    document.getElementById('stationWalk').value = stationWalk;
+                    toggleOptionalSlider('stationWalk');
+                }
 
                 // 築年数
                 const buildingAge = customer.preferences?.buildingAge;
@@ -1036,10 +1247,13 @@
                     updateBuildingAgeValue();
                 }
 
-                // 階数
-                const floor = customer.preferences?.floor || 1;
-                document.getElementById('floor').value = floor;
-                updateFloorValue();
+                // 階数（任意スライダー）
+                const floor = customer.preferences?.floor;
+                if (floor !== null && floor !== undefined && floor !== '' && floor !== 1) {
+                    document.getElementById('floorEnabled').checked = true;
+                    document.getElementById('floor').value = floor;
+                    toggleOptionalSlider('floor');
+                }
 
                 // 設備
                 const equipment = customer.equipment || {};
@@ -1066,6 +1280,25 @@
                 // 管理者設定
                 document.getElementById('pipelineStatus').value = customer.pipelineStatus || '初回相談';
                 document.getElementById('agentMemo').value = customer.agentMemo || '';
+
+                // 契約情報
+                const contractInfo = customer.contractInfo || {};
+                document.getElementById('contractDate').value = contractInfo.contractDate || '';
+                document.getElementById('contractMoveInDate').value = contractInfo.moveInDate || '';
+                document.getElementById('contractType').value = contractInfo.contractType || '普通借家';
+                document.getElementById('contractPeriodMonths').value = contractInfo.contractPeriodMonths || 24;
+                document.getElementById('contractPropertyAddress').value = contractInfo.propertyAddress || '';
+                document.getElementById('monthlyRent').value = contractInfo.monthlyRent || '';
+
+                // 契約終了日を自動計算
+                updateContractEndDate();
+
+                // フォローアップ設定
+                const followUpSettings = customer.followUpSettings || {};
+                document.getElementById('followUpEnabled').checked = followUpSettings.enabled !== false;
+
+                // カレンダーボタンの表示更新
+                setTimeout(() => updateCalendarButtonVisibility(), 100);
 
             } catch (error) {
                 console.error('❌ 顧客データ読み込みエラー:', error);
@@ -1109,6 +1342,15 @@
                 const buildingAgeType = document.querySelector('input[name="buildingAgeType"]:checked').value;
                 const buildingAgeValue = buildingAgeType === 'any' ? 999 : parseInt(document.getElementById('buildingAge').value);
 
+                // オプショナルスライダーの値を取得（チェックボックスが有効な場合のみ）
+                const getOptionalSliderValue = (id) => {
+                    const checkbox = document.getElementById(id + 'Enabled');
+                    if (checkbox && checkbox.checked) {
+                        return parseInt(document.getElementById(id).value) || null;
+                    }
+                    return null;
+                };
+
                 // フォームデータを収集
                 const customerData = {
                     basicInfo: {
@@ -1122,15 +1364,15 @@
                         currentHousing: document.getElementById('currentHousing').value,
                         occupation: document.getElementById('occupation').value.trim(),
                         companyName: document.getElementById('companyName').value.trim(),
-                        yearsEmployed: parseInt(document.getElementById('yearsEmployed').value) || 0,
-                        annualIncome: parseInt(document.getElementById('annualIncome').value) || 0,
+                        yearsEmployed: getOptionalSliderValue('yearsEmployed'),
+                        annualIncome: parseInt(document.getElementById('annualIncome').value) || null,
                         movingReason: document.getElementById('movingReason').value.trim(),
-                        numberOfOccupants: parseInt(document.getElementById('numberOfOccupants').value) || 1
+                        numberOfOccupants: parseInt(document.getElementById('numberOfOccupants').value) || null
                     },
                     preferences: {
                         budget: {
-                            min: parseInt(document.getElementById('budgetMin').value),
-                            max: parseInt(document.getElementById('budgetMax').value),
+                            min: parseInt(document.getElementById('budgetMin').value) || null,
+                            max: parseInt(document.getElementById('budgetMax').value) || null,
                             note: ""
                         },
                         moveInDate: document.getElementById('moveInDate').value.trim(),
@@ -1139,17 +1381,29 @@
                         areasNote: "",
                         layout: selectedLayouts.join(', '),
                         layoutNote: "",
-                        roomSize: parseInt(document.getElementById('roomSize').value),
+                        roomSize: getOptionalSliderValue('roomSize'),
                         roomSizeNote: "",
-                        stationWalk: parseInt(document.getElementById('stationWalk').value),
+                        stationWalk: getOptionalSliderValue('stationWalk'),
                         stationWalkNote: "",
                         buildingAge: {
                             value: buildingAgeValue,
                             type: buildingAgeType,
                             note: ""
                         },
-                        floor: parseInt(document.getElementById('floor').value),
+                        floor: getOptionalSliderValue('floor'),
                         floorNote: ""
+                    },
+                    contractInfo: {
+                        contractDate: document.getElementById('contractDate')?.value || null,
+                        contractType: document.getElementById('contractType')?.value || '普通借家',
+                        contractPeriodMonths: parseInt(document.getElementById('contractPeriodMonths')?.value) || 24,
+                        contractEndDate: document.getElementById('contractEndDate')?.value || null,
+                        propertyAddress: document.getElementById('contractPropertyAddress')?.value?.trim() || '',
+                        monthlyRent: parseInt(document.getElementById('monthlyRent')?.value) || null,
+                        moveInDate: document.getElementById('contractMoveInDate')?.value || null
+                    },
+                    followUpSettings: {
+                        enabled: document.getElementById('followUpEnabled')?.checked !== false
                     },
                     equipment: {
                         autoLock: document.getElementById('autoLock').checked,
@@ -1229,6 +1483,128 @@
                 window.location.href = 'customer.html';
             }
         }
+
+        // カレンダーボタン表示制御
+        function updateCalendarButtonVisibility() {
+            const contractDate = document.getElementById('contractDate')?.value;
+            const followUpEnabled = document.getElementById('followUpEnabled')?.checked;
+            const calendarButtonGroup = document.getElementById('calendarButtonGroup');
+
+            if (calendarButtonGroup && isEditMode && contractDate && followUpEnabled) {
+                calendarButtonGroup.style.display = 'block';
+                updateCalendarStatus();
+            } else if (calendarButtonGroup) {
+                calendarButtonGroup.style.display = 'none';
+            }
+        }
+
+        // カレンダー状態を表示
+        function updateCalendarStatus() {
+            const statusEl = document.getElementById('calendarStatus');
+            if (!statusEl || !editingCustomerId) return;
+
+            const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+            if (!customer) return;
+
+            const followUpSettings = customer.followUpSettings || {};
+
+            if (followUpSettings.calendarEventsCreated && followUpSettings.calendarEventIds?.length > 0) {
+                statusEl.innerHTML = `<span style="color: #10b981;">✅ ${followUpSettings.calendarEventIds.length}件のフォローアップ予定が作成済みです</span>`;
+                document.getElementById('createCalendarEventsBtn').textContent = '📅 フォローアップ予定を再作成';
+            } else {
+                statusEl.innerHTML = `<span style="color: #6b7280;">📅 フォローアップ予定は未作成です</span>`;
+            }
+        }
+
+        // Googleカレンダーにフォローアップ予定を作成
+        async function createFollowUpCalendarEvents() {
+            const btn = document.getElementById('createCalendarEventsBtn');
+            const originalText = btn.textContent;
+
+            try {
+                btn.disabled = true;
+                btn.textContent = '作成中...';
+
+                // Google Calendar APIの初期化確認
+                if (!window.GoogleCalendarAPI) {
+                    throw new Error('Google Calendar APIが利用できません');
+                }
+
+                // 顧客データを取得
+                const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                if (!customer) {
+                    throw new Error('顧客データが見つかりません');
+                }
+
+                // 既存のイベントがある場合は削除するか確認
+                const existingEvents = customer.followUpSettings?.calendarEventIds || [];
+                if (existingEvents.length > 0) {
+                    if (!confirm('既存のフォローアップ予定を削除して再作成しますか？')) {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                        return;
+                    }
+
+                    // 既存イベントを削除
+                    console.log('🗑️ 既存イベント削除中...');
+                    await window.GoogleCalendarAPI.deleteAllFollowUpEvents(customer);
+                }
+
+                // 現在のフォーム入力値で顧客データを更新
+                const contractInfo = {
+                    contractDate: document.getElementById('contractDate').value,
+                    contractType: document.getElementById('contractType').value,
+                    contractPeriodMonths: parseInt(document.getElementById('contractPeriodMonths').value),
+                    contractEndDate: document.getElementById('contractEndDate').value,
+                    propertyAddress: document.getElementById('contractPropertyAddress').value,
+                    monthlyRent: parseInt(document.getElementById('monthlyRent').value) || null,
+                    moveInDate: document.getElementById('contractMoveInDate').value
+                };
+
+                // 顧客データにcontractInfoを追加してカレンダーイベント作成
+                const customerWithContract = {
+                    ...customer,
+                    contractInfo: contractInfo
+                };
+
+                // フォローアップイベントを作成
+                const result = await window.GoogleCalendarAPI.createFollowUpEvents(customerWithContract);
+
+                if (result.success || result.totalCreated > 0) {
+                    // 作成されたイベントIDを保存
+                    const eventIds = result.createdEvents.map(e => e.eventId);
+
+                    await window.UnifiedDataManager.updateCustomer({
+                        id: editingCustomerId,
+                        followUpSettings: {
+                            enabled: true,
+                            calendarEventsCreated: true,
+                            calendarEventIds: eventIds
+                        }
+                    });
+
+                    alert(`✅ ${result.totalCreated}件のフォローアップ予定をGoogleカレンダーに作成しました！\n\n作成された予定:\n${result.createdEvents.map(e => `- ${e.timing}: ${e.date}`).join('\n')}`);
+
+                    updateCalendarStatus();
+                } else {
+                    throw new Error(result.errors.map(e => e.error).join(', ') || 'イベント作成に失敗しました');
+                }
+
+            } catch (error) {
+                console.error('❌ カレンダーイベント作成エラー:', error);
+                alert('❌ エラー: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 編集モード時の追加イベントリスナー
+        document.addEventListener('DOMContentLoaded', () => {
+            // 契約日やフォローアップ有効化の変更を監視
+            document.getElementById('contractDate')?.addEventListener('change', updateCalendarButtonVisibility);
+            document.getElementById('followUpEnabled')?.addEventListener('change', updateCalendarButtonVisibility);
+        });
 
         console.log('✅ 顧客登録フォーム準備完了');
     </script>
