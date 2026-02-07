@@ -1930,3 +1930,247 @@ textarea.error {
     background: #f97316;
     border-radius: 1px;
 }
+
+/* ===== ページローディングオーバーレイ ===== */
+.page-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+.page-loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.page-loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+.page-loading-text {
+    margin-top: 20px;
+    font-size: 16px;
+    color: #64748b;
+    text-align: center;
+}
+
+.page-loading-text .loading-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.page-loading-text .loading-subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+/* コンテンツ非表示（認証待ち） */
+.content-hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.content-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* ===== 顧客一覧テーブルスタイル ===== */
+.customer-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.customer-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.customer-table thead {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.customer-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.customer-table th:first-child {
+    padding-left: 20px;
+}
+
+.customer-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
+}
+
+.customer-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.customer-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.customer-table td {
+    padding: 14px 16px;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.customer-table td:first-child {
+    padding-left: 20px;
+}
+
+.customer-table .customer-name-cell {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.customer-table .customer-name-cell a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.customer-table .customer-name-cell a:hover {
+    text-decoration: underline;
+}
+
+.customer-table .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.customer-table .archive-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.customer-table .archive-badge.closed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.customer-table .archive-badge.lost {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.customer-table .archive-badge.inactive {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.customer-table .action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.customer-table .btn-table-action {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.customer-table .btn-table-action.btn-edit {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.customer-table .btn-table-action.btn-edit:hover {
+    background: #dbeafe;
+}
+
+.customer-table .btn-table-action.btn-archive {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.customer-table .btn-table-action.btn-archive:hover {
+    background: #fde68a;
+}
+
+.customer-table .btn-table-action.btn-restore {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.customer-table .btn-table-action.btn-restore:hover {
+    background: #bbf7d0;
+}
+
+/* 空状態 */
+.customer-table-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+}
+
+.customer-table-empty .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.customer-table-empty .empty-text {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.customer-table-empty .empty-hint {
+    font-size: 14px;
+    color: #cbd5e1;
+}
+
+/* テーブルレスポンシブ対応 */
+@media (max-width: 1024px) {
+    .customer-table-container {
+        overflow-x: auto;
+    }
+
+    .customer-table {
+        min-width: 800px;
+    }
+}
+
+/* 統計セクション表示切り替え */
+.stats-section.hidden {
+    display: none !important;
+}

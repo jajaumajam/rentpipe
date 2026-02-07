@@ -18,111 +18,94 @@
             margin-top: 8px;
         }
 
-        /* 認証ステータス - 共通スタイルをmain.cssに移動済み */
-        .auth-status {
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .auth-status.synced {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-
-        .auth-status.syncing {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #3b82f6;
-        }
-
-        .auth-status.not-synced {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #f59e0b;
+        .stats-section {
+            margin-bottom: 30px;
         }
 
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
+            padding: 18px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 14px;
         }
 
         .stat-icon {
-            font-size: 32px;
+            font-size: 28px;
         }
 
         .stat-content h3 {
             margin: 0;
-            font-size: 28px;
+            font-size: 24px;
             color: #1f2937;
         }
 
         .stat-content p {
-            margin: 5px 0 0 0;
+            margin: 4px 0 0 0;
             color: #6b7280;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .search-filter-container {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-box {
-            margin-bottom: 15px;
+            flex: 1;
+            min-width: 250px;
         }
 
         .search-box input {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px 14px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 14px;
         }
 
-        .filter-section {
-            margin-bottom: 15px;
+        .search-box input:focus {
+            outline: none;
+            border-color: #3b82f6;
         }
 
-        .filter-section-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .filter-buttons {
+        .filter-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .filter-btn {
-            padding: 8px 16px;
+            padding: 8px 14px;
             border: 2px solid #e5e7eb;
             background: white;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: #3b82f6;
         }
 
         .filter-btn.active {
@@ -131,120 +114,40 @@
             border-color: #3b82f6;
         }
 
-        .customer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .customer-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-        }
-
-        .customer-card.inactive {
-            opacity: 0.7;
-            background: #f9fafb;
-            border: 2px solid #e5e7eb;
-        }
-
-        .customer-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .customer-header {
+        .status-filters {
             display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-
-        .customer-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .active-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .active-badge.inactive {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .customer-status {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .customer-info {
-            margin-bottom: 8px;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .customer-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
+            gap: 6px;
             flex-wrap: wrap;
+            padding-top: 16px;
+            margin-top: 16px;
+            border-top: 1px solid #e5e7eb;
         }
 
-        .btn-edit, .btn-deactivate, .btn-activate {
-            flex: 1;
-            min-width: 80px;
-            padding: 8px;
+        .status-filters.hidden {
+            display: none;
+        }
+
+        .status-filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
             border-radius: 6px;
-            border: none;
             cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 12px;
             transition: all 0.2s;
         }
 
-        .btn-edit {
-            background: #3b82f6;
+        .status-filter-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .status-filter-btn.active {
+            background: #1e40af;
             color: white;
+            border-color: #1e40af;
         }
 
-        .btn-edit:hover {
-            background: #2563eb;
-        }
-
-        .btn-deactivate {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .btn-deactivate:hover {
-            background: #fde68a;
-        }
-
-        .btn-activate {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .btn-activate:hover {
-            background: #a7f3d0;
-        }
-
-        /* ローディングオーバーレイ */
+        /* ローディングオーバーレイ（処理中） */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -283,14 +186,40 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* テーブル件数表示 */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .customer-count {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .customer-count strong {
+            color: #1e293b;
+        }
     </style>
 </head>
 <body>
-    <!-- ローディングオーバーレイ -->
+    <!-- ページ読み込み中オーバーレイ -->
+    <div class="page-loading-overlay" id="page-loading">
+        <div class="page-loading-spinner"></div>
+        <div class="page-loading-text">
+            <div class="loading-title">RentPipe</div>
+            <div class="loading-subtitle">データを読み込んでいます...</div>
+        </div>
+    </div>
+
+    <!-- ローディングオーバーレイ（処理中） -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <p>処理中...</p>
+            <p id="loading-message">処理中...</p>
         </div>
     </div>
 
@@ -298,87 +227,104 @@
     <div id="navigation"></div>
 
     <!-- メインコンテンツ -->
-    <div class="main-content">
+    <div class="main-content content-hidden" id="main-content">
         <div class="page-header">
             <div>
                 <h1>👥 顧客管理</h1>
-                <p class="page-description">すべての顧客情報を一元管理（Google Sheets自動同期）</p>
+                <p class="page-description">すべての顧客情報を一元管理</p>
             </div>
             <a href="customer-form.html" class="btn btn-primary">➕ 新規顧客登録</a>
         </div>
 
-        <!-- 認証ステータス -->
-        <div id="auth-sync-status" class="auth-status syncing">
-            ⚡ 読み込み中...
-        </div>
-
         <!-- 統計 -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-icon">📋</div>
-                <div class="stat-content">
-                    <h3 id="stat-active">0</h3>
-                    <p>進行中</p>
+        <div class="stats-section" id="stats-section">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <h3 id="stat-active">0</h3>
+                        <p>進行中</p>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🎉</div>
-                <div class="stat-content">
-                    <h3 id="stat-closed">0</h3>
-                    <p>成約済み</p>
+                <div class="stat-card">
+                    <div class="stat-icon">🎉</div>
+                    <div class="stat-content">
+                        <h3 id="stat-closed">0</h3>
+                        <p>成約済み</p>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">❌</div>
-                <div class="stat-content">
-                    <h3 id="stat-lost">0</h3>
-                    <p>失注</p>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-content">
+                        <h3 id="stat-lost">0</h3>
+                        <p>失注</p>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🆕</div>
-                <div class="stat-content">
-                    <h3 id="stat-new">0</h3>
-                    <p>今月の新規</p>
+                <div class="stat-card">
+                    <div class="stat-icon">🆕</div>
+                    <div class="stat-content">
+                        <h3 id="stat-new">0</h3>
+                        <p>今月の新規</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 検索・フィルター -->
         <div class="search-filter-container">
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="🔍 顧客名、メール、電話番号で検索..." onkeyup="searchCustomers()">
-            </div>
-
-            <!-- 表示対象フィルター -->
-            <div class="filter-section">
-                <div class="filter-section-title">表示対象</div>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" id="filter-active" onclick="filterByActiveStatus('active')">📋 進行中</button>
-                    <button class="filter-btn" id="filter-closed" onclick="filterByActiveStatus('closed')">🎉 成約済み</button>
-                    <button class="filter-btn" id="filter-lost" onclick="filterByActiveStatus('lost')">❌ 失注</button>
-                    <button class="filter-btn" id="filter-all" onclick="filterByActiveStatus('all')">🗂️ すべて</button>
+            <div class="filter-row">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="🔍 顧客名、メール、電話番号で検索..." onkeyup="searchCustomers()">
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="active" onclick="filterByActiveStatus('active')">📋 進行中</button>
+                    <button class="filter-btn" data-filter="closed" onclick="filterByActiveStatus('closed')">🎉 成約済み</button>
+                    <button class="filter-btn" data-filter="lost" onclick="filterByActiveStatus('lost')">❌ 失注</button>
+                    <button class="filter-btn" data-filter="all" onclick="filterByActiveStatus('all')">🗂️ すべて</button>
                 </div>
             </div>
 
-            <!-- パイプラインステータスフィルター（進行中のみ表示） -->
-            <div class="filter-section" id="status-filter-section">
-                <div class="filter-section-title">パイプラインステータス</div>
-                <div class="filter-buttons" id="status-filters">
-                    <button class="filter-btn active" data-status="all" onclick="filterByStatus('all')">すべて</button>
-                    <button class="filter-btn" data-status="初回相談" onclick="filterByStatus('初回相談')">初回相談</button>
-                    <button class="filter-btn" data-status="物件紹介" onclick="filterByStatus('物件紹介')">物件紹介</button>
-                    <button class="filter-btn" data-status="内見調整" onclick="filterByStatus('内見調整')">内見調整</button>
-                    <button class="filter-btn" data-status="申込準備" onclick="filterByStatus('申込準備')">申込準備</button>
-                    <button class="filter-btn" data-status="審査中" onclick="filterByStatus('審査中')">審査中</button>
-                    <button class="filter-btn" data-status="契約手続き" onclick="filterByStatus('契約手続き')">契約手続き</button>
-                </div>
+            <!-- パイプラインステータスフィルター -->
+            <div class="status-filters" id="status-filters">
+                <button class="status-filter-btn active" data-status="all" onclick="filterByStatus('all')">すべて</button>
+                <button class="status-filter-btn" data-status="初回相談" onclick="filterByStatus('初回相談')">初回相談</button>
+                <button class="status-filter-btn" data-status="物件紹介" onclick="filterByStatus('物件紹介')">物件紹介</button>
+                <button class="status-filter-btn" data-status="内見調整" onclick="filterByStatus('内見調整')">内見調整</button>
+                <button class="status-filter-btn" data-status="申込準備" onclick="filterByStatus('申込準備')">申込準備</button>
+                <button class="status-filter-btn" data-status="審査中" onclick="filterByStatus('審査中')">審査中</button>
+                <button class="status-filter-btn" data-status="契約手続き" onclick="filterByStatus('契約手続き')">契約手続き</button>
             </div>
         </div>
 
-        <!-- 顧客リスト -->
-        <div id="customer-list" class="customer-grid">
-            <!-- 顧客カードがここに表示されます -->
+        <!-- 顧客テーブル -->
+        <div class="table-header">
+            <div class="customer-count">
+                表示: <strong id="display-count">0</strong> 件 / 全 <strong id="total-count">0</strong> 件
+            </div>
+        </div>
+
+        <div class="customer-table-container">
+            <table class="customer-table" id="customer-table">
+                <thead>
+                    <tr>
+                        <th>顧客名</th>
+                        <th>連絡先</th>
+                        <th>予算</th>
+                        <th>希望エリア</th>
+                        <th>ステータス</th>
+                        <th>登録日</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="customer-tbody">
+                    <!-- 顧客データがここに表示されます -->
+                </tbody>
+            </table>
+            <div class="customer-table-empty" id="empty-state" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">該当する顧客データがありません</div>
+                <div class="empty-hint">フィルターを変更するか、新規顧客を登録してください</div>
+            </div>
         </div>
     </div>
 
@@ -403,12 +349,47 @@
         let currentActiveFilter = 'active';
         let allCustomers = [];
 
+        // ステータス色マップ
+        const statusColors = {
+            '初回相談': { bg: '#fef3c7', color: '#92400e' },
+            '物件紹介': { bg: '#dbeafe', color: '#1e40af' },
+            '内見調整': { bg: '#e0e7ff', color: '#4338ca' },
+            '申込準備': { bg: '#fce7f3', color: '#9d174d' },
+            '審査中': { bg: '#fed7aa', color: '#c2410c' },
+            '契約手続き': { bg: '#d1fae5', color: '#065f46' },
+            '完了': { bg: '#d1fae5', color: '#065f46' }
+        };
+
+        // 統計表示の設定を読み込む
+        function loadStatsVisibility() {
+            const settings = JSON.parse(localStorage.getItem('rentpipe_ui_settings') || '{}');
+            const statsSection = document.getElementById('stats-section');
+            if (statsSection && settings.showStats === false) {
+                statsSection.classList.add('hidden');
+            }
+        }
+
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // 即座にローカルストレージのデータを表示
-                displayCustomers();
-                updateStats();
+                // 統計表示設定を適用
+                loadStatsVisibility();
+
+                // ローカルストレージからすぐに表示できるデータがあれば先に表示
+                const cachedData = localStorage.getItem('rentpipe_customers');
+                if (cachedData) {
+                    try {
+                        const parsed = JSON.parse(cachedData);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            allCustomers = parsed;
+                            showContent();
+                            displayCustomers();
+                            updateStats();
+                        }
+                    } catch (e) {
+                        console.log('キャッシュデータのパースに失敗');
+                    }
+                }
 
                 // PageInitializerで共通初期化
                 await PageInitializer.initialize({
@@ -419,29 +400,49 @@
                     }
                 });
 
+                // 初期化完了後にコンテンツを表示
+                showContent();
+                displayCustomers();
+                updateStats();
+
             } catch (error) {
                 console.error('customer.html 初期化エラー:', error);
+                showContent();
             }
         });
 
-        // 顧客表示
+        // コンテンツを表示
+        function showContent() {
+            const pageLoading = document.getElementById('page-loading');
+            const mainContent = document.getElementById('main-content');
+
+            if (pageLoading) {
+                pageLoading.classList.add('hidden');
+            }
+            if (mainContent) {
+                mainContent.classList.remove('content-hidden');
+                mainContent.classList.add('content-visible');
+            }
+        }
+
+        // 顧客表示（テーブル形式）
         function displayCustomers() {
             allCustomers = window.UnifiedDataManager ? window.UnifiedDataManager.getCustomers() : [];
             console.log('📊 顧客データ表示:', allCustomers.length, '件');
 
-            const container = document.getElementById('customer-list');
-            container.innerHTML = '';
+            const tbody = document.getElementById('customer-tbody');
+            const emptyState = document.getElementById('empty-state');
+            const table = document.getElementById('customer-table');
+            tbody.innerHTML = '';
 
             // フィルター適用
-            let filteredCustomers = allCustomers;
+            let filteredCustomers = [...allCustomers];
 
             if (currentActiveFilter === 'active') {
                 filteredCustomers = filteredCustomers.filter(c => c.isActive !== false);
             } else if (currentActiveFilter === 'closed') {
-                // 成約済み（archiveReason === '成約'）
                 filteredCustomers = filteredCustomers.filter(c => c.isActive === false && c.archiveReason === '成約');
             } else if (currentActiveFilter === 'lost') {
-                // 失注（archiveReason !== '成約' または archiveReason がない非アクティブ）
                 filteredCustomers = filteredCustomers.filter(c => c.isActive === false && c.archiveReason !== '成約');
             }
 
@@ -450,82 +451,111 @@
                 filteredCustomers = filteredCustomers.filter(c => c.pipelineStatus === currentStatusFilter);
             }
 
+            // 検索フィルター
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            if (searchTerm) {
+                filteredCustomers = filteredCustomers.filter(c => {
+                    const name = c.basicInfo?.name || c.name || '';
+                    const email = c.basicInfo?.email || c.email || '';
+                    const phone = c.basicInfo?.phone || c.phone || '';
+                    return name.toLowerCase().includes(searchTerm) ||
+                           email.toLowerCase().includes(searchTerm) ||
+                           phone.includes(searchTerm);
+                });
+            }
+
+            // 件数表示を更新
+            document.getElementById('display-count').textContent = filteredCustomers.length;
+            document.getElementById('total-count').textContent = allCustomers.length;
+
             if (filteredCustomers.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">該当する顧客データがありません</p>';
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
                 return;
             }
 
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+
+            // 最新順にソート
+            filteredCustomers.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
             filteredCustomers.forEach(customer => {
-                const card = createCustomerCard(customer);
-                container.appendChild(card);
+                const row = createCustomerRow(customer);
+                tbody.appendChild(row);
             });
         }
 
-        // 顧客カード作成
-        function createCustomerCard(customer) {
-            const card = document.createElement('div');
+        // 顧客行を作成
+        function createCustomerRow(customer) {
+            const row = document.createElement('tr');
             const isInactive = customer.isActive === false;
-            card.className = 'customer-card' + (isInactive ? ' inactive' : '');
 
-            const statusColors = {
-                '初回相談': '#fef3c7',
-                '物件紹介': '#dbeafe',
-                '内見': '#e0e7ff',
-                '申込': '#fce7f3',
-                '審査': '#fed7aa',
-                '契約': '#d1fae5',
-                '完了': '#d1fae5'
-            };
+            // 基本情報
+            const name = customer.basicInfo?.name || customer.name || '名前未設定';
+            const email = customer.basicInfo?.email || customer.email || '';
+            const phone = customer.basicInfo?.phone || customer.phone || '';
+            const budgetMin = customer.preferences?.budget?.min || 0;
+            const budgetMax = customer.preferences?.budget?.max || 0;
+            const areas = customer.preferences?.areas || '-';
+            const status = customer.pipelineStatus || '未設定';
+            const createdAt = customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('ja-JP') : '-';
 
-            let activeBadge = '';
+            // ステータスの色
+            const statusStyle = statusColors[status] || { bg: '#f3f4f6', color: '#6b7280' };
+
+            // アーカイブバッジ
+            let archiveBadge = '';
             if (isInactive) {
-                const archiveReason = customer.archiveReason;
-                if (archiveReason === '成約') {
-                    activeBadge = '<span class="active-badge" style="background: #d1fae5; color: #065f46;">🎉 成約済み</span>';
-                } else if (archiveReason === '失注') {
-                    activeBadge = '<span class="active-badge" style="background: #fee2e2; color: #991b1b;">❌ 失注</span>';
+                if (customer.archiveReason === '成約') {
+                    archiveBadge = '<span class="archive-badge closed">🎉 成約</span>';
+                } else if (customer.archiveReason === '失注') {
+                    archiveBadge = '<span class="archive-badge lost">❌ 失注</span>';
                 } else {
-                    activeBadge = '<span class="active-badge inactive">⏸️ 非アクティブ</span>';
+                    archiveBadge = '<span class="archive-badge inactive">⏸️</span>';
                 }
             }
 
-            // 新しいデータ構造に対応
-            const name = customer.basicInfo?.name || customer.name || '名前未設定';
-            const email = customer.basicInfo?.email || customer.email || 'メールなし';
-            const phone = customer.basicInfo?.phone || customer.phone || '電話番号なし';
-            const budgetMin = customer.preferences?.budget?.min || 0;
-            const budgetMax = customer.preferences?.budget?.max || 0;
-            const areas = customer.preferences?.areas || '';
+            // 予算表示
+            const budgetText = budgetMin ?
+                `${(budgetMin/10000).toFixed(1)}万〜${budgetMax ? (budgetMax/10000).toFixed(1) + '万' : ''}` :
+                '-';
 
-            card.innerHTML = `
-                <div class="customer-header">
-                    <div>
-                        <div class="customer-name">${name} ${activeBadge}</div>
+            // 連絡先
+            const contactInfo = [phone, email].filter(Boolean).join('<br>') || '-';
+
+            row.innerHTML = `
+                <td class="customer-name-cell">
+                    <a href="customer-form.html?edit=${customer.id}">${name}</a>
+                    ${archiveBadge}
+                </td>
+                <td style="font-size: 13px;">${contactInfo}</td>
+                <td style="white-space: nowrap;">${budgetText}</td>
+                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${areas}">${areas}</td>
+                <td>
+                    <span class="status-badge" style="background: ${statusStyle.bg}; color: ${statusStyle.color};">
+                        ${status}
+                    </span>
+                </td>
+                <td style="white-space: nowrap; font-size: 13px;">${createdAt}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-table-action btn-edit" onclick="window.location.href='customer-form.html?edit=${customer.id}'">
+                            編集
+                        </button>
+                        ${isInactive
+                            ? `<button class="btn-table-action btn-restore" onclick="activateCustomer('${customer.id}')">復元</button>`
+                            : `<button class="btn-table-action btn-archive" onclick="deactivateCustomer('${customer.id}')">アーカイブ</button>`
+                        }
                     </div>
-                    <div class="customer-status" style="background: ${statusColors[customer.pipelineStatus] || '#f3f4f6'}">
-                        ${customer.pipelineStatus || '未設定'}
-                    </div>
-                </div>
-                <div class="customer-info">📧 ${email}</div>
-                <div class="customer-info">📱 ${phone}</div>
-                ${budgetMin ? `
-                    <div class="customer-info">💰 ${budgetMin.toLocaleString()}円 〜 ${budgetMax ? budgetMax.toLocaleString() + '円' : ''}</div>
-                ` : ''}
-                ${areas ? `
-                    <div class="customer-info">📍 ${areas}</div>
-                ` : ''}
-                <div class="customer-actions">
-                    <button class="btn-edit" onclick="window.location.href='customer-form.html?edit=${customer.id}'">
-                        編集
-                    </button>
-                    ${isInactive
-                        ? `<button class="btn-activate" onclick="activateCustomer('${customer.id}')">▶️ 再アクティブ化</button>`
-                        : `<button class="btn-deactivate" onclick="deactivateCustomer('${customer.id}')">⏸️ 非アクティブ化</button>`
-                    }
-                </div>
+                </td>
             `;
 
-            return card;
+            if (isInactive) {
+                row.style.opacity = '0.7';
+            }
+
+            return row;
         }
 
         // 統計更新
@@ -552,49 +582,21 @@
 
         // 検索
         function searchCustomers() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-
-            if (!searchTerm) {
-                displayCustomers();
-                return;
-            }
-
-            const filtered = allCustomers.filter(c => {
-                const name = c.basicInfo?.name || c.name || '';
-                const email = c.basicInfo?.email || c.email || '';
-                const phone = c.basicInfo?.phone || c.phone || '';
-                return name.toLowerCase().includes(searchTerm) ||
-                       email.toLowerCase().includes(searchTerm) ||
-                       phone.includes(searchTerm);
-            });
-
-            const container = document.getElementById('customer-list');
-            container.innerHTML = '';
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">該当する顧客が見つかりません</p>';
-                return;
-            }
-
-            filtered.forEach(customer => {
-                const card = createCustomerCard(customer);
-                container.appendChild(card);
-            });
+            displayCustomers();
         }
 
         // 表示対象フィルター
         function filterByActiveStatus(filter) {
             currentActiveFilter = filter;
 
-            document.querySelectorAll('#filter-active, #filter-closed, #filter-lost, #filter-all').forEach(btn => {
-                btn.classList.remove('active');
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
             });
-            document.getElementById('filter-' + filter).classList.add('active');
 
             // パイプラインステータスフィルターは進行中のみ表示
-            const statusFilterSection = document.getElementById('status-filter-section');
-            if (statusFilterSection) {
-                statusFilterSection.style.display = filter === 'active' ? 'block' : 'none';
+            const statusFilters = document.getElementById('status-filters');
+            if (statusFilters) {
+                statusFilters.classList.toggle('hidden', filter !== 'active');
             }
 
             displayCustomers();
@@ -604,17 +606,24 @@
         function filterByStatus(status) {
             currentStatusFilter = status;
 
-            document.querySelectorAll('#status-filters .filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.status === status) {
-                    btn.classList.add('active');
-                }
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === status);
             });
 
             displayCustomers();
         }
 
-        // 顧客を非アクティブ化
+        // ローディング表示
+        function showLoading(message = '処理中...') {
+            document.getElementById('loading-message').textContent = message;
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        // 顧客を非アクティブ化（アーカイブ）
         async function deactivateCustomer(customerId) {
             const customer = window.UnifiedDataManager.getCustomerById(customerId);
             if (!customer) {
@@ -624,7 +633,7 @@
 
             const name = customer.basicInfo?.name || customer.name || '顧客';
             const reason = prompt(
-                `${name}さんを非アクティブにしますか?\n\n` +
+                `${name}さんをアーカイブしますか?\n\n` +
                 `理由を選択してください:\n` +
                 `1. 成約済み\n2. 失注(他社で契約)\n3. 連絡途絶\n4. 条件が合わない\n5. キャンセル\n6. その他\n\n` +
                 `番号を入力してください(1-6):`,
@@ -634,21 +643,33 @@
             if (!reason) return;
 
             const reasons = {
+                '1': '成約', '2': '失注', '3': '失注',
+                '4': '失注', '5': '失注', '6': 'その他'
+            };
+            const reasonLabels = {
                 '1': '成約済み', '2': '失注(他社で契約)', '3': '連絡途絶',
                 '4': '条件が合わない', '5': 'キャンセル', '6': 'その他'
             };
 
             try {
-                PageInitializer.showLoading('非アクティブ化中...');
-                await window.UnifiedDataManager.deactivateCustomer(customerId, reasons[reason] || 'その他');
+                showLoading('アーカイブ中...');
+                await window.UnifiedDataManager.deactivateCustomer(customerId, reasonLabels[reason] || 'その他');
+
+                // archiveReasonを設定（成約か失注か）
+                const archiveReason = reasons[reason] || 'その他';
+                await window.UnifiedDataManager.updateCustomer({
+                    id: customerId,
+                    archiveReason: archiveReason
+                });
+
                 displayCustomers();
                 updateStats();
-                PageInitializer.hideLoading();
-                PageInitializer.showNotification(`${name}さんを非アクティブにしました`, 'success');
+                hideLoading();
+                PageInitializer.showNotification(`${name}さんをアーカイブしました`, 'success');
             } catch (error) {
-                console.error('❌ 非アクティブ化エラー:', error);
-                PageInitializer.hideLoading();
-                PageInitializer.showNotification('非アクティブ化に失敗しました: ' + error.message, 'error');
+                console.error('❌ アーカイブエラー:', error);
+                hideLoading();
+                PageInitializer.showNotification('アーカイブに失敗しました: ' + error.message, 'error');
             }
         }
 
@@ -661,19 +682,19 @@
             }
 
             const name = customer.basicInfo?.name || customer.name || '顧客';
-            if (!confirm(`${name}さんを再アクティブ化しますか?`)) return;
+            if (!confirm(`${name}さんを復元しますか?`)) return;
 
             try {
-                PageInitializer.showLoading('再アクティブ化中...');
+                showLoading('復元中...');
                 await window.UnifiedDataManager.reactivateCustomer(customerId);
                 displayCustomers();
                 updateStats();
-                PageInitializer.hideLoading();
-                PageInitializer.showNotification(`${name}さんを再アクティブ化しました`, 'success');
+                hideLoading();
+                PageInitializer.showNotification(`${name}さんを復元しました`, 'success');
             } catch (error) {
-                console.error('❌ 再アクティブ化エラー:', error);
-                PageInitializer.hideLoading();
-                PageInitializer.showNotification('再アクティブ化に失敗しました: ' + error.message, 'error');
+                console.error('❌ 復元エラー:', error);
+                hideLoading();
+                PageInitializer.showNotification('復元に失敗しました: ' + error.message, 'error');
             }
         }
     </script>
