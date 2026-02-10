@@ -206,8 +206,8 @@
     </style>
 </head>
 <body>
-    <!-- ページ読み込み中オーバーレイ -->
-    <div class="page-loading-overlay" id="page-loading">
+    <!-- ページ読み込み中オーバーレイ（初期は非表示、一定時間後に表示） -->
+    <div class="page-loading-overlay hidden" id="page-loading">
         <div class="page-loading-spinner"></div>
         <div class="page-loading-text">
             <div class="loading-title">RentPipe</div>
@@ -369,19 +369,57 @@
             }
         }
 
+        // ローディング表示管理
+        let loadingTimer = null;
+        let isLoadingComplete = false;
+        const LOADING_DELAY = 300; // ms - この時間以上かかる場合のみローディングを表示
+
+        function startLoadingTimer() {
+            // 初期状態: ローディングも非表示、コンテンツも非表示
+            const pageLoading = document.getElementById('page-loading');
+            if (pageLoading) {
+                pageLoading.classList.add('hidden');
+            }
+
+            loadingTimer = setTimeout(() => {
+                // 読み込みがまだ完了していない場合のみローディングを表示
+                if (!isLoadingComplete) {
+                    const pageLoading = document.getElementById('page-loading');
+                    if (pageLoading) {
+                        pageLoading.classList.remove('hidden');
+                    }
+                }
+            }, LOADING_DELAY);
+        }
+
+        function cancelLoadingTimer() {
+            if (loadingTimer) {
+                clearTimeout(loadingTimer);
+                loadingTimer = null;
+            }
+        }
+
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // 統計表示設定を適用
                 loadStatsVisibility();
 
+                // ローディングタイマー開始
+                startLoadingTimer();
+
                 // ローカルストレージからすぐに表示できるデータがあれば先に表示
                 const cachedData = localStorage.getItem('rentpipe_customers');
+                let hasCachedData = false;
                 if (cachedData) {
                     try {
                         const parsed = JSON.parse(cachedData);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             allCustomers = parsed;
+                            hasCachedData = true;
+                            // キャッシュがある場合は即座に表示
+                            isLoadingComplete = true;
+                            cancelLoadingTimer();
                             showContent();
                             displayCustomers();
                             updateStats();
@@ -401,12 +439,16 @@
                 });
 
                 // 初期化完了後にコンテンツを表示
+                isLoadingComplete = true;
+                cancelLoadingTimer();
                 showContent();
                 displayCustomers();
                 updateStats();
 
             } catch (error) {
                 console.error('customer.html 初期化エラー:', error);
+                isLoadingComplete = true;
+                cancelLoadingTimer();
                 showContent();
             }
         });

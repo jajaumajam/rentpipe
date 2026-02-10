@@ -49,47 +49,31 @@
             line-height: 1.6;
         }
 
-        /* 認証ステータス */
-        .auth-status {
+        /* アカウント情報表示 */
+        .account-info {
             display: flex;
             align-items: center;
             gap: 15px;
             padding: 15px 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
         }
 
-        .auth-status.authenticated {
-            background: #d1fae5;
-            border: 1px solid #10b981;
-            color: #065f46;
+        .account-icon {
+            font-size: 32px;
         }
 
-        .auth-status.not-authenticated {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-        }
-
-        .auth-status.loading {
-            background: #e0f2fe;
-            border: 1px solid #38bdf8;
-            color: #0369a1;
-        }
-
-        .auth-icon {
-            font-size: 24px;
-        }
-
-        .auth-info h3 {
+        .account-details h3 {
             margin: 0 0 4px 0;
-            font-size: 15px;
+            font-size: 16px;
+            color: #166534;
         }
 
-        .auth-info p {
+        .account-details p {
             margin: 0;
             font-size: 13px;
-            opacity: 0.8;
+            color: #15803d;
         }
 
         /* フォーム設定 */
@@ -168,12 +152,13 @@
         }
 
         .action-btn.danger {
-            background: #ef4444;
-            color: white;
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
         }
 
         .action-btn.danger:hover {
-            background: #dc2626;
+            background: #fee2e2;
         }
 
         .action-btn:disabled {
@@ -183,16 +168,11 @@
 
         /* 注意書き */
         .notice {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
             border-radius: 8px;
             padding: 15px;
             margin-top: 20px;
-        }
-
-        .notice.info {
-            background: #e0f2fe;
-            border-color: #38bdf8;
         }
 
         .notice h4 {
@@ -201,19 +181,11 @@
             font-size: 14px;
         }
 
-        .notice.info h4 {
-            color: #0369a1;
-        }
-
         .notice ul {
             margin: 0;
             padding-left: 20px;
             color: #78350f;
             font-size: 13px;
-        }
-
-        .notice.info ul {
-            color: #0c4a6e;
         }
 
         .notice li {
@@ -242,7 +214,7 @@
             background: white;
             border-radius: 12px;
             padding: 25px;
-            max-width: 450px;
+            max-width: 500px;
             width: 90%;
         }
 
@@ -251,10 +223,35 @@
             color: #1f2937;
         }
 
-        .modal p {
-            color: #6b7280;
+        .modal-content {
+            color: #4b5563;
             margin-bottom: 20px;
             line-height: 1.6;
+        }
+
+        .modal-content p {
+            margin: 0 0 12px 0;
+        }
+
+        .modal-content .warning-list {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+        }
+
+        .modal-content .warning-list h4 {
+            margin: 0 0 8px 0;
+            color: #dc2626;
+            font-size: 14px;
+        }
+
+        .modal-content .warning-list ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            color: #7f1d1d;
         }
 
         .modal-buttons {
@@ -362,57 +359,27 @@
     </style>
 </head>
 <body>
-    <!-- ページ読み込み中オーバーレイ -->
-    <div class="page-loading-overlay" id="page-loading">
-        <div class="page-loading-spinner"></div>
-        <div class="page-loading-text">
-            <div class="loading-title">RentPipe</div>
-            <div class="loading-subtitle">設定を読み込んでいます...</div>
-        </div>
-    </div>
-
     <!-- ナビゲーション -->
     <div id="navigation"></div>
 
     <!-- メインコンテンツ -->
-    <div class="settings-container content-hidden" id="main-content">
+    <div class="settings-container">
         <div class="page-header">
             <h1>⚙️ 設定</h1>
             <p>アプリケーションの各種設定を管理します</p>
         </div>
 
-        <!-- Google認証セクション -->
+        <!-- ログイン中のアカウント情報 -->
         <div class="settings-section">
-            <h2>🔐 Google認証</h2>
-            <p class="section-description">Google DriveとSheetsへのアクセスに使用する認証です</p>
+            <h2>👤 ログイン中のアカウント</h2>
+            <p class="section-description">現在ログインしているGoogleアカウントです</p>
 
-            <div id="authStatus" class="auth-status loading">
-                <span class="auth-icon">⏳</span>
-                <div class="auth-info">
-                    <h3>確認中...</h3>
-                    <p>認証状態を確認しています</p>
+            <div class="account-info">
+                <span class="account-icon">✅</span>
+                <div class="account-details">
+                    <h3 id="accountEmail">読み込み中...</h3>
+                    <p>Google Drive・Sheetsと同期中</p>
                 </div>
-            </div>
-
-            <div class="action-buttons">
-                <button id="signInBtn" class="action-btn primary" onclick="signInGoogle()" style="display: none;">
-                    🔑 Googleでログイン
-                </button>
-                <button id="signOutBtn" class="action-btn secondary" onclick="signOutGoogle()" style="display: none;">
-                    🚪 ログアウト
-                </button>
-                <button id="refreshAuthBtn" class="action-btn secondary" onclick="refreshAuth()">
-                    🔄 認証を更新
-                </button>
-            </div>
-
-            <div class="notice info" id="popupBlockerNotice" style="display: none;">
-                <h4>💡 ポップアップがブロックされた場合</h4>
-                <ul>
-                    <li>ブラウザのアドレスバー付近に「ポップアップがブロックされました」と表示されたら、許可してください</li>
-                    <li>許可後、もう一度「Googleでログイン」ボタンをクリックしてください</li>
-                    <li>それでもうまくいかない場合は、ページを更新してから再度お試しください</li>
-                </ul>
             </div>
         </div>
 
@@ -454,7 +421,7 @@
                     ✨ フォームを生成
                 </button>
                 <button id="resetFormBtn" class="action-btn danger" onclick="confirmResetForm()" style="display: none;">
-                    🗑️ フォームをリセット
+                    🗑️ フォーム設定をリセット
                 </button>
             </div>
 
@@ -463,7 +430,6 @@
                 <ul>
                     <li>フォームを生成すると、Googleドライブにフォームが作成されます</li>
                     <li>作成後は「フォーム」ページでURLとQRコードを確認できます</li>
-                    <li>リセットすると設定が消えますが、Googleドライブ上のフォームは残ります</li>
                 </ul>
             </div>
         </div>
@@ -489,7 +455,7 @@
             </div>
 
             <div class="action-buttons">
-                <button class="action-btn secondary" onclick="syncData()">
+                <button class="action-btn secondary" onclick="syncData(event)">
                     🔄 データを同期
                 </button>
                 <button class="action-btn danger" onclick="confirmClearData()">
@@ -503,10 +469,12 @@
     <div class="modal-overlay" id="confirmModal">
         <div class="modal">
             <h3 id="modalTitle">確認</h3>
-            <p id="modalMessage">本当に実行しますか？</p>
+            <div class="modal-content" id="modalContent">
+                <p id="modalMessage">本当に実行しますか？</p>
+            </div>
             <div class="modal-buttons">
                 <button class="action-btn secondary" onclick="closeModal()">キャンセル</button>
-                <button class="action-btn danger" id="modalConfirmBtn" onclick="executeAction()">実行</button>
+                <button class="action-btn danger" id="modalConfirmBtn" onclick="executeAction()">実行する</button>
             </div>
         </div>
     </div>
@@ -528,7 +496,38 @@
         console.log('⚙️ 設定ページ読み込み開始...');
 
         let pendingAction = null;
-        let signInAttempts = 0;
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                loadUISettings();
+
+                if (window.IntegratedAuthManager && !window.IntegratedAuthManager.isInitialized) {
+                    await window.IntegratedAuthManager.initialize();
+                }
+
+                await ensureAuthentication();
+
+                if (window.AppInitializer) {
+                    try {
+                        await window.AppInitializer.initialize({ requireAuth: false });
+                    } catch (e) {
+                        console.warn('AppInitializer初期化エラー:', e);
+                    }
+                }
+
+                if (window.GoogleFormsManager) {
+                    await GoogleFormsManager.initialize();
+                }
+
+                updateAccountInfo();
+                updateFormStatus();
+                updateDataStats();
+
+            } catch (error) {
+                console.error('設定ページ初期化エラー:', error);
+            }
+        });
 
         // UI設定を読み込み
         function loadUISettings() {
@@ -545,200 +544,41 @@
             const settings = JSON.parse(localStorage.getItem('rentpipe_ui_settings') || '{}');
             settings.showStats = showStats;
             localStorage.setItem('rentpipe_ui_settings', JSON.stringify(settings));
-            console.log('📊 統計表示設定:', showStats ? 'ON' : 'OFF');
         }
 
-        // コンテンツを表示
-        function showContent() {
-            const pageLoading = document.getElementById('page-loading');
-            const mainContent = document.getElementById('main-content');
-
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
-            if (mainContent) {
-                mainContent.classList.remove('content-hidden');
-                mainContent.classList.add('content-visible');
-            }
-        }
-
-        // ページ初期化
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // UI設定を先に読み込み
-                loadUISettings();
-
-                // IntegratedAuthManagerを先に初期化
-                if (window.IntegratedAuthManager && !window.IntegratedAuthManager.isInitialized) {
-                    await window.IntegratedAuthManager.initialize();
-                }
-
-                // 認証を確実に引き継ぐ（AppInitializerより先に）
-                await ensureAuthentication();
-
-                // AppInitializerの初期化
-                if (window.AppInitializer) {
-                    try {
-                        await window.AppInitializer.initialize({ requireAuth: false });
-                    } catch (e) {
-                        console.warn('AppInitializer初期化エラー:', e);
-                    }
-                }
-
-                // GoogleFormsManagerを初期化
-                if (window.GoogleFormsManager) {
-                    await GoogleFormsManager.initialize();
-                }
-
-                // コンテンツを表示
-                showContent();
-
-                // 各種状態を更新
-                updateAuthStatus();
-                updateFormStatus();
-                updateDataStats();
-
-            } catch (error) {
-                console.error('設定ページ初期化エラー:', error);
-                showContent();
-            }
-        });
-
-        // 認証を確実に引き継ぐ（改善版）
+        // 認証を確実に引き継ぐ
         async function ensureAuthentication() {
-            console.log('🔐 認証状態を確認中...');
             let accessToken = null;
-            let email = '';
-            let expiresAt = null;
 
-            // 1. localStorageから直接トークンを取得
             try {
                 const googleAuthData = localStorage.getItem('google_auth_data');
                 if (googleAuthData) {
                     const authData = JSON.parse(googleAuthData);
                     if (authData.accessToken) {
-                        // 有効期限チェック
-                        const expiry = authData.expiresAt || authData.expiry;
-                        if (expiry && new Date(expiry) > new Date()) {
-                            accessToken = authData.accessToken;
-                            email = authData.user?.email || authData.email || '';
-                            expiresAt = expiry;
-                            console.log('✅ google_auth_data からトークン取得');
-                        } else if (expiry) {
-                            console.log('⚠️ google_auth_data のトークンは期限切れ');
-                        } else {
-                            // 有効期限がない場合はとりあえず使用
-                            accessToken = authData.accessToken;
-                            email = authData.user?.email || authData.email || '';
-                            console.log('⚠️ google_auth_data のトークンを使用（有効期限不明）');
-                        }
+                        accessToken = authData.accessToken;
                     }
                 }
-            } catch (e) {
-                console.warn('google_auth_data 読み取りエラー:', e);
-            }
+            } catch (e) {}
 
-            // 2. IntegratedAuthManagerからも取得を試みる
             if (!accessToken) {
-                try {
-                    const authState = window.IntegratedAuthManager?.getAuthState();
-                    if (authState?.googleAuth?.accessToken) {
-                        accessToken = authState.googleAuth.accessToken;
-                        email = authState.googleAuth.email || '';
-                        console.log('✅ IntegratedAuthManager からトークン取得');
-                    }
-                } catch (e) {
-                    console.warn('IntegratedAuthManager 読み取りエラー:', e);
-                }
+                const authState = window.IntegratedAuthManager?.getAuthState();
+                accessToken = authState?.googleAuth?.accessToken;
             }
 
-            // 3. rentpipe_auth からも取得を試みる
-            if (!accessToken) {
-                try {
-                    const rentpipeAuth = localStorage.getItem('rentpipe_auth');
-                    if (rentpipeAuth) {
-                        const authData = JSON.parse(rentpipeAuth);
-                        if (authData.googleAuth?.accessToken) {
-                            accessToken = authData.googleAuth.accessToken;
-                            email = authData.googleAuth.email || '';
-                            console.log('✅ rentpipe_auth からトークン取得');
-                        }
-                    }
-                } catch (e) {
-                    console.warn('rentpipe_auth 読み取りエラー:', e);
+            if (accessToken && window.GoogleDriveAPIv2) {
+                if (!window.GoogleDriveAPIv2.isInitialized) {
+                    await window.GoogleDriveAPIv2.initialize();
                 }
+                window.GoogleDriveAPIv2.accessToken = accessToken;
+                window.GoogleDriveAPIv2.isAuthenticated = true;
             }
-
-            // トークンがあればAPIに設定
-            if (accessToken) {
-                // GoogleDriveAPIv2を初期化してトークンを設定
-                if (window.GoogleDriveAPIv2) {
-                    try {
-                        if (!window.GoogleDriveAPIv2.isInitialized) {
-                            await window.GoogleDriveAPIv2.initialize();
-                        }
-                        window.GoogleDriveAPIv2.accessToken = accessToken;
-                        window.GoogleDriveAPIv2.isAuthenticated = true;
-                        console.log('✅ GoogleDriveAPIv2 に認証トークンを設定しました');
-                    } catch (e) {
-                        console.warn('GoogleDriveAPIv2 設定エラー:', e);
-                    }
-                }
-
-                // GoogleSheetsAPIにも設定
-                if (window.GoogleSheetsAPI) {
-                    window.GoogleSheetsAPI.accessToken = accessToken;
-                    console.log('✅ GoogleSheetsAPI に認証トークンを設定しました');
-                }
-
-                return true;
-            }
-
-            console.log('⚠️ 有効な認証トークンが見つかりませんでした');
-            return false;
         }
 
-        // 認証状態を更新
-        function updateAuthStatus() {
-            const statusEl = document.getElementById('authStatus');
-            const signInBtn = document.getElementById('signInBtn');
-            const signOutBtn = document.getElementById('signOutBtn');
+        // アカウント情報を表示
+        function updateAccountInfo() {
+            const emailEl = document.getElementById('accountEmail');
+            let email = window.IntegratedAuthManager?.getUserEmail() || '';
 
-            // 複数のソースから認証状態を確認
-            let isAuthenticated = false;
-            let email = '';
-
-            // 1. GoogleDriveAPIv2から確認
-            if (window.GoogleDriveAPIv2?.isAuthenticated && window.GoogleDriveAPIv2?.accessToken) {
-                isAuthenticated = true;
-            }
-
-            // 2. IntegratedAuthManagerから確認
-            if (!isAuthenticated) {
-                const authState = window.IntegratedAuthManager?.getAuthState();
-                if (authState?.googleAuth?.accessToken) {
-                    isAuthenticated = true;
-                }
-            }
-
-            // 3. localStorageから直接確認（フォールバック）
-            if (!isAuthenticated) {
-                try {
-                    const googleAuthData = localStorage.getItem('google_auth_data');
-                    if (googleAuthData) {
-                        const authData = JSON.parse(googleAuthData);
-                        if (authData.accessToken) {
-                            isAuthenticated = true;
-                            email = authData.user?.email || '';
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            // メールアドレスを取得
-            if (!email) {
-                email = window.IntegratedAuthManager?.getUserEmail() || '';
-            }
             if (!email) {
                 try {
                     const googleAuthData = localStorage.getItem('google_auth_data');
@@ -749,142 +589,8 @@
                 } catch (e) {}
             }
 
-            if (isAuthenticated) {
-                statusEl.className = 'auth-status authenticated';
-                statusEl.innerHTML = `
-                    <span class="auth-icon">✅</span>
-                    <div class="auth-info">
-                        <h3>認証済み</h3>
-                        <p>${email || 'Googleアカウント連携中'}</p>
-                    </div>
-                `;
-                signInBtn.style.display = 'none';
-                signOutBtn.style.display = 'inline-flex';
-            } else {
-                statusEl.className = 'auth-status not-authenticated';
-                statusEl.innerHTML = `
-                    <span class="auth-icon">⚠️</span>
-                    <div class="auth-info">
-                        <h3>未認証</h3>
-                        <p>Googleでログインしてください</p>
-                    </div>
-                `;
-                signInBtn.style.display = 'inline-flex';
-                signOutBtn.style.display = 'none';
-            }
-        }
-
-        // Googleログイン（ポップアップブロック対応改善版）
-        async function signInGoogle() {
-            const btn = document.getElementById('signInBtn');
-            const popupNotice = document.getElementById('popupBlockerNotice');
-            const originalText = btn.innerHTML;
-
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '⏳ ログイン中...';
-                signInAttempts++;
-
-                // GoogleDriveAPIv2の初期化
-                if (window.GoogleDriveAPIv2) {
-                    if (!window.GoogleDriveAPIv2.isInitialized) {
-                        await window.GoogleDriveAPIv2.initialize();
-                    }
-
-                    // サインインを実行
-                    await window.GoogleDriveAPIv2.signIn();
-
-                    // 成功した場合
-                    popupNotice.style.display = 'none';
-                    signInAttempts = 0;
-                    updateAuthStatus();
-                    updateFormStatus();
-                    alert('✅ Googleにログインしました');
-                }
-            } catch (error) {
-                console.error('Google認証エラー:', error);
-
-                // ポップアップブロックの可能性を検出
-                const errorMessage = error.message || error.toString();
-                const isPopupBlocked = errorMessage.includes('popup') ||
-                                       errorMessage.includes('closed') ||
-                                       errorMessage.includes('blocked') ||
-                                       errorMessage.includes('denied');
-
-                if (isPopupBlocked || signInAttempts >= 1) {
-                    // ポップアップブロックの可能性がある場合はヘルプを表示
-                    popupNotice.style.display = 'block';
-
-                    if (signInAttempts >= 2) {
-                        alert(
-                            '❌ ログインに失敗しました\n\n' +
-                            'ポップアップがブロックされている可能性があります。\n\n' +
-                            '【対処方法】\n' +
-                            '1. ブラウザのアドレスバー付近の「ポップアップがブロックされました」を確認\n' +
-                            '2. このサイトのポップアップを「常に許可」に設定\n' +
-                            '3. ページを更新（F5キー）してから再度ログイン\n\n' +
-                            '※Chromeの場合: アドレスバー右端のアイコンをクリック'
-                        );
-                    }
-                } else {
-                    alert('❌ Google認証に失敗しました: ' + errorMessage);
-                }
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-
-        // Googleログアウト
-        async function signOutGoogle() {
-            if (!confirm('Googleからログアウトしますか？\nログアウトすると、データの同期ができなくなります。')) {
-                return;
-            }
-
-            try {
-                // ローカルストレージから認証情報を削除
-                localStorage.removeItem('google_auth_data');
-                localStorage.removeItem('rentpipe_auth');
-
-                // APIの認証状態をリセット
-                if (window.GoogleDriveAPIv2) {
-                    window.GoogleDriveAPIv2.accessToken = null;
-                    window.GoogleDriveAPIv2.isAuthenticated = false;
-                }
-
-                if (window.IntegratedAuthManager) {
-                    window.IntegratedAuthManager.clearGoogleAuth();
-                }
-
-                updateAuthStatus();
-                alert('✅ ログアウトしました');
-
-            } catch (error) {
-                console.error('ログアウトエラー:', error);
-                alert('❌ ログアウトに失敗しました: ' + error.message);
-            }
-        }
-
-        // 認証を更新
-        async function refreshAuth() {
-            const btn = document.getElementById('refreshAuthBtn');
-            const originalText = btn.innerHTML;
-
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '🔄 更新中...';
-
-                // 認証を再読み込み
-                await ensureAuthentication();
-
-                updateAuthStatus();
-                alert('✅ 認証状態を更新しました');
-            } catch (error) {
-                console.error('認証更新エラー:', error);
-                alert('❌ 認証更新に失敗しました: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+            if (emailEl) {
+                emailEl.textContent = email || 'アカウント情報を取得中...';
             }
         }
 
@@ -893,7 +599,6 @@
             const statusEl = document.getElementById('formConfigStatus');
             const createBtn = document.getElementById('createFormBtn');
             const resetBtn = document.getElementById('resetFormBtn');
-
             const config = window.GoogleFormsManager?.formConfig;
 
             if (config && config.formId) {
@@ -928,20 +633,17 @@
             const originalText = btn.innerHTML;
 
             try {
-                // 認証チェック
                 const isAuthenticated = window.GoogleDriveAPIv2?.isAuthenticated ||
                                         window.IntegratedAuthManager?.getAuthState()?.googleAuth?.accessToken;
                 if (!isAuthenticated) {
-                    alert('⚠️ 先にGoogleでログインしてください');
+                    alert('⚠️ 認証が必要です。ページを再読み込みしてください。');
                     return;
                 }
 
                 btn.disabled = true;
                 btn.innerHTML = '⏳ 生成中...';
 
-                const config = await window.GoogleFormsManager.createForm();
-                console.log('フォーム生成完了:', config);
-
+                await window.GoogleFormsManager.createForm();
                 updateFormStatus();
                 alert('✅ アンケートフォームを生成しました！\n\n「フォーム」ページでURLとQRコードを確認できます。');
 
@@ -954,21 +656,47 @@
             }
         }
 
-        // フォームリセット確認
+        // フォームリセット確認（詳細な警告付き）
         function confirmResetForm() {
             pendingAction = 'resetForm';
-            document.getElementById('modalTitle').textContent = 'フォームをリセット';
-            document.getElementById('modalMessage').textContent =
-                'フォーム設定をリセットしますか？\n（Googleドライブ上のフォームは削除されません）';
+            document.getElementById('modalTitle').textContent = '⚠️ フォーム設定をリセット';
+            document.getElementById('modalContent').innerHTML = `
+                <p>フォーム設定をリセットしますか？</p>
+                <div class="warning-list">
+                    <h4>⚠️ この操作を行うと:</h4>
+                    <ul>
+                        <li>RentPipeとフォームの連携が解除されます</li>
+                        <li>「フォーム」ページでQRコードが表示されなくなります</li>
+                        <li>新しいフォームを生成し直す必要があります</li>
+                    </ul>
+                </div>
+                <p style="font-size: 13px; color: #6b7280;">
+                    ※ Googleドライブ上のフォーム自体は削除されません
+                </p>
+            `;
             document.getElementById('confirmModal').classList.add('active');
         }
 
-        // データクリア確認
+        // データクリア確認（詳細な警告付き）
         function confirmClearData() {
             pendingAction = 'clearData';
-            document.getElementById('modalTitle').textContent = 'ローカルデータをクリア';
-            document.getElementById('modalMessage').textContent =
-                'ローカルに保存された顧客データをクリアしますか？\n（Google Sheets上のデータは保持されます）';
+            const customers = window.UnifiedDataManager?.getCustomers() || [];
+
+            document.getElementById('modalTitle').textContent = '⚠️ ローカルデータをクリア';
+            document.getElementById('modalContent').innerHTML = `
+                <p>ローカルに保存された顧客データをクリアしますか？</p>
+                <div class="warning-list">
+                    <h4>⚠️ この操作を行うと:</h4>
+                    <ul>
+                        <li>現在保存されている <strong>${customers.length}件</strong> の顧客データがローカルから削除されます</li>
+                        <li>次回ページを開いた時にGoogle Sheetsから再同期されます</li>
+                        <li>同期前にオフラインで追加したデータは失われる可能性があります</li>
+                    </ul>
+                </div>
+                <p style="font-size: 13px; color: #6b7280;">
+                    ※ Google Sheets上のデータは削除されません
+                </p>
+            `;
             document.getElementById('confirmModal').classList.add('active');
         }
 
@@ -987,7 +715,7 @@
             } else if (pendingAction === 'clearData') {
                 localStorage.removeItem('rentpipe_customers');
                 updateDataStats();
-                alert('✅ ローカルデータをクリアしました');
+                alert('✅ ローカルデータをクリアしました\n\n次回ページを開いた時にGoogle Sheetsから再同期されます。');
             }
             closeModal();
         }
@@ -1001,7 +729,6 @@
                 document.getElementById('totalCustomers').textContent = customers.length;
                 document.getElementById('activeCustomers').textContent = active.length;
 
-                // 最終同期時刻
                 const lastSyncTime = localStorage.getItem('rentpipe_last_sync');
                 if (lastSyncTime) {
                     const date = new Date(lastSyncTime);
@@ -1023,7 +750,7 @@
         }
 
         // データ同期
-        async function syncData() {
+        async function syncData(event) {
             const btn = event.target;
             const originalText = btn.innerHTML;
 

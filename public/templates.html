@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メッセージテンプレート - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .templates-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+        }
+
+        /* カテゴリータブ */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .category-tab:hover {
+            border-color: #3b82f6;
+        }
+
+        .category-tab.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        /* 顧客選択 */
+        .customer-select-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .customer-select-section h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: #374151;
+        }
+
+        .customer-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .customer-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        /* テンプレートカード */
+        .template-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
+        }
+
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .template-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 4px 0;
+        }
+
+        .template-description {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .template-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .template-badge.pipeline {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .template-badge.followup {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .template-content {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #334155;
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+        }
+
+        /* 変数のハイライト */
+        .template-content .variable {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        /* 空状態 */
+        .empty-templates {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-templates .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* カスタマイズヒント */
+        .customization-hint {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .customization-hint h4 {
+            margin: 0 0 8px 0;
+            color: #92400e;
+            font-size: 14px;
+        }
+
+        .customization-hint p {
+            margin: 0;
+            font-size: 13px;
+            color: #78350f;
+        }
+
+        .variable-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .variable-tag {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <div id="navigation"></div>
+
+    <!-- メインコンテンツ -->
+    <div class="templates-container">
+        <div class="page-header">
+            <h1>📝 メッセージテンプレート</h1>
+            <p>顧客への連絡文案をコピーして、LINE・メール・SMSなどでご利用ください</p>
+        </div>
+
+        <!-- カテゴリータブ -->
+        <div class="category-tabs">
+            <button class="category-tab active" data-category="all" onclick="filterByCategory('all')">すべて</button>
+            <button class="category-tab" data-category="pipeline" onclick="filterByCategory('pipeline')">📋 商談進行中</button>
+            <button class="category-tab" data-category="followup" onclick="filterByCategory('followup')">🔄 成約後フォロー</button>
+        </div>
+
+        <!-- 顧客選択 -->
+        <div class="customer-select-section">
+            <h3>👤 顧客を選択（テンプレートに名前を反映）</h3>
+            <select class="customer-select" id="customerSelect" onchange="updateTemplates()">
+                <option value="">-- 顧客を選択してください --</option>
+            </select>
+        </div>
+
+        <!-- カスタマイズヒント -->
+        <div class="customization-hint">
+            <h4>💡 テンプレートの使い方</h4>
+            <p>「コピー」ボタンをクリックして、お使いの連絡ツール（LINE、メール、SMSなど）に貼り付けてください。</p>
+            <div class="variable-list">
+                <span class="variable-tag">{お客様名}</span>
+                <span class="variable-tag">{担当者名}</span>
+                <span class="variable-tag">{物件名}</span>
+                <span class="variable-tag">{日時}</span>
+            </div>
+        </div>
+
+        <!-- テンプレート一覧 -->
+        <div id="templates-list">
+            <!-- テンプレートがここに表示されます -->
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="js/navigation.js"></script>
+    <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/unified-data-manager.js"></script>
+    <script src="js/app-initializer.js"></script>
+    <script src="js/page-initializer.js"></script>
+
+    <script>
+        let currentCategory = 'all';
+        let selectedCustomer = null;
+        let agentName = '担当者'; // 設定から取得するか、デフォルト値
+
+        // メッセージテンプレート定義
+        const messageTemplates = [
+            // ===== 商談進行中テンプレート =====
+            {
+                id: 'initial-contact',
+                category: 'pipeline',
+                status: '初回相談',
+                title: '初回相談後のお礼・次回連絡',
+                description: '初回ヒアリング後にお送りするメッセージ',
+                template: `{お客様名}様
+
+本日はお時間をいただきありがとうございました。
+{担当者名}です。
+
+お聞きした条件をもとに、ご希望に合う物件をお探しいたします。
+いくつか候補が見つかりましたらご連絡させていただきます。
+
+ご不明な点がございましたら、いつでもお気軽にお問い合わせください。
+引き続きよろしくお願いいたします。`
+            },
+            {
+                id: 'property-intro',
+                category: 'pipeline',
+                status: '物件紹介',
+                title: '物件紹介のご案内',
+                description: '候補物件をご紹介する際のメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+ご希望の条件に合う物件が見つかりましたのでご紹介させていただきます。
+
+【ご紹介物件】
+・物件名：{物件名}
+・所在地：
+・賃料：
+・間取り：
+・その他特徴：
+
+ご興味がございましたら、内見のご予約も承っております。
+ご都合の良い日時をお知らせいただけますでしょうか。
+
+よろしくお願いいたします。`
+            },
+            {
+                id: 'viewing-schedule',
+                category: 'pipeline',
+                status: '内見調整',
+                title: '内見日程確定のご連絡',
+                description: '内見日程が決まった際のメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+内見の日程が確定いたしましたのでご連絡いたします。
+
+【内見予定】
+・日時：{日時}
+・物件：{物件名}
+・集合場所：現地（住所をお送りします）
+
+当日は私がご案内いたします。
+ご不明な点やご質問がございましたら、お気軽にお申し付けください。
+
+どうぞよろしくお願いいたします。`
+            },
+            {
+                id: 'viewing-reminder',
+                category: 'pipeline',
+                status: '内見調整',
+                title: '内見前日リマインド',
+                description: '内見前日に送る確認メッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+明日の内見について、改めてご案内申し上げます。
+
+【明日の予定】
+・日時：{日時}
+・物件：{物件名}
+・集合場所：現地
+
+お気をつけてお越しください。
+明日お会いできることを楽しみにしております。`
+            },
+            {
+                id: 'after-viewing',
+                category: 'pipeline',
+                status: '内見調整',
+                title: '内見後のフォロー',
+                description: '内見終了後に送るフォローメッセージ',
+                template: `{お客様名}様
+
+本日は内見にお越しいただきありがとうございました。
+{担当者名}です。
+
+ご覧いただいた物件はいかがでしたでしょうか？
+
+ご質問やご不明な点がございましたら、お気軽にお問い合わせください。
+また、他にも条件に合う物件がございましたら、ご紹介させていただきます。
+
+ご検討のほど、よろしくお願いいたします。`
+            },
+            {
+                id: 'application-guide',
+                category: 'pipeline',
+                status: '申込準備',
+                title: 'お申込み手続きのご案内',
+                description: '申込手続きの流れをご案内するメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+この度は{物件名}へのお申込みをご検討いただきありがとうございます。
+
+【お申込みに必要な書類】
+・ご本人確認書類（免許証・保険証など）
+・収入証明書（源泉徴収票・給与明細など）
+・印鑑
+
+【今後の流れ】
+1. 入居申込書のご記入
+2. 審査（通常3〜5営業日）
+3. 契約手続き
+4. 鍵のお渡し・入居
+
+ご不明な点がございましたら、お気軽にお問い合わせください。`
+            },
+            {
+                id: 'screening-progress',
+                category: 'pipeline',
+                status: '審査中',
+                title: '審査状況のご報告',
+                description: '審査の進捗をお知らせするメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+現在、{物件名}の入居審査を進めております。
+審査結果が出ましたら、改めてご連絡させていただきます。
+
+通常、審査には3〜5営業日ほどお時間をいただいております。
+今しばらくお待ちくださいますようお願いいたします。
+
+ご質問がございましたら、お気軽にご連絡ください。`
+            },
+            {
+                id: 'screening-passed',
+                category: 'pipeline',
+                status: '審査中',
+                title: '審査通過のお知らせ',
+                description: '審査通過をお知らせするメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+おめでとうございます！
+{物件名}の入居審査が無事通過いたしました。
+
+次は契約手続きに進みます。
+ご都合の良い日程をお知らせいただけますでしょうか。
+
+【契約時にお持ちいただくもの】
+・ご本人確認書類
+・印鑑（認印可）
+・初期費用
+
+詳細は改めてご案内いたします。
+引き続きよろしくお願いいたします。`
+            },
+            {
+                id: 'contract-schedule',
+                category: 'pipeline',
+                status: '契約手続き',
+                title: '契約日程のご案内',
+                description: '契約日程が決まった際のメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+契約日程が確定いたしましたのでご案内いたします。
+
+【契約予定】
+・日時：{日時}
+・場所：弊社事務所
+・所要時間：約1〜2時間
+
+【お持ちいただくもの】
+・ご本人確認書類
+・印鑑
+・初期費用（振込でも可）
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+当日お会いできることを楽しみにしております。`
+            },
+
+            // ===== 成約後フォローテンプレート =====
+            {
+                id: 'move-in-thanks',
+                category: 'followup',
+                title: 'ご入居後のお礼',
+                description: '入居後すぐにお送りするお礼メッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+この度はご入居おめでとうございます！
+新生活のスタートはいかがでしょうか。
+
+設備や住環境など、お困りのことがございましたらいつでもご連絡ください。
+快適な新生活をお過ごしいただけることを願っております。
+
+今後ともどうぞよろしくお願いいたします。`
+            },
+            {
+                id: 'one-month-followup',
+                category: 'followup',
+                title: '1ヶ月後フォロー',
+                description: '入居1ヶ月後のフォローメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+ご入居から1ヶ月ほど経ちましたが、新生活はいかがでしょうか？
+
+設備の不具合やご近所との関係など、お困りのことがございましたらお気軽にご相談ください。
+少しでも快適にお過ごしいただけるようサポートいたします。
+
+今後ともどうぞよろしくお願いいたします。`
+            },
+            {
+                id: 'six-month-followup',
+                category: 'followup',
+                title: '6ヶ月後フォロー',
+                description: '入居6ヶ月後のフォローメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+ご入居から半年が経ちましたが、お変わりなくお過ごしでしょうか。
+
+もし住み替えやお部屋探しのご予定がございましたら、ぜひお声がけください。
+また、ご友人やお知り合いでお部屋をお探しの方がいらっしゃいましたら、ご紹介いただけると幸いです。
+
+今後ともどうぞよろしくお願いいたします。`
+            },
+            {
+                id: 'one-year-followup',
+                category: 'followup',
+                title: '1年後フォロー',
+                description: '入居1年後のフォローメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+早いものでご入居から1年が経ちました。
+その後、快適にお過ごしいただけておりますでしょうか。
+
+契約更新や住み替えについて、ご質問やご相談がございましたらお気軽にお問い合わせください。
+引き続きサポートさせていただきます。
+
+今後ともどうぞよろしくお願いいたします。`
+            },
+            {
+                id: 'renewal-reminder',
+                category: 'followup',
+                title: '更新時期のお知らせ',
+                description: '契約更新時期が近づいた際のメッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+現在のご契約が更新時期を迎えますので、ご案内させていただきます。
+
+【更新について】
+・更新料：
+・更新後の条件：（変更がある場合）
+
+更新のお手続き、または住み替えのご相談など、ご希望がございましたらお知らせください。
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+よろしくお願いいたします。`
+            },
+            {
+                id: 'referral-request',
+                category: 'followup',
+                title: 'ご紹介のお願い',
+                description: 'お知り合いの紹介をお願いするメッセージ',
+                template: `{お客様名}様
+
+いつも大変お世話になっております。
+{担当者名}です。
+
+突然のご連絡失礼いたします。
+もしお知り合いやご友人の方でお部屋探しをされている方がいらっしゃいましたら、ぜひご紹介いただけると幸いです。
+
+{お客様名}様からのご紹介のお客様には、特典をご用意しております。
+
+ご検討いただけましたら嬉しく思います。
+今後ともどうぞよろしくお願いいたします。`
+            }
+        ];
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await PageInitializer.initialize({
+                    onDataUpdated: () => {
+                        loadCustomerList();
+                    }
+                });
+
+                loadCustomerList();
+                renderTemplates();
+
+            } catch (error) {
+                console.error('templates.html 初期化エラー:', error);
+            }
+        });
+
+        // 顧客リストを読み込み
+        function loadCustomerList() {
+            const select = document.getElementById('customerSelect');
+            const customers = window.UnifiedDataManager ? window.UnifiedDataManager.getCustomers() : [];
+
+            // アクティブな顧客のみ表示
+            const activeCustomers = customers.filter(c => c.isActive !== false);
+
+            select.innerHTML = '<option value="">-- 顧客を選択してください --</option>';
+
+            activeCustomers.forEach(customer => {
+                const name = customer.basicInfo?.name || customer.name || '名前未設定';
+                const status = customer.pipelineStatus || '';
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = `${name}（${status}）`;
+                select.appendChild(option);
+            });
+        }
+
+        // テンプレートを更新
+        function updateTemplates() {
+            const customerId = document.getElementById('customerSelect').value;
+
+            if (customerId) {
+                const customers = window.UnifiedDataManager ? window.UnifiedDataManager.getCustomers() : [];
+                selectedCustomer = customers.find(c => c.id === customerId);
+            } else {
+                selectedCustomer = null;
+            }
+
+            renderTemplates();
+        }
+
+        // カテゴリでフィルター
+        function filterByCategory(category) {
+            currentCategory = category;
+
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.category === category);
+            });
+
+            renderTemplates();
+        }
+
+        // テンプレートを描画
+        function renderTemplates() {
+            const container = document.getElementById('templates-list');
+            container.innerHTML = '';
+
+            let templates = messageTemplates;
+
+            // カテゴリでフィルター
+            if (currentCategory !== 'all') {
+                templates = templates.filter(t => t.category === currentCategory);
+            }
+
+            // 選択した顧客のステータスに関連するテンプレートを優先表示
+            if (selectedCustomer && selectedCustomer.pipelineStatus) {
+                const status = selectedCustomer.pipelineStatus;
+                templates = templates.sort((a, b) => {
+                    const aMatch = a.status === status ? 0 : 1;
+                    const bMatch = b.status === status ? 0 : 1;
+                    return aMatch - bMatch;
+                });
+            }
+
+            if (templates.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-templates">
+                        <div class="empty-icon">📭</div>
+                        <p>該当するテンプレートがありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            templates.forEach(template => {
+                const card = createTemplateCard(template);
+                container.appendChild(card);
+            });
+        }
+
+        // テンプレートカードを作成
+        function createTemplateCard(template) {
+            const card = document.createElement('div');
+            card.className = 'template-card';
+
+            const badgeClass = template.category === 'pipeline' ? 'pipeline' : 'followup';
+            const badgeText = template.category === 'pipeline' ? `📋 ${template.status || '商談中'}` : '🔄 成約後';
+
+            // 変数を置換したテンプレート内容
+            const content = replaceVariables(template.template);
+
+            card.innerHTML = `
+                <div class="template-header">
+                    <div>
+                        <h3 class="template-title">${template.title}</h3>
+                        <p class="template-description">${template.description}</p>
+                    </div>
+                    <span class="template-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="template-content">${escapeHtml(content)}</div>
+                <div class="template-actions">
+                    <button class="copy-btn" onclick="copyTemplate(this, '${template.id}')">
+                        📋 コピー
+                    </button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // 変数を置換
+        function replaceVariables(template) {
+            let result = template;
+
+            if (selectedCustomer) {
+                const name = selectedCustomer.basicInfo?.name || selectedCustomer.name || 'お客様';
+                result = result.replace(/{お客様名}/g, name);
+            }
+
+            result = result.replace(/{担当者名}/g, agentName);
+            result = result.replace(/{物件名}/g, '（物件名）');
+            result = result.replace(/{日時}/g, '（日時）');
+
+            return result;
+        }
+
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // テンプレートをコピー
+        function copyTemplate(button, templateId) {
+            const template = messageTemplates.find(t => t.id === templateId);
+            if (!template) return;
+
+            const content = replaceVariables(template.template);
+
+            navigator.clipboard.writeText(content).then(() => {
+                button.innerHTML = '✅ コピーしました';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.innerHTML = '📋 コピー';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('コピーに失敗:', err);
+                alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
+            });
+        }
+
+        console.log('✅ テンプレートページ準備完了');
+    </script>
+</body>
+</html>
