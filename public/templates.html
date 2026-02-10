@@ -25,6 +25,86 @@
             color: #6b7280;
         }
 
+        /* 設定セクション */
+        .settings-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .settings-panel h3 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            color: #374151;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .settings-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .settings-field label {
+            display: block;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .settings-field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .settings-field input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-btn.primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .settings-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        .settings-btn.secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .settings-btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
         /* カテゴリータブ */
         .category-tabs {
             display: flex;
@@ -117,6 +197,7 @@
             border-radius: 12px;
             font-size: 12px;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .template-badge.pipeline {
@@ -141,19 +222,40 @@
             font-family: inherit;
         }
 
+        .template-content.editing {
+            background: white;
+            border-color: #3b82f6;
+        }
+
+        .template-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 16px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #334155;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .template-textarea:focus {
+            outline: none;
+        }
+
         .template-actions {
             display: flex;
             gap: 10px;
             margin-top: 16px;
+            flex-wrap: wrap;
         }
 
-        .copy-btn {
+        .template-btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 10px 18px;
-            background: #3b82f6;
-            color: white;
             border: none;
             border-radius: 8px;
             font-size: 14px;
@@ -162,21 +264,59 @@
             transition: all 0.2s;
         }
 
-        .copy-btn:hover {
+        .template-btn.copy {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .template-btn.copy:hover {
             background: #2563eb;
         }
 
-        .copy-btn.copied {
+        .template-btn.copy.copied {
             background: #10b981;
         }
 
-        /* 変数のハイライト */
-        .template-content .variable {
+        .template-btn.edit {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .template-btn.edit:hover {
+            background: #e5e7eb;
+        }
+
+        .template-btn.save {
+            background: #10b981;
+            color: white;
+        }
+
+        .template-btn.save:hover {
+            background: #059669;
+        }
+
+        .template-btn.cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .template-btn.reset {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .template-btn.reset:hover {
+            background: #fee2e2;
+        }
+
+        /* カスタムバッジ */
+        .custom-badge {
             background: #fef3c7;
             color: #92400e;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
         }
 
         /* 空状態 */
@@ -193,8 +333,8 @@
 
         /* カスタマイズヒント */
         .customization-hint {
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 24px;
@@ -202,14 +342,14 @@
 
         .customization-hint h4 {
             margin: 0 0 8px 0;
-            color: #92400e;
+            color: #1e40af;
             font-size: 14px;
         }
 
         .customization-hint p {
             margin: 0;
             font-size: 13px;
-            color: #78350f;
+            color: #1e3a8a;
         }
 
         .variable-list {
@@ -220,8 +360,8 @@
         }
 
         .variable-tag {
-            background: #fef3c7;
-            color: #92400e;
+            background: #dbeafe;
+            color: #1e40af;
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
@@ -230,6 +370,12 @@
     </style>
 </head>
 <body>
+    <!-- ページローディングオーバーレイ -->
+    <div id="page-loading" class="page-loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>読み込み中...</p>
+    </div>
+
     <!-- ナビゲーション -->
     <div id="navigation"></div>
 
@@ -238,6 +384,20 @@
         <div class="page-header">
             <h1>📝 メッセージテンプレート</h1>
             <p>顧客への連絡文案をコピーして、LINE・メール・SMSなどでご利用ください</p>
+        </div>
+
+        <!-- 担当者名設定 -->
+        <div class="settings-panel">
+            <h3>⚙️ テンプレート設定</h3>
+            <div class="settings-row">
+                <div class="settings-field">
+                    <label>担当者名（テンプレートに反映されます）</label>
+                    <input type="text" id="agentNameInput" placeholder="例：山田太郎" value="">
+                </div>
+                <div class="settings-actions">
+                    <button class="settings-btn primary" onclick="saveAgentName()">保存</button>
+                </div>
+            </div>
         </div>
 
         <!-- カテゴリータブ -->
@@ -257,8 +417,8 @@
 
         <!-- カスタマイズヒント -->
         <div class="customization-hint">
-            <h4>💡 テンプレートの使い方</h4>
-            <p>「コピー」ボタンをクリックして、お使いの連絡ツール（LINE、メール、SMSなど）に貼り付けてください。</p>
+            <h4>💡 使い方</h4>
+            <p>「編集」ボタンでテンプレートをカスタマイズできます。変更は自動保存されます。</p>
             <div class="variable-list">
                 <span class="variable-tag">{お客様名}</span>
                 <span class="variable-tag">{担当者名}</span>
@@ -281,12 +441,49 @@
     <script src="js/page-initializer.js"></script>
 
     <script>
+        // ローディング表示制御（300ms遅延表示）
+        let loadingTimer = null;
+        let isLoadingComplete = false;
+        const LOADING_DELAY = 300;
+
+        function startLoadingTimer() {
+            const pageLoading = document.getElementById('page-loading');
+            if (pageLoading) {
+                pageLoading.classList.add('hidden');
+            }
+            loadingTimer = setTimeout(() => {
+                if (!isLoadingComplete) {
+                    const pageLoading = document.getElementById('page-loading');
+                    if (pageLoading) {
+                        pageLoading.classList.remove('hidden');
+                    }
+                }
+            }, LOADING_DELAY);
+        }
+
+        function hideLoading() {
+            isLoadingComplete = true;
+            if (loadingTimer) {
+                clearTimeout(loadingTimer);
+                loadingTimer = null;
+            }
+            const pageLoading = document.getElementById('page-loading');
+            if (pageLoading) {
+                pageLoading.classList.add('hidden');
+            }
+        }
+
+        // 初期化時にローディングタイマー開始
+        startLoadingTimer();
+
         let currentCategory = 'all';
         let selectedCustomer = null;
-        let agentName = '担当者'; // 設定から取得するか、デフォルト値
+        let agentName = '';
+        let editingTemplateId = null;
+        let customTemplates = {}; // カスタマイズしたテンプレートを保存
 
-        // メッセージテンプレート定義
-        const messageTemplates = [
+        // デフォルトのメッセージテンプレート定義
+        const defaultTemplates = [
             // ===== 商談進行中テンプレート =====
             {
                 id: 'initial-contact',
@@ -490,6 +687,7 @@
             },
 
             // ===== 成約後フォローテンプレート =====
+            // ※ 仲介業者の業務範囲に留意したテンプレート
             {
                 id: 'move-in-thanks',
                 category: 'followup',
@@ -501,18 +699,19 @@
 {担当者名}です。
 
 この度はご入居おめでとうございます！
-新生活のスタートはいかがでしょうか。
+新生活のスタートに携わることができ、大変嬉しく思っております。
 
-設備や住環境など、お困りのことがございましたらいつでもご連絡ください。
-快適な新生活をお過ごしいただけることを願っております。
+今後、お引越しやお部屋探しのご予定がございましたら、いつでもお気軽にご相談ください。
+ご友人やお知り合いの方でお部屋をお探しの方がいらっしゃいましたら、ぜひご紹介いただけると幸いです。
 
+快適な新生活をお祈りしております。
 今後ともどうぞよろしくお願いいたします。`
             },
             {
                 id: 'one-month-followup',
                 category: 'followup',
                 title: '1ヶ月後フォロー',
-                description: '入居1ヶ月後のフォローメッセージ',
+                description: '入居1ヶ月後のご挨拶メッセージ',
                 template: `{お客様名}様
 
 お世話になっております。
@@ -520,8 +719,8 @@
 
 ご入居から1ヶ月ほど経ちましたが、新生活はいかがでしょうか？
 
-設備の不具合やご近所との関係など、お困りのことがございましたらお気軽にご相談ください。
-少しでも快適にお過ごしいただけるようサポートいたします。
+今回のお部屋探しでお役に立てておりましたら幸いです。
+もしお知り合いの方でお部屋をお探しの方がいらっしゃいましたら、ぜひお声がけください。
 
 今後ともどうぞよろしくお願いいたします。`
             },
@@ -529,7 +728,7 @@
                 id: 'six-month-followup',
                 category: 'followup',
                 title: '6ヶ月後フォロー',
-                description: '入居6ヶ月後のフォローメッセージ',
+                description: '入居6ヶ月後のご挨拶メッセージ',
                 template: `{お客様名}様
 
 お世話になっております。
@@ -537,8 +736,8 @@
 
 ご入居から半年が経ちましたが、お変わりなくお過ごしでしょうか。
 
-もし住み替えやお部屋探しのご予定がございましたら、ぜひお声がけください。
-また、ご友人やお知り合いでお部屋をお探しの方がいらっしゃいましたら、ご紹介いただけると幸いです。
+もし今後、住み替えやお部屋探しのご予定がございましたら、ぜひお声がけください。
+また、ご友人やお知り合いでお部屋をお探しの方がいらっしゃいましたら、ご紹介いただけると大変嬉しく思います。
 
 今後ともどうぞよろしくお願いいたします。`
             },
@@ -546,40 +745,20 @@
                 id: 'one-year-followup',
                 category: 'followup',
                 title: '1年後フォロー',
-                description: '入居1年後のフォローメッセージ',
+                description: '入居1年後のご挨拶メッセージ',
                 template: `{お客様名}様
 
 お世話になっております。
 {担当者名}です。
 
 早いものでご入居から1年が経ちました。
-その後、快適にお過ごしいただけておりますでしょうか。
 
-契約更新や住み替えについて、ご質問やご相談がございましたらお気軽にお問い合わせください。
-引き続きサポートさせていただきます。
+今後、住み替えをご検討されることがございましたら、お気軽にご相談ください。
+ご希望の条件に合った物件をお探しいたします。
+
+また、お知り合いの方でお部屋探しをされている方がいらっしゃいましたら、ぜひご紹介ください。
 
 今後ともどうぞよろしくお願いいたします。`
-            },
-            {
-                id: 'renewal-reminder',
-                category: 'followup',
-                title: '更新時期のお知らせ',
-                description: '契約更新時期が近づいた際のメッセージ',
-                template: `{お客様名}様
-
-お世話になっております。
-{担当者名}です。
-
-現在のご契約が更新時期を迎えますので、ご案内させていただきます。
-
-【更新について】
-・更新料：
-・更新後の条件：（変更がある場合）
-
-更新のお手続き、または住み替えのご相談など、ご希望がございましたらお知らせください。
-ご不明な点がございましたら、お気軽にお問い合わせください。
-
-よろしくお願いいたします。`
             },
             {
                 id: 'referral-request',
@@ -592,12 +771,30 @@
 {担当者名}です。
 
 突然のご連絡失礼いたします。
-もしお知り合いやご友人の方でお部屋探しをされている方がいらっしゃいましたら、ぜひご紹介いただけると幸いです。
 
+もしお知り合いやご友人の方でお部屋探しをされている方がいらっしゃいましたら、ぜひご紹介いただけると幸いです。
 {お客様名}様からのご紹介のお客様には、特典をご用意しております。
 
 ご検討いただけましたら嬉しく思います。
 今後ともどうぞよろしくお願いいたします。`
+            },
+            {
+                id: 'moving-consultation',
+                category: 'followup',
+                title: '住み替えのご相談案内',
+                description: '住み替え検討の方へのご案内メッセージ',
+                template: `{お客様名}様
+
+お世話になっております。
+{担当者名}です。
+
+その後、お変わりなくお過ごしでしょうか。
+
+もし現在、住み替えやお引越しをご検討でしたら、ぜひご相談ください。
+ご希望の条件（エリア、間取り、ご予算など）に合わせて、最適な物件をお探しいたします。
+
+お気軽にお問い合わせいただければ幸いです。
+どうぞよろしくお願いいたします。`
             }
         ];
 
@@ -610,20 +807,59 @@
                     }
                 });
 
+                loadSettings();
+                loadCustomTemplates();
                 loadCustomerList();
                 renderTemplates();
 
+                // ローディング終了
+                hideLoading();
+
             } catch (error) {
                 console.error('templates.html 初期化エラー:', error);
+                hideLoading();
             }
         });
+
+        // 設定を読み込み
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
+            agentName = settings.agentName || '';
+            document.getElementById('agentNameInput').value = agentName;
+        }
+
+        // 担当者名を保存
+        function saveAgentName() {
+            agentName = document.getElementById('agentNameInput').value.trim();
+            const settings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
+            settings.agentName = agentName;
+            localStorage.setItem('rentpipe_template_settings', JSON.stringify(settings));
+
+            renderTemplates();
+            alert('✅ 担当者名を保存しました');
+        }
+
+        // カスタムテンプレートを読み込み
+        function loadCustomTemplates() {
+            const saved = localStorage.getItem('rentpipe_custom_templates');
+            if (saved) {
+                try {
+                    customTemplates = JSON.parse(saved);
+                } catch (e) {
+                    customTemplates = {};
+                }
+            }
+        }
+
+        // カスタムテンプレートを保存
+        function saveCustomTemplates() {
+            localStorage.setItem('rentpipe_custom_templates', JSON.stringify(customTemplates));
+        }
 
         // 顧客リストを読み込み
         function loadCustomerList() {
             const select = document.getElementById('customerSelect');
             const customers = window.UnifiedDataManager ? window.UnifiedDataManager.getCustomers() : [];
-
-            // アクティブな顧客のみ表示
             const activeCustomers = customers.filter(c => c.isActive !== false);
 
             select.innerHTML = '<option value="">-- 顧客を選択してください --</option>';
@@ -663,12 +899,26 @@
             renderTemplates();
         }
 
+        // テンプレート内容を取得（カスタムがあればカスタム、なければデフォルト）
+        function getTemplateContent(templateId) {
+            if (customTemplates[templateId]) {
+                return customTemplates[templateId];
+            }
+            const defaultTemplate = defaultTemplates.find(t => t.id === templateId);
+            return defaultTemplate ? defaultTemplate.template : '';
+        }
+
+        // テンプレートがカスタマイズされているか
+        function isCustomized(templateId) {
+            return !!customTemplates[templateId];
+        }
+
         // テンプレートを描画
         function renderTemplates() {
             const container = document.getElementById('templates-list');
             container.innerHTML = '';
 
-            let templates = messageTemplates;
+            let templates = [...defaultTemplates];
 
             // カテゴリでフィルター
             if (currentCategory !== 'all') {
@@ -705,28 +955,58 @@
         function createTemplateCard(template) {
             const card = document.createElement('div');
             card.className = 'template-card';
+            card.id = `template-card-${template.id}`;
 
             const badgeClass = template.category === 'pipeline' ? 'pipeline' : 'followup';
             const badgeText = template.category === 'pipeline' ? `📋 ${template.status || '商談中'}` : '🔄 成約後';
+            const customBadge = isCustomized(template.id) ? '<span class="custom-badge">カスタム</span>' : '';
 
             // 変数を置換したテンプレート内容
-            const content = replaceVariables(template.template);
+            const templateContent = getTemplateContent(template.id);
+            const content = replaceVariables(templateContent);
 
-            card.innerHTML = `
-                <div class="template-header">
-                    <div>
-                        <h3 class="template-title">${template.title}</h3>
-                        <p class="template-description">${template.description}</p>
+            const isEditing = editingTemplateId === template.id;
+
+            if (isEditing) {
+                card.innerHTML = `
+                    <div class="template-header">
+                        <div>
+                            <h3 class="template-title">${template.title}${customBadge}</h3>
+                            <p class="template-description">${template.description}</p>
+                        </div>
+                        <span class="template-badge ${badgeClass}">${badgeText}</span>
                     </div>
-                    <span class="template-badge ${badgeClass}">${badgeText}</span>
-                </div>
-                <div class="template-content">${escapeHtml(content)}</div>
-                <div class="template-actions">
-                    <button class="copy-btn" onclick="copyTemplate(this, '${template.id}')">
-                        📋 コピー
-                    </button>
-                </div>
-            `;
+                    <textarea class="template-textarea" id="edit-textarea-${template.id}">${escapeHtml(templateContent)}</textarea>
+                    <div class="template-actions">
+                        <button class="template-btn save" onclick="saveTemplate('${template.id}')">
+                            💾 保存
+                        </button>
+                        <button class="template-btn cancel" onclick="cancelEdit()">
+                            キャンセル
+                        </button>
+                        ${isCustomized(template.id) ? `<button class="template-btn reset" onclick="resetTemplate('${template.id}')">🔄 デフォルトに戻す</button>` : ''}
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="template-header">
+                        <div>
+                            <h3 class="template-title">${template.title}${customBadge}</h3>
+                            <p class="template-description">${template.description}</p>
+                        </div>
+                        <span class="template-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="template-content">${escapeHtml(content)}</div>
+                    <div class="template-actions">
+                        <button class="template-btn copy" onclick="copyTemplate(this, '${template.id}')">
+                            📋 コピー
+                        </button>
+                        <button class="template-btn edit" onclick="editTemplate('${template.id}')">
+                            ✏️ 編集
+                        </button>
+                    </div>
+                `;
+            }
 
             return card;
         }
@@ -740,7 +1020,7 @@
                 result = result.replace(/{お客様名}/g, name);
             }
 
-            result = result.replace(/{担当者名}/g, agentName);
+            result = result.replace(/{担当者名}/g, agentName || '（担当者名）');
             result = result.replace(/{物件名}/g, '（物件名）');
             result = result.replace(/{日時}/g, '（日時）');
 
@@ -756,10 +1036,8 @@
 
         // テンプレートをコピー
         function copyTemplate(button, templateId) {
-            const template = messageTemplates.find(t => t.id === templateId);
-            if (!template) return;
-
-            const content = replaceVariables(template.template);
+            const templateContent = getTemplateContent(templateId);
+            const content = replaceVariables(templateContent);
 
             navigator.clipboard.writeText(content).then(() => {
                 button.innerHTML = '✅ コピーしました';
@@ -773,6 +1051,48 @@
                 console.error('コピーに失敗:', err);
                 alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
             });
+        }
+
+        // テンプレートを編集モードに
+        function editTemplate(templateId) {
+            editingTemplateId = templateId;
+            renderTemplates();
+
+            // テキストエリアにフォーカス
+            setTimeout(() => {
+                const textarea = document.getElementById(`edit-textarea-${templateId}`);
+                if (textarea) {
+                    textarea.focus();
+                }
+            }, 100);
+        }
+
+        // 編集をキャンセル
+        function cancelEdit() {
+            editingTemplateId = null;
+            renderTemplates();
+        }
+
+        // テンプレートを保存
+        function saveTemplate(templateId) {
+            const textarea = document.getElementById(`edit-textarea-${templateId}`);
+            if (!textarea) return;
+
+            const newContent = textarea.value;
+            customTemplates[templateId] = newContent;
+            saveCustomTemplates();
+
+            editingTemplateId = null;
+            renderTemplates();
+        }
+
+        // テンプレートをデフォルトに戻す
+        function resetTemplate(templateId) {
+            if (confirm('このテンプレートをデフォルトに戻しますか？\nカスタマイズした内容は削除されます。')) {
+                delete customTemplates[templateId];
+                saveCustomTemplates();
+                renderTemplates();
+            }
         }
 
         console.log('✅ テンプレートページ準備完了');

@@ -263,6 +263,12 @@
     </style>
 </head>
 <body>
+    <!-- ページローディングオーバーレイ -->
+    <div id="page-loading" class="page-loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>読み込み中...</p>
+    </div>
+
     <!-- ナビゲーション -->
     <div id="navigation"></div>
 
@@ -356,6 +362,41 @@
     <script>
         console.log('📋 フォームページ読み込み開始...');
 
+        // ローディング表示制御（300ms遅延表示）
+        let loadingTimer = null;
+        let isLoadingComplete = false;
+        const LOADING_DELAY = 300;
+
+        function startLoadingTimer() {
+            const pageLoading = document.getElementById('page-loading');
+            if (pageLoading) {
+                pageLoading.classList.add('hidden');
+            }
+            loadingTimer = setTimeout(() => {
+                if (!isLoadingComplete) {
+                    const pageLoading = document.getElementById('page-loading');
+                    if (pageLoading) {
+                        pageLoading.classList.remove('hidden');
+                    }
+                }
+            }, LOADING_DELAY);
+        }
+
+        function hideLoading() {
+            isLoadingComplete = true;
+            if (loadingTimer) {
+                clearTimeout(loadingTimer);
+                loadingTimer = null;
+            }
+            const pageLoading = document.getElementById('page-loading');
+            if (pageLoading) {
+                pageLoading.classList.add('hidden');
+            }
+        }
+
+        // 初期化時にローディングタイマー開始
+        startLoadingTimer();
+
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -384,8 +425,12 @@
                 // フォーム状態を更新
                 updateFormDisplay();
 
+                // ローディング終了
+                hideLoading();
+
             } catch (error) {
                 console.error('フォームページ初期化エラー:', error);
+                hideLoading();
             }
         });
 
