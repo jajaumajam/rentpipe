@@ -438,6 +438,32 @@
                 grid-template-columns: repeat(3, 1fr);
             }
         }
+
+        /* アーカイブアクションボタン */
+        .archive-action-btn {
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .archive-action-btn.success {
+            color: #065f46;
+        }
+        .archive-action-btn.success:hover {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .archive-action-btn.danger {
+            color: #991b1b;
+        }
+        .archive-action-btn.danger:hover {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
     </style>
 </head>
 <body>
@@ -923,8 +949,23 @@
                             <option value="申込準備">申込準備</option>
                             <option value="審査中">審査中</option>
                             <option value="契約手続き">契約手続き</option>
-                            <option value="完了">完了</option>
                         </select>
+                    </div>
+
+                    <!-- 成約/失注アクション -->
+                    <div class="form-group" id="archiveActions" style="display: none;">
+                        <label>案件完了アクション</label>
+                        <div style="display: flex; gap: 12px; margin-top: 8px;">
+                            <button type="button" class="archive-action-btn success" onclick="archiveAsSuccess()">
+                                🎉 成約としてアーカイブ
+                            </button>
+                            <button type="button" class="archive-action-btn danger" onclick="archiveAsLost()">
+                                ❌ 失注としてアーカイブ
+                            </button>
+                        </div>
+                        <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                            ※ アーカイブすると顧客管理の「成約済み」または「失注」タブに移動します
+                        </p>
                     </div>
 
                     <div class="form-group">
@@ -1182,6 +1223,8 @@
 
                 // 管理者セクションを表示（visibleクラスを追加）
                 document.getElementById('adminSection').classList.add('visible');
+                // アーカイブアクションを表示
+                document.getElementById('archiveActions').style.display = 'block';
                 // 契約セクションはステータスによって後で表示制御
 
                 // AppInitializerの初期化を待つ
@@ -1534,6 +1577,64 @@
                 } else {
                     contractSection.classList.remove('visible');
                 }
+            }
+        }
+
+        // 成約としてアーカイブ
+        async function archiveAsSuccess() {
+            if (!editingCustomerId) return;
+
+            if (!confirm('この顧客を「成約」としてアーカイブしますか？\n\nアーカイブ後、顧客管理の「成約済み」タブに移動します。')) {
+                return;
+            }
+
+            try {
+                const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                if (!customer) {
+                    throw new Error('顧客が見つかりません');
+                }
+
+                customer.isActive = false;
+                customer.archivedAt = new Date().toISOString();
+                customer.archiveReason = '成約';
+                customer.pipelineStatus = '完了';
+
+                await window.UnifiedDataManager.updateCustomer(customer);
+
+                alert('✅ 成約としてアーカイブしました');
+                window.location.href = 'customer.html';
+            } catch (error) {
+                console.error('❌ アーカイブエラー:', error);
+                alert('アーカイブに失敗しました: ' + error.message);
+            }
+        }
+
+        // 失注としてアーカイブ
+        async function archiveAsLost() {
+            if (!editingCustomerId) return;
+
+            if (!confirm('この顧客を「失注」としてアーカイブしますか？\n\nアーカイブ後、顧客管理の「失注」タブに移動します。')) {
+                return;
+            }
+
+            try {
+                const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                if (!customer) {
+                    throw new Error('顧客が見つかりません');
+                }
+
+                customer.isActive = false;
+                customer.archivedAt = new Date().toISOString();
+                customer.archiveReason = '失注';
+                customer.pipelineStatus = '完了';
+
+                await window.UnifiedDataManager.updateCustomer(customer);
+
+                alert('✅ 失注としてアーカイブしました');
+                window.location.href = 'customer.html';
+            } catch (error) {
+                console.error('❌ アーカイブエラー:', error);
+                alert('アーカイブに失敗しました: ' + error.message);
             }
         }
 

@@ -168,90 +168,103 @@ class PipelineManager {
         `;
     }
 
-    async changeStatus(customerId, currentStatus) {
-        console.log('🔄 ステータス変更開始:', customerId, currentStatus);
+    // ステータス変更モーダルを開く
+    changeStatus(customerId, currentStatus) {
+        console.log('🔄 ステータス変更モーダル表示:', customerId, currentStatus);
 
-        // ステータス選択ダイアログ（アーカイブオプション付き）
-        const options = [
-            ...this.statuses.map((s, i) => `${i + 1}. ${s}${s === currentStatus ? ' (現在)' : ''}`),
-            '---',
-            `${this.statuses.length + 1}. 🎉 成約（アーカイブ）`,
-            `${this.statuses.length + 2}. ❌ 失注（アーカイブ）`
-        ];
+        this.pendingStatusChange = { customerId, currentStatus };
 
-        const newStatus = prompt(
-            `新しいステータスを選択してください:\n\n` +
-            options.join('\n') +
-            `\n\n番号を入力してください (1-${this.statuses.length + 2}):`,
-            this.statuses.indexOf(currentStatus) + 1
-        );
+        const customer = this.dataManager.getCustomerById(customerId);
+        const customerName = customer?.basicInfo?.name || customer?.name || '顧客';
 
-        if (!newStatus) {
-            console.log('ℹ️ ステータス変更キャンセル');
-            return;
+        // モーダルタイトルを設定
+        const titleEl = document.getElementById('status-modal-title');
+        if (titleEl) {
+            titleEl.textContent = `${customerName}さんのステータス`;
         }
 
-        const statusIndex = parseInt(newStatus) - 1;
+        // ステータスオプションを生成
+        const optionsContainer = document.getElementById('status-options');
+        if (optionsContainer) {
+            let html = '';
 
-        // 成約アーカイブ
-        if (statusIndex === this.statuses.length) {
-            await this.archiveCustomer(customerId, '成約');
-            return;
+            // パイプラインステータス
+            this.statuses.forEach(status => {
+                const isCurrent = status === currentStatus;
+                html += `
+                    <button class="status-option ${isCurrent ? 'current' : ''}"
+                            onclick="window.pipelineManager.selectStatus('${status}')">
+                        ${status}${isCurrent ? ' （現在）' : ''}
+                    </button>
+                `;
+            });
+
+            // 区切り線
+            html += `<div class="status-divider"><span>アーカイブ</span></div>`;
+
+            // アーカイブオプション
+            html += `
+                <button class="status-option archive success" onclick="window.pipelineManager.selectArchive('成約')">
+                    🎉 成約
+                </button>
+                <button class="status-option archive danger" onclick="window.pipelineManager.selectArchive('失注')">
+                    ❌ 失注
+                </button>
+            `;
+
+            optionsContainer.innerHTML = html;
         }
 
-        // 失注アーカイブ
-        if (statusIndex === this.statuses.length + 1) {
-            await this.archiveCustomer(customerId, '失注');
-            return;
-        }
+        // モーダルを表示
+        document.getElementById('status-modal').classList.add('active');
+    }
 
-        if (statusIndex < 0 || statusIndex >= this.statuses.length) {
-            alert('無効な番号です');
-            return;
-        }
+    // ステータスを選択
+    async selectStatus(newStatus) {
+        const { customerId, currentStatus } = this.pendingStatusChange || {};
+        if (!customerId) return;
 
-        const selectedStatus = this.statuses[statusIndex];
+        // モーダルを閉じる
+        document.getElementById('status-modal').classList.remove('active');
 
-        if (selectedStatus === currentStatus) {
-            alert('同じステータスです');
-            return;
+        if (newStatus === currentStatus) {
+            return; // 同じステータスなので何もしない
         }
 
         try {
-            // 更新中フラグを立てる
             this.isUpdating = true;
 
             const customer = this.dataManager.getCustomerById(customerId);
-
             if (!customer) {
                 throw new Error('顧客が見つかりません');
             }
 
-            // ステータス更新
-            customer.pipelineStatus = selectedStatus;
-
+            customer.pipelineStatus = newStatus;
             await this.dataManager.updateCustomer(customer);
 
-            console.log('✅ ステータス変更成功:', customerId, '→', selectedStatus);
-
-            // パイプライン再描画
+            console.log('✅ ステータス変更成功:', customerId, '→', newStatus);
             this.renderPipeline();
-
-            alert(`✅ ステータスを「${selectedStatus}」に変更しました`);
 
         } catch (error) {
             console.error('❌ ステータス変更エラー:', error);
             alert('ステータス変更に失敗しました: ' + error.message);
         } finally {
-            // 更新中フラグを解除
             this.isUpdating = false;
+            this.pendingStatusChange = null;
         }
     }
 
-    async archiveCustomer(customerId, reason) {
+    // アーカイブを選択
+    async selectArchive(reason) {
+        const { customerId } = this.pendingStatusChange || {};
+        if (!customerId) return;
+
+        // モーダルを閉じる
+        document.getElementById('status-modal').classList.remove('active');
+
         const reasonLabel = reason === '成約' ? '🎉 成約' : '❌ 失注';
 
-        if (!confirm(`この顧客を「${reasonLabel}」としてアーカイブしますか？\n\nアーカイブされた顧客は顧客一覧の「アーカイブ」タブから確認できます。`)) {
+        if (!confirm(`この顧客を「${reasonLabel}」としてアーカイブしますか？`)) {
             return;
         }
 
@@ -263,7 +276,6 @@ class PipelineManager {
                 throw new Error('顧客が見つかりません');
             }
 
-            // アーカイブ処理
             customer.isActive = false;
             customer.archivedAt = new Date().toISOString();
             customer.archiveReason = reason;
@@ -272,16 +284,14 @@ class PipelineManager {
             await this.dataManager.updateCustomer(customer);
 
             console.log(`✅ 顧客をアーカイブ: ${customerId} (${reason})`);
-
             this.renderPipeline();
-
-            alert(`✅ 顧客を「${reasonLabel}」としてアーカイブしました`);
 
         } catch (error) {
             console.error('❌ アーカイブエラー:', error);
             alert('アーカイブに失敗しました: ' + error.message);
         } finally {
             this.isUpdating = false;
+            this.pendingStatusChange = null;
         }
     }
 }

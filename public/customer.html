@@ -206,8 +206,8 @@
     </style>
 </head>
 <body>
-    <!-- ページ読み込み中オーバーレイ（初期は非表示、一定時間後に表示） -->
-    <div class="page-loading-overlay hidden" id="page-loading">
+    <!-- ページ読み込み中オーバーレイ（初期は表示、完了後に非表示） -->
+    <div class="page-loading-overlay" id="page-loading">
         <div class="page-loading-spinner"></div>
         <div class="page-loading-text">
             <div class="loading-title">RentPipe</div>
@@ -222,6 +222,131 @@
             <p id="loading-message">処理中...</p>
         </div>
     </div>
+
+    <!-- アーカイブ確認モーダル -->
+    <div class="modal-overlay" id="archive-modal">
+        <div class="modal-content">
+            <h3 id="archive-modal-title">顧客をアーカイブ</h3>
+            <p id="archive-modal-desc">アーカイブ理由を選択してください</p>
+            <div class="archive-options">
+                <button class="archive-option-btn success" onclick="confirmArchive('成約')">
+                    🎉 成約
+                </button>
+                <button class="archive-option-btn danger" onclick="confirmArchive('失注')">
+                    ❌ 失注
+                </button>
+            </div>
+            <div class="archive-reason-input">
+                <label>備考（任意）：エージェントメモに追記されます</label>
+                <textarea id="archive-reason-text" placeholder="例：他社で契約、条件不一致、連絡途絶など"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeArchiveModal()">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            color: #1f2937;
+        }
+        .modal-content > p {
+            margin: 0 0 20px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .archive-options {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .archive-option-btn {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .archive-option-btn:hover {
+            transform: translateY(-2px);
+        }
+        .archive-option-btn.success:hover {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .archive-option-btn.danger:hover {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .archive-reason-input {
+            margin-bottom: 20px;
+        }
+        .archive-reason-input label {
+            display: block;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .archive-reason-input textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            box-sizing: border-box;
+        }
+        .archive-reason-input textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .modal-actions {
+            text-align: center;
+        }
+        .btn-modal-cancel {
+            padding: 10px 24px;
+            border: none;
+            background: #f3f4f6;
+            color: #4b5563;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-modal-cancel:hover {
+            background: #e5e7eb;
+        }
+    </style>
 
     <!-- ナビゲーション -->
     <div id="navigation"></div>
@@ -369,67 +494,13 @@
             }
         }
 
-        // ローディング表示管理
-        let loadingTimer = null;
-        let isLoadingComplete = false;
-        const LOADING_DELAY = 300; // ms - この時間以上かかる場合のみローディングを表示
-
-        function startLoadingTimer() {
-            // 初期状態: ローディングも非表示、コンテンツも非表示
-            const pageLoading = document.getElementById('page-loading');
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
-
-            loadingTimer = setTimeout(() => {
-                // 読み込みがまだ完了していない場合のみローディングを表示
-                if (!isLoadingComplete) {
-                    const pageLoading = document.getElementById('page-loading');
-                    if (pageLoading) {
-                        pageLoading.classList.remove('hidden');
-                    }
-                }
-            }, LOADING_DELAY);
-        }
-
-        function cancelLoadingTimer() {
-            if (loadingTimer) {
-                clearTimeout(loadingTimer);
-                loadingTimer = null;
-            }
-        }
-
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // 統計表示設定を適用
                 loadStatsVisibility();
 
-                // ローディングタイマー開始
-                startLoadingTimer();
-
-                // ローカルストレージからすぐに表示できるデータがあれば先に表示
-                const cachedData = localStorage.getItem('rentpipe_customers');
-                let hasCachedData = false;
-                if (cachedData) {
-                    try {
-                        const parsed = JSON.parse(cachedData);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            allCustomers = parsed;
-                            hasCachedData = true;
-                            // キャッシュがある場合は即座に表示
-                            isLoadingComplete = true;
-                            cancelLoadingTimer();
-                            showContent();
-                            displayCustomers();
-                            updateStats();
-                        }
-                    } catch (e) {
-                        console.log('キャッシュデータのパースに失敗');
-                    }
-                }
-
-                // PageInitializerで共通初期化
+                // PageInitializerで共通初期化（認証・データ読み込み）
                 await PageInitializer.initialize({
                     onDataUpdated: () => {
                         console.log('🔔 データ更新通知受信 - 再表示');
@@ -439,16 +510,12 @@
                 });
 
                 // 初期化完了後にコンテンツを表示
-                isLoadingComplete = true;
-                cancelLoadingTimer();
                 showContent();
                 displayCustomers();
                 updateStats();
 
             } catch (error) {
                 console.error('customer.html 初期化エラー:', error);
-                isLoadingComplete = true;
-                cancelLoadingTimer();
                 showContent();
             }
         });
@@ -665,49 +732,71 @@
             document.getElementById('loading-overlay').classList.remove('active');
         }
 
-        // 顧客を非アクティブ化（アーカイブ）
-        async function deactivateCustomer(customerId) {
+        // アーカイブモーダル関連
+        let archiveTargetCustomerId = null;
+
+        // 顧客を非アクティブ化（アーカイブ）- モーダルを開く
+        function deactivateCustomer(customerId) {
             const customer = window.UnifiedDataManager.getCustomerById(customerId);
             if (!customer) {
                 alert('顧客が見つかりません');
                 return;
             }
 
+            archiveTargetCustomerId = customerId;
             const name = customer.basicInfo?.name || customer.name || '顧客';
-            const reason = prompt(
-                `${name}さんをアーカイブしますか?\n\n` +
-                `理由を選択してください:\n` +
-                `1. 成約済み\n2. 失注(他社で契約)\n3. 連絡途絶\n4. 条件が合わない\n5. キャンセル\n6. その他\n\n` +
-                `番号を入力してください(1-6):`,
-                '1'
-            );
 
-            if (!reason) return;
+            document.getElementById('archive-modal-title').textContent = `${name}さんをアーカイブ`;
+            document.getElementById('archive-reason-text').value = '';
+            document.getElementById('archive-modal').classList.add('active');
+        }
 
-            const reasons = {
-                '1': '成約', '2': '失注', '3': '失注',
-                '4': '失注', '5': '失注', '6': 'その他'
-            };
-            const reasonLabels = {
-                '1': '成約済み', '2': '失注(他社で契約)', '3': '連絡途絶',
-                '4': '条件が合わない', '5': 'キャンセル', '6': 'その他'
-            };
+        // アーカイブモーダルを閉じる
+        function closeArchiveModal() {
+            document.getElementById('archive-modal').classList.remove('active');
+            archiveTargetCustomerId = null;
+        }
+
+        // アーカイブを実行
+        async function confirmArchive(archiveReason) {
+            if (!archiveTargetCustomerId) return;
+
+            const customer = window.UnifiedDataManager.getCustomerById(archiveTargetCustomerId);
+            if (!customer) {
+                closeArchiveModal();
+                return;
+            }
+
+            const name = customer.basicInfo?.name || customer.name || '顧客';
+            const reasonText = document.getElementById('archive-reason-text').value.trim();
 
             try {
+                closeArchiveModal();
                 showLoading('アーカイブ中...');
-                await window.UnifiedDataManager.deactivateCustomer(customerId, reasonLabels[reason] || 'その他');
 
-                // archiveReasonを設定（成約か失注か）
-                const archiveReason = reasons[reason] || 'その他';
-                await window.UnifiedDataManager.updateCustomer({
-                    id: customerId,
+                // アーカイブ実行
+                await window.UnifiedDataManager.deactivateCustomer(archiveTargetCustomerId, archiveReason);
+
+                // archiveReasonを設定
+                const updateData = {
+                    id: archiveTargetCustomerId,
                     archiveReason: archiveReason
-                });
+                };
+
+                // 備考が入力されていればエージェントメモに追記
+                if (reasonText) {
+                    const currentMemo = customer.agentMemo || '';
+                    const timestamp = new Date().toLocaleDateString('ja-JP');
+                    const appendText = `\n\n【${timestamp} アーカイブ】${archiveReason}: ${reasonText}`;
+                    updateData.agentMemo = currentMemo + appendText;
+                }
+
+                await window.UnifiedDataManager.updateCustomer(updateData);
 
                 displayCustomers();
                 updateStats();
                 hideLoading();
-                PageInitializer.showNotification(`${name}さんをアーカイブしました`, 'success');
+                PageInitializer.showNotification(`${name}さんをアーカイブしました（${archiveReason}）`, 'success');
             } catch (error) {
                 console.error('❌ アーカイブエラー:', error);
                 hideLoading();

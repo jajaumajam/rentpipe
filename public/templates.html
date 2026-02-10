@@ -370,12 +370,6 @@
     </style>
 </head>
 <body>
-    <!-- ページローディングオーバーレイ -->
-    <div id="page-loading" class="page-loading-overlay hidden">
-        <div class="loading-spinner"></div>
-        <p>読み込み中...</p>
-    </div>
-
     <!-- ナビゲーション -->
     <div id="navigation"></div>
 
@@ -418,13 +412,7 @@
         <!-- カスタマイズヒント -->
         <div class="customization-hint">
             <h4>💡 使い方</h4>
-            <p>「編集」ボタンでテンプレートをカスタマイズできます。変更は自動保存されます。</p>
-            <div class="variable-list">
-                <span class="variable-tag">{お客様名}</span>
-                <span class="variable-tag">{担当者名}</span>
-                <span class="variable-tag">{物件名}</span>
-                <span class="variable-tag">{日時}</span>
-            </div>
+            <p>「編集」ボタンでテンプレートをカスタマイズできます。編集後は「保存」ボタンを押してください。</p>
         </div>
 
         <!-- テンプレート一覧 -->
@@ -434,48 +422,19 @@
     </div>
 
     <!-- スクリプト -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    <script src="js/data-migration.js"></script>
+    <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/app-initializer.js"></script>
     <script src="js/page-initializer.js"></script>
 
     <script>
-        // ローディング表示制御（300ms遅延表示）
-        let loadingTimer = null;
-        let isLoadingComplete = false;
-        const LOADING_DELAY = 300;
-
-        function startLoadingTimer() {
-            const pageLoading = document.getElementById('page-loading');
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
-            loadingTimer = setTimeout(() => {
-                if (!isLoadingComplete) {
-                    const pageLoading = document.getElementById('page-loading');
-                    if (pageLoading) {
-                        pageLoading.classList.remove('hidden');
-                    }
-                }
-            }, LOADING_DELAY);
-        }
-
-        function hideLoading() {
-            isLoadingComplete = true;
-            if (loadingTimer) {
-                clearTimeout(loadingTimer);
-                loadingTimer = null;
-            }
-            const pageLoading = document.getElementById('page-loading');
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
-        }
-
-        // 初期化時にローディングタイマー開始
-        startLoadingTimer();
-
         let currentCategory = 'all';
         let selectedCustomer = null;
         let agentName = '';
@@ -807,40 +766,77 @@
                     }
                 });
 
-                loadSettings();
-                loadCustomTemplates();
+                await loadSettings();
+                await loadCustomTemplates();
                 loadCustomerList();
                 renderTemplates();
 
-                // ローディング終了
-                hideLoading();
-
             } catch (error) {
                 console.error('templates.html 初期化エラー:', error);
-                hideLoading();
             }
         });
 
-        // 設定を読み込み
-        function loadSettings() {
-            const settings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
-            agentName = settings.agentName || '';
+        // 設定を読み込み（Google Sheets優先）
+        async function loadSettings() {
+            try {
+                // Google Sheetsから読み込み
+                if (window.UnifiedSheetsManager?.isEnabled || window.UnifiedSheetsManager?.spreadsheetId) {
+                    const settings = await window.UnifiedSheetsManager.loadSetting('templateSettings');
+                    if (settings && settings.agentName) {
+                        agentName = settings.agentName;
+                        document.getElementById('agentNameInput').value = agentName;
+                        console.log('📋 Google Sheets から担当者名読み込み:', agentName);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Google Sheets からの読み込みスキップ:', e.message);
+            }
+            // フォールバック: localStorage
+            const localSettings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
+            agentName = localSettings.agentName || '';
             document.getElementById('agentNameInput').value = agentName;
         }
 
-        // 担当者名を保存
-        function saveAgentName() {
+        // 担当者名を保存（Google Sheets + localStorage）
+        async function saveAgentName() {
             agentName = document.getElementById('agentNameInput').value.trim();
-            const settings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
-            settings.agentName = agentName;
+
+            const settings = { agentName: agentName };
+
+            // Google Sheetsに保存
+            if (window.UnifiedSheetsManager) {
+                try {
+                    await window.UnifiedSheetsManager.saveSetting('templateSettings', settings);
+                    console.log('💾 Google Sheets に担当者名保存');
+                } catch (e) {
+                    console.warn('Google Sheets への保存失敗:', e.message);
+                }
+            }
+
+            // localStorageにも保存（キャッシュとして）
             localStorage.setItem('rentpipe_template_settings', JSON.stringify(settings));
 
             renderTemplates();
             alert('✅ 担当者名を保存しました');
         }
 
-        // カスタムテンプレートを読み込み
-        function loadCustomTemplates() {
+        // カスタムテンプレートを読み込み（Google Sheets優先）
+        async function loadCustomTemplates() {
+            try {
+                // Google Sheetsから読み込み
+                if (window.UnifiedSheetsManager?.isEnabled || window.UnifiedSheetsManager?.spreadsheetId) {
+                    const templates = await window.UnifiedSheetsManager.loadSetting('customTemplates');
+                    if (templates && Object.keys(templates).length > 0) {
+                        customTemplates = templates;
+                        console.log('📋 Google Sheets からカスタムテンプレート読み込み');
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Google Sheets からの読み込みスキップ:', e.message);
+            }
+            // フォールバック: localStorage
             const saved = localStorage.getItem('rentpipe_custom_templates');
             if (saved) {
                 try {
@@ -851,8 +847,19 @@
             }
         }
 
-        // カスタムテンプレートを保存
-        function saveCustomTemplates() {
+        // カスタムテンプレートを保存（Google Sheets + localStorage）
+        async function saveCustomTemplates() {
+            // Google Sheetsに保存
+            if (window.UnifiedSheetsManager) {
+                try {
+                    await window.UnifiedSheetsManager.saveSetting('customTemplates', customTemplates);
+                    console.log('💾 Google Sheets にカスタムテンプレート保存');
+                } catch (e) {
+                    console.warn('Google Sheets への保存失敗:', e.message);
+                }
+            }
+
+            // localStorageにも保存（キャッシュとして）
             localStorage.setItem('rentpipe_custom_templates', JSON.stringify(customTemplates));
         }
 
@@ -1074,23 +1081,24 @@
         }
 
         // テンプレートを保存
-        function saveTemplate(templateId) {
+        async function saveTemplate(templateId) {
             const textarea = document.getElementById(`edit-textarea-${templateId}`);
             if (!textarea) return;
 
             const newContent = textarea.value;
             customTemplates[templateId] = newContent;
-            saveCustomTemplates();
+            await saveCustomTemplates();
 
             editingTemplateId = null;
             renderTemplates();
+            alert('✅ テンプレートを保存しました');
         }
 
         // テンプレートをデフォルトに戻す
-        function resetTemplate(templateId) {
+        async function resetTemplate(templateId) {
             if (confirm('このテンプレートをデフォルトに戻しますか？\nカスタマイズした内容は削除されます。')) {
                 delete customTemplates[templateId];
-                saveCustomTemplates();
+                await saveCustomTemplates();
                 renderTemplates();
             }
         }
