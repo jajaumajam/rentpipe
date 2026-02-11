@@ -46,7 +46,14 @@ const GoogleCalendarAPI = {
     },
 
     /**
-     * フォローアップイベントを作成
+     * アプリケーションのベースURLを取得
+     */
+    getBaseUrl: function() {
+        return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
+    },
+
+    /**
+     * フォローアップイベントを作成（成約時に呼び出し）
      * @param {Object} customer - 顧客データ
      * @returns {Object} - 作成結果
      */
@@ -57,22 +64,20 @@ const GoogleCalendarAPI = {
         }
 
         const contractInfo = customer.contractInfo || {};
+        const moveInDate = contractInfo.moveInDate;
         const contractEndDate = contractInfo.contractEndDate;
+        const contractType = contractInfo.contractType || '普通借家';
 
-        if (!contractEndDate) {
-            return { success: false, error: '契約終了日が設定されていません' };
+        if (!moveInDate) {
+            return { success: false, error: '入居日が設定されていません' };
         }
 
         const customerName = customer.basicInfo?.name || '顧客';
-        const propertyAddress = contractInfo.propertyAddress || '物件';
-        const contractType = contractInfo.contractType || '普通借家';
-        const monthlyRent = contractInfo.monthlyRent;
-
         const createdEvents = [];
         const errors = [];
 
         // フォローアップタイミングを計算
-        const followUpTimings = this.calculateFollowUpTimings(contractEndDate, contractType);
+        const followUpTimings = this.calculateFollowUpTimings(moveInDate, contractEndDate, contractType);
 
         for (const timing of followUpTimings) {
             try {
@@ -107,68 +112,99 @@ const GoogleCalendarAPI = {
 
     /**
      * フォローアップタイミングを計算
+     * @param {string} moveInDate - 入居日 (YYYY-MM-DD)
      * @param {string} contractEndDate - 契約終了日 (YYYY-MM-DD)
      * @param {string} contractType - 契約種別
      * @returns {Array} - フォローアップタイミングの配列
      */
-    calculateFollowUpTimings: function(contractEndDate, contractType) {
-        const endDate = new Date(contractEndDate);
+    calculateFollowUpTimings: function(moveInDate, contractEndDate, contractType) {
         const timings = [];
-
-        if (contractType === '定期借家') {
-            // 定期借家: 期間満了型のため、より早めに連絡
-            // 6ヶ月前: 転居先検討開始の案内
-            timings.push({
-                label: '【定期】6ヶ月前連絡',
-                date: this.addMonths(endDate, -6),
-                type: 'early_notice',
-                reminderDays: 7,
-                messageTemplate: 'fixed_term_6months'
-            });
-
-            // 4ヶ月前: 具体的な物件提案
-            timings.push({
-                label: '【定期】4ヶ月前フォロー',
-                date: this.addMonths(endDate, -4),
-                type: 'property_proposal',
-                reminderDays: 3,
-                messageTemplate: 'fixed_term_4months'
-            });
-
-            // 2ヶ月前: 最終確認
-            timings.push({
-                label: '【定期】2ヶ月前最終確認',
-                date: this.addMonths(endDate, -2),
-                type: 'final_check',
-                reminderDays: 1,
-                messageTemplate: 'fixed_term_2months'
-            });
-        } else {
-            // 普通借家: 更新型
-            // 4ヶ月前: 更新意向確認
-            timings.push({
-                label: '更新4ヶ月前連絡',
-                date: this.addMonths(endDate, -4),
-                type: 'renewal_check',
-                reminderDays: 7,
-                messageTemplate: 'regular_4months'
-            });
-
-            // 2ヶ月前: 転居希望者へのフォロー
-            timings.push({
-                label: '更新2ヶ月前フォロー',
-                date: this.addMonths(endDate, -2),
-                type: 'follow_up',
-                reminderDays: 3,
-                messageTemplate: 'regular_2months'
-            });
-        }
-
-        // 過去の日付は除外
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // ===== 全案件共通: 入居日基準 =====
+        if (moveInDate) {
+            const moveIn = new Date(moveInDate);
+
+            // 入居日の翌日: 入居後のお礼（前日にリマインド）
+            const thankYouDate = this.addDays(moveIn, 1);
+            timings.push({
+                label: '入居後のお礼',
+                date: thankYouDate,
+                type: 'move_in_thanks',
+                reminderDays: 1,
+                templateId: 'move-in-thanks'
+            });
+
+            // 入居日の1ヶ月後: 1ヶ月後フォロー（3日前にリマインド）
+            const oneMonthDate = this.addMonths(moveIn, 1);
+            timings.push({
+                label: '1ヶ月後フォロー',
+                date: oneMonthDate,
+                type: 'one_month_followup',
+                reminderDays: 3,
+                templateId: 'one-month-followup'
+            });
+
+            // 入居日の6ヶ月後: 6ヶ月後フォロー（7日前にリマインド）
+            const sixMonthDate = this.addMonths(moveIn, 6);
+            timings.push({
+                label: '6ヶ月後フォロー',
+                date: sixMonthDate,
+                type: 'six_month_followup',
+                reminderDays: 7,
+                templateId: 'six-month-followup'
+            });
+
+            // 入居日の1年後: 1年後フォロー（7日前にリマインド）
+            const oneYearDate = this.addMonths(moveIn, 12);
+            timings.push({
+                label: '1年後フォロー',
+                date: oneYearDate,
+                type: 'one_year_followup',
+                reminderDays: 7,
+                templateId: 'one-year-followup'
+            });
+        }
+
+        // ===== 契約種別に応じたフォロー: 契約終了日基準 =====
+        if (contractEndDate) {
+            const endDate = new Date(contractEndDate);
+
+            if (contractType === '定期借家') {
+                // 定期借家: 6ヶ月前に転居先検討開始の案内（7日前にリマインド）
+                const sixMonthsBefore = this.addMonths(endDate, -6);
+                timings.push({
+                    label: '【定期】契約満了6ヶ月前連絡',
+                    date: sixMonthsBefore,
+                    type: 'fixed_term_notice',
+                    reminderDays: 7,
+                    templateId: 'moving-consultation'
+                });
+            } else {
+                // 普通借家: 4ヶ月前に更新意向確認（7日前にリマインド）
+                const fourMonthsBefore = this.addMonths(endDate, -4);
+                timings.push({
+                    label: '更新意向確認（4ヶ月前）',
+                    date: fourMonthsBefore,
+                    type: 'renewal_check',
+                    reminderDays: 7,
+                    templateId: 'moving-consultation'
+                });
+            }
+        }
+
+        // 過去の日付は除外
         return timings.filter(t => new Date(t.date) > today);
+    },
+
+    /**
+     * 日を加算
+     */
+    addDays: function(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return this.formatDate(result);
     },
 
     /**
@@ -177,11 +213,16 @@ const GoogleCalendarAPI = {
     addMonths: function(date, months) {
         const result = new Date(date);
         result.setMonth(result.getMonth() + months);
+        return this.formatDate(result);
+    },
 
-        // YYYY-MM-DD形式で返す
-        const year = result.getFullYear();
-        const month = String(result.getMonth() + 1).padStart(2, '0');
-        const day = String(result.getDate()).padStart(2, '0');
+    /**
+     * 日付をYYYY-MM-DD形式にフォーマット
+     */
+    formatDate: function(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     },
 
@@ -191,6 +232,7 @@ const GoogleCalendarAPI = {
     generateEventDescription: function(customer, timing) {
         const basicInfo = customer.basicInfo || {};
         const contractInfo = customer.contractInfo || {};
+        const baseUrl = this.getBaseUrl();
 
         let description = `【フォローアップ連絡】\n\n`;
         description += `■ 顧客情報\n`;
@@ -199,18 +241,24 @@ const GoogleCalendarAPI = {
         description += `  メール: ${basicInfo.email || '未設定'}\n\n`;
 
         description += `■ 契約情報\n`;
-        description += `  物件: ${contractInfo.propertyAddress || '未設定'}\n`;
+        description += `  物件: ${contractInfo.propertyName || contractInfo.propertyAddress || '未設定'}\n`;
         description += `  契約種別: ${contractInfo.contractType || '未設定'}\n`;
+        description += `  入居日: ${contractInfo.moveInDate || '未設定'}\n`;
         description += `  契約終了日: ${contractInfo.contractEndDate || '未設定'}\n`;
         description += `  月額賃料: ${contractInfo.monthlyRent ? contractInfo.monthlyRent.toLocaleString() + '円' : '未設定'}\n\n`;
 
         description += `■ 連絡目的\n`;
         description += `  ${this.getTimingPurpose(timing)}\n\n`;
 
-        description += `■ トークスクリプト\n`;
-        description += this.getMessageTemplate(timing, customer);
+        description += `■ メッセージテンプレート\n`;
+        description += `  以下のリンクからテンプレートを確認してください:\n`;
+        description += `  ${baseUrl}/templates.html\n\n`;
 
-        description += `\n\n---\nRentPipeで自動作成されました`;
+        if (timing.templateId) {
+            description += `  推奨テンプレート: ${this.getTemplateTitle(timing.templateId)}\n`;
+        }
+
+        description += `\n---\nRentPipeで自動作成されました`;
 
         return description;
     },
@@ -220,82 +268,30 @@ const GoogleCalendarAPI = {
      */
     getTimingPurpose: function(timing) {
         const purposes = {
-            'early_notice': '契約満了に向けた転居先検討の案内',
-            'property_proposal': '具体的な物件提案',
-            'final_check': '最終的な意向確認と手続き案内',
+            'move_in_thanks': '入居後のお礼とご挨拶',
+            'one_month_followup': '入居1ヶ月後のフォローアップ',
+            'six_month_followup': '入居6ヶ月後のフォローアップ・ご紹介依頼',
+            'one_year_followup': '入居1年後のフォローアップ・住み替え相談',
+            'fixed_term_notice': '定期借家契約満了に向けた転居先検討の案内',
             'renewal_check': '更新意向の確認と転居希望のヒアリング',
-            'follow_up': '転居希望者への物件提案'
+            'custom_followup': 'カスタムフォローアップ'
         };
         return purposes[timing.type] || '定期フォローアップ';
     },
 
     /**
-     * メッセージテンプレートを取得
+     * テンプレートタイトルを取得
      */
-    getMessageTemplate: function(timing, customer) {
-        const name = customer.basicInfo?.name || 'お客様';
-        const contractEnd = customer.contractInfo?.contractEndDate || '';
-
-        const templates = {
-            'fixed_term_6months': `
-「${name}様、お世話になっております。
-以前お住まいをご紹介させていただきました○○です。
-
-お住まいの定期借家契約が${contractEnd}に満了となりますので、
-そろそろ次のお住まい探しを始められてはいかがでしょうか。
-
-ご希望のエリアや条件などお聞かせいただければ、
-ご要望に合った物件をお探しいたします。
-
-お忙しいところ恐れ入りますが、ご都合の良いお時間を
-お知らせいただけますでしょうか。」`,
-
-            'fixed_term_4months': `
-「${name}様、先日はお電話ありがとうございました。
-
-お伝えいただいたご希望条件をもとに、
-いくつか物件をピックアップいたしました。
-
-[物件リストを添付]
-
-ご興味のある物件がございましたら、
-内見のご案内をさせていただきます。」`,
-
-            'fixed_term_2months': `
-「${name}様、契約満了まで残り2ヶ月となりました。
-
-次のお住まいの準備は順調でしょうか。
-まだお探し中でしたら、引き続きお手伝いいたします。
-
-退去手続きについてもご不明点があれば
-お気軽にお問い合わせください。」`,
-
-            'regular_4months': `
-「${name}様、お世話になっております。
-
-契約更新時期（${contractEnd}）が近づいてまいりました。
-つきましては、更新のご意向をお伺いしたく
-ご連絡いたしました。
-
-もし転居をご検討されている場合は、
-物件探しのお手伝いをさせていただきます。
-
-ご都合の良いお時間をお知らせください。」`,
-
-            'regular_2months': `
-「${name}様、先日のご連絡の件でお電話いたしました。
-
-転居をご検討とのことでしたので、
-ご希望条件に合いそうな物件をいくつか
-ピックアップいたしました。
-
-[物件リストを準備]
-
-ご興味のある物件がございましたら、
-内見のご手配をいたします。」`
+    getTemplateTitle: function(templateId) {
+        const titles = {
+            'move-in-thanks': 'ご入居後のお礼',
+            'one-month-followup': '1ヶ月後フォロー',
+            'six-month-followup': '6ヶ月後フォロー',
+            'one-year-followup': '1年後フォロー',
+            'moving-consultation': '住み替えのご相談案内',
+            'referral-request': 'ご紹介のお願い'
         };
-
-        return templates[timing.messageTemplate] || '※定型メッセージなし';
+        return titles[templateId] || templateId;
     },
 
     /**
@@ -328,6 +324,55 @@ const GoogleCalendarAPI = {
         });
 
         return response.result;
+    },
+
+    /**
+     * 単一のカスタムフォローアップイベントを作成（追加フォローアップ用）
+     * @param {Object} customer - 顧客データ
+     * @param {string} followUpDate - フォロー日付 (YYYY-MM-DD)
+     * @param {string} label - イベントのラベル
+     * @param {number} reminderDays - リマインド日数
+     * @returns {Object} - 作成結果
+     */
+    createSingleFollowUpEvent: async function(customer, followUpDate, label, reminderDays = 3) {
+        const initResult = await this.init();
+        if (!initResult.success) {
+            return initResult;
+        }
+
+        const customerName = customer.basicInfo?.name || '顧客';
+
+        const timing = {
+            label: label || 'フォローアップ',
+            date: followUpDate,
+            type: 'custom_followup',
+            reminderDays: reminderDays,
+            templateId: 'moving-consultation'
+        };
+
+        try {
+            const event = await this.createCalendarEvent({
+                summary: `📞 ${timing.label}: ${customerName}様`,
+                description: this.generateEventDescription(customer, timing),
+                startDate: followUpDate,
+                reminderDays: reminderDays
+            });
+
+            console.log(`✅ 追加フォローアップイベント作成: ${label} - ${followUpDate}`);
+
+            return {
+                success: true,
+                eventId: event.id,
+                timing: label,
+                date: followUpDate
+            };
+        } catch (error) {
+            console.error('❌ 追加フォローアップイベント作成エラー:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     },
 
     /**

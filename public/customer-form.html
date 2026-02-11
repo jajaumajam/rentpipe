@@ -1058,20 +1058,28 @@
                         </div>
                         <div class="form-group">
                             <label>契約期間</label>
-                            <select id="contractPeriodMonths" onchange="updateContractEndDate()">
+                            <select id="contractPeriodMonths" onchange="handleContractPeriodChange()">
                                 <option value="12">1年（12ヶ月）</option>
                                 <option value="24" selected>2年（24ヶ月）</option>
                                 <option value="36">3年（36ヶ月）</option>
                                 <option value="48">4年（48ヶ月）</option>
                                 <option value="60">5年（60ヶ月）</option>
+                                <option value="other">その他（手入力）</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>契約終了予定日（自動計算）</label>
-                        <input type="date" id="contractEndDate" readonly style="background: #f3f4f6;">
-                        <p class="help-text">成約日と契約期間から自動計算されます</p>
+                    <div class="form-row">
+                        <div class="form-group" id="contractEndDateAutoGroup">
+                            <label>契約終了予定日（自動計算）</label>
+                            <input type="date" id="contractEndDate" readonly style="background: #f3f4f6;">
+                            <p class="help-text">成約日と契約期間から自動計算されます</p>
+                        </div>
+                        <div class="form-group" id="contractEndDateManualGroup" style="display: none;">
+                            <label>契約終了予定日（手入力）</label>
+                            <input type="date" id="contractEndDateManual" onchange="updateContractEndDateFromManual()">
+                            <p class="help-text">契約期間が「その他」の場合、終了日を直接入力してください</p>
+                        </div>
                     </div>
 
                     <div class="form-group" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #86efac;">
@@ -1122,6 +1130,39 @@
                             ※ 案内途中で見込みがなくなった場合にアーカイブします
                         </p>
                     </div>
+                </div>
+
+                <!-- ========================================
+                     セクション8: 追加フォローアップ（成約アーカイブ済み顧客用）
+                ========================================= -->
+                <div class="form-section" id="additionalFollowUpSection" style="display: none; border: 2px solid #10b981; background: #f0fdf4;">
+                    <h2 class="section-title"><span class="icon">📅</span> 追加フォローアップ</h2>
+                    <p style="color: #6b7280; margin-bottom: 20px;">成約済みの顧客に対して、追加のフォローアップ予定をカレンダーに登録できます。</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>フォローアップ日</label>
+                            <input type="date" id="additionalFollowUpDate">
+                        </div>
+                        <div class="form-group">
+                            <label>リマインド（何日前）</label>
+                            <select id="additionalFollowUpReminder">
+                                <option value="1">1日前</option>
+                                <option value="3" selected>3日前</option>
+                                <option value="7">7日前</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>フォローアップ内容</label>
+                        <input type="text" id="additionalFollowUpLabel" placeholder="例：更新後フォロー、リピート確認">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="createAdditionalFollowUp()" style="background: #10b981; width: auto; padding: 12px 24px;">
+                        📅 Googleカレンダーに追加
+                    </button>
+                    <p class="help-text" style="margin-top: 8px;">
+                        ※ 契約更新後や、リピート確認など任意のタイミングでフォロー予定を追加できます
+                    </p>
                 </div>
 
                 <div class="button-group">
@@ -1239,13 +1280,33 @@
             document.getElementById('floorValue').textContent = text;
         }
 
+        // 契約期間の変更ハンドラ
+        function handleContractPeriodChange() {
+            const periodValue = document.getElementById('contractPeriodMonths').value;
+            const autoGroup = document.getElementById('contractEndDateAutoGroup');
+            const manualGroup = document.getElementById('contractEndDateManualGroup');
+            const endDateInput = document.getElementById('contractEndDate');
+
+            if (periodValue === 'other') {
+                // その他を選択した場合、手入力フィールドを表示
+                if (autoGroup) autoGroup.style.display = 'none';
+                if (manualGroup) manualGroup.style.display = 'block';
+                endDateInput.value = '';
+            } else {
+                // 通常の期間を選択した場合、自動計算フィールドを表示
+                if (autoGroup) autoGroup.style.display = 'block';
+                if (manualGroup) manualGroup.style.display = 'none';
+                updateContractEndDate();
+            }
+        }
+
         // 契約終了日を自動計算
         function updateContractEndDate() {
             const contractDateInput = document.getElementById('contractDate');
             const periodMonthsSelect = document.getElementById('contractPeriodMonths');
             const endDateInput = document.getElementById('contractEndDate');
 
-            if (!contractDateInput.value) {
+            if (!contractDateInput.value || periodMonthsSelect.value === 'other') {
                 endDateInput.value = '';
                 return;
             }
@@ -1262,6 +1323,13 @@
             const month = String(endDate.getMonth() + 1).padStart(2, '0');
             const day = String(endDate.getDate()).padStart(2, '0');
             endDateInput.value = `${year}-${month}-${day}`;
+        }
+
+        // 契約終了日を手入力から更新
+        function updateContractEndDateFromManual() {
+            const manualDate = document.getElementById('contractEndDateManual').value;
+            const endDateInput = document.getElementById('contractEndDate');
+            endDateInput.value = manualDate;
         }
 
         // 概算初期費用を計算
@@ -1508,10 +1576,18 @@
                 document.getElementById('contractDate').value = contractInfo.contractDate || '';
                 document.getElementById('contractMoveInDate').value = contractInfo.moveInDate || '';
                 document.getElementById('contractType').value = contractInfo.contractType || '普通借家';
-                document.getElementById('contractPeriodMonths').value = contractInfo.contractPeriodMonths || 24;
 
-                // 契約終了日を自動計算
-                updateContractEndDate();
+                // 契約期間の設定（「その他」の場合は手入力フィールドを使用）
+                const periodValue = contractInfo.contractPeriodMonths;
+                if (periodValue === 'other' || (contractInfo.contractEndDateManual && !['12', '24', '36', '48', '60'].includes(String(periodValue)))) {
+                    document.getElementById('contractPeriodMonths').value = 'other';
+                    document.getElementById('contractEndDateManual').value = contractInfo.contractEndDate || '';
+                    handleContractPeriodChange();
+                } else {
+                    document.getElementById('contractPeriodMonths').value = periodValue || 24;
+                    // 契約終了日を自動計算
+                    updateContractEndDate();
+                }
                 // 概算初期費用を計算
                 calculateInitialCost();
 
@@ -1634,7 +1710,9 @@
                         // 契約情報
                         contractDate: document.getElementById('contractDate')?.value || null,
                         contractType: document.getElementById('contractType')?.value || '普通借家',
-                        contractPeriodMonths: parseInt(document.getElementById('contractPeriodMonths')?.value) || 24,
+                        contractPeriodMonths: document.getElementById('contractPeriodMonths')?.value === 'other'
+                            ? 'other'
+                            : (parseInt(document.getElementById('contractPeriodMonths')?.value) || 24),
                         contractEndDate: document.getElementById('contractEndDate')?.value || null,
                         moveInDate: document.getElementById('contractMoveInDate')?.value || null
                     },
@@ -1741,6 +1819,21 @@
             const archiveSection = document.getElementById('archiveSection');
             const bothOptions = document.getElementById('archiveBothOptions');
             const lostOnly = document.getElementById('archiveLostOnly');
+            const additionalFollowUpSection = document.getElementById('additionalFollowUpSection');
+
+            // アーカイブ済み成約顧客の場合は追加フォローアップセクションを表示
+            if (isEditMode && editingCustomerId) {
+                const customer = window.UnifiedDataManager?.getCustomerById(editingCustomerId);
+                if (customer && customer.isActive === false && customer.archiveReason === '成約') {
+                    // 成約アーカイブ済み：アーカイブセクション非表示、追加フォローアップセクション表示
+                    if (archiveSection) archiveSection.style.display = 'none';
+                    if (additionalFollowUpSection) additionalFollowUpSection.style.display = 'block';
+                    return;
+                }
+            }
+
+            // 追加フォローアップセクションは非表示
+            if (additionalFollowUpSection) additionalFollowUpSection.style.display = 'none';
 
             if (archiveSection && isEditMode) {
                 // 編集モードのみ表示
@@ -1762,7 +1855,15 @@
         async function archiveAsSuccess() {
             if (!editingCustomerId) return;
 
-            if (!confirm('この顧客を「成約」としてアーカイブしますか？\n\nアーカイブ後、顧客管理の「成約済み」タブに移動します。')) {
+            const followUpEnabled = document.getElementById('followUpEnabled')?.checked;
+            const moveInDate = document.getElementById('contractMoveInDate')?.value;
+
+            let confirmMsg = 'この顧客を「成約」としてアーカイブしますか？\n\nアーカイブ後、顧客管理の「成約済み」タブに移動します。';
+            if (followUpEnabled && moveInDate) {
+                confirmMsg += '\n\nフォローアップが有効のため、Googleカレンダーにフォローアップ予定が登録されます。';
+            }
+
+            if (!confirm(confirmMsg)) {
                 return;
             }
 
@@ -1772,18 +1873,99 @@
                     throw new Error('顧客が見つかりません');
                 }
 
+                // 最新のフォーム入力値で契約情報を更新
+                customer.contractInfo = customer.contractInfo || {};
+                customer.contractInfo.moveInDate = document.getElementById('contractMoveInDate')?.value || null;
+                customer.contractInfo.contractDate = document.getElementById('contractDate')?.value || null;
+                customer.contractInfo.contractType = document.getElementById('contractType')?.value || '普通借家';
+                customer.contractInfo.contractEndDate = document.getElementById('contractEndDate')?.value || null;
+                customer.contractInfo.propertyName = document.getElementById('contractPropertyAddress')?.value || null;
+                customer.contractInfo.monthlyRent = parseInt(document.getElementById('monthlyRent')?.value) || null;
+
                 customer.isActive = false;
                 customer.archivedAt = new Date().toISOString();
                 customer.archiveReason = '成約';
                 customer.pipelineStatus = '完了';
 
+                // フォローアップ設定を保存
+                customer.followUpSettings = customer.followUpSettings || {};
+                customer.followUpSettings.enabled = followUpEnabled;
+
+                // フォローアップが有効で入居日が設定されている場合、カレンダーイベントを作成
+                if (followUpEnabled && customer.contractInfo.moveInDate) {
+                    try {
+                        const calendarResult = await window.GoogleCalendarAPI.createFollowUpEvents(customer);
+                        if (calendarResult.success) {
+                            customer.followUpSettings.calendarEventIds = calendarResult.createdEvents.map(e => e.eventId);
+                            customer.followUpSettings.lastCalendarSync = new Date().toISOString();
+                            console.log('✅ カレンダーイベント作成成功:', calendarResult);
+                        } else {
+                            console.warn('⚠️ カレンダーイベント作成に一部失敗:', calendarResult.errors);
+                        }
+                    } catch (calError) {
+                        console.error('❌ カレンダー連携エラー:', calError);
+                        // カレンダーエラーでもアーカイブ自体は続行
+                    }
+                }
+
                 await window.UnifiedDataManager.updateCustomer(customer);
 
-                alert('✅ 成約としてアーカイブしました');
+                let successMsg = '✅ 成約としてアーカイブしました';
+                if (followUpEnabled && customer.contractInfo.moveInDate && customer.followUpSettings.calendarEventIds?.length > 0) {
+                    successMsg += `\n📅 ${customer.followUpSettings.calendarEventIds.length}件のフォローアップ予定をカレンダーに登録しました`;
+                }
+                alert(successMsg);
                 window.location.href = 'customer.html';
             } catch (error) {
                 console.error('❌ アーカイブエラー:', error);
                 alert('アーカイブに失敗しました: ' + error.message);
+            }
+        }
+
+        // 追加フォローアップをカレンダーに登録
+        async function createAdditionalFollowUp() {
+            if (!editingCustomerId) return;
+
+            const followUpDate = document.getElementById('additionalFollowUpDate')?.value;
+            const reminderDays = parseInt(document.getElementById('additionalFollowUpReminder')?.value) || 3;
+            const label = document.getElementById('additionalFollowUpLabel')?.value?.trim() || 'フォローアップ';
+
+            if (!followUpDate) {
+                alert('フォローアップ日を選択してください');
+                return;
+            }
+
+            try {
+                const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                if (!customer) {
+                    throw new Error('顧客が見つかりません');
+                }
+
+                const result = await window.GoogleCalendarAPI.createSingleFollowUpEvent(
+                    customer,
+                    followUpDate,
+                    label,
+                    reminderDays
+                );
+
+                if (result.success) {
+                    // カレンダーイベントIDを保存
+                    customer.followUpSettings = customer.followUpSettings || {};
+                    customer.followUpSettings.calendarEventIds = customer.followUpSettings.calendarEventIds || [];
+                    customer.followUpSettings.calendarEventIds.push(result.eventId);
+                    await window.UnifiedDataManager.updateCustomer(customer);
+
+                    alert(`✅ フォローアップ予定をカレンダーに登録しました\n\n日付: ${followUpDate}\n内容: ${label}`);
+
+                    // 入力欄をクリア
+                    document.getElementById('additionalFollowUpDate').value = '';
+                    document.getElementById('additionalFollowUpLabel').value = '';
+                } else {
+                    alert('カレンダー登録に失敗しました: ' + result.error);
+                }
+            } catch (error) {
+                console.error('❌ 追加フォローアップエラー:', error);
+                alert('エラーが発生しました: ' + error.message);
             }
         }
 
@@ -1883,10 +2065,11 @@
                 }
 
                 // 現在のフォーム入力値で顧客データを更新
+                const periodValue = document.getElementById('contractPeriodMonths').value;
                 const contractInfo = {
                     contractDate: document.getElementById('contractDate').value,
                     contractType: document.getElementById('contractType').value,
-                    contractPeriodMonths: parseInt(document.getElementById('contractPeriodMonths').value),
+                    contractPeriodMonths: periodValue === 'other' ? 'other' : parseInt(periodValue),
                     contractEndDate: document.getElementById('contractEndDate').value,
                     propertyAddress: document.getElementById('contractPropertyAddress').value,
                     monthlyRent: parseInt(document.getElementById('monthlyRent').value) || null,
