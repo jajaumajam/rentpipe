@@ -239,6 +239,29 @@
         </div>
     </div>
 
+    <!-- 顧客復元モーダル -->
+    <div class="modal-overlay" id="restore-modal">
+        <div class="modal-content">
+            <h3 id="restore-modal-title">顧客を復元</h3>
+            <p style="color: #6b7280; margin-bottom: 16px;">復元後のステータスを選択してください</p>
+            <div class="restore-status-select">
+                <label style="font-weight: 500; margin-bottom: 8px; display: block;">復元先ステータス</label>
+                <select id="restore-status" style="width: 100%; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                    <option value="初回相談">初回相談</option>
+                    <option value="物件紹介">物件紹介</option>
+                    <option value="内見調整">内見調整</option>
+                    <option value="申込準備">申込準備</option>
+                    <option value="審査中">審査中</option>
+                    <option value="契約手続き">契約手続き</option>
+                </select>
+            </div>
+            <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+                <button class="btn-modal-cancel" onclick="closeRestoreModal()">キャンセル</button>
+                <button class="btn-modal-ok" onclick="executeRestore()" style="background: #10b981;">復元する</button>
+            </div>
+        </div>
+    </div>
+
     <style>
         .modal-overlay {
             display: none;
@@ -812,24 +835,62 @@
             }
         }
 
-        // 顧客を再アクティブ化
-        async function activateCustomer(customerId) {
+        // 復元モーダル用の変数
+        let restoreTargetCustomerId = null;
+
+        // 顧客を再アクティブ化（モーダルを表示）
+        function activateCustomer(customerId) {
             const customer = window.UnifiedDataManager.getCustomerById(customerId);
             if (!customer) {
                 alert('顧客が見つかりません');
                 return;
             }
 
+            restoreTargetCustomerId = customerId;
             const name = customer.basicInfo?.name || customer.name || '顧客';
-            if (!confirm(`${name}さんを復元しますか?`)) return;
+
+            // 元のステータスをデフォルト値にセット（完了以外）
+            const originalStatus = customer.pipelineStatus;
+            const restoreStatusSelect = document.getElementById('restore-status');
+            if (originalStatus && originalStatus !== '完了') {
+                restoreStatusSelect.value = originalStatus;
+            } else {
+                restoreStatusSelect.value = '初回相談';
+            }
+
+            document.getElementById('restore-modal-title').textContent = `${name}さんを復元`;
+            document.getElementById('restore-modal').classList.add('active');
+        }
+
+        // 復元モーダルを閉じる
+        function closeRestoreModal() {
+            document.getElementById('restore-modal').classList.remove('active');
+            restoreTargetCustomerId = null;
+        }
+
+        // 復元を実行
+        async function executeRestore() {
+            if (!restoreTargetCustomerId) return;
+
+            const newStatus = document.getElementById('restore-status').value;
+            const customer = window.UnifiedDataManager.getCustomerById(restoreTargetCustomerId);
+            const name = customer?.basicInfo?.name || customer?.name || '顧客';
 
             try {
+                closeRestoreModal();
                 showLoading('復元中...');
-                await window.UnifiedDataManager.reactivateCustomer(customerId);
+
+                // 顧客をアクティブに戻し、ステータスを設定
+                customer.isActive = true;
+                customer.pipelineStatus = newStatus;
+                delete customer.archivedAt;
+                delete customer.archiveReason;
+
+                await window.UnifiedDataManager.updateCustomer(customer);
                 displayCustomers();
                 updateStats();
                 hideLoading();
-                PageInitializer.showNotification(`${name}さんを復元しました`, 'success');
+                PageInitializer.showNotification(`${name}さんを「${newStatus}」に復元しました`, 'success');
             } catch (error) {
                 console.error('❌ 復元エラー:', error);
                 hideLoading();

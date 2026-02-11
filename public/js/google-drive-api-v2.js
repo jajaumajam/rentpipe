@@ -119,7 +119,14 @@ window.GoogleDriveAPIv2 = {
                     if (response.access_token) {
                         this.accessToken = response.access_token;
                         this.isAuthenticated = true;
-                        
+
+                        // gapiにトークンを設定（Calendar API等で使用）
+                        if (window.gapi?.client) {
+                            window.gapi.client.setToken({
+                                access_token: response.access_token
+                            });
+                        }
+
                         // トークンをLocalStorageに保存
                         localStorage.setItem('google_access_token', response.access_token);
                         localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());
@@ -190,7 +197,15 @@ window.GoogleDriveAPIv2 = {
                             console.log('✅ アクセストークン取得成功');
                             this.accessToken = response.access_token;
                             this.isAuthenticated = true;
-                            
+
+                            // gapiにトークンを設定（Calendar API等で使用）
+                            if (window.gapi?.client) {
+                                window.gapi.client.setToken({
+                                    access_token: response.access_token
+                                });
+                                console.log('✅ gapi.clientにトークン設定完了');
+                            }
+
                             // トークンを保存
                             localStorage.setItem('google_access_token', response.access_token);
                             localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());

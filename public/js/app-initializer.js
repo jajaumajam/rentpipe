@@ -89,6 +89,14 @@ const AppInitializer = {
             return;
         }
 
+        // gapi.client にトークンを設定（Calendar API等で使用）
+        if (window.gapi?.client) {
+            window.gapi.client.setToken({
+                access_token: accessToken
+            });
+            console.log('✅ gapi.client にトークン設定完了');
+        }
+
         // Google Drive API を初期化
         if (window.GoogleDriveAPIv2) {
             if (!window.GoogleDriveAPIv2.isInitialized) {
