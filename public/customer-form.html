@@ -942,7 +942,7 @@
 
                     <div class="form-group">
                         <label>パイプライン状態</label>
-                        <select id="pipelineStatus" onchange="updateContractSectionVisibility()">
+                        <select id="pipelineStatus" onchange="updateContractSectionVisibility(); updateArchiveSectionVisibility();">
                             <option value="初回相談">初回相談</option>
                             <option value="物件紹介">物件紹介</option>
                             <option value="内見調整">内見調整</option>
@@ -952,22 +952,6 @@
                         </select>
                     </div>
 
-                    <!-- 成約/失注アクション -->
-                    <div class="form-group" id="archiveActions" style="display: none;">
-                        <label>案件完了アクション</label>
-                        <div style="display: flex; gap: 12px; margin-top: 8px;">
-                            <button type="button" class="archive-action-btn success" onclick="archiveAsSuccess()">
-                                🎉 成約としてアーカイブ
-                            </button>
-                            <button type="button" class="archive-action-btn danger" onclick="archiveAsLost()">
-                                ❌ 失注としてアーカイブ
-                            </button>
-                        </div>
-                        <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                            ※ アーカイブすると顧客管理の「成約済み」または「失注」タブに移動します
-                        </p>
-                    </div>
-
                     <div class="form-group">
                         <label>エージェントメモ</label>
                         <textarea id="agentMemo" placeholder="【初回ヒアリング】&#10;・絶対条件:&#10;・妥協可能:&#10;・その他メモ:" style="min-height: 150px;"></textarea>
@@ -975,12 +959,84 @@
                 </div>
 
                 <!-- ========================================
-                     セクション6: 契約・成約情報（管理者用）
+                     セクション6: 申込・契約情報（管理者用）
                 ========================================= -->
                 <div class="form-section" id="contractSection" style="display: none;">
-                    <h2 class="section-title"><span class="icon">📝</span> 契約・成約情報</h2>
-                    <p style="color: #6b7280; margin-bottom: 20px;">成約時に入力してください。フォローアップ機能で使用されます。</p>
+                    <h2 class="section-title"><span class="icon">📝</span> 申込・契約情報</h2>
+                    <p style="color: #6b7280; margin-bottom: 20px;">審査中〜契約時に入力してください。初期費用の概算計算やフォローアップに使用されます。</p>
 
+                    <!-- 申込情報 -->
+                    <h3 style="font-size: 16px; color: #374151; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">📋 申込情報</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>申込日</label>
+                            <input type="date" id="applicationDate">
+                        </div>
+                        <div class="form-group">
+                            <label>入居開始希望日</label>
+                            <input type="date" id="desiredMoveInDate" onchange="calculateInitialCost()">
+                        </div>
+                    </div>
+
+                    <!-- 申込物件情報 -->
+                    <h3 style="font-size: 16px; color: #374151; margin: 25px 0 15px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">🏠 申込物件情報</h3>
+                    <div class="form-group">
+                        <label>物件名・住所</label>
+                        <input type="text" id="contractPropertyAddress">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>月額賃料（管理費込み）</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="number" id="monthlyRent" oninput="calculateInitialCost()" style="flex: 1;">
+                                <span style="color: #6b7280;">円</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>敷金</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="number" id="depositMonths" step="0.5" min="0" oninput="calculateInitialCost()" style="flex: 1;">
+                                <span style="color: #6b7280;">ヶ月分</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>礼金</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="number" id="keyMoneyMonths" step="0.5" min="0" oninput="calculateInitialCost()" style="flex: 1;">
+                                <span style="color: #6b7280;">ヶ月分</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>その他初期費用</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="number" id="otherInitialCost" oninput="calculateInitialCost()" style="flex: 1;">
+                                <span style="color: #6b7280;">円</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 概算初期費用計算結果 -->
+                    <div class="form-group" style="background: #f0f9ff; padding: 20px; border-radius: 8px; border: 1px solid #93c5fd; margin-top: 15px;">
+                        <label style="font-weight: 600; color: #1e40af; margin-bottom: 12px; display: block;">💰 概算初期費用</label>
+                        <div id="initialCostBreakdown" style="font-size: 14px; color: #374151; line-height: 1.8;">
+                            <div>敷金: <span id="costDeposit">-</span></div>
+                            <div>礼金: <span id="costKeyMoney">-</span></div>
+                            <div>前家賃: <span id="costAdvanceRent">-</span> <span id="advanceRentDetail" style="font-size: 12px; color: #6b7280;"></span></div>
+                            <div>仲介手数料（税込）: <span id="costBrokerFee">-</span></div>
+                            <div>その他初期費用: <span id="costOther">-</span></div>
+                            <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #3b82f6; font-size: 18px; font-weight: 700; color: #1e40af;">
+                                合計: <span id="costTotal">-</span>
+                            </div>
+                        </div>
+                        <p class="help-text" style="margin-top: 10px; color: #6b7280;">※ 仲介手数料は賃料×1.1（税込）、前家賃は入居開始日からの日割り+翌月分で計算</p>
+                    </div>
+
+                    <!-- 契約情報 -->
+                    <h3 style="font-size: 16px; color: #374151; margin: 30px 0 15px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">📄 契約情報（成約時に入力）</h3>
                     <div class="form-row">
                         <div class="form-group">
                             <label>成約日</label>
@@ -1012,22 +1068,10 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>契約終了予定日（自動計算）</label>
-                            <input type="date" id="contractEndDate" readonly style="background: #f3f4f6;">
-                            <p class="help-text">成約日と契約期間から自動計算されます</p>
-                        </div>
-                        <div class="form-group">
-                            <label>月額賃料（税込）</label>
-                            <input type="number" id="monthlyRent" placeholder="例: 85000">
-                            <p class="help-text">管理費込みの金額</p>
-                        </div>
-                    </div>
-
                     <div class="form-group">
-                        <label>成約物件住所</label>
-                        <input type="text" id="contractPropertyAddress" placeholder="例: 東京都渋谷区〇〇1-2-3 △△マンション 101号室">
+                        <label>契約終了予定日（自動計算）</label>
+                        <input type="date" id="contractEndDate" readonly style="background: #f3f4f6;">
+                        <p class="help-text">成約日と契約期間から自動計算されます</p>
                     </div>
 
                     <div class="form-group" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #86efac;">
@@ -1044,6 +1088,39 @@
                             📅 Googleカレンダーにフォローアップ予定を作成
                         </button>
                         <p class="help-text" style="margin-top: 8px;">契約終了前のフォローアップ予定をGoogleカレンダーに自動作成します</p>
+                    </div>
+                </div>
+
+                <!-- ========================================
+                     セクション7: アーカイブ操作（最下部）
+                ========================================= -->
+                <div class="form-section" id="archiveSection" style="display: none; border: 2px solid #fbbf24; background: #fffbeb;">
+                    <h2 class="section-title"><span class="icon">📦</span> アーカイブ</h2>
+                    <p style="color: #6b7280; margin-bottom: 20px;">案件が終了した場合にアーカイブ処理を行います。</p>
+
+                    <!-- 審査中以降の場合：成約/失注の両方 -->
+                    <div id="archiveBothOptions" style="display: none;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button type="button" class="archive-action-btn success" onclick="archiveAsSuccess()">
+                                🎉 成約としてアーカイブ
+                            </button>
+                            <button type="button" class="archive-action-btn danger" onclick="archiveAsLost()">
+                                ❌ 失注としてアーカイブ
+                            </button>
+                        </div>
+                        <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">
+                            ※ 成約：契約完了した顧客 ／ 失注：案内途中で見込みがなくなった顧客
+                        </p>
+                    </div>
+
+                    <!-- 審査中より前の場合：失注のみ -->
+                    <div id="archiveLostOnly" style="display: none;">
+                        <button type="button" class="archive-action-btn danger" onclick="archiveAsLost()">
+                            ❌ 失注としてアーカイブ
+                        </button>
+                        <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">
+                            ※ 案内途中で見込みがなくなった場合にアーカイブします
+                        </p>
                     </div>
                 </div>
 
@@ -1187,6 +1264,65 @@
             endDateInput.value = `${year}-${month}-${day}`;
         }
 
+        // 概算初期費用を計算
+        function calculateInitialCost() {
+            const monthlyRent = parseInt(document.getElementById('monthlyRent')?.value) || 0;
+            const depositMonths = parseFloat(document.getElementById('depositMonths')?.value) || 0;
+            const keyMoneyMonths = parseFloat(document.getElementById('keyMoneyMonths')?.value) || 0;
+            const otherCost = parseInt(document.getElementById('otherInitialCost')?.value) || 0;
+            const desiredMoveInDate = document.getElementById('desiredMoveInDate')?.value;
+
+            // 敷金・礼金（月数×賃料）
+            const deposit = Math.round(monthlyRent * depositMonths);
+            const keyMoney = Math.round(monthlyRent * keyMoneyMonths);
+
+            // 仲介手数料（賃料×1.1 = 税込）
+            const brokerFee = Math.round(monthlyRent * 1.1);
+
+            // 前家賃の計算（入居開始日から月末までの日割り + 翌月1ヶ月分）
+            let advanceRent = 0;
+            let advanceRentDetail = '';
+
+            if (desiredMoveInDate && monthlyRent > 0) {
+                const moveInDate = new Date(desiredMoveInDate);
+                const moveInDay = moveInDate.getDate();
+                const moveInYear = moveInDate.getFullYear();
+                const moveInMonth = moveInDate.getMonth();
+
+                // 入居月の日数を取得
+                const daysInMoveInMonth = new Date(moveInYear, moveInMonth + 1, 0).getDate();
+
+                // 入居日から月末までの日数
+                const remainingDays = daysInMoveInMonth - moveInDay + 1;
+
+                // 日割り賃料
+                const dailyRent = monthlyRent / daysInMoveInMonth;
+                const proratedRent = Math.round(dailyRent * remainingDays);
+
+                // 前家賃 = 日割り + 翌月分
+                advanceRent = proratedRent + monthlyRent;
+                advanceRentDetail = `（${moveInMonth + 1}月${remainingDays}日分 + ${moveInMonth + 2 > 12 ? 1 : moveInMonth + 2}月分）`;
+            } else if (monthlyRent > 0) {
+                // 入居日未入力の場合は1ヶ月分として概算
+                advanceRent = monthlyRent;
+                advanceRentDetail = '（入居日未入力のため1ヶ月分で概算）';
+            }
+
+            // 合計
+            const total = deposit + keyMoney + advanceRent + brokerFee + otherCost;
+
+            // 表示を更新
+            const formatCurrency = (value) => value > 0 ? `¥${value.toLocaleString()}` : '-';
+
+            document.getElementById('costDeposit').textContent = formatCurrency(deposit);
+            document.getElementById('costKeyMoney').textContent = formatCurrency(keyMoney);
+            document.getElementById('costAdvanceRent').textContent = formatCurrency(advanceRent);
+            document.getElementById('advanceRentDetail').textContent = advanceRentDetail;
+            document.getElementById('costBrokerFee').textContent = formatCurrency(brokerFee);
+            document.getElementById('costOther').textContent = formatCurrency(otherCost);
+            document.getElementById('costTotal').textContent = total > 0 ? `¥${total.toLocaleString()}` : '-';
+        }
+
         // 間取りチェックボックス切り替え
         function toggleLayoutCheckbox(element) {
             const checkbox = element.querySelector('input[type="checkbox"]');
@@ -1223,9 +1359,7 @@
 
                 // 管理者セクションを表示（visibleクラスを追加）
                 document.getElementById('adminSection').classList.add('visible');
-                // アーカイブアクションを表示
-                document.getElementById('archiveActions').style.display = 'block';
-                // 契約セクションはステータスによって後で表示制御
+                // 契約セクション・アーカイブセクションはステータスによって後で表示制御
 
                 // AppInitializerの初期化を待つ
                 if (window.AppInitializer && window.AppInitializer.initializationPromise) {
@@ -1361,15 +1495,25 @@
 
                 // 契約情報
                 const contractInfo = customer.contractInfo || {};
+                // 申込情報
+                document.getElementById('applicationDate').value = contractInfo.applicationDate || '';
+                document.getElementById('desiredMoveInDate').value = contractInfo.desiredMoveInDate || '';
+                // 物件情報
+                document.getElementById('contractPropertyAddress').value = contractInfo.propertyAddress || '';
+                document.getElementById('monthlyRent').value = contractInfo.monthlyRent || '';
+                document.getElementById('depositMonths').value = contractInfo.depositMonths || '';
+                document.getElementById('keyMoneyMonths').value = contractInfo.keyMoneyMonths || '';
+                document.getElementById('otherInitialCost').value = contractInfo.otherInitialCost || '';
+                // 契約情報
                 document.getElementById('contractDate').value = contractInfo.contractDate || '';
                 document.getElementById('contractMoveInDate').value = contractInfo.moveInDate || '';
                 document.getElementById('contractType').value = contractInfo.contractType || '普通借家';
                 document.getElementById('contractPeriodMonths').value = contractInfo.contractPeriodMonths || 24;
-                document.getElementById('contractPropertyAddress').value = contractInfo.propertyAddress || '';
-                document.getElementById('monthlyRent').value = contractInfo.monthlyRent || '';
 
                 // 契約終了日を自動計算
                 updateContractEndDate();
+                // 概算初期費用を計算
+                calculateInitialCost();
 
                 // フォローアップ設定
                 const followUpSettings = customer.followUpSettings || {};
@@ -1377,6 +1521,9 @@
 
                 // 契約セクションの表示制御（ステータスに依存）
                 updateContractSectionVisibility();
+
+                // アーカイブセクションの表示制御
+                updateArchiveSectionVisibility();
 
                 // カレンダーボタンの表示更新
                 setTimeout(() => updateCalendarButtonVisibility(), 100);
@@ -1475,12 +1622,20 @@
                         floorNote: ""
                     },
                     contractInfo: {
+                        // 申込情報
+                        applicationDate: document.getElementById('applicationDate')?.value || null,
+                        desiredMoveInDate: document.getElementById('desiredMoveInDate')?.value || null,
+                        // 物件情報
+                        propertyAddress: document.getElementById('contractPropertyAddress')?.value?.trim() || '',
+                        monthlyRent: parseInt(document.getElementById('monthlyRent')?.value) || null,
+                        depositMonths: parseFloat(document.getElementById('depositMonths')?.value) || null,
+                        keyMoneyMonths: parseFloat(document.getElementById('keyMoneyMonths')?.value) || null,
+                        otherInitialCost: parseInt(document.getElementById('otherInitialCost')?.value) || null,
+                        // 契約情報
                         contractDate: document.getElementById('contractDate')?.value || null,
                         contractType: document.getElementById('contractType')?.value || '普通借家',
                         contractPeriodMonths: parseInt(document.getElementById('contractPeriodMonths')?.value) || 24,
                         contractEndDate: document.getElementById('contractEndDate')?.value || null,
-                        propertyAddress: document.getElementById('contractPropertyAddress')?.value?.trim() || '',
-                        monthlyRent: parseInt(document.getElementById('monthlyRent')?.value) || null,
                         moveInDate: document.getElementById('contractMoveInDate')?.value || null
                     },
                     followUpSettings: {
@@ -1571,11 +1726,34 @@
             const contractSection = document.getElementById('contractSection');
 
             if (contractSection && isEditMode) {
-                // 「契約手続き」または「完了」の場合のみ契約セクションを表示
-                if (status === '契約手続き' || status === '完了') {
+                // 「審査中」「契約手続き」または「完了」の場合に契約セクションを表示
+                if (status === '審査中' || status === '契約手続き' || status === '完了') {
                     contractSection.classList.add('visible');
                 } else {
                     contractSection.classList.remove('visible');
+                }
+            }
+        }
+
+        // アーカイブセクションの表示制御（ステータスに依存）
+        function updateArchiveSectionVisibility() {
+            const status = document.getElementById('pipelineStatus')?.value;
+            const archiveSection = document.getElementById('archiveSection');
+            const bothOptions = document.getElementById('archiveBothOptions');
+            const lostOnly = document.getElementById('archiveLostOnly');
+
+            if (archiveSection && isEditMode) {
+                // 編集モードのみ表示
+                archiveSection.style.display = 'block';
+
+                // 審査中以降は成約/失注の両方、それ以前は失注のみ
+                const advancedStatuses = ['審査中', '契約手続き', '完了'];
+                if (advancedStatuses.includes(status)) {
+                    bothOptions.style.display = 'block';
+                    lostOnly.style.display = 'none';
+                } else {
+                    bothOptions.style.display = 'none';
+                    lostOnly.style.display = 'block';
                 }
             }
         }

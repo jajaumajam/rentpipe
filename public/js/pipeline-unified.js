@@ -134,7 +134,7 @@ class PipelineManager {
         const email = customer.basicInfo?.email || customer.email || '-';
         const phone = customer.basicInfo?.phone || customer.phone || '-';
         const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 0;
-        
+
         return `
             <div class="customer-card" data-customer-id="${customer.id}">
                 <div class="card-header">
@@ -157,12 +157,19 @@ class PipelineManager {
                     ` : ''}
                 </div>
                 <div class="card-actions">
-                    <button class="card-button" onclick="window.pipelineManager.changeStatus('${customer.id}', '${customer.pipelineStatus}')">
-                        ステータス変更
-                    </button>
-                    <a href="customer-form.html?edit=${customer.id}&from=pipeline" class="card-button" style="text-decoration: none; text-align: center;">
-                        編集
-                    </a>
+                    <div class="card-actions-row">
+                        <button class="card-button" onclick="window.pipelineManager.changeStatus('${customer.id}', '${customer.pipelineStatus}')">
+                            ステータス変更
+                        </button>
+                        <button class="card-button btn-archive" onclick="window.pipelineManager.openArchiveModal('${customer.id}')">
+                            案内中止
+                        </button>
+                    </div>
+                    <div class="card-actions-row">
+                        <a href="customer-form.html?edit=${customer.id}&from=pipeline" class="card-button" style="text-decoration: none; text-align: center; flex: 1;">
+                            編集
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
@@ -183,12 +190,12 @@ class PipelineManager {
             titleEl.textContent = `${customerName}さんのステータス`;
         }
 
-        // ステータスオプションを生成
+        // ステータスオプションを生成（アーカイブは別ボタンに分離）
         const optionsContainer = document.getElementById('status-options');
         if (optionsContainer) {
             let html = '';
 
-            // パイプラインステータス
+            // パイプラインステータスのみ
             this.statuses.forEach(status => {
                 const isCurrent = status === currentStatus;
                 html += `
@@ -199,24 +206,79 @@ class PipelineManager {
                 `;
             });
 
-            // 区切り線
-            html += `<div class="status-divider"><span>アーカイブ</span></div>`;
-
-            // アーカイブオプション
-            html += `
-                <button class="status-option archive success" onclick="window.pipelineManager.selectArchive('成約')">
-                    🎉 成約
-                </button>
-                <button class="status-option archive danger" onclick="window.pipelineManager.selectArchive('失注')">
-                    ❌ 失注
-                </button>
-            `;
-
             optionsContainer.innerHTML = html;
         }
 
         // モーダルを表示
         document.getElementById('status-modal').classList.add('active');
+    }
+
+    // 失注アーカイブモーダルを開く
+    openArchiveModal(customerId) {
+        console.log('📦 失注アーカイブモーダル表示:', customerId);
+
+        this.pendingArchive = { customerId };
+
+        const customer = this.dataManager.getCustomerById(customerId);
+        const customerName = customer?.basicInfo?.name || customer?.name || '顧客';
+
+        // モーダルタイトルを設定
+        const titleEl = document.getElementById('archive-modal-title');
+        if (titleEl) {
+            titleEl.textContent = `${customerName}さんを失注としてアーカイブ`;
+        }
+
+        // 備考欄をリセット
+        const reasonText = document.getElementById('pipeline-archive-reason-text');
+        if (reasonText) reasonText.value = '';
+
+        // モーダルを表示
+        document.getElementById('archive-modal').classList.add('active');
+    }
+
+    // 失注としてアーカイブを実行
+    async executeArchiveAsLost() {
+        const { customerId } = this.pendingArchive || {};
+        if (!customerId) return;
+
+        const reasonText = document.getElementById('pipeline-archive-reason-text')?.value?.trim() || '';
+
+        // モーダルを閉じる
+        document.getElementById('archive-modal').classList.remove('active');
+
+        try {
+            this.isUpdating = true;
+
+            const customer = this.dataManager.getCustomerById(customerId);
+            if (!customer) {
+                throw new Error('顧客が見つかりません');
+            }
+
+            customer.isActive = false;
+            customer.archivedAt = new Date().toISOString();
+            customer.archiveReason = '失注';
+            customer.pipelineStatus = '完了';
+
+            // 備考が入力されていればエージェントメモに追記
+            if (reasonText) {
+                const currentMemo = customer.agentMemo || '';
+                const timestamp = new Date().toLocaleDateString('ja-JP');
+                const appendText = `\n\n【${timestamp} アーカイブ】失注: ${reasonText}`;
+                customer.agentMemo = currentMemo + appendText;
+            }
+
+            await this.dataManager.updateCustomer(customer);
+
+            console.log(`✅ 顧客を失注としてアーカイブ: ${customerId}`);
+            this.renderPipeline();
+
+        } catch (error) {
+            console.error('❌ アーカイブエラー:', error);
+            alert('アーカイブに失敗しました: ' + error.message);
+        } finally {
+            this.isUpdating = false;
+            this.pendingArchive = null;
+        }
     }
 
     // ステータスを選択
@@ -254,46 +316,6 @@ class PipelineManager {
         }
     }
 
-    // アーカイブを選択
-    async selectArchive(reason) {
-        const { customerId } = this.pendingStatusChange || {};
-        if (!customerId) return;
-
-        // モーダルを閉じる
-        document.getElementById('status-modal').classList.remove('active');
-
-        const reasonLabel = reason === '成約' ? '🎉 成約' : '❌ 失注';
-
-        if (!confirm(`この顧客を「${reasonLabel}」としてアーカイブしますか？`)) {
-            return;
-        }
-
-        try {
-            this.isUpdating = true;
-
-            const customer = this.dataManager.getCustomerById(customerId);
-            if (!customer) {
-                throw new Error('顧客が見つかりません');
-            }
-
-            customer.isActive = false;
-            customer.archivedAt = new Date().toISOString();
-            customer.archiveReason = reason;
-            customer.pipelineStatus = '完了';
-
-            await this.dataManager.updateCustomer(customer);
-
-            console.log(`✅ 顧客をアーカイブ: ${customerId} (${reason})`);
-            this.renderPipeline();
-
-        } catch (error) {
-            console.error('❌ アーカイブエラー:', error);
-            alert('アーカイブに失敗しました: ' + error.message);
-        } finally {
-            this.isUpdating = false;
-            this.pendingStatusChange = null;
-        }
-    }
 }
 
 // グローバルインスタンス作成

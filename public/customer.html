@@ -223,25 +223,18 @@
         </div>
     </div>
 
-    <!-- アーカイブ確認モーダル -->
+    <!-- 失注アーカイブ確認モーダル -->
     <div class="modal-overlay" id="archive-modal">
         <div class="modal-content">
-            <h3 id="archive-modal-title">顧客をアーカイブ</h3>
-            <p id="archive-modal-desc">アーカイブ理由を選択してください</p>
-            <div class="archive-options">
-                <button class="archive-option-btn success" onclick="confirmArchive('成約')">
-                    🎉 成約
-                </button>
-                <button class="archive-option-btn danger" onclick="confirmArchive('失注')">
-                    ❌ 失注
-                </button>
-            </div>
+            <h3 id="archive-modal-title">顧客を失注としてアーカイブ</h3>
+            <p id="archive-modal-desc">この顧客を失注としてアーカイブします</p>
             <div class="archive-reason-input">
                 <label>備考（任意）：エージェントメモに追記されます</label>
                 <textarea id="archive-reason-text" placeholder="例：他社で契約、条件不一致、連絡途絶など"></textarea>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center;">
                 <button class="btn-modal-cancel" onclick="closeArchiveModal()">キャンセル</button>
+                <button class="btn-modal-ok" onclick="executeArchiveAsLost()">失注としてアーカイブ</button>
             </div>
         </div>
     </div>
@@ -345,6 +338,20 @@
         }
         .btn-modal-cancel:hover {
             background: #e5e7eb;
+        }
+        .btn-modal-ok {
+            padding: 10px 24px;
+            border: none;
+            background: #ef4444;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-modal-ok:hover {
+            background: #dc2626;
         }
     </style>
 
@@ -654,7 +661,7 @@
                         </button>
                         ${isInactive
                             ? `<button class="btn-table-action btn-restore" onclick="activateCustomer('${customer.id}')">復元</button>`
-                            : `<button class="btn-table-action btn-archive" onclick="deactivateCustomer('${customer.id}')">アーカイブ</button>`
+                            : `<button class="btn-table-action btn-archive" onclick="deactivateCustomer('${customer.id}')">案内中止</button>`
                         }
                     </div>
                 </td>
@@ -735,7 +742,7 @@
         // アーカイブモーダル関連
         let archiveTargetCustomerId = null;
 
-        // 顧客を非アクティブ化（アーカイブ）- モーダルを開く
+        // 顧客を非アクティブ化（失注アーカイブ）- モーダルを開く
         function deactivateCustomer(customerId) {
             const customer = window.UnifiedDataManager.getCustomerById(customerId);
             if (!customer) {
@@ -746,8 +753,9 @@
             archiveTargetCustomerId = customerId;
             const name = customer.basicInfo?.name || customer.name || '顧客';
 
-            document.getElementById('archive-modal-title').textContent = `${name}さんをアーカイブ`;
+            document.getElementById('archive-modal-title').textContent = `${name}さんを失注としてアーカイブ`;
             document.getElementById('archive-reason-text').value = '';
+
             document.getElementById('archive-modal').classList.add('active');
         }
 
@@ -757,8 +765,8 @@
             archiveTargetCustomerId = null;
         }
 
-        // アーカイブを実行
-        async function confirmArchive(archiveReason) {
+        // 失注としてアーカイブを実行
+        async function executeArchiveAsLost() {
             if (!archiveTargetCustomerId) return;
 
             const customer = window.UnifiedDataManager.getCustomerById(archiveTargetCustomerId);
@@ -774,20 +782,20 @@
                 closeArchiveModal();
                 showLoading('アーカイブ中...');
 
-                // アーカイブ実行
-                await window.UnifiedDataManager.deactivateCustomer(archiveTargetCustomerId, archiveReason);
+                // アーカイブ実行（失注）
+                await window.UnifiedDataManager.deactivateCustomer(archiveTargetCustomerId, '失注');
 
                 // archiveReasonを設定
                 const updateData = {
                     id: archiveTargetCustomerId,
-                    archiveReason: archiveReason
+                    archiveReason: '失注'
                 };
 
                 // 備考が入力されていればエージェントメモに追記
                 if (reasonText) {
                     const currentMemo = customer.agentMemo || '';
                     const timestamp = new Date().toLocaleDateString('ja-JP');
-                    const appendText = `\n\n【${timestamp} アーカイブ】${archiveReason}: ${reasonText}`;
+                    const appendText = `\n\n【${timestamp} アーカイブ】失注: ${reasonText}`;
                     updateData.agentMemo = currentMemo + appendText;
                 }
 
@@ -796,7 +804,7 @@
                 displayCustomers();
                 updateStats();
                 hideLoading();
-                PageInitializer.showNotification(`${name}さんをアーカイブしました（${archiveReason}）`, 'success');
+                PageInitializer.showNotification(`${name}さんを失注としてアーカイブしました`, 'success');
             } catch (error) {
                 console.error('❌ アーカイブエラー:', error);
                 hideLoading();
