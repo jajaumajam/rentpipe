@@ -89,15 +89,7 @@ const AppInitializer = {
             return;
         }
 
-        // gapi.client にトークンを設定（Calendar API等で使用）
-        if (window.gapi?.client) {
-            window.gapi.client.setToken({
-                access_token: accessToken
-            });
-            console.log('✅ gapi.client にトークン設定完了');
-        }
-
-        // Google Drive API を初期化
+        // Google Drive API を初期化（これがgapi.clientとdiscovery docsを読み込む）
         if (window.GoogleDriveAPIv2) {
             if (!window.GoogleDriveAPIv2.isInitialized) {
                 console.log('⏳ Google Drive API 初期化中...');
@@ -113,12 +105,21 @@ const AppInitializer = {
             console.log('✅ Google Drive API 準備完了');
         }
 
+        // gapi.client にトークンを設定（Calendar API等で使用）
+        // ※ GoogleDriveAPIv2の初期化後に実行（discovery docsが読み込まれた後）
+        if (window.gapi?.client) {
+            window.gapi.client.setToken({
+                access_token: accessToken
+            });
+            console.log('✅ gapi.client にトークン設定完了');
+        }
+
         // Google Sheets API を初期化
         if (window.GoogleSheetsAPI) {
             if (!window.GoogleSheetsAPI.isInitialized) {
                 console.log('⏳ Google Sheets API 初期化中...');
                 const result = await window.GoogleSheetsAPI.initialize();
-                
+
                 if (!result) {
                     throw new Error('Google Sheets API の初期化に失敗しました');
                 }

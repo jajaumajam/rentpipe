@@ -297,12 +297,14 @@ const UnifiedDataManager = {
     },
 
     /**
-     * 顧客を非アクティブ化
+     * 顧客を非アクティブ化（アーカイブ）
      */
     deactivateCustomer: async function(customerId, reason) {
         return await this.updateCustomer(customerId, {
             isActive: false,
-            archivedAt: new Date().toISOString()
+            archivedAt: new Date().toISOString(),
+            archiveReason: reason || '失注',
+            pipelineStatus: '完了'
         });
     },
 
