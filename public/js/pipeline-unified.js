@@ -213,72 +213,10 @@ class PipelineManager {
         document.getElementById('status-modal').classList.add('active');
     }
 
-    // 失注アーカイブモーダルを開く
+    // 失注アーカイブモーダルを開く（ArchiveManagerを使用）
     openArchiveModal(customerId) {
         console.log('📦 失注アーカイブモーダル表示:', customerId);
-
-        this.pendingArchive = { customerId };
-
-        const customer = this.dataManager.getCustomerById(customerId);
-        const customerName = customer?.basicInfo?.name || customer?.name || '顧客';
-
-        // モーダルタイトルを設定
-        const titleEl = document.getElementById('archive-modal-title');
-        if (titleEl) {
-            titleEl.textContent = `${customerName}さんを失注としてアーカイブ`;
-        }
-
-        // 備考欄をリセット
-        const reasonText = document.getElementById('pipeline-archive-reason-text');
-        if (reasonText) reasonText.value = '';
-
-        // モーダルを表示
-        document.getElementById('archive-modal').classList.add('active');
-    }
-
-    // 失注としてアーカイブを実行
-    async executeArchiveAsLost() {
-        const { customerId } = this.pendingArchive || {};
-        if (!customerId) return;
-
-        const reasonText = document.getElementById('pipeline-archive-reason-text')?.value?.trim() || '';
-
-        // モーダルを閉じる
-        document.getElementById('archive-modal').classList.remove('active');
-
-        try {
-            this.isUpdating = true;
-
-            const customer = this.dataManager.getCustomerById(customerId);
-            if (!customer) {
-                throw new Error('顧客が見つかりません');
-            }
-
-            customer.isActive = false;
-            customer.archivedAt = new Date().toISOString();
-            customer.archiveReason = '失注';
-            customer.pipelineStatus = '完了';
-
-            // 備考が入力されていればエージェントメモに追記
-            if (reasonText) {
-                const currentMemo = customer.agentMemo || '';
-                const timestamp = new Date().toLocaleDateString('ja-JP');
-                const appendText = `\n\n【${timestamp} アーカイブ】失注: ${reasonText}`;
-                customer.agentMemo = currentMemo + appendText;
-            }
-
-            await this.dataManager.updateCustomer(customer);
-
-            console.log(`✅ 顧客を失注としてアーカイブ: ${customerId}`);
-            this.renderPipeline();
-
-        } catch (error) {
-            console.error('❌ アーカイブエラー:', error);
-            alert('アーカイブに失敗しました: ' + error.message);
-        } finally {
-            this.isUpdating = false;
-            this.pendingArchive = null;
-        }
+        window.ArchiveManager.openModal(customerId);
     }
 
     // ステータスを選択

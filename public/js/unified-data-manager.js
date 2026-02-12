@@ -186,17 +186,24 @@ const UnifiedDataManager = {
         try {
             const customers = this.getCustomers();
             let customerId, customerUpdates;
-            
+
+            // 引数のnull/undefinedチェック
+            if (!customerIdOrObject) {
+                console.error('updateCustomer: customerIdOrObjectがnullです');
+                return { success: false, error: '顧客IDが指定されていません' };
+            }
+
             // 引数の形式を判定
             if (typeof customerIdOrObject === 'string') {
                 // 従来の形式: updateCustomer(customerId, updates)
                 customerId = customerIdOrObject;
-                customerUpdates = updates;
-            } else if (typeof customerIdOrObject === 'object' && customerIdOrObject.id) {
+                customerUpdates = updates || {};
+            } else if (typeof customerIdOrObject === 'object' && customerIdOrObject !== null && customerIdOrObject.id) {
                 // 新しい形式: updateCustomer(customer)
                 customerId = customerIdOrObject.id;
                 customerUpdates = customerIdOrObject;
             } else {
+                console.error('updateCustomer: 無効な引数:', customerIdOrObject);
                 return { success: false, error: '無効な引数です' };
             }
             

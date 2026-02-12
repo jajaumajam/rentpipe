@@ -223,22 +223,6 @@
         </div>
     </div>
 
-    <!-- 失注アーカイブ確認モーダル -->
-    <div class="modal-overlay" id="archive-modal">
-        <div class="modal-content">
-            <h3 id="archive-modal-title">顧客を失注としてアーカイブ</h3>
-            <p id="archive-modal-desc">この顧客を失注としてアーカイブします</p>
-            <div class="archive-reason-input">
-                <label>備考（任意）：エージェントメモに追記されます</label>
-                <textarea id="archive-reason-text" placeholder="例：他社で契約、条件不一致、連絡途絶など"></textarea>
-            </div>
-            <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center;">
-                <button class="btn-modal-cancel" onclick="closeArchiveModal()">キャンセル</button>
-                <button class="btn-modal-ok" onclick="executeArchiveAsLost()">失注としてアーカイブ</button>
-            </div>
-        </div>
-    </div>
-
     <!-- 顧客復元モーダル -->
     <div class="modal-overlay" id="restore-modal">
         <div class="modal-content">
@@ -295,56 +279,6 @@
             margin: 0 0 20px 0;
             color: #6b7280;
             font-size: 14px;
-        }
-        .archive-options {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .archive-option-btn {
-            flex: 1;
-            padding: 16px 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            background: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .archive-option-btn:hover {
-            transform: translateY(-2px);
-        }
-        .archive-option-btn.success:hover {
-            border-color: #10b981;
-            background: #ecfdf5;
-        }
-        .archive-option-btn.danger:hover {
-            border-color: #ef4444;
-            background: #fef2f2;
-        }
-        .archive-reason-input {
-            margin-bottom: 20px;
-        }
-        .archive-reason-input label {
-            display: block;
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-        .archive-reason-input textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 80px;
-            box-sizing: border-box;
-        }
-        .archive-reason-input textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
         }
         .modal-actions {
             text-align: center;
@@ -495,6 +429,7 @@
     <script src="js/data-migration.js"></script>
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
+    <script src="js/archive-manager.js"></script>
     <script src="js/app-initializer.js"></script>
     <script src="js/page-initializer.js"></script>
 
@@ -762,77 +697,9 @@
             document.getElementById('loading-overlay').classList.remove('active');
         }
 
-        // アーカイブモーダル関連
-        let archiveTargetCustomerId = null;
-
-        // 顧客を非アクティブ化（失注アーカイブ）- モーダルを開く
+        // 顧客を非アクティブ化（失注アーカイブ）- ArchiveManagerを使用
         function deactivateCustomer(customerId) {
-            const customer = window.UnifiedDataManager.getCustomerById(customerId);
-            if (!customer) {
-                alert('顧客が見つかりません');
-                return;
-            }
-
-            archiveTargetCustomerId = customerId;
-            const name = customer.basicInfo?.name || customer.name || '顧客';
-
-            document.getElementById('archive-modal-title').textContent = `${name}さんを失注としてアーカイブ`;
-            document.getElementById('archive-reason-text').value = '';
-
-            document.getElementById('archive-modal').classList.add('active');
-        }
-
-        // アーカイブモーダルを閉じる
-        function closeArchiveModal() {
-            document.getElementById('archive-modal').classList.remove('active');
-            archiveTargetCustomerId = null;
-        }
-
-        // 失注としてアーカイブを実行
-        async function executeArchiveAsLost() {
-            if (!archiveTargetCustomerId) return;
-
-            const customer = window.UnifiedDataManager.getCustomerById(archiveTargetCustomerId);
-            if (!customer) {
-                closeArchiveModal();
-                return;
-            }
-
-            const name = customer.basicInfo?.name || customer.name || '顧客';
-            const reasonText = document.getElementById('archive-reason-text').value.trim();
-
-            try {
-                closeArchiveModal();
-                showLoading('アーカイブ中...');
-
-                // アーカイブ実行（失注）
-                await window.UnifiedDataManager.deactivateCustomer(archiveTargetCustomerId, '失注');
-
-                // archiveReasonを設定
-                const updateData = {
-                    id: archiveTargetCustomerId,
-                    archiveReason: '失注'
-                };
-
-                // 備考が入力されていればエージェントメモに追記
-                if (reasonText) {
-                    const currentMemo = customer.agentMemo || '';
-                    const timestamp = new Date().toLocaleDateString('ja-JP');
-                    const appendText = `\n\n【${timestamp} アーカイブ】失注: ${reasonText}`;
-                    updateData.agentMemo = currentMemo + appendText;
-                }
-
-                await window.UnifiedDataManager.updateCustomer(updateData);
-
-                displayCustomers();
-                updateStats();
-                hideLoading();
-                PageInitializer.showNotification(`${name}さんを失注としてアーカイブしました`, 'success');
-            } catch (error) {
-                console.error('❌ アーカイブエラー:', error);
-                hideLoading();
-                PageInitializer.showNotification('アーカイブに失敗しました: ' + error.message, 'error');
-            }
+            window.ArchiveManager.openModal(customerId);
         }
 
         // 復元モーダル用の変数
