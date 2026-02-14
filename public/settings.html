@@ -394,6 +394,20 @@
             <h2>💎 プラン管理</h2>
             <p class="section-description">現在のプランと機能を確認できます</p>
 
+            <!-- ベータ版バナー（BETA_MODE = true の場合のみ表示） -->
+            <div id="betaBanner" style="display: none; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, #4CAF50, #45a049); border-radius: 8px; color: white; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 32px;">🚀</span>
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: bold;">ベータ版期間中：全機能無料開放！</h3>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.95;">
+                            現在、ベータ版として全ての機能を無料でご利用いただけます。<br>
+                            正式版移行時に改めてお知らせいたします。この期間中に存分にお試しください！
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div id="planInfo" style="margin-bottom: 20px;">
                 <div style="padding: 20px; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -563,6 +577,7 @@
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
+    <script src="js/feature-flags.js"></script>
     <script src="js/plan-manager.js"></script>
     <script src="js/supabase-google-sync.js"></script>
     <script src="js/navigation.js"></script>
@@ -875,6 +890,16 @@
         // プラン情報を更新
         async function updatePlanInfo() {
             try {
+                // ベータ版バナーの表示制御
+                const betaBanner = document.getElementById('betaBanner');
+                if (betaBanner && window.featureFlags) {
+                    if (window.featureFlags.isBetaMode()) {
+                        betaBanner.style.display = 'block';
+                    } else {
+                        betaBanner.style.display = 'none';
+                    }
+                }
+
                 if (!window.planManager) {
                     console.warn('PlanManager not available');
                     return;
@@ -922,7 +947,20 @@
                 // 機能リストを更新
                 const featuresList = document.getElementById('planFeaturesList');
                 if (featuresList) {
-                    const features = planFeatures[plan] || planFeatures['free'];
+                    let features;
+                    // ベータ版モードの場合は全機能を表示
+                    if (window.featureFlags && window.featureFlags.isBetaMode()) {
+                        features = [
+                            '顧客管理（無制限）',
+                            'パイプライン管理',
+                            'Googleカレンダー連携（基本・拡張）',
+                            'Googleフォーム連携',
+                            '連絡テンプレート管理',
+                            'フォローアップ自動化'
+                        ];
+                    } else {
+                        features = planFeatures[plan] || planFeatures['free'];
+                    }
                     featuresList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
                 }
 

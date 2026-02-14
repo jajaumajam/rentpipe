@@ -117,10 +117,17 @@ class PlanManager {
 
   /**
    * Check if user has access to a feature
+   * FeatureFlagsと連携して、ベータ版モードに対応
    */
   hasFeatureAccess(feature) {
     const plan = this.getPlan();
 
+    // FeatureFlagsが利用可能な場合はそれを使用
+    if (window.featureFlags) {
+      return window.featureFlags.hasAccess(feature, plan);
+    }
+
+    // フォールバック: 従来のロジック
     const PLAN_FEATURES = {
       free: ['customerManagement', 'pipeline', 'calendarBasic'],
       senior_agent: ['customerManagement', 'pipeline', 'calendarBasic', 'calendarAdvanced', 'googleForms', 'templates'],
