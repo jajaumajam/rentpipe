@@ -424,6 +424,10 @@
     <!-- スクリプト -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/plan-manager.js"></script>
+    <script src="js/supabase-google-sync.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
@@ -1061,7 +1065,15 @@
         }
 
         // テンプレートを編集モードに
-        function editTemplate(templateId) {
+        async function editTemplate(templateId) {
+            // プランチェック
+            if (window.planManager) {
+                const hasAccess = await window.planManager.checkFeatureAccess('templates', 'テンプレート編集');
+                if (!hasAccess) {
+                    return;
+                }
+            }
+
             editingTemplateId = templateId;
             renderTemplates();
 
@@ -1082,6 +1094,14 @@
 
         // テンプレートを保存
         async function saveTemplate(templateId) {
+            // プランチェック
+            if (window.planManager) {
+                const hasAccess = await window.planManager.checkFeatureAccess('templates', 'テンプレート編集');
+                if (!hasAccess) {
+                    return;
+                }
+            }
+
             const textarea = document.getElementById(`edit-textarea-${templateId}`);
             if (!textarea) return;
 

@@ -389,6 +389,79 @@
             </div>
         </div>
 
+        <!-- プラン管理セクション -->
+        <div class="settings-section">
+            <h2>💎 プラン管理</h2>
+            <p class="section-description">現在のプランと機能を確認できます</p>
+
+            <div id="planInfo" style="margin-bottom: 20px;">
+                <div style="padding: 20px; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e3a8a;">
+                                現在のプラン: <span id="currentPlanName">Free</span>
+                            </h3>
+                            <p style="margin: 0; color: #64748b; font-size: 14px;">無制限の顧客管理が可能です</p>
+                        </div>
+                        <button id="upgradeButton" class="btn-primary" style="padding: 10px 20px;">
+                            アップグレード
+                        </button>
+                    </div>
+
+                    <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #64748b;">利用可能な機能</h4>
+                        <ul id="planFeaturesList" style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px; line-height: 1.8;">
+                            <li>顧客管理（無制限）</li>
+                            <li>パイプライン管理</li>
+                            <li>Googleカレンダー連携（基本）</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- プラン比較テーブル -->
+                <div id="planComparison" style="margin-top: 20px; display: none;">
+                    <h4 style="margin-bottom: 16px; color: #1e3a8a;">プラン比較</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <!-- Free Plan -->
+                        <div style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px; background: white;">
+                            <h3 style="margin: 0 0 8px 0; color: #1e3a8a;">Free</h3>
+                            <p style="margin: 0 0 16px 0; font-size: 24px; font-weight: bold;">¥0</p>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+                                <li>顧客管理（無制限）</li>
+                                <li>パイプライン管理</li>
+                                <li>Googleカレンダー連携（基本）</li>
+                            </ul>
+                        </div>
+
+                        <!-- Senior Agent Plan -->
+                        <div style="border: 2px solid #3b82f6; border-radius: 8px; padding: 20px; background: linear-gradient(135deg, #eff6ff, #dbeafe); position: relative;">
+                            <div style="position: absolute; top: -12px; right: 16px; background: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                                おすすめ
+                            </div>
+                            <h3 style="margin: 0 0 8px 0; color: #1e3a8a;">Senior Agent</h3>
+                            <p style="margin: 0 0 16px 0; font-size: 24px; font-weight: bold; color: #3b82f6;">¥2,480<span style="font-size: 14px; color: #64748b;">/月</span></p>
+                            <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+                                <li>すべてのFree機能</li>
+                                <li>Googleフォーム連携</li>
+                                <li>Googleカレンダー連携（拡張）</li>
+                                <li>連絡テンプレート管理</li>
+                            </ul>
+                            <button id="upgradeSeniorButton" class="btn-primary" style="width: 100%; padding: 10px;">
+                                アップグレード
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- サブスクリプション管理（有料プラン加入者のみ表示） -->
+                <div id="subscriptionManagement" style="margin-top: 20px; display: none;">
+                    <button id="manageBillingButton" class="btn-secondary" style="width: 100%; padding: 12px;">
+                        サブスクリプション管理（請求・キャンセル）
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- UI設定セクション -->
         <div class="settings-section">
             <h2>🎨 表示設定</h2>
@@ -488,6 +561,10 @@
     <!-- スクリプト -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/plan-manager.js"></script>
+    <script src="js/supabase-google-sync.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
@@ -794,6 +871,215 @@
                 btn.innerHTML = originalText;
             }
         }
+
+        // プラン情報を更新
+        async function updatePlanInfo() {
+            try {
+                if (!window.planManager) {
+                    console.warn('PlanManager not available');
+                    return;
+                }
+
+                await window.planManager.initialize();
+
+                // Supabaseから最新のプラン情報を取得
+                await window.planManager.fetchPlan();
+
+                const plan = window.planManager.getPlan();
+                const isSignedIn = window.planManager.isSignedIn();
+
+                const planNames = {
+                    'free': 'Free',
+                    'senior_agent': 'Senior Agent',
+                    'top_agent': 'Top Agent'
+                };
+
+                const planFeatures = {
+                    'free': [
+                        '顧客管理（無制限）',
+                        'パイプライン管理',
+                        'Googleカレンダー連携（基本）'
+                    ],
+                    'senior_agent': [
+                        'すべてのFree機能',
+                        'Googleフォーム連携',
+                        'Googleカレンダー連携（拡張）',
+                        '連絡テンプレート管理'
+                    ],
+                    'top_agent': [
+                        'すべてのSenior Agent機能',
+                        '高度な分析機能',
+                        '優先サポート'
+                    ]
+                };
+
+                // プラン名を更新
+                const planNameElement = document.getElementById('currentPlanName');
+                if (planNameElement) {
+                    planNameElement.textContent = planNames[plan] || 'Free';
+                }
+
+                // 機能リストを更新
+                const featuresList = document.getElementById('planFeaturesList');
+                if (featuresList) {
+                    const features = planFeatures[plan] || planFeatures['free'];
+                    featuresList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
+                }
+
+                // アップグレードボタンの表示制御
+                const upgradeButton = document.getElementById('upgradeButton');
+                const planComparison = document.getElementById('planComparison');
+
+                if (plan === 'free') {
+                    if (upgradeButton) {
+                        upgradeButton.style.display = 'block';
+                        upgradeButton.onclick = () => {
+                            planComparison.style.display = planComparison.style.display === 'none' ? 'block' : 'none';
+                        };
+                    }
+                } else {
+                    if (upgradeButton) upgradeButton.style.display = 'none';
+                }
+
+                // サブスクリプション管理ボタンの表示制御
+                const subscriptionManagement = document.getElementById('subscriptionManagement');
+                if (plan !== 'free' && isSignedIn) {
+                    if (subscriptionManagement) {
+                        subscriptionManagement.style.display = 'block';
+                    }
+                } else {
+                    if (subscriptionManagement) {
+                        subscriptionManagement.style.display = 'none';
+                    }
+                }
+
+            } catch (error) {
+                console.error('プラン情報更新エラー:', error);
+            }
+        }
+
+        // Stripe Checkout に移動
+        async function handleUpgrade() {
+            try {
+                if (!window.planManager || !window.planManager.isSignedIn()) {
+                    alert('プランをアップグレードするには、まずSupabaseアカウントでログインしてください。');
+                    return;
+                }
+
+                // localStorageからユーザー情報を取得
+                const savedUser = window.supabaseGoogleSync?.getSavedUser();
+                if (!savedUser || !savedUser.id || !savedUser.email) {
+                    alert('ユーザー情報が見つかりません。再度ログインしてください。');
+                    return;
+                }
+
+                // Stripe Price ID
+                const priceId = 'price_1T0c0rQMLO8hZlng0aMuxHzN';
+
+                console.log('Creating checkout session for:', savedUser.email);
+
+                const response = await fetch('/api/stripe/create-checkout-simple', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: savedUser.id,
+                        email: savedUser.email,
+                        priceId: priceId,
+                        planName: 'Senior Agent'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to create checkout session');
+                }
+
+                const data = await response.json();
+                console.log('Checkout session created:', data.sessionId);
+
+                // Stripeチェックアウトページにリダイレクト
+                window.location.href = data.url;
+
+            } catch (error) {
+                console.error('アップグレードエラー:', error);
+                alert('アップグレード処理中にエラーが発生しました: ' + error.message);
+            }
+        }
+
+        // サブスクリプション管理ポータルを開く
+        async function handleManageBilling() {
+            try {
+                // localStorageからユーザー情報を取得
+                const savedUser = window.supabaseGoogleSync?.getSavedUser();
+                if (!savedUser || !savedUser.id || !savedUser.email) {
+                    alert('ユーザー情報が見つかりません。再度ログインしてください。');
+                    return;
+                }
+
+                console.log('Creating billing portal session for:', savedUser.email);
+
+                const response = await fetch('/api/stripe/create-portal-simple', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: savedUser.id,
+                        email: savedUser.email,
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to create portal session');
+                }
+
+                const data = await response.json();
+                console.log('Billing portal session created');
+
+                // Stripe請求管理ポータルを新しいタブで開く
+                window.open(data.url, '_blank');
+
+                // 数秒後にプラン情報を更新（キャンセルした場合の反映）
+                setTimeout(async () => {
+                    console.log('プラン情報を更新中...');
+                    await updatePlanInfo();
+                }, 3000);
+
+            } catch (error) {
+                console.error('サブスクリプション管理エラー:', error);
+                alert('サブスクリプション管理画面の表示中にエラーが発生しました: ' + error.message);
+            }
+        }
+
+        // イベントリスナーを設定
+        document.addEventListener('DOMContentLoaded', () => {
+            const upgradeSeniorButton = document.getElementById('upgradeSeniorButton');
+            if (upgradeSeniorButton) {
+                upgradeSeniorButton.onclick = handleUpgrade;
+            }
+
+            const manageBillingButton = document.getElementById('manageBillingButton');
+            if (manageBillingButton) {
+                manageBillingButton.onclick = handleManageBilling;
+            }
+
+            // プラン情報を更新
+            updatePlanInfo();
+
+            // ページが再度表示されたときにプラン情報を更新
+            // （ユーザーが別タブから戻ってきたとき）
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    console.log('ページが再表示されました。プラン情報を更新中...');
+                    setTimeout(() => {
+                        updatePlanInfo();
+                    }, 1000);
+                }
+            });
+        });
 
         console.log('✅ 設定ページ準備完了');
     </script>

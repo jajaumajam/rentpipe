@@ -156,8 +156,12 @@
     <!-- Google API Client & Identity Services -->
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://apis.google.com/js/api.js"></script>
-    
+
     <!-- RentPipe Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/plan-manager.js"></script>
+    <script src="js/supabase-google-sync.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-sheets-api.js"></script>
@@ -257,9 +261,21 @@
                 if (!savedAuth || !savedGoogleAuth || !savedToken) {
                     throw new Error('認証情報の保存確認に失敗しました');
                 }
-                
+
+                // 5. Supabaseにユーザー情報を同期
+                if (window.supabaseGoogleSync) {
+                    console.log('🔄 Supabaseにユーザー情報を同期中...');
+                    try {
+                        await window.supabaseGoogleSync.syncGoogleUser(userInfo);
+                        console.log('✅ Supabase同期完了');
+                    } catch (syncError) {
+                        console.warn('⚠️ Supabase同期失敗（処理は継続）:', syncError);
+                        // Supabase同期失敗はログインを妨げない
+                    }
+                }
+
                 return true;
-                
+
             } catch (error) {
                 console.error('❌ 統合認証データ保存エラー:', error);
                 return false;

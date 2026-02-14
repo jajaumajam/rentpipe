@@ -1,0 +1,18 @@
+{
+  "name": "rentpipe",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Real estate CRM with Google Drive integration",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build required'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.7",
+    "stripe": "^14.14.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.21"
+  }
+}
