@@ -159,6 +159,12 @@ class PlanManager {
    * Show upgrade modal
    */
   showUpgradeModal(featureName) {
+    // ベータ版モードの場合は、この関数は呼ばれないはずだが、念のため
+    if (window.featureFlags && window.featureFlags.isBetaMode()) {
+      console.log('Beta mode: All features are available');
+      return;
+    }
+
     const modal = document.createElement('div');
     modal.className = 'plan-upgrade-modal';
     modal.innerHTML = `

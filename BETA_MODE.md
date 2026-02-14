@@ -30,6 +30,7 @@ const BETA_MODE = true;  // ← ここを変更
 
 - すべてのユーザーが**全機能を無料**で利用可能
 - プラン（Free/Senior Agent）に関係なく、すべての機能にアクセス可能
+- **Stripe決済が完全に無効化**される（アップグレードボタン非表示、決済処理をブロック）
 - settings.htmlに**「ベータ版期間中：全機能無料開放！」**バナーが表示される
 - コンソールに緑色のメッセージが表示される:
   ```
@@ -205,6 +206,69 @@ async function updatePlanInfo() {
 
 ---
 
+## 決済無効化の仕組み
+
+ベータ版モード（`BETA_MODE = true`）では、Stripe決済が完全に無効化され、ユーザーに誤って請求が発生することを防ぎます。
+
+### 実装箇所
+
+#### 1. settings.html - handleUpgrade関数
+
+```javascript
+async function handleUpgrade() {
+  // ベータ版モードチェック
+  if (window.featureFlags && window.featureFlags.isBetaMode()) {
+    alert('現在ベータ版期間中のため、全機能を無料でご利用いただけます。\n\n正式版リリース時に改めてプラン機能をご案内いたします。\nこの期間中に存分にお試しください！');
+    return;  // 決済処理をブロック
+  }
+  // ... Stripe決済処理
+}
+```
+
+#### 2. settings.html - updatePlanInfo関数
+
+```javascript
+async function updatePlanInfo() {
+  // アップグレードボタンの表示制御
+  if (window.featureFlags && window.featureFlags.isBetaMode()) {
+    // ベータ版モードではアップグレードボタンを非表示
+    upgradeButton.style.display = 'none';
+    planComparison.style.display = 'none';
+    subscriptionManagement.style.display = 'none';
+  }
+  // ...
+}
+```
+
+#### 3. plan-manager.js - showUpgradeModal関数
+
+```javascript
+showUpgradeModal(featureName) {
+  // ベータ版モードの場合は、モーダルを表示しない
+  if (window.featureFlags && window.featureFlags.isBetaMode()) {
+    return;
+  }
+  // ...
+}
+```
+
+### 無効化される要素
+
+- ✅ アップグレードボタン（プラン情報セクション）
+- ✅ プラン比較セクション
+- ✅ Senior Agentプランのアップグレードボタン
+- ✅ サブスクリプション管理ボタン
+- ✅ アップグレードモーダル
+- ✅ Stripe Checkout への遷移
+
+### メリット
+
+1. **誤課金の防止**: ベータ版期間中にユーザーに請求が発生しない
+2. **Vercel無料プラン準拠**: 商用利用（決済）を行わないため、無料プランで運営可能
+3. **シンプルな切り替え**: `BETA_MODE = false` に変更するだけで決済機能が有効化される
+
+---
+
 ## 注意点
 
 ### ⚠️ デプロイメント
@@ -269,7 +333,14 @@ rentpipe/
 
 ### Q3: ベータ版期間中にStripe決済は動作する？
 
-**A:** はい。機能制限は無効化されていますが、決済システムは正常に動作します。ただし、ベータ版期間中は決済を受け付けないことを推奨します。
+**A:** いいえ。ベータ版モード（`BETA_MODE = true`）では、**Stripe決済が完全に無効化**されます。具体的には：
+
+- アップグレードボタンが非表示になる
+- プラン比較セクションが非表示になる
+- アップグレード処理を実行しようとすると、「現在ベータ版期間中のため、全機能を無料でご利用いただけます」というアラートが表示される
+- サブスクリプション管理ボタンも非表示になる
+
+これにより、ベータ版期間中に誤ってユーザーに請求が発生することを防ぎ、Vercel無料プランのポリシーにも準拠します。
 
 ### Q4: 新しい機能を追加したい場合は？
 

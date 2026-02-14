@@ -968,7 +968,11 @@
                 const upgradeButton = document.getElementById('upgradeButton');
                 const planComparison = document.getElementById('planComparison');
 
-                if (plan === 'free') {
+                // ベータ版モードではアップグレードボタンを非表示
+                if (window.featureFlags && window.featureFlags.isBetaMode()) {
+                    if (upgradeButton) upgradeButton.style.display = 'none';
+                    if (planComparison) planComparison.style.display = 'none';
+                } else if (plan === 'free') {
                     if (upgradeButton) {
                         upgradeButton.style.display = 'block';
                         upgradeButton.onclick = () => {
@@ -981,7 +985,12 @@
 
                 // サブスクリプション管理ボタンの表示制御
                 const subscriptionManagement = document.getElementById('subscriptionManagement');
-                if (plan !== 'free' && isSignedIn) {
+                // ベータ版モードでは非表示（決済が発生しないため）
+                if (window.featureFlags && window.featureFlags.isBetaMode()) {
+                    if (subscriptionManagement) {
+                        subscriptionManagement.style.display = 'none';
+                    }
+                } else if (plan !== 'free' && isSignedIn) {
                     if (subscriptionManagement) {
                         subscriptionManagement.style.display = 'block';
                     }
@@ -999,6 +1008,12 @@
         // Stripe Checkout に移動
         async function handleUpgrade() {
             try {
+                // ベータ版モードチェック
+                if (window.featureFlags && window.featureFlags.isBetaMode()) {
+                    alert('現在ベータ版期間中のため、全機能を無料でご利用いただけます。\n\n正式版リリース時に改めてプラン機能をご案内いたします。\nこの期間中に存分にお試しください！');
+                    return;
+                }
+
                 if (!window.planManager || !window.planManager.isSignedIn()) {
                     alert('プランをアップグレードするには、まずSupabaseアカウントでログインしてください。');
                     return;
