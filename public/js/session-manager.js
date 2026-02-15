@@ -282,10 +282,30 @@
     /**
      * Google再認証を促す
      */
-    promptReauth() {
-      // 設定ページにリダイレクト（再認証を促す）
-      if (confirm('設定ページに移動して再認証しますか？')) {
-        window.location.href = '/settings.html?reauth=google';
+    async promptReauth() {
+      try {
+        console.log('🔄 Google再認証を開始...');
+
+        // GoogleDriveAPIv2 が初期化されているか確認
+        if (!window.GoogleDriveAPIv2?.isInitialized) {
+          console.log('⏳ Google Drive API を初期化中...');
+          await window.GoogleDriveAPIv2?.initialize();
+        }
+
+        // 認証を実行
+        if (window.GoogleDriveAPIv2?.authenticate) {
+          await window.GoogleDriveAPIv2.authenticate();
+          console.log('✅ Google再認証完了');
+
+          // ページをリロードして新しいトークンを反映
+          window.location.reload();
+        } else {
+          console.error('❌ GoogleDriveAPIv2.authenticate が利用できません');
+          alert('再認証機能が利用できません。ページをリロードしてください。');
+        }
+      } catch (error) {
+        console.error('❌ 再認証エラー:', error);
+        alert('再認証に失敗しました: ' + error.message);
       }
     }
 

@@ -230,7 +230,17 @@ function updateUserInfo() {
 // ログアウト処理
 window.handleLogout = function() {
     if (confirm('ログアウトしますか？')) {
+        // すべての認証情報をクリア
         localStorage.removeItem('google_auth_data');
+        localStorage.removeItem('google_access_token');
+        localStorage.removeItem('google_token_expiry');
+        localStorage.removeItem('rentpipe_auth');
+        localStorage.removeItem('rentpipe_auth_simple');
+        localStorage.removeItem('rentpipe_user_info');
+
+        // ログアウトフラグをセット（login.htmlで自動ログインを防ぐ）
+        sessionStorage.setItem('just_logged_out', 'true');
+
         window.location.href = 'login.html';
     }
 };

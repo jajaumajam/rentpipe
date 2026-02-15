@@ -390,12 +390,20 @@
         async function initialize() {
             try {
                 console.log('🚀 ログインページ初期化...');
-                
+
+                // ログアウト直後はスキップ（自動ログインを防ぐ）
+                if (sessionStorage.getItem('just_logged_out') === 'true') {
+                    console.log('🚪 ログアウト直後 - 自動ログインをスキップ');
+                    sessionStorage.removeItem('just_logged_out');
+                    console.log('✅ ログインページ初期化完了');
+                    return;
+                }
+
                 // 既にログイン済みかチェック
                 if (window.IntegratedAuthManagerV2) {
                     await window.IntegratedAuthManagerV2.initialize();
                     const authState = window.IntegratedAuthManagerV2.getAuthState();
-                    
+
                     if (authState.isAuthenticated) {
                         console.log('✅ 既にログイン済み - customer.htmlへリダイレクト');
                         updateStatus('既にログイン済みです', 'success', 'リダイレクト中...');
@@ -405,9 +413,9 @@
                         return;
                     }
                 }
-                
+
                 console.log('✅ ログインページ初期化完了');
-                
+
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
             }

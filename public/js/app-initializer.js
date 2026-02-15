@@ -84,22 +84,21 @@ const AppInitializer = {
         const authState = window.IntegratedAuthManager.getAuthState();
         const accessToken = authState?.googleAuth?.accessToken;
 
-        if (!accessToken) {
-            console.warn('⚠️ アクセストークンがありません');
-            return;
-        }
-
-        // Google Drive API を初期化（これがgapi.clientとdiscovery docsを読み込む）
+        // Google Drive API を初期化（トークンがなくても gapi.client をロード）
         if (window.GoogleDriveAPIv2) {
             if (!window.GoogleDriveAPIv2.isInitialized) {
                 console.log('⏳ Google Drive API 初期化中...');
                 await window.GoogleDriveAPIv2.initialize();
             }
 
-            if (!window.GoogleDriveAPIv2.isAuthenticated) {
-                console.log('🔑 Google Drive API にトークンを設定中...');
-                window.GoogleDriveAPIv2.accessToken = accessToken;
-                window.GoogleDriveAPIv2.isAuthenticated = true;
+            if (accessToken) {
+                if (!window.GoogleDriveAPIv2.isAuthenticated) {
+                    console.log('🔑 Google Drive API にトークンを設定中...');
+                    window.GoogleDriveAPIv2.accessToken = accessToken;
+                    window.GoogleDriveAPIv2.isAuthenticated = true;
+                }
+            } else {
+                console.warn('⚠️ アクセストークンがありません - API初期化のみ実行');
             }
 
             console.log('✅ Google Drive API 準備完了');
@@ -107,7 +106,7 @@ const AppInitializer = {
 
         // gapi.client にトークンを設定（Calendar API等で使用）
         // ※ GoogleDriveAPIv2の初期化後に実行（discovery docsが読み込まれた後）
-        if (window.gapi?.client) {
+        if (accessToken && window.gapi?.client) {
             window.gapi.client.setToken({
                 access_token: accessToken
             });
