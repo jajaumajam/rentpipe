@@ -67,12 +67,24 @@
 
                 <!-- CSVフォーマット例 -->
                 <div class="mt-4" style="margin-top: 24px;">
-                    <h3 style="font-size: 16px; margin-bottom: 12px;">📝 CSVフォーマット例</h3>
-                    <pre class="code-block">name,email,phone,company,address,notes
-山田太郎,yamada@example.com,090-1234-5678,株式会社サンプル,東京都渋谷区...,優良顧客
-佐藤花子,sato@example.com,080-9876-5432,佐藤不動産,神奈川県横浜市...,初回問い合わせ</pre>
+                    <h3 style="font-size: 16px; margin-bottom: 12px;">📝 CSVフォーマット</h3>
+                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
+                        RentPipeの全項目に対応した詳細なテンプレートです。<br>
+                        必須項目は「name（お名前）」と「phone（電話番号）」のみです。その他は空欄でも構いません。
+                    </p>
+                    <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; margin: 0 0 8px 0; color: #1f2937;">📋 項目一覧（全60項目）</h4>
+                        <div style="font-size: 12px; color: #6b7280; line-height: 1.6; columns: 2; column-gap: 20px;">
+                            <div>基本情報: name*, nameKana, email, phone*, birthday, gender, currentAddress</div>
+                            <div>住居・職業: currentHousing, numberOfOccupants, occupation, companyName, yearsEmployed, annualIncome, movingReason</div>
+                            <div>希望条件: budgetMin, budgetMax, moveInDate, areas, layout, roomSize, stationWalk, floor</div>
+                            <div>設備条件: separateBath, separateWashroom, autoLock, indoorWashing, など全30項目</div>
+                            <div>契約情報: contractType, contractStartDate, contractEndDate, monthlyRent, など</div>
+                            <div>その他: pipelineStatus, notes, agentMemo</div>
+                        </div>
+                    </div>
                     <button class="btn-rentpipe btn-rentpipe-primary mt-2" onclick="downloadCsvTemplate()">
-                        ⬇️ テンプレートをダウンロード
+                        ⬇️ 詳細テンプレートをダウンロード
                     </button>
                 </div>
             </div>
@@ -95,27 +107,31 @@
 
                 <!-- JSONフォーマット例 -->
                 <div class="mt-4" style="margin-top: 24px;">
-                    <h3 style="font-size: 16px; margin-bottom: 12px;">📝 JSONフォーマット例</h3>
+                    <h3 style="font-size: 16px; margin-bottom: 12px;">📝 JSONフォーマット</h3>
+                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
+                        RentPipeの全項目に対応した詳細なテンプレートです。<br>
+                        必須項目は「name（お名前）」と「phone（電話番号）」のみです。その他は空文字列（""）でも構いません。
+                    </p>
                     <pre class="code-block">[
   {
     "name": "山田太郎",
+    "nameKana": "ヤマダタロウ",
     "email": "yamada@example.com",
     "phone": "090-1234-5678",
-    "company": "株式会社サンプル",
-    "address": "東京都渋谷区...",
-    "notes": "優良顧客"
-  },
-  {
-    "name": "佐藤花子",
-    "email": "sato@example.com",
-    "phone": "080-9876-5432",
-    "company": "佐藤不動産",
-    "address": "神奈川県横浜市...",
-    "notes": "初回問い合わせ"
+    "birthday": "1990-01-15",
+    "gender": "male",
+    "currentAddress": "東京都渋谷区1-2-3",
+    "budgetMin": "80000",
+    "budgetMax": "100000",
+    "areas": "渋谷駅・表参道駅 徒歩10分以内",
+    "layout": "1K|1DK",
+    "pipelineStatus": "初回相談",
+    "notes": "予算内で良い物件を探したい",
+    ...（全60項目）
   }
 ]</pre>
                     <button class="btn-rentpipe btn-rentpipe-primary mt-2" onclick="downloadJsonTemplate()">
-                        ⬇️ テンプレートをダウンロード
+                        ⬇️ 詳細テンプレートをダウンロード
                     </button>
                 </div>
             </div>
@@ -423,41 +439,158 @@
         }
 
         function downloadCsvTemplate() {
-            const csv = `name,email,phone,company,address,notes
-山田太郎,yamada@example.com,090-1234-5678,株式会社サンプル,東京都渋谷区...,優良顧客
-佐藤花子,sato@example.com,080-9876-5432,佐藤不動産,神奈川県横浜市...,初回問い合わせ`;
+            // RentPipe 顧客情報 詳細テンプレート（全60項目）
+            const csv = `name,nameKana,email,phone,birthday,gender,currentAddress,currentHousing,numberOfOccupants,occupation,companyName,yearsEmployed,annualIncome,movingReason,budgetMin,budgetMax,moveInDate,areas,layout,roomSize,stationWalk,floor,buildingAge,separateBath,separateWashroom,autoLock,indoorWashing,deliveryBox,elevator,parking,bicycle,bike,internet,petAllowed,instrumentAllowed,sohoAllowed,twoGasStove,noTatami,flooring,contractType,contractStartDate,contractEndDate,contractPeriodMonths,monthlyRent,depositMonths,keyMoneyMonths,otherInitialCost,contractPropertyAddress,pipelineStatus,notes,agentMemo,desiredMoveInDate,applicationDate,followUpDate,additionalFollowUpDate,additionalFollowUpReminder,contractEndDateManual
+山田太郎,ヤマダタロウ,yamada@example.com,090-1234-5678,1990-01-15,male,東京都渋谷区1-2-3,賃貸,1,会社員,株式会社サンプル,5,5000000,転勤,80000,100000,2026年4月,渋谷駅・表参道駅 徒歩10分以内,1K|1DK,25,10,2階以上,築10年以内,yes,yes,yes,yes,yes,yes,no,no,no,yes,no,no,no,yes,yes,yes,新規契約,2026-04-01,2028-03-31,24,90000,1,1,50000,東京都渋谷区サンプル町1-2-3,初回相談,予算内で良い物件を探したい,積極的に物件紹介,2026-04-01,,,,,
+佐藤花子,サトウハナコ,sato@example.com,080-9876-5432,1995-05-20,female,神奈川県横浜市中区4-5-6,実家,2,自営業,佐藤不動産,,3000000,結婚,60000,80000,2026年5月,横浜駅・みなとみらい駅,1LDK|2K,30,15,指定なし,指定なし,yes,yes,yes,no,yes,no,no,no,no,yes,yes,no,no,no,no,no,,,,,,,,,物件紹介,ペット可の物件希望,猫を飼っている,2026-05-01,,,,,`;
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'customer_import_template.csv';
+            link.download = 'rentpipe_customer_template_detailed.csv';
             link.click();
         }
 
         function downloadJsonTemplate() {
             const json = JSON.stringify([
                 {
+                    // 基本情報（必須項目: name, phone）
                     name: '山田太郎',
+                    nameKana: 'ヤマダタロウ',
                     email: 'yamada@example.com',
                     phone: '090-1234-5678',
-                    company: '株式会社サンプル',
-                    address: '東京都渋谷区...',
-                    notes: '優良顧客'
+                    birthday: '1990-01-15',
+                    gender: 'male',
+                    currentAddress: '東京都渋谷区1-2-3',
+
+                    // 住居・職業情報
+                    currentHousing: '賃貸',
+                    numberOfOccupants: '1',
+                    occupation: '会社員',
+                    companyName: '株式会社サンプル',
+                    yearsEmployed: '5',
+                    annualIncome: '5000000',
+                    movingReason: '転勤',
+
+                    // 希望条件
+                    budgetMin: '80000',
+                    budgetMax: '100000',
+                    moveInDate: '2026年4月',
+                    areas: '渋谷駅・表参道駅 徒歩10分以内',
+                    layout: '1K|1DK',
+                    roomSize: '25',
+                    stationWalk: '10',
+                    floor: '2階以上',
+                    buildingAge: '築10年以内',
+
+                    // 設備条件（yes/no）
+                    separateBath: 'yes',
+                    separateWashroom: 'yes',
+                    autoLock: 'yes',
+                    indoorWashing: 'yes',
+                    deliveryBox: 'yes',
+                    elevator: 'yes',
+                    parking: 'no',
+                    bicycle: 'no',
+                    bike: 'no',
+                    internet: 'yes',
+                    petAllowed: 'no',
+                    instrumentAllowed: 'no',
+                    sohoAllowed: 'no',
+                    twoGasStove: 'yes',
+                    noTatami: 'yes',
+                    flooring: 'yes',
+
+                    // 契約情報
+                    contractType: '新規契約',
+                    contractStartDate: '2026-04-01',
+                    contractEndDate: '2028-03-31',
+                    contractPeriodMonths: '24',
+                    monthlyRent: '90000',
+                    depositMonths: '1',
+                    keyMoneyMonths: '1',
+                    otherInitialCost: '50000',
+                    contractPropertyAddress: '東京都渋谷区サンプル町1-2-3',
+
+                    // ステータス・メモ
+                    pipelineStatus: '初回相談',
+                    notes: '予算内で良い物件を探したい',
+                    agentMemo: '積極的に物件紹介',
+
+                    // フォローアップ
+                    desiredMoveInDate: '2026-04-01',
+                    applicationDate: '',
+                    followUpDate: '',
+                    additionalFollowUpDate: '',
+                    additionalFollowUpReminder: '',
+                    contractEndDateManual: ''
                 },
                 {
+                    // 最小限の例（必須項目のみ）
                     name: '佐藤花子',
+                    nameKana: 'サトウハナコ',
                     email: 'sato@example.com',
                     phone: '080-9876-5432',
-                    company: '佐藤不動産',
-                    address: '神奈川県横浜市...',
-                    notes: '初回問い合わせ'
+                    birthday: '1995-05-20',
+                    gender: 'female',
+                    currentAddress: '神奈川県横浜市中区4-5-6',
+                    currentHousing: '実家',
+                    numberOfOccupants: '2',
+                    occupation: '自営業',
+                    companyName: '佐藤不動産',
+                    yearsEmployed: '',
+                    annualIncome: '3000000',
+                    movingReason: '結婚',
+                    budgetMin: '60000',
+                    budgetMax: '80000',
+                    moveInDate: '2026年5月',
+                    areas: '横浜駅・みなとみらい駅',
+                    layout: '1LDK|2K',
+                    roomSize: '30',
+                    stationWalk: '15',
+                    floor: '指定なし',
+                    buildingAge: '指定なし',
+                    separateBath: 'yes',
+                    separateWashroom: 'yes',
+                    autoLock: 'yes',
+                    indoorWashing: 'no',
+                    deliveryBox: 'yes',
+                    elevator: 'no',
+                    parking: 'no',
+                    bicycle: 'no',
+                    bike: 'no',
+                    internet: 'yes',
+                    petAllowed: 'yes',
+                    instrumentAllowed: 'no',
+                    sohoAllowed: 'no',
+                    twoGasStove: 'no',
+                    noTatami: 'no',
+                    flooring: 'no',
+                    contractType: '',
+                    contractStartDate: '',
+                    contractEndDate: '',
+                    contractPeriodMonths: '',
+                    monthlyRent: '',
+                    depositMonths: '',
+                    keyMoneyMonths: '',
+                    otherInitialCost: '',
+                    contractPropertyAddress: '',
+                    pipelineStatus: '物件紹介',
+                    notes: 'ペット可の物件希望',
+                    agentMemo: '猫を飼っている',
+                    desiredMoveInDate: '2026-05-01',
+                    applicationDate: '',
+                    followUpDate: '',
+                    additionalFollowUpDate: '',
+                    additionalFollowUpReminder: '',
+                    contractEndDateManual: ''
                 }
             ], null, 2);
 
             const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'customer_import_template.json';
+            link.download = 'rentpipe_customer_template_detailed.json';
             link.click();
         }
     </script>
