@@ -5,7 +5,7 @@
   "description": "Real estate CRM with Google Drive integration",
   "scripts": {
     "dev": "vercel dev",
-    "build": "node scripts/inject-env.js",
+    "build": "node scripts/inject-env.cjs",
     "deploy": "vercel --prod"
   },
   "dependencies": {
