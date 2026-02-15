@@ -31,9 +31,6 @@ window.createNavigation = function() {
                         <a href="settings.html" class="nav-link ${currentPage === 'settings.html' ? 'active' : ''}">
                             設定
                         </a>
-                        <a href="${window.FEEDBACK_LINE_URL || 'https://line.me/ti/g2/YOUR_OPEN_CHAT_ID'}" target="_blank" rel="noopener noreferrer" class="nav-link nav-link-feedback">
-                            意見箱
-                        </a>
                     </div>
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div id="user-info" style="color: white; font-size: 0.85rem; white-space: nowrap;"></div>
@@ -77,9 +74,6 @@ window.createNavigation = function() {
                     <a href="settings.html" class="mobile-menu-link ${currentPage === 'settings.html' ? 'active' : ''}">
                         設定
                     </a>
-                    <a href="${window.FEEDBACK_LINE_URL || 'https://line.me/ti/g2/YOUR_OPEN_CHAT_ID'}" target="_blank" rel="noopener noreferrer" class="mobile-menu-link">
-                        意見箱
-                    </a>
                     <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 0.5rem 0; padding-top: 0.5rem;">
                         <button onclick="handleLogout()" style="width: 100%; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
                             ログアウト
@@ -110,14 +104,6 @@ window.createNavigation = function() {
                 background: rgba(255,255,255,0.2);
                 color: white;
                 font-weight: 600;
-            }
-            .nav-link-feedback {
-                border: 1px solid rgba(255,255,255,0.25);
-                margin-left: 0.25rem;
-            }
-            .nav-link-feedback:hover {
-                background: rgba(255,255,255,0.2);
-                border-color: rgba(255,255,255,0.4);
             }
 
             /* モバイルメニュー */
