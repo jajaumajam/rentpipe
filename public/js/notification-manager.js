@@ -1,5 +1,5 @@
 /**
- * Notification Manager
+ * Notification Manager (Supabase連携版)
  * お知らせ通知の管理（バナー表示・既読管理）
  */
 
@@ -7,35 +7,140 @@
   'use strict';
 
   const NotificationManager = {
-    // 通知データ
-    notifications: [
-      {
-        id: 'beta-launch-2026',
-        type: 'banner',
-        priority: 1,
-        title: 'ベータ版リリースのお知らせ',
-        message: 'RentPipeベータ版へようこそ！現在、全機能を無料でご利用いただけます。ご意見・ご要望は意見箱からお気軽にお寄せください。',
-        variant: 'info', // info, success, warning, danger
-        startDate: '2026-02-01',
-        endDate: '2026-12-31',
-        dismissible: true,
-        showOnPages: [] // 空配列 = 全ページに表示
-      }
-      // 追加の通知はここに追加
-    ],
+    // 通知データ（Supabaseから取得）
+    notifications: [],
+
+    // Supabaseクライアント
+    supabase: null,
 
     // localStorageキー
     STORAGE_KEY: 'rentpipe_notification_read_status',
     STORAGE_EXPIRY_DAYS: 90, // 既読データの保持期間
 
+    // 初期化済みフラグ
+    isInitialized: false,
+
     /**
      * 初期化
      */
-    init() {
+    async init() {
+      if (this.isInitialized) {
+        console.log('📢 Notification Manager は既に初期化済み');
+        return;
+      }
+
       console.log('📢 Notification Manager 初期化中...');
-      this.cleanupOldReadStatus();
-      this.renderBanners();
-      console.log('✅ Notification Manager 初期化完了');
+
+      try {
+        // Supabase初期化
+        await this.initSupabase();
+
+        // 通知を読み込み
+        await this.loadNotifications();
+
+        // 既読データをクリーンアップ
+        this.cleanupOldReadStatus();
+
+        // バナーを表示
+        this.renderBanners();
+
+        this.isInitialized = true;
+        console.log('✅ Notification Manager 初期化完了');
+      } catch (error) {
+        console.error('❌ Notification Manager 初期化エラー:', error);
+        // エラーが発生してもアプリは継続
+      }
+    },
+
+    /**
+     * Supabase初期化
+     */
+    async initSupabase() {
+      if (this.supabase) return;
+
+      if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+        console.warn('⚠️ Supabase設定がありません - お知らせ機能は無効です');
+        return;
+      }
+
+      // Supabase JSライブラリが読み込まれるまで待つ
+      if (!window.supabase) {
+        console.log('⏳ Supabase JSライブラリを読み込み中...');
+        await this.loadSupabaseScript();
+      }
+
+      this.supabase = window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_ANON_KEY
+      );
+
+      console.log('✅ Supabase初期化完了（Notification Manager）');
+    },
+
+    /**
+     * Supabase JSライブラリを動的ロード
+     */
+    loadSupabaseScript() {
+      return new Promise((resolve, reject) => {
+        if (window.supabase) {
+          resolve();
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+          console.log('✅ Supabase JSライブラリ読み込み完了');
+          setTimeout(resolve, 100); // 少し待つ
+        };
+        script.onerror = () => reject(new Error('Supabase JSライブラリの読み込みに失敗'));
+        document.head.appendChild(script);
+      });
+    },
+
+    /**
+     * 通知をSupabaseから読み込み
+     */
+    async loadNotifications() {
+      if (!this.supabase) {
+        console.warn('⚠️ Supabase未初期化 - 通知を読み込めません');
+        return;
+      }
+
+      try {
+        const now = new Date().toISOString();
+
+        const { data, error } = await this.supabase
+          .from('notifications')
+          .select('*')
+          .eq('status', 'published')
+          .lte('start_date', now)
+          .or(`end_date.is.null,end_date.gte.${now}`)
+          .order('priority', { ascending: true });
+
+        if (error) {
+          console.error('通知取得エラー:', error);
+          return;
+        }
+
+        this.notifications = (data || []).map(n => ({
+          id: n.id,
+          type: n.type,
+          priority: n.priority,
+          title: n.title,
+          message: n.message,
+          variant: n.variant,
+          startDate: n.start_date,
+          endDate: n.end_date,
+          dismissible: n.dismissible,
+          showOnPages: n.show_on_pages || [],
+          showBanner: n.show_banner
+        }));
+
+        console.log(`📊 ${this.notifications.length}件の通知を読み込みました`);
+      } catch (error) {
+        console.error('通知読み込みエラー:', error);
+      }
     },
 
     /**
@@ -133,6 +238,13 @@
     },
 
     /**
+     * バナー表示用の通知を取得
+     */
+    getBannerNotifications() {
+      return this.getActiveNotifications().filter(n => n.showBanner);
+    },
+
+    /**
      * バナーを表示
      */
     renderBanners() {
@@ -142,127 +254,86 @@
         return;
       }
 
-      const activeNotifications = this.getActiveNotifications();
+      const bannerNotifications = this.getBannerNotifications();
 
-      if (activeNotifications.length === 0) {
+      if (bannerNotifications.length === 0) {
         container.innerHTML = '';
         return;
       }
 
-      // 最大2件まで表示
-      const toShow = activeNotifications.slice(0, 2);
+      container.innerHTML = bannerNotifications.map(notif => {
+        const variantClasses = {
+          info: 'bg-blue-50 border-blue-200 text-blue-900',
+          success: 'bg-green-50 border-green-200 text-green-900',
+          warning: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+          danger: 'bg-red-50 border-red-200 text-red-900'
+        };
 
-      container.innerHTML = toShow.map(notif => this.createBannerHTML(notif)).join('');
+        const closeButtonClass = {
+          info: 'text-blue-600 hover:text-blue-800',
+          success: 'text-green-600 hover:text-green-800',
+          warning: 'text-yellow-600 hover:text-yellow-800',
+          danger: 'text-red-600 hover:text-red-800'
+        };
 
-      // 閉じるボタンのイベントリスナー
-      toShow.forEach(notif => {
-        if (notif.dismissible) {
-          const dismissBtn = document.getElementById(`dismiss-${notif.id}`);
-          if (dismissBtn) {
-            dismissBtn.addEventListener('click', () => this.dismiss(notif.id));
-          }
-        }
-      });
-
-      console.log(`📢 ${toShow.length}件のバナー通知を表示しました`);
-    },
-
-    /**
-     * バナーHTML生成
-     */
-    createBannerHTML(notif) {
-      const variantStyles = {
-        info: 'background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;',
-        success: 'background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;',
-        warning: 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;',
-        danger: 'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;'
-      };
-
-      const style = variantStyles[notif.variant] || variantStyles.info;
-
-      return `
-        <div class="notification-banner" id="banner-${notif.id}" style="${style} padding: 16px 20px; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); animation: slideDown 0.3s ease-out;">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px;">
+        return `
+          <div
+            class="notification-banner ${variantClasses[notif.variant] || variantClasses.info}"
+            data-notification-id="${notif.id}"
+            style="display: flex; align-items: start; gap: 12px; padding: 16px; border: 1px solid; border-radius: 8px; margin-bottom: 12px; animation: slideDown 0.3s ease-out;">
             <div style="flex: 1;">
-              <div style="font-weight: 600; margin-bottom: 4px;">${notif.title}</div>
-              <div style="font-size: 0.9rem; opacity: 0.95;">${notif.message}</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">${this.escapeHtml(notif.title)}</div>
+              <div style="font-size: 14px; line-height: 1.6;">${this.escapeHtml(notif.message)}</div>
             </div>
             ${notif.dismissible ? `
-              <button id="dismiss-${notif.id}" style="background: rgba(255,255,255,0.2); color: inherit; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 1.2rem; line-height: 1; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                ×
+              <button
+                onclick="NotificationManager.dismissBanner('${notif.id}')"
+                class="${closeButtonClass[notif.variant] || closeButtonClass.info}"
+                style="background: none; border: none; cursor: pointer; padding: 4px; font-size: 20px; line-height: 1; transition: opacity 0.2s;"
+                onmouseover="this.style.opacity='0.7'"
+                onmouseout="this.style.opacity='1'"
+                title="閉じる">
+                ✕
               </button>
             ` : ''}
           </div>
-        </div>
-      `;
+        `;
+      }).join('');
     },
 
     /**
      * バナーを閉じる
      */
-    dismiss(notificationId) {
-      const banner = document.getElementById(`banner-${notificationId}`);
+    dismissBanner(notificationId) {
+      this.markAsRead(notificationId);
+
+      const banner = document.querySelector(`[data-notification-id="${notificationId}"]`);
       if (banner) {
-        // アニメーション付きで削除
         banner.style.animation = 'slideUp 0.3s ease-out';
         setTimeout(() => {
           banner.remove();
-          this.markAsRead(notificationId);
+
+          // バナーがすべてなくなったらコンテナを非表示
+          const container = document.getElementById('notification-banners');
+          if (container && container.children.length === 0) {
+            container.innerHTML = '';
+          }
         }, 300);
       }
     },
 
     /**
-     * 全既読状態をリセット（デバッグ用）
+     * HTMLエスケープ
      */
-    resetAllRead() {
-      localStorage.removeItem(this.STORAGE_KEY);
-      console.log('🔄 全既読状態をリセットしました');
-      this.renderBanners();
-    },
-
-    /**
-     * 新しい通知を追加（管理者用）
-     */
-    addNotification(notification) {
-      this.notifications.push(notification);
-      this.renderBanners();
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
   };
 
-  // グローバルスコープに公開
+  // グローバルに公開
   window.NotificationManager = NotificationManager;
 
-  // CSSアニメーション追加
-  if (!document.getElementById('notification-animations')) {
-    const style = document.createElement('style');
-    style.id = 'notification-animations';
-    style.textContent = `
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes slideUp {
-        from {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        to {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  console.log('✅ Notification Manager ロード完了');
-
+  console.log('✅ NotificationManager (Supabase連携版) loaded');
 })();

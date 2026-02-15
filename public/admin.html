@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者画面 - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'rentpipe-primary': '#667eea',
+                        'rentpipe-secondary': '#764ba2',
+                        'rentpipe-success': '#10b981',
+                        'rentpipe-danger': '#ef4444',
+                        'rentpipe-warning': '#f59e0b',
+                        'rentpipe-info': '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+        }
+
+        .notifications-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .notification-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .notification-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .notification-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-draft { background: #f3f4f6; color: #374151; }
+        .badge-published { background: #d1fae5; color: #065f46; }
+        .badge-archived { background: #e5e7eb; color: #6b7280; }
+
+        .notification-message {
+            color: #6b7280;
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+
+        .notification-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 12px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-admin {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <div id="navigation"></div>
+
+    <div class="admin-container">
+        <!-- ヘッダー -->
+        <div class="admin-header">
+            <h1 style="margin: 0 0 8px 0; font-size: 28px;">🛠️ 管理者画面</h1>
+            <p style="margin: 0; opacity: 0.9;">お知らせの管理・公開設定</p>
+        </div>
+
+        <!-- 新規作成ボタン -->
+        <div style="margin-bottom: 24px;">
+            <button class="btn-admin btn-primary" onclick="openCreateModal()" style="font-size: 16px; padding: 12px 24px;">
+                ➕ 新しいお知らせを作成
+            </button>
+        </div>
+
+        <!-- タブ -->
+        <div class="tabs">
+            <button class="tab active" data-status="all" onclick="filterByStatus('all')">
+                すべて
+            </button>
+            <button class="tab" data-status="published" onclick="filterByStatus('published')">
+                📢 公開中
+            </button>
+            <button class="tab" data-status="draft" onclick="filterByStatus('draft')">
+                📝 下書き
+            </button>
+            <button class="tab" data-status="archived" onclick="filterByStatus('archived')">
+                📦 アーカイブ
+            </button>
+        </div>
+
+        <!-- お知らせ一覧 -->
+        <div id="notifications-list" class="notifications-grid">
+            <!-- JavaScriptで動的に生成 -->
+        </div>
+
+        <!-- 空状態 -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📭</div>
+            <h3>お知らせがありません</h3>
+            <p>新しいお知らせを作成してください</p>
+        </div>
+    </div>
+
+    <!-- 作成/編集モーダル -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle" style="margin: 0 0 24px 0;">新しいお知らせ</h2>
+
+            <form id="notificationForm" onsubmit="saveNotification(event)">
+                <input type="hidden" id="notificationId">
+
+                <div class="form-group">
+                    <label>タイトル *</label>
+                    <input type="text" id="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label>メッセージ *</label>
+                    <textarea id="message" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>種類 *</label>
+                    <select id="variant" required>
+                        <option value="info">📘 お知らせ（青）</option>
+                        <option value="success">✅ 成功・アップデート（緑）</option>
+                        <option value="warning">⚠️ 警告（黄）</option>
+                        <option value="danger">🚨 重要・緊急（赤）</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>表示タイプ *</label>
+                    <select id="type" required>
+                        <option value="banner">バナー表示</option>
+                        <option value="page">お知らせ一覧のみ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showBanner">
+                        顧客管理画面の上部にバナーで表示する
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>優先度（1-10、小さいほど上に表示）</label>
+                    <input type="number" id="priority" min="1" max="10" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label>開始日時 *</label>
+                    <input type="datetime-local" id="startDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>終了日時</label>
+                    <input type="datetime-local" id="endDate">
+                    <small style="color: #6b7280;">空欄の場合は無期限</small>
+                </div>
+
+                <div class="form-group">
+                    <label>ステータス *</label>
+                    <select id="status" required>
+                        <option value="draft">📝 下書き</option>
+                        <option value="published">📢 公開</option>
+                        <option value="archived">📦 アーカイブ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="dismissible" checked>
+                        ユーザーが閉じることができる
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 32px;">
+                    <button type="submit" class="btn-admin btn-primary" style="flex: 1;">
+                        保存
+                    </button>
+                    <button type="button" class="btn-admin btn-secondary" onclick="closeModal()">
+                        キャンセル
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="js/config.js"></script>
+    <script src="js/navigation.js"></script>
+
+    <script>
+        let currentFilter = 'all';
+        let notifications = [];
+        let supabase = null;
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadNavigation();
+
+            // 管理者権限チェック
+            const isAdmin = await checkAdminPermission();
+            if (!isAdmin) {
+                alert('管理者権限がありません');
+                window.location.href = 'customer.html';
+                return;
+            }
+
+            // Supabase初期化
+            if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+                supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+                console.log('✅ Supabase初期化完了');
+            } else {
+                alert('Supabaseの設定がありません');
+                return;
+            }
+
+            // お知らせを読み込み
+            await loadNotifications();
+        });
+
+        // 管理者権限チェック
+        async function checkAdminPermission() {
+            const authData = localStorage.getItem('google_auth_data');
+            if (!authData) return false;
+
+            try {
+                const data = JSON.parse(authData);
+                const email = data.user?.email;
+
+                // 管理者メールアドレスリスト
+                const adminEmails = ['jajaumajam@gmail.com'];
+
+                return adminEmails.includes(email);
+            } catch (e) {
+                console.error('認証データ解析エラー:', e);
+                return false;
+            }
+        }
+
+        // お知らせ読み込み
+        async function loadNotifications() {
+            try {
+                const { data, error } = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                notifications = data || [];
+                renderNotifications();
+            } catch (error) {
+                console.error('お知らせ読み込みエラー:', error);
+                alert('お知らせの読み込みに失敗しました: ' + error.message);
+            }
+        }
+
+        // お知らせ表示
+        function renderNotifications() {
+            const container = document.getElementById('notifications-list');
+            const emptyState = document.getElementById('empty-state');
+
+            let filtered = notifications;
+            if (currentFilter !== 'all') {
+                filtered = notifications.filter(n => n.status === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            container.innerHTML = filtered.map(notification => {
+                const startDate = new Date(notification.start_date).toLocaleString('ja-JP');
+                const endDate = notification.end_date ? new Date(notification.end_date).toLocaleString('ja-JP') : '無期限';
+
+                return `
+                    <div class="notification-card">
+                        <div class="notification-header">
+                            <h3 class="notification-title">${escapeHtml(notification.title)}</h3>
+                            <div class="notification-badges">
+                                <span class="badge badge-${notification.variant}">${getVariantLabel(notification.variant)}</span>
+                                <span class="badge badge-${notification.status}">${getStatusLabel(notification.status)}</span>
+                                ${notification.show_banner ? '<span class="badge" style="background: #fef3c7; color: #92400e;">📌 バナー</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="notification-message">${escapeHtml(notification.message)}</div>
+                        <div class="notification-meta">
+                            <span>📅 ${startDate} 〜 ${endDate}</span>
+                            <span>🎯 優先度: ${notification.priority}</span>
+                            <span>👁️ ${notification.type === 'banner' ? 'バナー表示' : 'お知らせ一覧のみ'}</span>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn-admin btn-secondary" onclick="editNotification('${notification.id}')">
+                                ✏️ 編集
+                            </button>
+                            <button class="btn-admin btn-secondary" onclick="duplicateNotification('${notification.id}')">
+                                📋 複製
+                            </button>
+                            <button class="btn-admin btn-danger" onclick="deleteNotification('${notification.id}')">
+                                🗑️ 削除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // フィルター切り替え
+        function filterByStatus(status) {
+            currentFilter = status;
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.status === status);
+            });
+
+            renderNotifications();
+        }
+
+        // 作成モーダルを開く
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = '新しいお知らせ';
+            document.getElementById('notificationForm').reset();
+            document.getElementById('notificationId').value = '';
+
+            // デフォルト値設定
+            document.getElementById('priority').value = '5';
+            document.getElementById('dismissible').checked = true;
+            document.getElementById('status').value = 'draft';
+
+            // 開始日時を現在時刻に設定
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('startDate').value = now.toISOString().slice(0, 16);
+
+            document.getElementById('notificationModal').classList.add('active');
+        }
+
+        // 編集モーダルを開く
+        function editNotification(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (!notification) return;
+
+            document.getElementById('modalTitle').textContent = 'お知らせを編集';
+            document.getElementById('notificationId').value = notification.id;
+            document.getElementById('title').value = notification.title;
+            document.getElementById('message').value = notification.message;
+            document.getElementById('variant').value = notification.variant;
+            document.getElementById('type').value = notification.type;
+            document.getElementById('showBanner').checked = notification.show_banner;
+            document.getElementById('priority').value = notification.priority;
+            document.getElementById('status').value = notification.status;
+            document.getElementById('dismissible').checked = notification.dismissible;
+
+            // 日時設定
+            const startDate = new Date(notification.start_date);
+            startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
+            document.getElementById('startDate').value = startDate.toISOString().slice(0, 16);
+
+            if (notification.end_date) {
+                const endDate = new Date(notification.end_date);
+                endDate.setMinutes(endDate.getMinutes() - endDate.getTimezoneOffset());
+                document.getElementById('endDate').value = endDate.toISOString().slice(0, 16);
+            }
+
+            document.getElementById('notificationModal').classList.add('active');
+        }
+
+        // 複製
+        async function duplicateNotification(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (!notification) return;
+
+            if (!confirm('このお知らせを複製しますか？')) return;
+
+            try {
+                const { id: _, created_at, updated_at, ...data } = notification;
+                data.title = `${data.title}（コピー）`;
+                data.status = 'draft';
+
+                const { error } = await supabase
+                    .from('notifications')
+                    .insert([data]);
+
+                if (error) throw error;
+
+                alert('複製しました');
+                await loadNotifications();
+            } catch (error) {
+                console.error('複製エラー:', error);
+                alert('複製に失敗しました: ' + error.message);
+            }
+        }
+
+        // 保存
+        async function saveNotification(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('notificationId').value;
+            const data = {
+                title: document.getElementById('title').value,
+                message: document.getElementById('message').value,
+                variant: document.getElementById('variant').value,
+                type: document.getElementById('type').value,
+                show_banner: document.getElementById('showBanner').checked,
+                priority: parseInt(document.getElementById('priority').value),
+                start_date: new Date(document.getElementById('startDate').value).toISOString(),
+                end_date: document.getElementById('endDate').value
+                    ? new Date(document.getElementById('endDate').value).toISOString()
+                    : null,
+                status: document.getElementById('status').value,
+                dismissible: document.getElementById('dismissible').checked,
+                show_on_pages: []
+            };
+
+            try {
+                if (id) {
+                    // 更新
+                    const { error } = await supabase
+                        .from('notifications')
+                        .update(data)
+                        .eq('id', id);
+
+                    if (error) throw error;
+                    alert('更新しました');
+                } else {
+                    // 新規作成
+                    const authData = JSON.parse(localStorage.getItem('google_auth_data'));
+                    data.created_by = authData.user?.email || 'unknown';
+
+                    const { error } = await supabase
+                        .from('notifications')
+                        .insert([data]);
+
+                    if (error) throw error;
+                    alert('作成しました');
+                }
+
+                closeModal();
+                await loadNotifications();
+            } catch (error) {
+                console.error('保存エラー:', error);
+                alert('保存に失敗しました: ' + error.message);
+            }
+        }
+
+        // 削除
+        async function deleteNotification(id) {
+            if (!confirm('本当に削除しますか？この操作は取り消せません。')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('notifications')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                alert('削除しました');
+                await loadNotifications();
+            } catch (error) {
+                console.error('削除エラー:', error);
+                alert('削除に失敗しました: ' + error.message);
+            }
+        }
+
+        // モーダルを閉じる
+        function closeModal() {
+            document.getElementById('notificationModal').classList.remove('active');
+        }
+
+        // ヘルパー関数
+        function getVariantLabel(variant) {
+            const labels = {
+                info: '📘 お知らせ',
+                success: '✅ 成功',
+                warning: '⚠️ 警告',
+                danger: '🚨 重要'
+            };
+            return labels[variant] || variant;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                draft: '📝 下書き',
+                published: '📢 公開中',
+                archived: '📦 アーカイブ'
+            };
+            return labels[status] || status;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>

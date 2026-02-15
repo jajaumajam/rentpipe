@@ -76,12 +76,14 @@
     <script src="js/notification-manager.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async function() {
             // ナビゲーション初期化
             loadNavigation();
 
-            // 通知バナー初期化
-            NotificationManager.init();
+            // 通知バナー初期化（Supabaseから読み込み）
+            await NotificationManager.init();
 
             // お知らせ一覧の描画
             renderNotificationsList();
