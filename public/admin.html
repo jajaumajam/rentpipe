@@ -394,6 +394,9 @@
     </div>
 
     <!-- スクリプト -->
+    <!-- Supabase JS（先に読み込み） -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="js/config.js"></script>
     <script src="js/navigation.js"></script>
 
@@ -415,13 +418,18 @@
             }
 
             // Supabase初期化
-            if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-                supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-                console.log('✅ Supabase初期化完了');
-            } else {
+            if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
                 alert('Supabaseの設定がありません');
                 return;
             }
+
+            if (!window.supabase) {
+                alert('Supabaseライブラリの読み込みに失敗しました。ページをリロードしてください。');
+                return;
+            }
+
+            supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            console.log('✅ Supabase初期化完了');
 
             // お知らせを読み込み
             await loadNotifications();
@@ -707,8 +715,5 @@
             return div.innerHTML;
         }
     </script>
-
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
