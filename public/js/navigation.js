@@ -6,30 +6,30 @@ window.createNavigation = function() {
         <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 2rem;">
-                    <h1 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 700;">
-                        🏠 RentPipe
+                    <h1 style="color: white; margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px;">
+                        RentPipe
                     </h1>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.25rem;">
                         <a href="customer.html" class="nav-link ${currentPage === 'customer.html' ? 'active' : ''}">
-                            <span>👥 顧客管理</span>
+                            <span>顧客管理</span>
                         </a>
                         <a href="pipeline.html" class="nav-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
-                            <span>📊 パイプライン</span>
+                            <span>パイプライン</span>
                         </a>
                         <a href="forms.html" class="nav-link ${currentPage === 'forms.html' ? 'active' : ''}">
-                            <span>📋 フォーム</span>
+                            <span>フォーム</span>
                         </a>
                         <a href="templates.html" class="nav-link ${currentPage === 'templates.html' ? 'active' : ''}">
-                            <span>📝 テンプレート</span>
+                            <span>テンプレート</span>
                         </a>
                         <a href="notifications.html" class="nav-link ${currentPage === 'notifications.html' ? 'active' : ''}">
-                            <span>📢 お知らせ</span>
+                            <span>お知らせ</span>
                         </a>
                         <a href="settings.html" class="nav-link ${currentPage === 'settings.html' ? 'active' : ''}">
-                            <span>⚙️ 設定</span>
+                            <span>設定</span>
                         </a>
                         <a href="${window.FEEDBACK_LINE_URL || 'https://line.me/ti/g2/YOUR_OPEN_CHAT_ID'}" target="_blank" rel="noopener noreferrer" class="nav-link nav-link-feedback">
-                            <span>💬 意見箱</span>
+                            <span>意見箱</span>
                         </a>
                     </div>
                 </div>
@@ -43,29 +43,31 @@ window.createNavigation = function() {
         </nav>
         <style>
             .nav-link {
-                color: rgba(255,255,255,0.9);
+                color: rgba(255,255,255,0.85);
                 text-decoration: none;
-                padding: 0.5rem 1rem;
+                padding: 0.4rem 0.75rem;
                 border-radius: 6px;
-                transition: all 0.2s;
+                transition: all 200ms ease;
                 font-weight: 500;
+                font-size: 0.9rem;
                 display: inline-block;
             }
             .nav-link:hover {
-                background: rgba(255,255,255,0.15);
+                background: rgba(255,255,255,0.12);
                 color: white;
             }
             .nav-link.active {
-                background: rgba(255,255,255,0.25);
+                background: rgba(255,255,255,0.2);
                 color: white;
                 font-weight: 600;
             }
             .nav-link-feedback {
-                border: 1px solid rgba(255,255,255,0.3);
+                border: 1px solid rgba(255,255,255,0.25);
+                margin-left: 0.25rem;
             }
             .nav-link-feedback:hover {
-                background: rgba(255,255,255,0.25);
-                border-color: rgba(255,255,255,0.5);
+                background: rgba(255,255,255,0.2);
+                border-color: rgba(255,255,255,0.4);
             }
         </style>
     `;
