@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顧客インポート - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'rentpipe-primary': '#667eea',
+                        'rentpipe-secondary': '#764ba2',
+                        'rentpipe-success': '#10b981',
+                        'rentpipe-danger': '#ef4444',
+                        'rentpipe-warning': '#f59e0b',
+                        'rentpipe-info': '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="navigation-container"></div>
+
+    <!-- お知らせバナーエリア -->
+    <div id="notification-banners" style="max-width: 1200px; margin: 0 auto; padding: 16px 20px 0;"></div>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>📥 顧客データインポート</h1>
+            <p class="text-muted">CSV/JSONファイルから顧客データを一括登録できます</p>
+        </div>
+
+        <!-- インポート方法選択 -->
+        <div class="card-rentpipe mb-4" style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; margin-bottom: 16px;">📋 インポート形式</h2>
+            <div class="flex gap-3" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-rentpipe btn-rentpipe-primary active" data-format="csv" onclick="selectFormat('csv')">
+                    📄 CSV形式
+                </button>
+                <button class="btn-rentpipe" data-format="json" onclick="selectFormat('json')">
+                    📦 JSON形式
+                </button>
+            </div>
+        </div>
+
+        <!-- CSVインポート -->
+        <div id="csv-import" class="import-section">
+            <div class="card-rentpipe">
+                <h2 style="font-size: 18px; margin-bottom: 16px;">📄 CSVファイルをアップロード</h2>
+
+                <!-- ファイルアップロードエリア -->
+                <div class="upload-area" id="csv-upload-area">
+                    <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleCsvFile(event)">
+                    <label for="csv-file-input" class="upload-label">
+                        <div class="upload-icon">📁</div>
+                        <p class="upload-text">クリックしてCSVファイルを選択</p>
+                        <p class="upload-hint">または、ファイルをドラッグ&ドロップ</p>
+                    </label>
+                </div>
+
+                <!-- CSVフォーマット例 -->
+                <div class="mt-4" style="margin-top: 24px;">
+                    <h3 style="font-size: 16px; margin-bottom: 12px;">📝 CSVフォーマット例</h3>
+                    <pre class="code-block">name,email,phone,company,address,notes
+山田太郎,yamada@example.com,090-1234-5678,株式会社サンプル,東京都渋谷区...,優良顧客
+佐藤花子,sato@example.com,080-9876-5432,佐藤不動産,神奈川県横浜市...,初回問い合わせ</pre>
+                    <button class="btn-rentpipe btn-rentpipe-primary mt-2" onclick="downloadCsvTemplate()">
+                        ⬇️ テンプレートをダウンロード
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSONインポート -->
+        <div id="json-import" class="import-section" style="display: none;">
+            <div class="card-rentpipe">
+                <h2 style="font-size: 18px; margin-bottom: 16px;">📦 JSONファイルをアップロード</h2>
+
+                <!-- ファイルアップロードエリア -->
+                <div class="upload-area" id="json-upload-area">
+                    <input type="file" id="json-file-input" accept=".json" style="display: none;" onchange="handleJsonFile(event)">
+                    <label for="json-file-input" class="upload-label">
+                        <div class="upload-icon">📁</div>
+                        <p class="upload-text">クリックしてJSONファイルを選択</p>
+                        <p class="upload-hint">または、ファイルをドラッグ&ドロップ</p>
+                    </label>
+                </div>
+
+                <!-- JSONフォーマット例 -->
+                <div class="mt-4" style="margin-top: 24px;">
+                    <h3 style="font-size: 16px; margin-bottom: 12px;">📝 JSONフォーマット例</h3>
+                    <pre class="code-block">[
+  {
+    "name": "山田太郎",
+    "email": "yamada@example.com",
+    "phone": "090-1234-5678",
+    "company": "株式会社サンプル",
+    "address": "東京都渋谷区...",
+    "notes": "優良顧客"
+  },
+  {
+    "name": "佐藤花子",
+    "email": "sato@example.com",
+    "phone": "080-9876-5432",
+    "company": "佐藤不動産",
+    "address": "神奈川県横浜市...",
+    "notes": "初回問い合わせ"
+  }
+]</pre>
+                    <button class="btn-rentpipe btn-rentpipe-primary mt-2" onclick="downloadJsonTemplate()">
+                        ⬇️ テンプレートをダウンロード
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- プレビューエリア -->
+        <div id="preview-section" class="card-rentpipe" style="display: none; margin-top: 24px;">
+            <h2 style="font-size: 18px; margin-bottom: 16px;">👁️ インポートプレビュー</h2>
+            <div id="preview-stats" class="mb-3" style="margin-bottom: 16px;"></div>
+            <div id="preview-table-container" style="overflow-x: auto;"></div>
+            <div class="mt-4" style="margin-top: 24px; display: flex; gap: 12px;">
+                <button class="btn-rentpipe btn-rentpipe-success" onclick="executeImport()">
+                    ✅ インポート実行
+                </button>
+                <button class="btn-rentpipe btn-rentpipe-danger" onclick="cancelImport()">
+                    ❌ キャンセル
+                </button>
+            </div>
+        </div>
+
+        <!-- 結果表示エリア -->
+        <div id="result-section" class="card-rentpipe" style="display: none; margin-top: 24px;">
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/notification-manager.js"></script>
+    <script src="js/db.js"></script>
+
+    <script>
+        let importData = [];
+        let currentFormat = 'csv';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNavigation();
+            NotificationManager.init();
+            setupDragAndDrop();
+        });
+
+        function selectFormat(format) {
+            currentFormat = format;
+
+            // ボタンのアクティブ状態を切り替え
+            document.querySelectorAll('[data-format]').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-format') === format);
+            });
+
+            // セクションの表示切り替え
+            document.getElementById('csv-import').style.display = format === 'csv' ? 'block' : 'none';
+            document.getElementById('json-import').style.display = format === 'json' ? 'block' : 'none';
+
+            // プレビュー・結果をクリア
+            hidePreview();
+            hideResult();
+        }
+
+        function setupDragAndDrop() {
+            ['csv-upload-area', 'json-upload-area'].forEach(areaId => {
+                const area = document.getElementById(areaId);
+                if (!area) return;
+
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (areaId === 'csv-upload-area' && file.name.endsWith('.csv')) {
+                            handleCsvFile({ target: { files: [file] } });
+                        } else if (areaId === 'json-upload-area' && file.name.endsWith('.json')) {
+                            handleJsonFile({ target: { files: [file] } });
+                        }
+                    }
+                });
+            });
+        }
+
+        function handleCsvFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    importData = parseCsv(csv);
+                    showPreview();
+                } catch (error) {
+                    alert('CSVファイルの解析に失敗しました: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleJsonFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    importData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importData)) {
+                        throw new Error('JSON配列である必要があります');
+                    }
+                    showPreview();
+                } catch (error) {
+                    alert('JSONファイルの解析に失敗しました: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCsv(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 2) {
+                throw new Error('CSVデータが不正です');
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push(row);
+            }
+
+            return data;
+        }
+
+        function showPreview() {
+            const previewSection = document.getElementById('preview-section');
+            const statsDiv = document.getElementById('preview-stats');
+            const tableContainer = document.getElementById('preview-table-container');
+
+            // 統計情報
+            statsDiv.innerHTML = `
+                <div class="badge-rentpipe-info">
+                    📊 ${importData.length}件のデータが見つかりました
+                </div>
+            `;
+
+            // テーブル生成
+            if (importData.length > 0) {
+                const headers = Object.keys(importData[0]);
+                let tableHtml = '<table class="preview-table"><thead><tr>';
+                headers.forEach(header => {
+                    tableHtml += `<th>${header}</th>`;
+                });
+                tableHtml += '</tr></thead><tbody>';
+
+                importData.slice(0, 10).forEach(row => {
+                    tableHtml += '<tr>';
+                    headers.forEach(header => {
+                        tableHtml += `<td>${row[header] || ''}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+
+                if (importData.length > 10) {
+                    tableHtml += `<tr><td colspan="${headers.length}" class="text-muted" style="text-align: center;">... 他 ${importData.length - 10} 件</td></tr>`;
+                }
+
+                tableHtml += '</tbody></table>';
+                tableContainer.innerHTML = tableHtml;
+            }
+
+            previewSection.style.display = 'block';
+            hideResult();
+        }
+
+        function hidePreview() {
+            document.getElementById('preview-section').style.display = 'none';
+        }
+
+        function hideResult() {
+            document.getElementById('result-section').style.display = 'none';
+        }
+
+        async function executeImport() {
+            if (importData.length === 0) {
+                alert('インポートするデータがありません');
+                return;
+            }
+
+            const resultSection = document.getElementById('result-section');
+            const resultContent = document.getElementById('result-content');
+
+            try {
+                // Supabase接続チェック
+                if (!window.db) {
+                    throw new Error('データベース接続が初期化されていません');
+                }
+
+                let successCount = 0;
+                let errorCount = 0;
+                const errors = [];
+
+                // 進捗表示
+                resultContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner"></div>
+                        <p>インポート中... (0 / ${importData.length})</p>
+                    </div>
+                `;
+                resultSection.style.display = 'block';
+
+                // 1件ずつインポート
+                for (let i = 0; i < importData.length; i++) {
+                    try {
+                        const customer = importData[i];
+                        await window.db.addCustomer({
+                            name: customer.name || '',
+                            email: customer.email || '',
+                            phone: customer.phone || '',
+                            company: customer.company || '',
+                            address: customer.address || '',
+                            notes: customer.notes || ''
+                        });
+                        successCount++;
+                    } catch (error) {
+                        errorCount++;
+                        errors.push(`行${i + 1}: ${error.message}`);
+                    }
+
+                    // 進捗更新
+                    resultContent.innerHTML = `
+                        <div class="text-center">
+                            <div class="spinner"></div>
+                            <p>インポート中... (${i + 1} / ${importData.length})</p>
+                        </div>
+                    `;
+                }
+
+                // 結果表示
+                resultContent.innerHTML = `
+                    <h2 style="font-size: 18px; margin-bottom: 16px;">✅ インポート完了</h2>
+                    <div class="mb-3">
+                        <div class="badge-rentpipe-success" style="margin-right: 8px;">
+                            成功: ${successCount}件
+                        </div>
+                        ${errorCount > 0 ? `<div class="badge-rentpipe-danger">失敗: ${errorCount}件</div>` : ''}
+                    </div>
+                    ${errorCount > 0 ? `
+                        <div class="mt-3">
+                            <h3 style="font-size: 16px; margin-bottom: 8px;">❌ エラー詳細</h3>
+                            <pre class="code-block" style="max-height: 200px; overflow-y: auto;">${errors.join('\n')}</pre>
+                        </div>
+                    ` : ''}
+                    <div class="mt-4">
+                        <a href="customer.html" class="btn-rentpipe btn-rentpipe-primary">
+                            📋 顧客一覧へ戻る
+                        </a>
+                        <button class="btn-rentpipe" onclick="resetImport()" style="margin-left: 8px;">
+                            🔄 新しいインポート
+                        </button>
+                    </div>
+                `;
+
+                hidePreview();
+
+            } catch (error) {
+                resultContent.innerHTML = `
+                    <h2 style="font-size: 18px; margin-bottom: 16px;">❌ インポート失敗</h2>
+                    <div class="badge-rentpipe-danger">${error.message}</div>
+                    <div class="mt-4">
+                        <button class="btn-rentpipe btn-rentpipe-primary" onclick="hideResult()">
+                            戻る
+                        </button>
+                    </div>
+                `;
+                resultSection.style.display = 'block';
+            }
+        }
+
+        function cancelImport() {
+            if (confirm('インポートをキャンセルしますか？')) {
+                resetImport();
+            }
+        }
+
+        function resetImport() {
+            importData = [];
+            document.getElementById('csv-file-input').value = '';
+            document.getElementById('json-file-input').value = '';
+            hidePreview();
+            hideResult();
+        }
+
+        function downloadCsvTemplate() {
+            const csv = `name,email,phone,company,address,notes
+山田太郎,yamada@example.com,090-1234-5678,株式会社サンプル,東京都渋谷区...,優良顧客
+佐藤花子,sato@example.com,080-9876-5432,佐藤不動産,神奈川県横浜市...,初回問い合わせ`;
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'customer_import_template.csv';
+            link.click();
+        }
+
+        function downloadJsonTemplate() {
+            const json = JSON.stringify([
+                {
+                    name: '山田太郎',
+                    email: 'yamada@example.com',
+                    phone: '090-1234-5678',
+                    company: '株式会社サンプル',
+                    address: '東京都渋谷区...',
+                    notes: '優良顧客'
+                },
+                {
+                    name: '佐藤花子',
+                    email: 'sato@example.com',
+                    phone: '080-9876-5432',
+                    company: '佐藤不動産',
+                    address: '神奈川県横浜市...',
+                    notes: '初回問い合わせ'
+                }
+            ], null, 2);
+
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'customer_import_template.json';
+            link.click();
+        }
+    </script>
+
+    <style>
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-label {
+            cursor: pointer;
+            display: block;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .preview-table th, .preview-table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .preview-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .preview-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mb-3 {
+            margin-bottom: 16px;
+        }
+
+        .mb-4 {
+            margin-bottom: 24px;
+        }
+
+        .mt-2 {
+            margin-top: 8px;
+        }
+
+        .mt-3 {
+            margin-top: 16px;
+        }
+
+        .mt-4 {
+            margin-top: 24px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</body>
+</html>

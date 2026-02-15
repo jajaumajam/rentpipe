@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お知らせ一覧 - RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'rentpipe-primary': '#667eea',
+                        'rentpipe-secondary': '#764ba2',
+                        'rentpipe-success': '#10b981',
+                        'rentpipe-danger': '#ef4444',
+                        'rentpipe-warning': '#f59e0b',
+                        'rentpipe-info': '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="navigation-container"></div>
+
+    <!-- お知らせバナーエリア -->
+    <div id="notification-banners" style="max-width: 1200px; margin: 0 auto; padding: 16px 20px 0;"></div>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>📢 お知らせ一覧</h1>
+            <p class="text-muted">RentPipeからの重要なお知らせや更新情報をご確認いただけます</p>
+        </div>
+
+        <!-- フィルターエリア -->
+        <div class="mb-4" style="margin-bottom: 24px;">
+            <div class="flex gap-2" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn-rentpipe btn-rentpipe-primary active" data-filter="all">
+                    すべて
+                </button>
+                <button class="btn-rentpipe" data-filter="info">
+                    📘 お知らせ
+                </button>
+                <button class="btn-rentpipe" data-filter="success">
+                    ✅ アップデート
+                </button>
+                <button class="btn-rentpipe" data-filter="warning">
+                    ⚠️ メンテナンス
+                </button>
+                <button class="btn-rentpipe" data-filter="danger">
+                    🚨 重要
+                </button>
+            </div>
+        </div>
+
+        <!-- お知らせリスト -->
+        <div id="notifications-list" class="notifications-list">
+            <!-- JavaScript で動的生成 -->
+        </div>
+
+        <!-- 空の状態 -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <p class="text-muted">該当するお知らせはありません</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/notification-manager.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ナビゲーション初期化
+            loadNavigation();
+
+            // 通知バナー初期化
+            NotificationManager.init();
+
+            // お知らせ一覧の描画
+            renderNotificationsList();
+
+            // フィルターボタンのイベント
+            setupFilterButtons();
+        });
+
+        function renderNotificationsList(filter = 'all') {
+            const listContainer = document.getElementById('notifications-list');
+            const emptyState = document.getElementById('empty-state');
+
+            // すべての通知を取得（バナー以外も含む、終了日フィルターなし）
+            let notifications = NotificationManager.notifications || [];
+
+            // フィルター適用
+            if (filter !== 'all') {
+                notifications = notifications.filter(n => n.variant === filter);
+            }
+
+            // 優先度と日付でソート
+            notifications.sort((a, b) => {
+                if (a.priority !== b.priority) {
+                    return a.priority - b.priority; // 数字が小さいほど優先度高い
+                }
+                return new Date(b.startDate || '2026-01-01') - new Date(a.startDate || '2026-01-01');
+            });
+
+            if (notifications.length === 0) {
+                listContainer.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // カード生成
+            listContainer.innerHTML = notifications.map(notification => {
+                const isRead = NotificationManager.getReadStatus(notification.id);
+                const isActive = isNotificationActive(notification);
+                const variantColors = getVariantColors(notification.variant);
+
+                return `
+                    <div class="notification-card ${isRead ? 'read' : 'unread'} ${!isActive ? 'expired' : ''}"
+                         data-id="${notification.id}"
+                         data-variant="${notification.variant}">
+                        <div class="notification-header">
+                            <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                                <span class="badge-rentpipe-${notification.variant}">
+                                    ${getVariantIcon(notification.variant)} ${getVariantLabel(notification.variant)}
+                                </span>
+                                ${!isActive ? '<span class="badge-rentpipe-info" style="background: #94a3b8;">期限切れ</span>' : ''}
+                                ${!isRead ? '<span class="badge-rentpipe-danger" style="font-size: 12px;">NEW</span>' : ''}
+                            </div>
+                            <div class="notification-date">
+                                ${formatDate(notification.startDate)}
+                            </div>
+                        </div>
+
+                        <h3 class="notification-title">${notification.title}</h3>
+                        <p class="notification-message">${notification.message}</p>
+
+                        ${notification.actionText && notification.actionUrl ? `
+                            <div class="notification-actions">
+                                <a href="${notification.actionUrl}"
+                                   class="btn-rentpipe btn-rentpipe-${notification.variant}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    ${notification.actionText}
+                                </a>
+                            </div>
+                        ` : ''}
+
+                        <div class="notification-footer">
+                            <div class="text-muted" style="font-size: 12px;">
+                                ${notification.endDate ? `有効期限: ${formatDate(notification.endDate)}` : '期限なし'}
+                            </div>
+                            ${!isRead ? `
+                                <button class="btn-rentpipe btn-rentpipe-primary"
+                                        onclick="markAsRead('${notification.id}')"
+                                        style="font-size: 12px; padding: 4px 12px;">
+                                    既読にする
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function isNotificationActive(notification) {
+            const now = new Date();
+            const startDate = notification.startDate ? new Date(notification.startDate) : null;
+            const endDate = notification.endDate ? new Date(notification.endDate) : null;
+
+            if (startDate && now < startDate) return false;
+            if (endDate && now > endDate) return false;
+
+            return true;
+        }
+
+        function getVariantColors(variant) {
+            const colors = {
+                'info': { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+                'success': { bg: '#d1fae5', border: '#10b981', text: '#065f46' },
+                'warning': { bg: '#fed7aa', border: '#f59e0b', text: '#92400e' },
+                'danger': { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' }
+            };
+            return colors[variant] || colors.info;
+        }
+
+        function getVariantIcon(variant) {
+            const icons = {
+                'info': '📘',
+                'success': '✅',
+                'warning': '⚠️',
+                'danger': '🚨'
+            };
+            return icons[variant] || '📘';
+        }
+
+        function getVariantLabel(variant) {
+            const labels = {
+                'info': 'お知らせ',
+                'success': 'アップデート',
+                'warning': 'メンテナンス',
+                'danger': '重要'
+            };
+            return labels[variant] || 'お知らせ';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}年${month}月${day}日`;
+        }
+
+        function markAsRead(notificationId) {
+            NotificationManager.markAsRead(notificationId);
+            renderNotificationsList(getCurrentFilter());
+        }
+
+        function setupFilterButtons() {
+            const filterButtons = document.querySelectorAll('[data-filter]');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // すべてのボタンから active を削除
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // クリックされたボタンに active を追加
+                    this.classList.add('active');
+
+                    // フィルター適用
+                    const filter = this.getAttribute('data-filter');
+                    renderNotificationsList(filter);
+                });
+            });
+        }
+
+        function getCurrentFilter() {
+            const activeButton = document.querySelector('[data-filter].active');
+            return activeButton ? activeButton.getAttribute('data-filter') : 'all';
+        }
+    </script>
+
+    <style>
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .notification-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .notification-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .notification-card.unread {
+            border-left: 4px solid #667eea;
+            background: #f8f9ff;
+        }
+
+        .notification-card.expired {
+            opacity: 0.6;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .notification-date {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #1f2937;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.6;
+            margin: 0 0 16px 0;
+        }
+
+        .notification-actions {
+            margin: 16px 0;
+        }
+
+        .notification-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .btn-rentpipe.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .notification-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+</body>
+</html>

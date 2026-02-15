@@ -22,6 +22,9 @@ window.createNavigation = function() {
                         <a href="templates.html" class="nav-link ${currentPage === 'templates.html' ? 'active' : ''}">
                             <span>📝 テンプレート</span>
                         </a>
+                        <a href="notifications.html" class="nav-link ${currentPage === 'notifications.html' ? 'active' : ''}">
+                            <span>📢 お知らせ</span>
+                        </a>
                         <a href="settings.html" class="nav-link ${currentPage === 'settings.html' ? 'active' : ''}">
                             <span>⚙️ 設定</span>
                         </a>
