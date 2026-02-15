@@ -1,27 +1,24 @@
 /**
  * RentPipe Configuration
  *
- * IMPORTANT: Supabase環境変数をここに設定してください
- *
- * Supabase Dashboard → Settings → API から取得:
- * - Project URL
- * - anon public key
+ * セキュリティ: 機密情報は環境変数から注入されます
+ * ビルド時に scripts/inject-env.js が実行され、プレースホルダーが置き換えられます
  */
 
-// Supabase設定
-window.SUPABASE_URL = 'https://pjfspvwwzaemfmeizvhl.supabase.co'; // 例: https://xxxxx.supabase.co
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqZnNwdnd3emFlbWZtZWl6dmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTE4MDUsImV4cCI6MjA4NjU2NzgwNX0.S2orVh93qxaYo_2ez1wvTzBakm1kNW4iwpVhPKmklXU'; // 例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+// Supabase設定（ビルド時に環境変数から注入）
+window.SUPABASE_URL = '__SUPABASE_URL__';
+window.SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
 
-// Stripe設定（公開キー）
-window.STRIPE_PUBLISHABLE_KEY = 'YOUR_STRIPE_PUBLISHABLE_KEY'; // 例: pk_test_...
+// Stripe設定（ビルド時に環境変数から注入）
+window.STRIPE_PUBLISHABLE_KEY = '__STRIPE_PUBLISHABLE_KEY__';
 
-// アプリURL
-window.APP_URL = 'https://rentpipe.vercel.app';
+// アプリURL（ビルド時に環境変数から注入）
+window.APP_URL = '__APP_URL__';
 
-// 意見箱（LINEオープンチャット）
+// 意見箱（LINEオープンチャット） - 公開情報なのでハードコード可
 window.FEEDBACK_LINE_URL = 'https://line.me/ti/g2/DsmrFz_36bh5BDMJ80DpDtNQ-0fjGDKx_cdoCg?utm_source=invitation&utm_medium=link_copy&utm_campaign=default';
 
-// サポートメール
+// サポートメール - 公開情報なのでハードコード可
 window.SUPPORT_EMAIL = 'support@rentpipe.example.com';
 
 // アプリバージョン
