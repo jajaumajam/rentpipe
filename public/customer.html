@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'rentpipe-primary': '#667eea',
+                        'rentpipe-secondary': '#764ba2',
+                        'rentpipe-success': '#10b981',
+                        'rentpipe-danger': '#ef4444',
+                        'rentpipe-warning': '#f59e0b',
+                        'rentpipe-info': '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         .page-header {
             display: flex;
@@ -315,6 +335,9 @@
     <!-- ナビゲーション -->
     <div id="navigation"></div>
 
+    <!-- お知らせバナー -->
+    <div id="notification-banners" style="max-width: 1200px; margin: 0 auto; padding: 16px 20px 0;"></div>
+
     <!-- メインコンテンツ -->
     <div class="main-content content-hidden" id="main-content">
         <div class="page-header">
@@ -422,7 +445,9 @@
     <script src="https://apis.google.com/js/api.js"></script>
 
     <!-- RentPipe Core Scripts -->
+    <script src="js/config.js"></script>
     <script src="js/session-manager.js"></script>
+    <script src="js/notification-manager.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
@@ -463,6 +488,11 @@
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // お知らせ通知を表示
+                if (window.NotificationManager) {
+                    window.NotificationManager.init();
+                }
+
                 // 統計表示設定を適用
                 loadStatsVisibility();
 

@@ -2347,3 +2347,113 @@ textarea.error {
     padding: 24px;
   }
 }
+
+/* ============================================
+   Tailwind CSS互換ユーティリティクラス
+   ============================================ */
+
+/* ボタンコンポーネント */
+.btn-rentpipe {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-rentpipe-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-rentpipe-primary:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.btn-rentpipe-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.btn-rentpipe-secondary:hover {
+  background-color: #4b5563;
+}
+
+.btn-rentpipe-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-rentpipe-success:hover {
+  background-color: #059669;
+}
+
+.btn-rentpipe-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-rentpipe-danger:hover {
+  background-color: #dc2626;
+}
+
+/* カードコンポーネント */
+.card-rentpipe {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.card-rentpipe:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* インプットコンポーネント */
+.input-rentpipe {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input-rentpipe:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* バッジコンポーネント */
+.badge-rentpipe {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-rentpipe-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-rentpipe-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-rentpipe-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-rentpipe-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}

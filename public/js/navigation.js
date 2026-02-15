@@ -25,6 +25,9 @@ window.createNavigation = function() {
                         <a href="settings.html" class="nav-link ${currentPage === 'settings.html' ? 'active' : ''}">
                             <span>⚙️ 設定</span>
                         </a>
+                        <a href="${window.FEEDBACK_LINE_URL || 'https://line.me/ti/g2/YOUR_OPEN_CHAT_ID'}" target="_blank" rel="noopener noreferrer" class="nav-link nav-link-feedback">
+                            <span>💬 意見箱</span>
+                        </a>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
@@ -53,6 +56,13 @@ window.createNavigation = function() {
                 background: rgba(255,255,255,0.25);
                 color: white;
                 font-weight: 600;
+            }
+            .nav-link-feedback {
+                border: 1px solid rgba(255,255,255,0.3);
+            }
+            .nav-link-feedback:hover {
+                background: rgba(255,255,255,0.25);
+                border-color: rgba(255,255,255,0.5);
             }
         </style>
     `;

@@ -18,4 +18,22 @@ window.STRIPE_PUBLISHABLE_KEY = 'YOUR_STRIPE_PUBLISHABLE_KEY'; // 例: pk_test_.
 // アプリURL
 window.APP_URL = 'https://rentpipe.vercel.app';
 
+// 意見箱（LINEオープンチャット）
+window.FEEDBACK_LINE_URL = 'https://line.me/ti/g2/DsmrFz_36bh5BDMJ80DpDtNQ-0fjGDKx_cdoCg?utm_source=invitation&utm_medium=link_copy&utm_campaign=default';
+
+// サポートメール
+window.SUPPORT_EMAIL = 'support@rentpipe.example.com';
+
+// アプリバージョン
+window.APP_VERSION = '1.0.0-beta';
+
+// AppConfigオブジェクトとしても利用可能
+window.AppConfig = {
+  FEEDBACK_LINE_URL: window.FEEDBACK_LINE_URL,
+  SUPPORT_EMAIL: window.SUPPORT_EMAIL,
+  VERSION: window.APP_VERSION,
+  APP_NAME: 'RentPipe',
+  DEBUG_MODE: false
+};
+
 console.log('✅ Config loaded');
