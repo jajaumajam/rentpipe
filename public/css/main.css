@@ -2077,7 +2077,7 @@ textarea.error {
 }
 
 .customer-table th {
-    padding: 14px 16px;
+    padding: 10px 12px;
     text-align: left;
     font-weight: 600;
     color: #475569;
@@ -2085,7 +2085,7 @@ textarea.error {
 }
 
 .customer-table th:first-child {
-    padding-left: 20px;
+    padding-left: 16px;
 }
 
 .customer-table tbody tr {
@@ -2102,13 +2102,13 @@ textarea.error {
 }
 
 .customer-table td {
-    padding: 14px 16px;
+    padding: 8px 12px;
     color: #334155;
     vertical-align: middle;
 }
 
 .customer-table td:first-child {
-    padding-left: 20px;
+    padding-left: 16px;
 }
 
 .customer-table .customer-name-cell {
@@ -2127,9 +2127,9 @@ textarea.error {
 
 .customer-table .status-badge {
     display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
     font-weight: 500;
     white-space: nowrap;
 }
@@ -2160,16 +2160,18 @@ textarea.error {
 
 .customer-table .action-buttons {
     display: flex;
-    gap: 8px;
+    gap: 4px;
+    flex-wrap: nowrap;
 }
 
 .customer-table .btn-table-action {
-    padding: 6px 12px;
+    padding: 4px 8px;
     border: none;
-    border-radius: 6px;
-    font-size: 12px;
+    border-radius: 4px;
+    font-size: 11px;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .customer-table .btn-table-action.btn-edit {

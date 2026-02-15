@@ -1,47 +1,96 @@
-// ナビゲーションシステム - ダッシュボード削除版
+// ナビゲーションシステム - モバイル対応ハンバーガーメニュー版
 window.createNavigation = function() {
     const currentPage = window.location.pathname.split('/').pop() || 'customer.html';
-    
+
     const nav = `
-        <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 2rem;">
-                    <h1 style="color: white; margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px;">
-                        RentPipe
-                    </h1>
+                <!-- ロゴ -->
+                <h1 style="color: white; margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px;">
+                    RentPipe
+                </h1>
+
+                <!-- デスクトップメニュー -->
+                <div class="nav-desktop" style="display: flex; align-items: center; gap: 2rem;">
                     <div style="display: flex; gap: 0.25rem;">
                         <a href="customer.html" class="nav-link ${currentPage === 'customer.html' ? 'active' : ''}">
-                            <span>顧客管理</span>
+                            顧客管理
                         </a>
                         <a href="pipeline.html" class="nav-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
-                            <span>パイプライン</span>
+                            パイプライン
                         </a>
                         <a href="forms.html" class="nav-link ${currentPage === 'forms.html' ? 'active' : ''}">
-                            <span>フォーム</span>
+                            フォーム
                         </a>
                         <a href="templates.html" class="nav-link ${currentPage === 'templates.html' ? 'active' : ''}">
-                            <span>テンプレート</span>
+                            テンプレート
                         </a>
                         <a href="notifications.html" class="nav-link ${currentPage === 'notifications.html' ? 'active' : ''}">
-                            <span>お知らせ</span>
+                            お知らせ
                         </a>
                         <a href="settings.html" class="nav-link ${currentPage === 'settings.html' ? 'active' : ''}">
-                            <span>設定</span>
+                            設定
                         </a>
                         <a href="${window.FEEDBACK_LINE_URL || 'https://line.me/ti/g2/YOUR_OPEN_CHAT_ID'}" target="_blank" rel="noopener noreferrer" class="nav-link nav-link-feedback">
-                            <span>意見箱</span>
+                            意見箱
                         </a>
                     </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div id="user-info" style="color: white; font-size: 0.85rem; white-space: nowrap;"></div>
+                        <button onclick="handleLogout()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; white-space: nowrap;">
+                            ログアウト
+                        </button>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div id="user-info" style="color: white; font-size: 0.9rem;"></div>
-                    <button onclick="handleLogout()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;">
-                        ログアウト
+
+                <!-- モバイルメニューボタン -->
+                <div class="nav-mobile-controls" style="display: none; align-items: center; gap: 0.5rem;">
+                    <div id="user-info-mobile" style="color: white; font-size: 0.75rem;"></div>
+                    <button id="mobile-menu-toggle" onclick="toggleMobileMenu()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
             </div>
+
+            <!-- モバイルドロワーメニュー -->
+            <div id="mobile-menu" class="mobile-menu" style="display: none;">
+                <div class="mobile-menu-content">
+                    <a href="customer.html" class="mobile-menu-link ${currentPage === 'customer.html' ? 'active' : ''}">
+                        顧客管理
+                    </a>
+                    <a href="pipeline.html" class="mobile-menu-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
+                        パイプライン
+                    </a>
+                    <a href="forms.html" class="mobile-menu-link ${currentPage === 'forms.html' ? 'active' : ''}">
+                        フォーム
+                    </a>
+                    <a href="templates.html" class="mobile-menu-link ${currentPage === 'templates.html' ? 'active' : ''}">
+                        テンプレート
+                    </a>
+                    <a href="notifications.html" class="mobile-menu-link ${currentPage === 'notifications.html' ? 'active' : ''}">
+                        お知らせ
+                    </a>
+                    <a href="settings.html" class="mobile-menu-link ${currentPage === 'settings.html' ? 'active' : ''}">
+                        設定
+                    </a>
+                    <a href="${window.FEEDBACK_LINE_URL || 'https://line.me/ti/g2/YOUR_OPEN_CHAT_ID'}" target="_blank" rel="noopener noreferrer" class="mobile-menu-link">
+                        意見箱
+                    </a>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 0.5rem 0; padding-top: 0.5rem;">
+                        <button onclick="handleLogout()" style="width: 100%; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                            ログアウト
+                        </button>
+                    </div>
+                </div>
+            </div>
         </nav>
+
         <style>
+            /* デスクトップメニュー */
             .nav-link {
                 color: rgba(255,255,255,0.85);
                 text-decoration: none;
@@ -51,6 +100,7 @@ window.createNavigation = function() {
                 font-weight: 500;
                 font-size: 0.9rem;
                 display: inline-block;
+                white-space: nowrap;
             }
             .nav-link:hover {
                 background: rgba(255,255,255,0.12);
@@ -69,16 +119,76 @@ window.createNavigation = function() {
                 background: rgba(255,255,255,0.2);
                 border-color: rgba(255,255,255,0.4);
             }
+
+            /* モバイルメニュー */
+            .mobile-menu {
+                background: rgba(102, 126, 234, 0.98);
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                z-index: 999;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+            .mobile-menu-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0.5rem;
+            }
+            .mobile-menu-link {
+                display: block;
+                color: white;
+                text-decoration: none;
+                padding: 0.75rem 1rem;
+                border-radius: 6px;
+                transition: background 200ms ease;
+                font-size: 0.95rem;
+            }
+            .mobile-menu-link:hover {
+                background: rgba(255,255,255,0.15);
+            }
+            .mobile-menu-link.active {
+                background: rgba(255,255,255,0.25);
+                font-weight: 600;
+            }
+
+            /* レスポンシブ */
+            @media (max-width: 1024px) {
+                .nav-desktop {
+                    gap: 1rem !important;
+                }
+                .nav-link {
+                    font-size: 0.85rem;
+                    padding: 0.35rem 0.6rem;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .nav-desktop {
+                    display: none !important;
+                }
+                .nav-mobile-controls {
+                    display: flex !important;
+                }
+            }
         </style>
     `;
-    
+
     const navContainer = document.getElementById('navigation');
     if (navContainer) {
         navContainer.innerHTML = nav;
     }
-    
+
     // ユーザー情報表示
     updateUserInfo();
+};
+
+// モバイルメニュー開閉
+window.toggleMobileMenu = function() {
+    const menu = document.getElementById('mobile-menu');
+    if (menu) {
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
 };
 
 // ユーザー情報更新
@@ -88,28 +198,28 @@ function updateUserInfo() {
         try {
             const data = JSON.parse(authData);
             const userInfoEl = document.getElementById('user-info');
-            if (userInfoEl && data.email) {
-                userInfoEl.textContent = data.email;
+            const userInfoMobileEl = document.getElementById('user-info-mobile');
+
+            if (data.email) {
+                const emailShort = data.email.split('@')[0];
+                if (userInfoEl) userInfoEl.textContent = emailShort;
+                if (userInfoMobileEl) userInfoMobileEl.textContent = emailShort;
             }
-        } catch (error) {
-            console.warn('ユーザー情報表示エラー:', error);
+        } catch (e) {
+            console.error('Failed to parse auth data:', e);
         }
     }
 }
 
 // ログアウト処理
-function handleLogout() {
+window.handleLogout = function() {
     if (confirm('ログアウトしますか？')) {
-        localStorage.clear();
+        localStorage.removeItem('google_auth_data');
         window.location.href = 'login.html';
     }
-}
+};
 
-// 自動初期化
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.createNavigation);
-} else {
+// ナビゲーション読み込み（互換性のため）
+window.loadNavigation = function() {
     window.createNavigation();
-}
-
-console.log('✅ ナビゲーションシステム準備完了（ダッシュボードなし）');
+};
