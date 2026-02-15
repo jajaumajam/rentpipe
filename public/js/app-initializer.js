@@ -124,9 +124,13 @@ const AppInitializer = {
                 }
             }
 
-            if (!window.GoogleSheetsAPI.isAuthenticated) {
-                console.log('🔑 Google Sheets API にトークンを設定中...');
-                await window.GoogleSheetsAPI.setAccessToken(accessToken);
+            if (accessToken) {
+                if (!window.GoogleSheetsAPI.isAuthenticated) {
+                    console.log('🔑 Google Sheets API にトークンを設定中...');
+                    await window.GoogleSheetsAPI.setAccessToken(accessToken);
+                }
+            } else {
+                console.warn('⚠️ アクセストークンがありません - Sheets API認証をスキップ');
             }
 
             console.log('✅ Google Sheets API 準備完了');

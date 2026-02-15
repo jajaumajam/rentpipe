@@ -76,20 +76,42 @@ window.IntegratedAuthManagerV2 = {
             const googleAuth = localStorage.getItem('google_auth_data');
             if (googleAuth) {
                 const authData = JSON.parse(googleAuth);
-                
+
+                // accessTokenがない場合は個別保存から取得（後方互換性）
+                let accessToken = authData.accessToken;
+                let tokenExpiry = authData.tokenExpiry;
+
+                if (!accessToken) {
+                    console.log('⚠️ google_auth_dataにaccessTokenがありません - 個別保存から復元を試みます');
+                    accessToken = localStorage.getItem('google_access_token');
+                    const expiryStr = localStorage.getItem('google_token_expiry');
+                    tokenExpiry = expiryStr ? parseInt(expiryStr) : null;
+                }
+
                 // トークンの有効期限確認
-                const isTokenValid = authData.tokenExpiry && new Date().getTime() < authData.tokenExpiry;
-                
+                const isTokenValid = accessToken && tokenExpiry && new Date().getTime() < tokenExpiry;
+
                 if (isTokenValid) {
                     this.authState.googleAuth = {
                         isSignedIn: true,
                         user: authData.user,
-                        accessToken: authData.accessToken,
-                        tokenExpiry: authData.tokenExpiry
+                        accessToken: accessToken,
+                        tokenExpiry: tokenExpiry
                     };
                     console.log('✅ Google認証状態復元完了:', authData.user?.email);
+
+                    // 古いデータを新しい形式で上書き保存
+                    if (!authData.accessToken) {
+                        console.log('🔄 古いデータを新形式に更新中...');
+                        localStorage.setItem('google_auth_data', JSON.stringify({
+                            isSignedIn: true,
+                            user: authData.user,
+                            accessToken: accessToken,
+                            tokenExpiry: tokenExpiry
+                        }));
+                    }
                 } else {
-                    console.log('⚠️ Googleトークンが期限切れです');
+                    console.log('⚠️ Googleトークンが期限切れまたは存在しません');
                     this.clearGoogleAuth();
                 }
             }

@@ -14,6 +14,13 @@ const UnifiedSheetsManager = {
      */
     initSpreadsheet: async function() {
         try {
+            // トークンが設定されているか確認
+            if (!window.gapi?.client?.getToken()?.access_token) {
+                console.warn('⚠️ Google API トークンが設定されていません - Sheets初期化をスキップ');
+                this.isEnabled = false;
+                return { success: false, error: 'トークンが設定されていません' };
+            }
+
             // 既存のスプレッドシートを検索
             const response = await gapi.client.drive.files.list({
                 q: `name='${this.SPREADSHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
