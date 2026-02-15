@@ -488,6 +488,9 @@
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // ナビゲーション表示
+                loadNavigation();
+
                 // お知らせ通知を表示
                 if (window.NotificationManager) {
                     window.NotificationManager.init();

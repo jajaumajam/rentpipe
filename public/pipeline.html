@@ -346,6 +346,9 @@
         // アプリケーション初期化後の処理
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // ナビゲーション表示
+                loadNavigation();
+
                 // PageInitializerで共通初期化（認証・データ読み込み）
                 await PageInitializer.initialize({
                     onDataUpdated: () => {

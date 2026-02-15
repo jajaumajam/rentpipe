@@ -395,6 +395,9 @@
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // ナビゲーション表示
+                loadNavigation();
+
                 // IntegratedAuthManagerを先に初期化
                 if (window.IntegratedAuthManager && !window.IntegratedAuthManager.isInitialized) {
                     await window.IntegratedAuthManager.initialize();
