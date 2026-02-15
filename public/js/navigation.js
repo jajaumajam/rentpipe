@@ -3,7 +3,7 @@ window.createNavigation = function() {
     const currentPage = window.location.pathname.split('/').pop() || 'customer.html';
 
     const nav = `
-        <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative;">
             <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
                 <!-- ロゴ -->
                 <h1 style="color: white; margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px;">
@@ -129,11 +129,22 @@ window.createNavigation = function() {
                 right: 0;
                 z-index: 999;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideDown 0.2s ease-out;
             }
             .mobile-menu-content {
                 max-width: 1200px;
                 margin: 0 auto;
                 padding: 0.5rem;
+            }
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
             .mobile-menu-link {
                 display: block;
@@ -186,8 +197,13 @@ window.createNavigation = function() {
 // モバイルメニュー開閉
 window.toggleMobileMenu = function() {
     const menu = document.getElementById('mobile-menu');
+    console.log('Toggle mobile menu:', menu);
     if (menu) {
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        const isHidden = menu.style.display === 'none' || menu.style.display === '';
+        menu.style.display = isHidden ? 'block' : 'none';
+        console.log('Menu display:', menu.style.display);
+    } else {
+        console.error('Mobile menu element not found');
     }
 };
 
