@@ -334,23 +334,24 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label>表示タイプ *</label>
-                    <select id="type" required>
-                        <option value="banner">バナー表示</option>
-                        <option value="page">お知らせ一覧のみ</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-label">
+                <div class="form-group" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #64748b;">
+                        すべての通知はお知らせ一覧（notifications.html）に表示されます。
+                    </p>
+                    <label class="checkbox-label" style="font-weight: 600;">
                         <input type="checkbox" id="showBanner">
-                        顧客管理画面の上部にバナーで表示する
+                        顧客管理画面の上部にもバナーで表示する
                     </label>
+                    <div id="bannerOptions" style="margin-top: 12px; padding-left: 24px; display: none;">
+                        <label class="checkbox-label" style="font-weight: normal; color: #374151;">
+                            <input type="checkbox" id="dismissible" checked>
+                            ユーザーが閉じることができる
+                        </label>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>優先度（1-10、小さいほど上に表示）</label>
+                    <label>優先度（1〜10、小さいほど上に表示）</label>
                     <input type="number" id="priority" min="1" max="10" value="5">
                 </div>
 
@@ -368,17 +369,10 @@
                 <div class="form-group">
                     <label>ステータス *</label>
                     <select id="status" required>
-                        <option value="draft">📝 下書き</option>
+                        <option value="draft">📝 下書き（非公開）</option>
                         <option value="published">📢 公開</option>
                         <option value="archived">📦 アーカイブ</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="dismissible" checked>
-                        ユーザーが閉じることができる
-                    </label>
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-top: 32px;">
@@ -405,6 +399,16 @@
         let currentFilter = 'all';
         let notifications = [];
         let sbClient = null;
+
+        // バナーチェックボックスの連動
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'showBanner') {
+                const bannerOptions = document.getElementById('bannerOptions');
+                if (bannerOptions) {
+                    bannerOptions.style.display = e.target.checked ? 'block' : 'none';
+                }
+            }
+        });
 
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
@@ -534,6 +538,8 @@
             document.getElementById('notificationId').value = '';
             document.getElementById('priority').value = '5';
             document.getElementById('dismissible').checked = true;
+            document.getElementById('showBanner').checked = false;
+            document.getElementById('bannerOptions').style.display = 'none';
             document.getElementById('status').value = 'draft';
 
             const now = new Date();
@@ -570,6 +576,10 @@
                 document.getElementById('endDate').value = endDate.toISOString().slice(0, 16);
             }
 
+            // バナーオプションの表示制御
+            document.getElementById('bannerOptions').style.display =
+                notification.show_banner ? 'block' : 'none';
+
             document.getElementById('notificationModal').classList.add('active');
         }
 
@@ -600,19 +610,20 @@
             event.preventDefault();
 
             const id = document.getElementById('notificationId').value;
+            const showBanner = document.getElementById('showBanner').checked;
             const data = {
                 title: document.getElementById('title').value,
                 message: document.getElementById('message').value,
                 variant: document.getElementById('variant').value,
-                type: document.getElementById('type').value,
-                show_banner: document.getElementById('showBanner').checked,
+                type: 'banner',  // 常にbanner（お知らせ一覧には常に表示）
+                show_banner: showBanner,
                 priority: parseInt(document.getElementById('priority').value),
                 start_date: new Date(document.getElementById('startDate').value).toISOString(),
                 end_date: document.getElementById('endDate').value
                     ? new Date(document.getElementById('endDate').value).toISOString()
                     : null,
                 status: document.getElementById('status').value,
-                dismissible: document.getElementById('dismissible').checked,
+                dismissible: showBanner ? document.getElementById('dismissible').checked : true,
                 show_on_pages: []
             };
 

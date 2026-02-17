@@ -238,9 +238,11 @@
     },
 
     /**
-     * バナー表示用の通知を取得
+     * バナー表示用の通知を取得（customer.htmlのみ）
      */
     getBannerNotifications() {
+      const currentPage = window.location.pathname.split('/').pop() || 'customer.html';
+      if (currentPage !== 'customer.html') return [];
       return this.getActiveNotifications().filter(n => n.showBanner);
     },
 
