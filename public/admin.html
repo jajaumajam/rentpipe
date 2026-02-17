@@ -401,9 +401,10 @@
     <script src="js/navigation.js"></script>
 
     <script>
+        // supabaseという名前はSupabase JSライブラリがグローバルを占有するためsbClientを使用
         let currentFilter = 'all';
         let notifications = [];
-        let supabase = null;
+        let sbClient = null;
 
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
@@ -428,7 +429,7 @@
                 return;
             }
 
-            supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
             console.log('✅ Supabase初期化完了');
 
             // お知らせを読み込み
@@ -443,10 +444,7 @@
             try {
                 const data = JSON.parse(authData);
                 const email = data.user?.email;
-
-                // 管理者メールアドレスリスト
                 const adminEmails = ['jajaumajam@gmail.com'];
-
                 return adminEmails.includes(email);
             } catch (e) {
                 console.error('認証データ解析エラー:', e);
@@ -457,7 +455,7 @@
         // お知らせ読み込み
         async function loadNotifications() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await sbClient
                     .from('notifications')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -511,15 +509,9 @@
                             <span>👁️ ${notification.type === 'banner' ? 'バナー表示' : 'お知らせ一覧のみ'}</span>
                         </div>
                         <div class="notification-actions">
-                            <button class="btn-admin btn-secondary" onclick="editNotification('${notification.id}')">
-                                ✏️ 編集
-                            </button>
-                            <button class="btn-admin btn-secondary" onclick="duplicateNotification('${notification.id}')">
-                                📋 複製
-                            </button>
-                            <button class="btn-admin btn-danger" onclick="deleteNotification('${notification.id}')">
-                                🗑️ 削除
-                            </button>
+                            <button class="btn-admin btn-secondary" onclick="editNotification('${notification.id}')">✏️ 編集</button>
+                            <button class="btn-admin btn-secondary" onclick="duplicateNotification('${notification.id}')">📋 複製</button>
+                            <button class="btn-admin btn-danger" onclick="deleteNotification('${notification.id}')">🗑️ 削除</button>
                         </div>
                     </div>
                 `;
@@ -529,11 +521,9 @@
         // フィルター切り替え
         function filterByStatus(status) {
             currentFilter = status;
-
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.status === status);
             });
-
             renderNotifications();
         }
 
@@ -542,13 +532,10 @@
             document.getElementById('modalTitle').textContent = '新しいお知らせ';
             document.getElementById('notificationForm').reset();
             document.getElementById('notificationId').value = '';
-
-            // デフォルト値設定
             document.getElementById('priority').value = '5';
             document.getElementById('dismissible').checked = true;
             document.getElementById('status').value = 'draft';
 
-            // 開始日時を現在時刻に設定
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('startDate').value = now.toISOString().slice(0, 16);
@@ -572,11 +559,11 @@
             document.getElementById('status').value = notification.status;
             document.getElementById('dismissible').checked = notification.dismissible;
 
-            // 日時設定
             const startDate = new Date(notification.start_date);
             startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
             document.getElementById('startDate').value = startDate.toISOString().slice(0, 16);
 
+            document.getElementById('endDate').value = '';
             if (notification.end_date) {
                 const endDate = new Date(notification.end_date);
                 endDate.setMinutes(endDate.getMinutes() - endDate.getTimezoneOffset());
@@ -590,7 +577,6 @@
         async function duplicateNotification(id) {
             const notification = notifications.find(n => n.id === id);
             if (!notification) return;
-
             if (!confirm('このお知らせを複製しますか？')) return;
 
             try {
@@ -598,10 +584,7 @@
                 data.title = `${data.title}（コピー）`;
                 data.status = 'draft';
 
-                const { error } = await supabase
-                    .from('notifications')
-                    .insert([data]);
-
+                const { error } = await sbClient.from('notifications').insert([data]);
                 if (error) throw error;
 
                 alert('複製しました');
@@ -635,23 +618,13 @@
 
             try {
                 if (id) {
-                    // 更新
-                    const { error } = await supabase
-                        .from('notifications')
-                        .update(data)
-                        .eq('id', id);
-
+                    const { error } = await sbClient.from('notifications').update(data).eq('id', id);
                     if (error) throw error;
                     alert('更新しました');
                 } else {
-                    // 新規作成
-                    const authData = JSON.parse(localStorage.getItem('google_auth_data'));
+                    const authData = JSON.parse(localStorage.getItem('google_auth_data') || '{}');
                     data.created_by = authData.user?.email || 'unknown';
-
-                    const { error } = await supabase
-                        .from('notifications')
-                        .insert([data]);
-
+                    const { error } = await sbClient.from('notifications').insert([data]);
                     if (error) throw error;
                     alert('作成しました');
                 }
@@ -669,11 +642,7 @@
             if (!confirm('本当に削除しますか？この操作は取り消せません。')) return;
 
             try {
-                const { error } = await supabase
-                    .from('notifications')
-                    .delete()
-                    .eq('id', id);
-
+                const { error } = await sbClient.from('notifications').delete().eq('id', id);
                 if (error) throw error;
 
                 alert('削除しました');
@@ -691,21 +660,12 @@
 
         // ヘルパー関数
         function getVariantLabel(variant) {
-            const labels = {
-                info: '📘 お知らせ',
-                success: '✅ 成功',
-                warning: '⚠️ 警告',
-                danger: '🚨 重要'
-            };
+            const labels = { info: '📘 お知らせ', success: '✅ 成功', warning: '⚠️ 警告', danger: '🚨 重要' };
             return labels[variant] || variant;
         }
 
         function getStatusLabel(status) {
-            const labels = {
-                draft: '📝 下書き',
-                published: '📢 公開中',
-                archived: '📦 アーカイブ'
-            };
+            const labels = { draft: '📝 下書き', published: '📢 公開中', archived: '📦 アーカイブ' };
             return labels[status] || status;
         }
 
