@@ -1427,6 +1427,9 @@
 
         // ページ初期化完了後に編集モードをチェック
         document.addEventListener('DOMContentLoaded', async () => {
+            // ナビゲーション表示
+            loadNavigation();
+
             // お知らせ通知を表示
             if (window.NotificationManager) {
                 window.NotificationManager.init();

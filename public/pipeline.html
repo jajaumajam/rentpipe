@@ -274,12 +274,6 @@
     </style>
 </head>
 <body>
-    <!-- ページローディングオーバーレイ（初期表示、完了後に非表示） -->
-    <div id="page-loading" class="page-loading-overlay">
-        <div class="loading-spinner"></div>
-        <p>読み込み中...</p>
-    </div>
-
     <!-- ステータス変更モーダル -->
     <div class="status-modal-overlay" id="status-modal">
         <div class="status-modal">
@@ -303,7 +297,12 @@
 
         <!-- パイプライン -->
         <div class="pipeline-container" id="pipeline-container">
-            <!-- パイプラインカラムが動的に生成されます -->
+            <!-- 初期スケルトン -->
+            <div id="pipeline-skeleton" style="display:flex;gap:16px;width:100%;padding:8px 0;">
+                <div style="flex:1;background:#f1f5f9;border-radius:8px;min-height:200px;animation:skeleton-pulse 1.5s ease-in-out infinite;"></div>
+                <div style="flex:1;background:#f1f5f9;border-radius:8px;min-height:200px;animation:skeleton-pulse 1.5s ease-in-out infinite 0.2s;"></div>
+                <div style="flex:1;background:#f1f5f9;border-radius:8px;min-height:200px;animation:skeleton-pulse 1.5s ease-in-out infinite 0.4s;"></div>
+            </div>
         </div>
     </div>
 
@@ -327,12 +326,10 @@
     <script>
         console.log('📊 パイプラインページ読み込み開始...');
 
-        // ローディング非表示
+        // スケルトン除去
         function hideLoading() {
-            const pageLoading = document.getElementById('page-loading');
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
+            const skeleton = document.getElementById('pipeline-skeleton');
+            if (skeleton) skeleton.remove();
         }
 
         // ステータスモーダルを閉じる

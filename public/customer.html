@@ -226,16 +226,7 @@
     </style>
 </head>
 <body>
-    <!-- ページ読み込み中オーバーレイ（初期は表示、完了後に非表示） -->
-    <div class="page-loading-overlay" id="page-loading">
-        <div class="page-loading-spinner"></div>
-        <div class="page-loading-text">
-            <div class="loading-title">RentPipe</div>
-            <div class="loading-subtitle">データを読み込んでいます...</div>
-        </div>
-    </div>
-
-    <!-- ローディングオーバーレイ（処理中） -->
+    <!-- ローディングオーバーレイ（処理中のみ使用） -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -339,7 +330,7 @@
     <div id="notification-banners" style="max-width: 1200px; margin: 0 auto; padding: 16px 20px 0;"></div>
 
     <!-- メインコンテンツ -->
-    <div class="main-content content-hidden" id="main-content">
+    <div class="main-content" id="main-content">
         <div class="page-header">
             <div>
                 <h1>👥 顧客管理</h1>
@@ -429,7 +420,10 @@
                     </tr>
                 </thead>
                 <tbody id="customer-tbody">
-                    <!-- 顧客データがここに表示されます -->
+                    <!-- スケルトンローダー -->
+                    <tr class="skeleton-row"><td colspan="7"><div class="skeleton-line"></div></td></tr>
+                    <tr class="skeleton-row"><td colspan="7"><div class="skeleton-line"></div></td></tr>
+                    <tr class="skeleton-row"><td colspan="7"><div class="skeleton-line" style="width:80%"></div></td></tr>
                 </tbody>
             </table>
             <div class="customer-table-empty" id="empty-state" style="display: none;">
@@ -519,18 +513,9 @@
             }
         });
 
-        // コンテンツを表示
+        // スケルトンを除去（データ読み込み完了時）
         function showContent() {
-            const pageLoading = document.getElementById('page-loading');
-            const mainContent = document.getElementById('main-content');
-
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
-            if (mainContent) {
-                mainContent.classList.remove('content-hidden');
-                mainContent.classList.add('content-visible');
-            }
+            document.querySelectorAll('.skeleton-row').forEach(r => r.remove());
         }
 
         // 顧客表示（テーブル形式）

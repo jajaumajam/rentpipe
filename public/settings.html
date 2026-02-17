@@ -379,12 +379,6 @@
     </style>
 </head>
 <body>
-    <!-- ページローディングオーバーレイ（初期表示、完了後に非表示） -->
-    <div id="page-loading" class="page-loading-overlay">
-        <div class="loading-spinner"></div>
-        <p>読み込み中...</p>
-    </div>
-
     <!-- ナビゲーション -->
     <div id="navigation"></div>
 
@@ -645,13 +639,8 @@
     <script>
         console.log('⚙️ 設定ページ読み込み開始...');
 
-        // ローディング非表示
-        function hideLoading() {
-            const pageLoading = document.getElementById('page-loading');
-            if (pageLoading) {
-                pageLoading.classList.add('hidden');
-            }
-        }
+        // ローディング非表示（page-loading-overlay廃止済み・互換用に残す）
+        function hideLoading() { /* no-op */ }
 
         let pendingAction = null;
 
