@@ -103,32 +103,46 @@ class PipelineManager {
 
         container.innerHTML = '';
 
+        // ステータスカラーマップ
+        const statusColors = {
+            '初回相談':  { dot: 'bg-blue-400',   header: 'bg-blue-50 border-blue-100',   count: 'bg-blue-500',   border: 'border-l-blue-400'   },
+            '物件紹介':  { dot: 'bg-purple-400',  header: 'bg-purple-50 border-purple-100', count: 'bg-purple-500', border: 'border-l-purple-400' },
+            '内見調整':  { dot: 'bg-cyan-400',    header: 'bg-cyan-50 border-cyan-100',   count: 'bg-cyan-500',   border: 'border-l-cyan-400'   },
+            '申込準備':  { dot: 'bg-amber-400',   header: 'bg-amber-50 border-amber-100', count: 'bg-amber-500',  border: 'border-l-amber-400'  },
+            '審査中':    { dot: 'bg-orange-400',  header: 'bg-orange-50 border-orange-100', count: 'bg-orange-500', border: 'border-l-orange-400' },
+            '契約手続き': { dot: 'bg-green-400',  header: 'bg-green-50 border-green-100', count: 'bg-green-500',  border: 'border-l-green-400'  },
+        };
+
         // 各ステータスごとにカラムを作成
         this.statuses.forEach(status => {
             const statusCustomers = customers.filter(c => c.pipelineStatus === status);
-            
+            const colors = statusColors[status] || { dot: 'bg-gray-400', header: 'bg-gray-50 border-gray-100', count: 'bg-gray-500', border: 'border-l-gray-400' };
+
             const column = document.createElement('div');
-            column.className = 'pipeline-column';
+            column.className = 'bg-gray-50 rounded-2xl p-3 min-h-80 flex flex-col border border-gray-100';
             column.innerHTML = `
-                <div class="column-header">
-                    <h3>${status}</h3>
-                    <span class="count">${statusCustomers.length}</span>
+                <div class="${colors.header} border rounded-xl px-3 py-2.5 mb-3 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></span>
+                        <h3 class="font-semibold text-sm text-gray-700">${status}</h3>
+                    </div>
+                    <span class="${colors.count} text-white text-xs font-bold px-2.5 py-0.5 rounded-full">${statusCustomers.length}</span>
                 </div>
-                <div class="column-content" data-status="${status}">
-                    ${statusCustomers.length === 0 
-                        ? '<div class="empty-state">顧客なし</div>'
-                        : statusCustomers.map(customer => this.createCustomerCard(customer)).join('')
+                <div class="flex flex-col gap-2 flex-1" data-status="${status}">
+                    ${statusCustomers.length === 0
+                        ? '<div class="flex-1 flex items-center justify-center text-gray-400 text-xs py-8">顧客なし</div>'
+                        : statusCustomers.map(customer => this.createCustomerCard(customer, colors.border)).join('')
                     }
                 </div>
             `;
-            
+
             container.appendChild(column);
         });
         
         console.log('✅ パイプライン描画完了');
     }
 
-    createCustomerCard(customer) {
+    createCustomerCard(customer, borderColorClass = 'border-l-blue-400') {
         // 新しいデータ構造に対応（旧データ構造との後方互換性も維持）
         const name = customer.basicInfo?.name || customer.name || '名前未設定';
         const email = customer.basicInfo?.email || customer.email || '-';
@@ -136,40 +150,42 @@ class PipelineManager {
         const budgetMin = customer.preferences?.budget?.min || customer.preferences?.budgetMin || 0;
 
         return `
-            <div class="customer-card" data-customer-id="${customer.id}">
-                <div class="card-header">
-                    <h4>${name}</h4>
-                </div>
-                <div class="card-body">
-                    <div class="card-info">
+            <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 border-l-4 ${borderColorClass} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                 data-customer-id="${customer.id}">
+                <h4 class="font-semibold text-sm text-gray-900 mb-2">${name}</h4>
+                <div class="space-y-1 mb-3">
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
                         <span>📧</span>
-                        <span>${email}</span>
+                        <span class="truncate">${email}</span>
                     </div>
-                    <div class="card-info">
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
                         <span>📱</span>
                         <span>${phone}</span>
                     </div>
                     ${budgetMin ? `
-                        <div class="card-info">
+                        <div class="flex items-center gap-1.5 text-xs text-gray-500">
                             <span>💰</span>
                             <span>${budgetMin.toLocaleString()}円〜</span>
                         </div>
                     ` : ''}
                 </div>
-                <div class="card-actions">
-                    <div class="card-actions-row">
-                        <button class="card-button" onclick="window.pipelineManager.changeStatus('${customer.id}', '${customer.pipelineStatus}')">
+                <div class="border-t border-gray-100 pt-2.5 flex flex-col gap-1.5">
+                    <div class="flex gap-1.5">
+                        <button
+                            onclick="window.pipelineManager.changeStatus('${customer.id}', '${customer.pipelineStatus}')"
+                            class="flex-1 py-1.5 text-xs font-medium bg-rentpipe-primary hover:bg-indigo-600 text-white rounded-lg transition-colors border-0 cursor-pointer">
                             ステータス変更
                         </button>
-                        <button class="card-button btn-archive" onclick="window.pipelineManager.openArchiveModal('${customer.id}')">
+                        <button
+                            onclick="window.pipelineManager.openArchiveModal('${customer.id}')"
+                            class="flex-1 py-1.5 text-xs font-medium bg-amber-400 hover:bg-amber-500 text-white rounded-lg transition-colors border-0 cursor-pointer">
                             案内中止
                         </button>
                     </div>
-                    <div class="card-actions-row">
-                        <a href="customer-form.html?edit=${customer.id}&from=pipeline" class="card-button" style="text-decoration: none; text-align: center; flex: 1;">
-                            編集
-                        </a>
-                    </div>
+                    <a href="customer-form.html?edit=${customer.id}&from=pipeline"
+                       class="block text-center py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors no-underline">
+                        ✏️ 編集
+                    </a>
                 </div>
             </div>
         `;
@@ -199,9 +215,9 @@ class PipelineManager {
             this.statuses.forEach(status => {
                 const isCurrent = status === currentStatus;
                 html += `
-                    <button class="status-option ${isCurrent ? 'current' : ''}"
+                    <button class="status-option w-full text-left px-4 py-2.5 border-2 rounded-xl text-sm font-medium cursor-pointer transition-all ${isCurrent ? 'current border-green-400 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-gray-700'}"
                             onclick="window.pipelineManager.selectStatus('${status}')">
-                        ${status}${isCurrent ? ' （現在）' : ''}
+                        ${status}${isCurrent ? ' ✓' : ''}
                     </button>
                 `;
             });

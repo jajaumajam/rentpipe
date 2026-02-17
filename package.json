@@ -13,6 +13,8 @@
     "stripe": "^14.14.0"
   },
   "devDependencies": {
-    "@vercel/node": "^3.0.21"
+    "@tailwindcss/cli": "^4.1.18",
+    "@vercel/node": "^3.0.21",
+    "tailwindcss": "^4.1.18"
   }
 }

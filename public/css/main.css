@@ -211,11 +211,7 @@
 /* RentPipe メインスタイルシート */
 
 /* ===== ベース設定 ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* * { margin/padding/box-sizing } はTailwind preflightが担当するため削除 */
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -926,10 +922,14 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 9999;
+}
+
+.loading-overlay.active {
+    display: flex;
 }
 
 .loading-content {

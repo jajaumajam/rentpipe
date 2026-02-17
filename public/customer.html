@@ -5,25 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>顧客管理 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'rentpipe-primary': '#667eea',
-                        'rentpipe-secondary': '#764ba2',
-                        'rentpipe-success': '#10b981',
-                        'rentpipe-danger': '#ef4444',
-                        'rentpipe-warning': '#f59e0b',
-                        'rentpipe-info': '#3b82f6'
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (local build) -->
+    <link rel="stylesheet" href="css/tailwind-output.css">
 
     <style>
         .page-header {
@@ -207,6 +190,20 @@
             100% { transform: rotate(360deg); }
         }
 
+        @keyframes skeleton-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .skeleton-row td { padding: 10px 12px; }
+        .skeleton-line {
+            height: 18px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            width: 100%;
+            animation: skeleton-pulse 1.5s ease-in-out infinite;
+        }
+
         /* テーブル件数表示 */
         .table-header {
             display: flex;
@@ -327,103 +324,104 @@
     <div id="navigation"></div>
 
     <!-- お知らせバナー -->
-    <div id="notification-banners" style="max-width: 1200px; margin: 0 auto; padding: 16px 20px 0;"></div>
+    <div id="notification-banners" class="max-w-7xl mx-auto px-5 pt-4"></div>
 
     <!-- メインコンテンツ -->
-    <div class="main-content" id="main-content">
-        <div class="page-header">
+    <div class="max-w-7xl mx-auto px-5 py-6" id="main-content">
+
+        <!-- ページヘッダー -->
+        <div class="flex items-center justify-between mb-6">
             <div>
-                <h1>👥 顧客管理</h1>
-                <p class="page-description">すべての顧客情報を一元管理</p>
+                <h1 class="text-2xl font-bold text-gray-900">👥 顧客管理</h1>
+                <p class="text-sm text-gray-500 mt-1">すべての顧客情報を一元管理</p>
             </div>
-            <a href="customer-form.html" class="btn btn-primary">➕ 新規顧客登録</a>
+            <a href="customer-form.html" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rentpipe-primary to-rentpipe-secondary text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-sm">
+                ➕ 新規顧客登録
+            </a>
         </div>
 
-        <!-- 統計 -->
-        <div class="stats-section" id="stats-section">
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-content">
-                        <h3 id="stat-active">0</h3>
-                        <p>進行中</p>
-                    </div>
+        <!-- 統計カード -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="stats-section">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="text-3xl">📋</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900" id="stat-active">0</div>
+                    <div class="text-xs text-gray-500 mt-0.5">進行中</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🎉</div>
-                    <div class="stat-content">
-                        <h3 id="stat-closed">0</h3>
-                        <p>成約済み</p>
-                    </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="text-3xl">🎉</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900" id="stat-closed">0</div>
+                    <div class="text-xs text-gray-500 mt-0.5">成約済み</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">❌</div>
-                    <div class="stat-content">
-                        <h3 id="stat-lost">0</h3>
-                        <p>失注</p>
-                    </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="text-3xl">❌</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900" id="stat-lost">0</div>
+                    <div class="text-xs text-gray-500 mt-0.5">失注</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🆕</div>
-                    <div class="stat-content">
-                        <h3 id="stat-new">0</h3>
-                        <p>今月の新規</p>
-                    </div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="text-3xl">🆕</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900" id="stat-new">0</div>
+                    <div class="text-xs text-gray-500 mt-0.5">今月の新規</div>
                 </div>
             </div>
         </div>
 
         <!-- 検索・フィルター -->
-        <div class="search-filter-container">
-            <div class="filter-row">
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="🔍 顧客名、メール、電話番号で検索..." onkeyup="searchCustomers()">
-                </div>
-                <div class="filter-group">
-                    <button class="filter-btn active" data-filter="active" onclick="filterByActiveStatus('active')">📋 進行中</button>
-                    <button class="filter-btn" data-filter="closed" onclick="filterByActiveStatus('closed')">🎉 成約済み</button>
-                    <button class="filter-btn" data-filter="lost" onclick="filterByActiveStatus('lost')">❌ 失注</button>
-                    <button class="filter-btn" data-filter="all" onclick="filterByActiveStatus('all')">🗂️ すべて</button>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+            <div class="flex flex-col sm:flex-row gap-3 mb-3">
+                <input type="text" id="search-input"
+                    placeholder="🔍 顧客名、メール、電話番号で検索..."
+                    onkeyup="searchCustomers()"
+                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rentpipe-primary focus:border-transparent transition-all">
+                <div class="flex gap-2 flex-wrap">
+                    <button class="filter-btn active px-3 py-2 text-sm rounded-lg border transition-all" data-filter="active" onclick="filterByActiveStatus('active')">📋 進行中</button>
+                    <button class="filter-btn px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 transition-all hover:border-rentpipe-primary hover:text-rentpipe-primary" data-filter="closed" onclick="filterByActiveStatus('closed')">🎉 成約済み</button>
+                    <button class="filter-btn px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 transition-all hover:border-rentpipe-primary hover:text-rentpipe-primary" data-filter="lost" onclick="filterByActiveStatus('lost')">❌ 失注</button>
+                    <button class="filter-btn px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 transition-all hover:border-rentpipe-primary hover:text-rentpipe-primary" data-filter="all" onclick="filterByActiveStatus('all')">🗂️ すべて</button>
                 </div>
             </div>
-
             <!-- パイプラインステータスフィルター -->
-            <div class="status-filters" id="status-filters">
-                <button class="status-filter-btn active" data-status="all" onclick="filterByStatus('all')">すべて</button>
-                <button class="status-filter-btn" data-status="初回相談" onclick="filterByStatus('初回相談')">初回相談</button>
-                <button class="status-filter-btn" data-status="物件紹介" onclick="filterByStatus('物件紹介')">物件紹介</button>
-                <button class="status-filter-btn" data-status="内見調整" onclick="filterByStatus('内見調整')">内見調整</button>
-                <button class="status-filter-btn" data-status="申込準備" onclick="filterByStatus('申込準備')">申込準備</button>
-                <button class="status-filter-btn" data-status="審査中" onclick="filterByStatus('審査中')">審査中</button>
-                <button class="status-filter-btn" data-status="契約手続き" onclick="filterByStatus('契約手続き')">契約手続き</button>
+            <div class="flex gap-2 flex-wrap" id="status-filters">
+                <button class="status-filter-btn active px-3 py-1.5 text-xs rounded-lg border transition-all" data-status="all" onclick="filterByStatus('all')">すべて</button>
+                <button class="status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50" data-status="初回相談" onclick="filterByStatus('初回相談')">初回相談</button>
+                <button class="status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50" data-status="物件紹介" onclick="filterByStatus('物件紹介')">物件紹介</button>
+                <button class="status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50" data-status="内見調整" onclick="filterByStatus('内見調整')">内見調整</button>
+                <button class="status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50" data-status="申込準備" onclick="filterByStatus('申込準備')">申込準備</button>
+                <button class="status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50" data-status="審査中" onclick="filterByStatus('審査中')">審査中</button>
+                <button class="status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50" data-status="契約手続き" onclick="filterByStatus('契約手続き')">契約手続き</button>
             </div>
+        </div>
+
+        <!-- 件数表示 -->
+        <div class="text-sm text-gray-500 mb-3 px-1">
+            表示: <strong class="text-gray-800" id="display-count">0</strong> 件 / 全 <strong class="text-gray-800" id="total-count">0</strong> 件
         </div>
 
         <!-- 顧客テーブル -->
-        <div class="table-header">
-            <div class="customer-count">
-                表示: <strong id="display-count">0</strong> 件 / 全 <strong id="total-count">0</strong> 件
-            </div>
-        </div>
-
-        <div class="customer-table-container">
-            <table class="customer-table" id="customer-table">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <table class="customer-table w-full" id="customer-table">
                 <thead>
-                    <tr>
-                        <th>顧客名</th>
-                        <th>連絡先</th>
-                        <th>予算</th>
-                        <th>希望エリア</th>
-                        <th>ステータス</th>
-                        <th>登録日</th>
-                        <th>操作</th>
+                    <tr class="bg-gray-50 border-b border-gray-100">
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">顧客名</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">連絡先</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">予算</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">希望エリア</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ステータス</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">登録日</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
                     </tr>
                 </thead>
                 <tbody id="customer-tbody">
                     <!-- スケルトンローダー -->
-                    <tr class="skeleton-row"><td colspan="7"><div class="skeleton-line"></div></td></tr>
-                    <tr class="skeleton-row"><td colspan="7"><div class="skeleton-line"></div></td></tr>
-                    <tr class="skeleton-row"><td colspan="7"><div class="skeleton-line" style="width:80%"></div></td></tr>
+                    <tr class="skeleton-row"><td colspan="7" class="px-4 py-3"><div class="skeleton-line"></div></td></tr>
+                    <tr class="skeleton-row"><td colspan="7" class="px-4 py-3"><div class="skeleton-line"></div></td></tr>
+                    <tr class="skeleton-row"><td colspan="7" class="px-4 py-3"><div class="skeleton-line" style="width:80%"></div></td></tr>
                 </tbody>
             </table>
             <div class="customer-table-empty" id="empty-state" style="display: none;">
@@ -517,6 +515,9 @@
         function showContent() {
             document.querySelectorAll('.skeleton-row').forEach(r => r.remove());
         }
+
+        // 最大5秒でスケルトンを強制除去（フォールバック）
+        setTimeout(showContent, 5000);
 
         // 顧客表示（テーブル形式）
         function displayCustomers() {

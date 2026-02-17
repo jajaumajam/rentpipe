@@ -263,37 +263,36 @@
         return;
       }
 
-      container.innerHTML = bannerNotifications.map(notif => {
-        const variantClasses = {
-          info: 'bg-blue-50 border-blue-200 text-blue-900',
-          success: 'bg-green-50 border-green-200 text-green-900',
-          warning: 'bg-yellow-50 border-yellow-200 text-yellow-900',
-          danger: 'bg-red-50 border-red-200 text-red-900'
-        };
+      const variantClasses = {
+        info:    'bg-blue-50 border-blue-200 text-blue-900',
+        success: 'bg-green-50 border-green-200 text-green-900',
+        warning: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+        danger:  'bg-red-50 border-red-200 text-red-900'
+      };
+      const closeBtnClasses = {
+        info:    'text-blue-500 hover:text-blue-700',
+        success: 'text-green-500 hover:text-green-700',
+        warning: 'text-yellow-600 hover:text-yellow-800',
+        danger:  'text-red-500 hover:text-red-700'
+      };
 
-        const closeButtonClass = {
-          info: 'text-blue-600 hover:text-blue-800',
-          success: 'text-green-600 hover:text-green-800',
-          warning: 'text-yellow-600 hover:text-yellow-800',
-          danger: 'text-red-600 hover:text-red-800'
-        };
+      container.innerHTML = bannerNotifications.map(notif => {
+        const vc = variantClasses[notif.variant] || variantClasses.info;
+        const bc = closeBtnClasses[notif.variant] || closeBtnClasses.info;
 
         return `
           <div
-            class="notification-banner ${variantClasses[notif.variant] || variantClasses.info}"
+            class="notification-banner flex items-start gap-3 p-4 border rounded-xl mb-3 ${vc}"
             data-notification-id="${notif.id}"
-            style="display: flex; align-items: start; gap: 12px; padding: 16px; border: 1px solid; border-radius: 8px; margin-bottom: 12px; animation: slideDown 0.3s ease-out;">
-            <div style="flex: 1;">
-              <div style="font-weight: 600; margin-bottom: 4px;">${this.escapeHtml(notif.title)}</div>
-              <div style="font-size: 14px; line-height: 1.6;">${this.escapeHtml(notif.message)}</div>
+            style="animation: slideDown 0.3s ease-out;">
+            <div class="flex-1">
+              <div class="font-semibold text-sm mb-0.5">${this.escapeHtml(notif.title)}</div>
+              <div class="text-sm leading-relaxed opacity-90">${this.escapeHtml(notif.message)}</div>
             </div>
             ${notif.dismissible ? `
               <button
                 onclick="NotificationManager.dismissBanner('${notif.id}')"
-                class="${closeButtonClass[notif.variant] || closeButtonClass.info}"
-                style="background: none; border: none; cursor: pointer; padding: 4px; font-size: 20px; line-height: 1; transition: opacity 0.2s;"
-                onmouseover="this.style.opacity='0.7'"
-                onmouseout="this.style.opacity='1'"
+                class="${bc} bg-transparent border-0 cursor-pointer p-1 text-xl leading-none transition-opacity hover:opacity-70"
                 title="閉じる">
                 ✕
               </button>

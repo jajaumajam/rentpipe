@@ -5,27 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>フォーム - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'rentpipe-primary': '#667eea',
-                        'rentpipe-secondary': '#764ba2',
-                        'rentpipe-success': '#10b981',
-                        'rentpipe-danger': '#ef4444',
-                        'rentpipe-warning': '#f59e0b',
-                        'rentpipe-info': '#3b82f6'
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (local build) -->
+    <link rel="stylesheet" href="css/tailwind-output.css">
 
     <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes skeleton-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
         .forms-container {
             max-width: 700px;
             margin: 0 auto;
@@ -287,73 +279,82 @@
     <div id="navigation"></div>
 
     <!-- メインコンテンツ -->
-    <main class="forms-container">
-        <div class="page-header">
-            <h1>📋 アンケートフォーム</h1>
-            <p>顧客からのアンケート回答を取得します</p>
+    <main class="max-w-2xl mx-auto px-5 py-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">📋 アンケートフォーム</h1>
+            <p class="text-sm text-gray-500 mt-1">顧客からのアンケート回答を取得します</p>
+        </div>
+
+        <!-- 読み込み中スケルトン -->
+        <div id="forms-skeleton" class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 flex flex-col items-center gap-4">
+            <div class="w-12 h-12 rounded-full border-4 border-gray-200 border-t-rentpipe-primary" style="animation: spin 1s linear infinite;"></div>
+            <div class="text-sm text-gray-400">読み込み中...</div>
+            <div class="w-full max-w-xs space-y-2">
+                <div class="h-3 bg-gray-200 rounded" style="animation: skeleton-pulse 1.5s ease-in-out infinite;"></div>
+                <div class="h-3 bg-gray-200 rounded w-4/5 mx-auto" style="animation: skeleton-pulse 1.5s ease-in-out infinite;"></div>
+            </div>
         </div>
 
         <!-- フォーム未作成状態 -->
-        <div class="card" id="noFormCard">
-            <div class="no-form-state">
-                <div class="icon">📝</div>
-                <h2>フォームが未作成です</h2>
-                <p>設定画面からアンケートフォームを作成してください</p>
-                <a href="settings.html" class="action-btn">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100" id="noFormCard" style="display: none;">
+            <div class="flex flex-col items-center py-14 px-6 text-center">
+                <div class="text-5xl mb-4">📝</div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">フォームが未作成です</h2>
+                <p class="text-gray-500 text-sm mb-6">設定画面からアンケートフォームを作成してください</p>
+                <a href="settings.html" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rentpipe-primary to-rentpipe-secondary text-white font-semibold rounded-xl text-sm hover:shadow-md transition-all">
                     ⚙️ 設定画面へ移動
                 </a>
             </div>
         </div>
 
         <!-- フォームあり状態 -->
-        <div class="card form-active-state" id="formActiveCard">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 form-active-state" id="formActiveCard">
             <!-- URL表示 -->
-            <div class="url-section">
-                <div class="section-title">🔗 フォームURL</div>
-                <div class="url-display">
-                    <input type="text" id="formUrl" class="url-input" readonly>
-                    <button class="copy-btn" onclick="copyFormUrl()">📋 コピー</button>
+            <div class="p-6 border-b border-gray-100">
+                <div class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">🔗 フォームURL</div>
+                <div class="flex gap-2">
+                    <input type="text" id="formUrl" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none" readonly>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors" onclick="copyFormUrl()">📋 コピー</button>
                 </div>
             </div>
 
             <!-- QRコード -->
-            <div class="qr-section">
-                <div class="section-title" style="justify-content: center;">📱 QRコード</div>
-                <div class="qr-container">
-                    <img id="qrCode" src="" alt="QRコード">
+            <div class="p-6 border-b border-gray-100 text-center">
+                <div class="text-sm font-semibold text-gray-700 mb-4 flex items-center justify-center gap-2">📱 QRコード</div>
+                <div class="inline-block p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <img id="qrCode" src="" alt="QRコード" class="w-36 h-36">
                 </div>
-                <p class="qr-help">スマートフォンで読み取ってお客様に共有してください</p>
+                <p class="text-xs text-gray-500 mt-3">スマートフォンで読み取ってお客様に共有してください</p>
             </div>
 
             <!-- 回答取得 -->
-            <div class="fetch-section">
-                <div class="section-title">📥 回答の取り込み</div>
-                <div class="stats-row">
-                    <div class="stat-item">
-                        <div class="stat-value" id="importedCount">0</div>
-                        <div class="stat-label">取込済み</div>
+            <div class="p-6">
+                <div class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">📥 回答の取り込み</div>
+                <div class="flex gap-4 mb-4">
+                    <div class="flex-1 bg-gray-50 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-gray-900" id="importedCount">0</div>
+                        <div class="text-xs text-gray-500 mt-1">取込済み</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="lastFetched">-</div>
-                        <div class="stat-label">最終取得</div>
+                    <div class="flex-1 bg-gray-50 rounded-xl p-4 text-center">
+                        <div class="text-lg font-bold text-gray-900" id="lastFetched">-</div>
+                        <div class="text-xs text-gray-500 mt-1">最終取得</div>
                     </div>
                 </div>
-                <button id="fetchBtn" class="fetch-btn" onclick="fetchResponses()">
+                <button id="fetchBtn" class="w-full py-3.5 bg-rentpipe-success hover:bg-green-600 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors flex items-center justify-center gap-2" onclick="fetchResponses()">
                     📥 新しい回答を取り込む
                 </button>
-
-                <div class="notice">
-                    <p>💡 回答は自動では取り込まれません。定期的に「新しい回答を取り込む」ボタンを押してください。<br>
+                <div class="mt-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-xs text-amber-800 leading-relaxed">💡 回答は自動では取り込まれません。定期的に「新しい回答を取り込む」ボタンを押してください。<br>
                     名前と電話番号が入力されていない回答は取り込まれません。</p>
                 </div>
             </div>
 
             <!-- 補助リンク -->
-            <div class="helper-links">
-                <a href="#" class="helper-link" onclick="openForm(); return false;">
+            <div class="flex gap-6 px-6 pb-6 justify-center">
+                <a href="#" class="text-rentpipe-primary hover:underline text-sm flex items-center gap-1" onclick="openForm(); return false;">
                     🔗 フォームを開く
                 </a>
-                <a href="settings.html" class="helper-link">
+                <a href="settings.html" class="text-rentpipe-primary hover:underline text-sm flex items-center gap-1">
                     ⚙️ フォーム設定
                 </a>
             </div>
@@ -378,8 +379,14 @@
     <script>
         console.log('📋 フォームページ読み込み開始...');
 
-        // ローディング非表示（page-loading-overlay廃止済み・互換用に残す）
-        function hideLoading() { /* no-op */ }
+        // スケルトン除去
+        function hideLoading() {
+            const skeleton = document.getElementById('forms-skeleton');
+            if (skeleton) skeleton.remove();
+        }
+
+        // 最大5秒でスケルトンを強制除去（フォールバック）
+        setTimeout(hideLoading, 5000);
 
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
