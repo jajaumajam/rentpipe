@@ -369,14 +369,43 @@
             }
         }
         
+        // 自動ログアウト理由を表示
+        function showAutoLogoutReason() {
+            const params = new URLSearchParams(window.location.search);
+            const reason = params.get('reason');
+            if (!reason) return;
+
+            const messages = {
+                timeout:       { text: '24時間操作がなかったため、自動的にログアウトしました。', icon: '⏰' },
+                token_expired: { text: 'セッションの有効期限が切れました。再度ログインしてください。', icon: '🔒' },
+                manual:        { text: 'ログアウトしました。', icon: '👋' },
+            };
+
+            const msg = messages[reason] || { text: 'セッションが終了しました。再度ログインしてください。', icon: 'ℹ️' };
+
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-box';
+            statusDiv.style.cssText = 'display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:15px; border-radius:8px; margin:0 0 20px 0; font-size:14px;';
+            statusDiv.innerHTML = `<strong>${msg.icon} ${msg.text}</strong>`;
+
+            // URLからreasonパラメータを除去（ブラウザ履歴を汚さない）
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+        }
+
         // 初期化
         async function initialize() {
             try {
                 console.log('🚀 ログインページ初期化...');
 
-                // ログアウト直後はスキップ（自動ログインを防ぐ）
-                if (sessionStorage.getItem('just_logged_out') === 'true') {
-                    console.log('🚪 ログアウト直後 - 自動ログインをスキップ');
+                // 自動ログアウト理由を表示
+                showAutoLogoutReason();
+
+                // ログアウト直後 or 自動ログアウト後はスキップ（自動ログインを防ぐ）
+                const isAutoLogout = new URLSearchParams(window.location.search).get('reason');
+                if (sessionStorage.getItem('just_logged_out') === 'true' || isAutoLogout) {
+                    console.log('🚪 ログアウト後 - 自動ログインをスキップ');
                     sessionStorage.removeItem('just_logged_out');
                     console.log('✅ ログインページ初期化完了');
                     return;
