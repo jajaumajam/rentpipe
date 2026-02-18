@@ -344,29 +344,33 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="stats-section">
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
                 <div class="text-3xl">📋</div>
-                <div>
-                    <div class="text-2xl font-bold text-gray-900" id="stat-active">0</div>
+                <div class="flex-1 min-w-0">
+                    <div id="stat-active-skeleton" class="h-8 w-12 bg-gray-200 rounded-lg mb-1" style="animation:skeleton-pulse 1.5s ease-in-out infinite;"></div>
+                    <div class="text-2xl font-bold text-gray-900 hidden" id="stat-active">0</div>
                     <div class="text-xs text-gray-500 mt-0.5">進行中</div>
                 </div>
             </div>
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
                 <div class="text-3xl">🎉</div>
-                <div>
-                    <div class="text-2xl font-bold text-gray-900" id="stat-closed">0</div>
+                <div class="flex-1 min-w-0">
+                    <div id="stat-closed-skeleton" class="h-8 w-12 bg-gray-200 rounded-lg mb-1" style="animation:skeleton-pulse 1.5s ease-in-out infinite 0.1s;"></div>
+                    <div class="text-2xl font-bold text-gray-900 hidden" id="stat-closed">0</div>
                     <div class="text-xs text-gray-500 mt-0.5">成約済み</div>
                 </div>
             </div>
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
                 <div class="text-3xl">❌</div>
-                <div>
-                    <div class="text-2xl font-bold text-gray-900" id="stat-lost">0</div>
+                <div class="flex-1 min-w-0">
+                    <div id="stat-lost-skeleton" class="h-8 w-12 bg-gray-200 rounded-lg mb-1" style="animation:skeleton-pulse 1.5s ease-in-out infinite 0.2s;"></div>
+                    <div class="text-2xl font-bold text-gray-900 hidden" id="stat-lost">0</div>
                     <div class="text-xs text-gray-500 mt-0.5">失注</div>
                 </div>
             </div>
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
                 <div class="text-3xl">🆕</div>
-                <div>
-                    <div class="text-2xl font-bold text-gray-900" id="stat-new">0</div>
+                <div class="flex-1 min-w-0">
+                    <div id="stat-new-skeleton" class="h-8 w-12 bg-gray-200 rounded-lg mb-1" style="animation:skeleton-pulse 1.5s ease-in-out infinite 0.3s;"></div>
+                    <div class="text-2xl font-bold text-gray-900 hidden" id="stat-new">0</div>
                     <div class="text-xs text-gray-500 mt-0.5">今月の新規</div>
                 </div>
             </div>
@@ -519,7 +523,16 @@
         }
 
         // 最大5秒でスケルトンを強制除去（フォールバック）
-        setTimeout(showContent, 5000);
+        setTimeout(() => {
+            showContent();
+            // 統計スケルトンも強制除去してゼロ表示にフォールバック
+            ['stat-active', 'stat-closed', 'stat-lost', 'stat-new'].forEach(id => {
+                const skeleton = document.getElementById(id + '-skeleton');
+                if (skeleton) skeleton.remove();
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('hidden');
+            });
+        }, 5000);
 
         // 顧客表示（テーブル形式）
         function displayCustomers() {
@@ -654,6 +667,17 @@
             return row;
         }
 
+        // スケルトンを非表示にして実数値を表示するヘルパー
+        function showStat(id, value) {
+            const skeleton = document.getElementById(id + '-skeleton');
+            const el = document.getElementById(id);
+            if (skeleton) skeleton.remove();
+            if (el) {
+                el.textContent = value;
+                el.classList.remove('hidden');
+            }
+        }
+
         // 統計更新
         function updateStats() {
             const customers = window.UnifiedDataManager ? window.UnifiedDataManager.getCustomers() : [];
@@ -670,10 +694,10 @@
                 return created >= startOfMonth;
             }).length;
 
-            document.getElementById('stat-active').textContent = active;
-            document.getElementById('stat-closed').textContent = closed;
-            document.getElementById('stat-lost').textContent = lost;
-            document.getElementById('stat-new').textContent = newThisMonth;
+            showStat('stat-active', active);
+            showStat('stat-closed', closed);
+            showStat('stat-lost', lost);
+            showStat('stat-new', newThisMonth);
         }
 
         // 検索
