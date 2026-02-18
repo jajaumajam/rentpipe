@@ -1095,8 +1095,12 @@
                     return;
                 }
 
-                // Stripe Price ID
-                const priceId = 'price_1T0c0rQMLO8hZlng0aMuxHzN';
+                // Stripe Price ID（config.js 経由で環境変数から注入）
+                const priceId = window.STRIPE_PRICE_SENIOR_AGENT;
+                if (!priceId) {
+                    alert('決済設定が未完了です。管理者にお問い合わせください。');
+                    return;
+                }
 
                 console.log('Creating checkout session for:', savedUser.email);
 

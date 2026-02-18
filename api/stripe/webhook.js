@@ -238,12 +238,23 @@ async function handleInvoicePaymentFailed(invoice) {
  * Helper to determine plan from Stripe price ID
  */
 function getPlanFromPriceId(priceId) {
-  // Map price IDs to plans
-  // These should match your Stripe product price IDs
-  const priceToPlanMap = {
-    [process.env.STRIPE_PRICE_SENIOR_AGENT]: PLANS.SENIOR_AGENT,
-    // Add more price IDs as you create new plans
-  };
+  if (!priceId) return PLANS.FREE;
 
-  return priceToPlanMap[priceId] || PLANS.FREE;
+  // 環境変数が未設定の場合、undefined キーがマップに入るのを防ぐ
+  const priceToPlanMap = {};
+  if (process.env.STRIPE_PRICE_SENIOR_AGENT) {
+    priceToPlanMap[process.env.STRIPE_PRICE_SENIOR_AGENT] = PLANS.SENIOR_AGENT;
+  } else {
+    console.warn('⚠️ STRIPE_PRICE_SENIOR_AGENT is not set. Plan mapping may be incomplete.');
+  }
+  // 新しいプランを追加する場合はここに追加
+  // if (process.env.STRIPE_PRICE_TOP_AGENT) {
+  //   priceToPlanMap[process.env.STRIPE_PRICE_TOP_AGENT] = PLANS.TOP_AGENT;
+  // }
+
+  const plan = priceToPlanMap[priceId];
+  if (!plan) {
+    console.warn(`⚠️ Unknown price ID: ${priceId}. Defaulting to FREE plan.`);
+  }
+  return plan || PLANS.FREE;
 }

@@ -1041,7 +1041,7 @@
             card.id = `template-card-${template.id}`;
 
             const badgeClass = template.category === 'pipeline' ? 'pipeline' : 'followup';
-            const badgeText = template.category === 'pipeline' ? `📋 ${template.status || '商談中'}` : '🔄 成約後';
+            const badgeText = template.category === 'pipeline' ? `📋 ${escapeHtml(template.status || '商談中')}` : '🔄 成約後';
             const customBadge = isCustomized(template.id) ? '<span class="custom-badge">カスタム</span>' : '';
 
             // 変数を置換したテンプレート内容
@@ -1050,12 +1050,13 @@
 
             const isEditing = editingTemplateId === template.id;
 
+            // DOM操作でXSSを完全に防ぐ: innerHTML に直接入るのは制御済みのHTML（クラス名・data属性）のみ
             if (isEditing) {
                 card.innerHTML = `
                     <div class="template-header">
                         <div>
-                            <h3 class="template-title">${template.title}${customBadge}</h3>
-                            <p class="template-description">${template.description}</p>
+                            <h3 class="template-title"></h3>
+                            <p class="template-description"></p>
                         </div>
                         <span class="template-badge ${badgeClass}">${badgeText}</span>
                     </div>
@@ -1074,12 +1075,12 @@
                 card.innerHTML = `
                     <div class="template-header">
                         <div>
-                            <h3 class="template-title">${template.title}${customBadge}</h3>
-                            <p class="template-description">${template.description}</p>
+                            <h3 class="template-title"></h3>
+                            <p class="template-description"></p>
                         </div>
                         <span class="template-badge ${badgeClass}">${badgeText}</span>
                     </div>
-                    <div class="template-content">${escapeHtml(content)}</div>
+                    <div class="template-content"></div>
                     <div class="template-actions">
                         <button class="template-btn copy" onclick="copyTemplate(this, '${template.id}')">
                             📋 コピー
@@ -1089,6 +1090,14 @@
                         </button>
                     </div>
                 `;
+            }
+
+            // タイトル・説明・本文は textContent で安全に設定
+            card.querySelector('.template-title').textContent = template.title;
+            card.querySelector('.template-title').insertAdjacentHTML('beforeend', customBadge);
+            card.querySelector('.template-description').textContent = template.description;
+            if (!isEditing) {
+                card.querySelector('.template-content').textContent = content;
             }
 
             return card;

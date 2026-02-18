@@ -44,25 +44,42 @@ window.IntegratedAuthManagerV2 = {
     restoreAuthState: async function() {
         try {
             console.log('🔄 認証状態復元中...');
-            
+
+            // LocalStorage から JSON をパースするユーティリティ（破損データ対策）
+            const safeParse = (key) => {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                try {
+                    return JSON.parse(raw);
+                } catch (e) {
+                    console.warn(`⚠️ LocalStorage "${key}" のJSONが破損しています。削除します。`, e);
+                    localStorage.removeItem(key);
+                    return null;
+                }
+            };
+
             // RentPipe認証状態復元
-            const rentpipeAuth = localStorage.getItem('rentpipe_auth');
-            if (rentpipeAuth) {
-                const authData = JSON.parse(rentpipeAuth);
-                this.authState.rentpipeAuth = {
-                    isLoggedIn: true,
-                    user: authData.user || { email: 'user@example.com', name: 'ユーザー' }
-                };
-                this.authState.isAuthenticated = true;
-                console.log('✅ RentPipe認証状態復元完了:', this.authState.rentpipeAuth.user.email);
+            const authData = safeParse('rentpipe_auth');
+            if (authData) {
+                // ダミーフォールバックは使わない: user が存在する場合のみ復元
+                if (authData.user && authData.user.email) {
+                    this.authState.rentpipeAuth = {
+                        isLoggedIn: true,
+                        user: authData.user
+                    };
+                    this.authState.isAuthenticated = true;
+                    console.log('✅ RentPipe認証状態復元完了:', authData.user.email);
+                } else {
+                    console.warn('⚠️ rentpipe_auth にユーザー情報がありません。ログアウト状態として扱います。');
+                    localStorage.removeItem('rentpipe_auth');
+                }
             }
-            
+
             // 簡易認証状態も確認
             const simpleAuth = localStorage.getItem('rentpipe_auth_simple');
             if (simpleAuth === 'logged_in') {
-                const userInfo = localStorage.getItem('rentpipe_user_info');
-                if (userInfo) {
-                    const userData = JSON.parse(userInfo);
+                const userData = safeParse('rentpipe_user_info');
+                if (userData && userData.email) {
                     this.authState.rentpipeAuth = {
                         isLoggedIn: true,
                         user: userData
@@ -71,11 +88,21 @@ window.IntegratedAuthManagerV2 = {
                     console.log('✅ 簡易認証状態復元完了:', userData.email);
                 }
             }
-            
+
             // Google認証状態復元
-            const googleAuth = localStorage.getItem('google_auth_data');
-            if (googleAuth) {
-                const authData = JSON.parse(googleAuth);
+            const googleAuthRaw = localStorage.getItem('google_auth_data');
+            if (googleAuthRaw) {
+                const googleAuthData = (() => {
+                    try { return JSON.parse(googleAuthRaw); }
+                    catch (e) {
+                        console.warn('⚠️ google_auth_data のJSONが破損しています。削除します。', e);
+                        localStorage.removeItem('google_auth_data');
+                        return null;
+                    }
+                })();
+                if (!googleAuthData) return;
+                // 変数名を authData → googleAuthData に統一（以降の処理で使用）
+                const authData = googleAuthData;
 
                 // accessTokenがない場合は個別保存から取得（後方互換性）
                 let accessToken = authData.accessToken;
@@ -117,9 +144,13 @@ window.IntegratedAuthManagerV2 = {
             }
             
             console.log('🔍 復元後の認証状態:', this.authState);
-            
+
         } catch (error) {
+            // 予期しないエラー時は安全のため認証状態をリセット（不整合な半端な状態を残さない）
             console.error('❌ 認証状態復元エラー:', error);
+            this.authState.isAuthenticated = false;
+            this.authState.rentpipeAuth = { isLoggedIn: false, user: null };
+            this.authState.googleAuth = { isSignedIn: false, user: null, accessToken: null, tokenExpiry: null };
         }
     },
     
