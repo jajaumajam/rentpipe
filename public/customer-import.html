@@ -293,20 +293,41 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Google API Client & Identity Services -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <!-- RentPipe Core Scripts -->
     <script src="js/config.js"></script>
-    <script src="js/navigation.js"></script>
+    <script src="js/session-manager.js"></script>
     <script src="js/notification-manager.js"></script>
-    <script src="js/db.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/integrated-auth-manager-v2.js"></script>
+    <script src="js/google-drive-api-v2.js"></script>
+    <script src="js/google-sheets-api.js"></script>
+    <script src="js/data-migration.js"></script>
+    <script src="js/unified-sheets-manager.js"></script>
+    <script src="js/unified-data-manager.js"></script>
+    <script src="js/app-initializer.js"></script>
+    <script src="js/page-initializer.js"></script>
 
     <script>
         let importData = [];
         let currentFormat = 'csv';
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             loadNavigation();
-            NotificationManager.init();
+            if (window.NotificationManager) NotificationManager.init();
             setupDragAndDrop();
+
+            // 認証・データ初期化（UnifiedDataManager を使えるようにする）
+            if (window.AppInitializer) {
+                try {
+                    await AppInitializer.initialize({ silent: true });
+                } catch (e) {
+                    console.warn('AppInitializer エラー（インポートは続行可能）:', e.message);
+                }
+            }
         });
 
         function selectFormat(format) {
@@ -479,100 +500,179 @@
             document.getElementById('result-section').style.display = 'none';
         }
 
+        /**
+         * CSVフラット行 → UnifiedDataManager.addCustomer() が期待するネスト構造に変換
+         */
+        function mapRowToCustomer(row) {
+            const yn = v => v === 'yes'; // yes/no → boolean
+            const num = v => v ? Number(v) || 0 : 0;
+
+            return {
+                basicInfo: {
+                    name:               row.name              || '',
+                    nameKana:           row.nameKana          || '',
+                    email:              row.email             || '',
+                    phone:              row.phone             || '',
+                    birthday:           row.birthday          || '',
+                    gender:             row.gender            || 'no_answer',
+                    currentAddress:     row.currentAddress    || '',
+                    currentHousing:     row.currentHousing    || '',
+                    occupation:         row.occupation        || '',
+                    companyName:        row.companyName       || '',
+                    yearsEmployed:      num(row.yearsEmployed),
+                    annualIncome:       num(row.annualIncome),
+                    movingReason:       row.movingReason      || '',
+                    numberOfOccupants:  num(row.numberOfOccupants) || 1,
+                },
+                preferences: {
+                    budget: {
+                        min:  num(row.budgetMin),
+                        max:  num(row.budgetMax),
+                        note: '',
+                    },
+                    moveInDate:     row.moveInDate    || '',
+                    areas:          row.areas         || '',
+                    layout:         row.layout        || '',
+                    roomSize:       num(row.roomSize),
+                    stationWalk:    row.stationWalk   || '',
+                    floor:          row.floor         || '',
+                    buildingAge:    row.buildingAge   || '',
+                    facilities: {
+                        separateBath:       yn(row.separateBath),
+                        separateWashroom:   yn(row.separateWashroom),
+                        autoLock:           yn(row.autoLock),
+                        indoorWashing:      yn(row.indoorWashing),
+                        deliveryBox:        yn(row.deliveryBox),
+                        elevator:           yn(row.elevator),
+                        parking:            yn(row.parking),
+                        bicycle:            yn(row.bicycle),
+                        bike:               yn(row.bike),
+                        internet:           yn(row.internet),
+                        petAllowed:         yn(row.petAllowed),
+                        instrumentAllowed:  yn(row.instrumentAllowed),
+                        sohoAllowed:        yn(row.sohoAllowed),
+                        twoGasStove:        yn(row.twoGasStove),
+                        noTatami:           yn(row.noTatami),
+                        flooring:           yn(row.flooring),
+                    },
+                },
+                contract: {
+                    contractType:            row.contractType            || '',
+                    contractStartDate:       row.contractStartDate       || '',
+                    contractEndDate:         row.contractEndDate         || '',
+                    contractPeriodMonths:    num(row.contractPeriodMonths),
+                    monthlyRent:             num(row.monthlyRent),
+                    depositMonths:           num(row.depositMonths),
+                    keyMoneyMonths:          num(row.keyMoneyMonths),
+                    otherInitialCost:        num(row.otherInitialCost),
+                    contractPropertyAddress: row.contractPropertyAddress || '',
+                    contractEndDateManual:   row.contractEndDateManual   || '',
+                },
+                pipelineStatus: row.pipelineStatus || '初回相談',
+                notes:          row.notes          || '',
+                agentMemo:      row.agentMemo       || '',
+                followUp: {
+                    desiredMoveInDate:        row.desiredMoveInDate        || '',
+                    applicationDate:          row.applicationDate          || '',
+                    followUpDate:             row.followUpDate             || '',
+                    additionalFollowUpDate:   row.additionalFollowUpDate   || '',
+                    additionalFollowUpReminder: row.additionalFollowUpReminder || '',
+                },
+                isActive: true,
+            };
+        }
+
         async function executeImport() {
             if (importData.length === 0) {
                 alert('インポートするデータがありません');
                 return;
             }
 
+            // UnifiedDataManager の存在確認
+            if (!window.UnifiedDataManager) {
+                alert('データマネージャーが読み込まれていません。ページをリロードしてください。');
+                return;
+            }
+
             const resultSection = document.getElementById('result-section');
             const resultContent = document.getElementById('result-content');
 
-            try {
-                // Supabase接続チェック
-                if (!window.db) {
-                    throw new Error('データベース接続が初期化されていません');
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+
+            // 進捗表示
+            resultContent.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner"></div>
+                    <p>インポート中... (0 / ${importData.length})</p>
+                </div>
+            `;
+            resultSection.style.display = 'block';
+
+            // 1件ずつインポート
+            for (let i = 0; i < importData.length; i++) {
+                try {
+                    const row = importData[i];
+
+                    // 必須項目チェック
+                    if (!row.name || !row.phone) {
+                        throw new Error('name（氏名）またはphone（電話番号）が空です');
+                    }
+
+                    const customerData = mapRowToCustomer(row);
+                    await window.UnifiedDataManager.addCustomer(customerData);
+                    successCount++;
+
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`行${i + 2}: ${error.message}`); // ヘッダ行を考慮して+2
                 }
 
-                let successCount = 0;
-                let errorCount = 0;
-                const errors = [];
-
-                // 進捗表示
+                // 進捗更新
                 resultContent.innerHTML = `
                     <div class="text-center">
                         <div class="spinner"></div>
-                        <p>インポート中... (0 / ${importData.length})</p>
+                        <p>インポート中... (${i + 1} / ${importData.length})</p>
                     </div>
                 `;
-                resultSection.style.display = 'block';
-
-                // 1件ずつインポート
-                for (let i = 0; i < importData.length; i++) {
-                    try {
-                        const customer = importData[i];
-                        await window.db.addCustomer({
-                            name: customer.name || '',
-                            email: customer.email || '',
-                            phone: customer.phone || '',
-                            company: customer.company || '',
-                            address: customer.address || '',
-                            notes: customer.notes || ''
-                        });
-                        successCount++;
-                    } catch (error) {
-                        errorCount++;
-                        errors.push(`行${i + 1}: ${error.message}`);
-                    }
-
-                    // 進捗更新
-                    resultContent.innerHTML = `
-                        <div class="text-center">
-                            <div class="spinner"></div>
-                            <p>インポート中... (${i + 1} / ${importData.length})</p>
-                        </div>
-                    `;
-                }
-
-                // 結果表示
-                resultContent.innerHTML = `
-                    <h2 style="font-size: 18px; margin-bottom: 16px;">✅ インポート完了</h2>
-                    <div class="mb-3">
-                        <div class="badge-rentpipe-success" style="margin-right: 8px;">
-                            成功: ${successCount}件
-                        </div>
-                        ${errorCount > 0 ? `<div class="badge-rentpipe-danger">失敗: ${errorCount}件</div>` : ''}
-                    </div>
-                    ${errorCount > 0 ? `
-                        <div class="mt-3">
-                            <h3 style="font-size: 16px; margin-bottom: 8px;">❌ エラー詳細</h3>
-                            <pre class="code-block" style="max-height: 200px; overflow-y: auto;">${errors.join('\n')}</pre>
-                        </div>
-                    ` : ''}
-                    <div class="mt-4">
-                        <a href="customer.html" class="btn-rentpipe btn-rentpipe-primary">
-                            📋 顧客一覧へ戻る
-                        </a>
-                        <button class="btn-rentpipe" onclick="resetImport()" style="margin-left: 8px;">
-                            🔄 新しいインポート
-                        </button>
-                    </div>
-                `;
-
-                hidePreview();
-
-            } catch (error) {
-                resultContent.innerHTML = `
-                    <h2 style="font-size: 18px; margin-bottom: 16px;">❌ インポート失敗</h2>
-                    <div class="badge-rentpipe-danger">${error.message}</div>
-                    <div class="mt-4">
-                        <button class="btn-rentpipe btn-rentpipe-primary" onclick="hideResult()">
-                            戻る
-                        </button>
-                    </div>
-                `;
-                resultSection.style.display = 'block';
             }
+
+            // 完了後 Google Sheets へ同期
+            if (successCount > 0 && window.UnifiedDataManager) {
+                try {
+                    await window.UnifiedDataManager.syncToSheetsImmediately?.();
+                } catch (e) {
+                    console.warn('Sheets同期スキップ:', e.message);
+                }
+            }
+
+            // 結果表示
+            resultContent.innerHTML = `
+                <h2 style="font-size: 18px; margin-bottom: 16px;">✅ インポート完了</h2>
+                <div class="mb-3">
+                    <div class="badge-rentpipe-success" style="margin-right: 8px;">
+                        成功: ${successCount}件
+                    </div>
+                    ${errorCount > 0 ? `<div class="badge-rentpipe-danger">失敗: ${errorCount}件</div>` : ''}
+                </div>
+                ${errorCount > 0 ? `
+                    <div class="mt-3">
+                        <h3 style="font-size: 16px; margin-bottom: 8px;">❌ エラー詳細</h3>
+                        <pre class="code-block" style="max-height: 200px; overflow-y: auto;">${errors.join('\n')}</pre>
+                    </div>
+                ` : ''}
+                <div class="mt-4">
+                    <a href="customer.html" class="btn-rentpipe btn-rentpipe-primary">
+                        📋 顧客一覧へ戻る
+                    </a>
+                    <button class="btn-rentpipe" onclick="resetImport()" style="margin-left: 8px;">
+                        🔄 新しいインポート
+                    </button>
+                </div>
+            `;
+
+            hidePreview();
         }
 
         function cancelImport() {
