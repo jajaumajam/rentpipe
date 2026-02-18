@@ -63,9 +63,159 @@
                             <div>その他: pipelineStatus, notes, agentMemo</div>
                         </div>
                     </div>
-                    <button class="btn-rentpipe btn-rentpipe-primary mt-2" onclick="downloadCsvTemplate()">
-                        ⬇️ 詳細テンプレートをダウンロード
-                    </button>
+                    <div class="flex gap-3 flex-wrap mt-2" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                        <button class="btn-rentpipe btn-rentpipe-primary" onclick="downloadCsvTemplate()">
+                            ⬇️ 詳細テンプレートをダウンロード
+                        </button>
+                        <button class="btn-rentpipe" onclick="toggleFieldGuide()" id="guide-toggle-btn" style="border:2px solid #667eea; color:#667eea; background:white;">
+                            📖 項目ガイドを見る
+                        </button>
+                    </div>
+
+                    <!-- 項目ガイド（折りたたみ） -->
+                    <div id="field-guide" style="display:none; margin-top:20px;">
+                        <div style="background:#f0f4ff; border:1px solid #c7d2fe; border-radius:12px; padding:20px;">
+                            <h4 style="font-size:15px; font-weight:700; color:#3730a3; margin:0 0 16px 0;">📖 CSVテンプレート 項目ガイド</h4>
+
+                            <!-- 必須項目 -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#fef2f2; color:#991b1b; border-color:#fecaca;">
+                                    ⚠️ 必須項目（2項目）
+                                </div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>説明・入力例</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>name</code></td><td>氏名</td><td>顧客の氏名。例: <em>山田太郎</em></td></tr>
+                                        <tr><td><code>phone</code></td><td>電話番号</td><td>ハイフンあり・なし両方可。例: <em>090-1234-5678</em></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 基本情報 -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#eff6ff; color:#1e40af; border-color:#bfdbfe;">
+                                    👤 基本情報
+                                </div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>説明・入力例</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>nameKana</code></td><td>氏名（フリガナ）</td><td>全角カタカナ。例: <em>ヤマダタロウ</em></td></tr>
+                                        <tr><td><code>email</code></td><td>メールアドレス</td><td>例: <em>yamada@example.com</em></td></tr>
+                                        <tr><td><code>birthday</code></td><td>生年月日</td><td>YYYY-MM-DD形式。例: <em>1990-01-15</em></td></tr>
+                                        <tr><td><code>gender</code></td><td>性別</td><td><code>male</code>（男性）/ <code>female</code>（女性）/ <code>other</code>（その他）</td></tr>
+                                        <tr><td><code>currentAddress</code></td><td>現住所</td><td>例: <em>東京都渋谷区1-2-3</em></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 住居・職業情報 -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">
+                                    🏠 現在の住居・職業情報
+                                </div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>説明・入力例</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>currentHousing</code></td><td>現在の住居形態</td><td><em>賃貸</em> / <em>実家</em> / <em>持ち家</em> / <em>社宅</em> など</td></tr>
+                                        <tr><td><code>numberOfOccupants</code></td><td>入居人数</td><td>数字。例: <em>2</em></td></tr>
+                                        <tr><td><code>occupation</code></td><td>職業</td><td><em>会社員</em> / <em>自営業</em> / <em>学生</em> / <em>主婦</em> など</td></tr>
+                                        <tr><td><code>companyName</code></td><td>勤務先名</td><td>例: <em>株式会社サンプル</em></td></tr>
+                                        <tr><td><code>yearsEmployed</code></td><td>勤続年数</td><td>数字（年）。例: <em>5</em></td></tr>
+                                        <tr><td><code>annualIncome</code></td><td>年収</td><td>数字（円）。例: <em>5000000</em></td></tr>
+                                        <tr><td><code>movingReason</code></td><td>引越し理由</td><td><em>転勤</em> / <em>結婚</em> / <em>就職</em> / <em>家族構成の変化</em> など</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 希望条件 -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#fefce8; color:#854d0e; border-color:#fde68a;">
+                                    🔍 希望条件
+                                </div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>説明・入力例</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>budgetMin</code></td><td>予算（下限）</td><td>数字（円/月）。例: <em>80000</em></td></tr>
+                                        <tr><td><code>budgetMax</code></td><td>予算（上限）</td><td>数字（円/月）。例: <em>100000</em></td></tr>
+                                        <tr><td><code>moveInDate</code></td><td>希望入居日</td><td>例: <em>2026年4月</em> / <em>即入居可</em></td></tr>
+                                        <tr><td><code>areas</code></td><td>希望エリア</td><td>例: <em>渋谷駅・表参道駅 徒歩10分以内</em></td></tr>
+                                        <tr><td><code>layout</code></td><td>希望間取り</td><td>複数選択は <code>|</code> 区切り。例: <em>1K|1DK|1LDK</em></td></tr>
+                                        <tr><td><code>roomSize</code></td><td>希望専有面積（㎡以上）</td><td>数字。例: <em>25</em></td></tr>
+                                        <tr><td><code>stationWalk</code></td><td>駅徒歩（分以内）</td><td>数字。例: <em>10</em>（<em>指定なし</em> も可）</td></tr>
+                                        <tr><td><code>floor</code></td><td>希望階数</td><td>例: <em>2階以上</em> / <em>1階</em> / <em>指定なし</em></td></tr>
+                                        <tr><td><code>buildingAge</code></td><td>築年数</td><td>例: <em>築10年以内</em> / <em>新築</em> / <em>指定なし</em></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 設備条件 -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#fdf4ff; color:#6b21a8; border-color:#e9d5ff;">
+                                    ⚙️ 設備・条件（yes / no で入力）
+                                </div>
+                                <div style="font-size:12px; color:#6b7280; margin-bottom:10px;">すべて <code>yes</code>（希望する）または <code>no</code>（不問）で入力してください。空欄は <code>no</code> として扱われます。</div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>列名</th><th>項目名</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>separateBath</code></td><td>バス・トイレ別</td><td><code>separateWashroom</code></td><td>洗面所独立</td></tr>
+                                        <tr><td><code>autoLock</code></td><td>オートロック</td><td><code>indoorWashing</code></td><td>室内洗濯機置場</td></tr>
+                                        <tr><td><code>deliveryBox</code></td><td>宅配ボックス</td><td><code>elevator</code></td><td>エレベーター</td></tr>
+                                        <tr><td><code>parking</code></td><td>駐車場</td><td><code>bicycle</code></td><td>駐輪場</td></tr>
+                                        <tr><td><code>bike</code></td><td>バイク置場</td><td><code>internet</code></td><td>インターネット完備</td></tr>
+                                        <tr><td><code>petAllowed</code></td><td>ペット可</td><td><code>instrumentAllowed</code></td><td>楽器可</td></tr>
+                                        <tr><td><code>sohoAllowed</code></td><td>SOHO可</td><td><code>twoGasStove</code></td><td>2口以上ガスコンロ</td></tr>
+                                        <tr><td><code>noTatami</code></td><td>畳なし</td><td><code>flooring</code></td><td>フローリング</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 契約情報 -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#fff7ed; color:#9a3412; border-color:#fed7aa;">
+                                    📝 契約情報（成約後に入力）
+                                </div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>説明・入力例</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>contractType</code></td><td>契約種別</td><td><em>新規契約</em> / <em>更新</em> / <em>再契約</em></td></tr>
+                                        <tr><td><code>contractStartDate</code></td><td>契約開始日</td><td>YYYY-MM-DD形式。例: <em>2026-04-01</em></td></tr>
+                                        <tr><td><code>contractEndDate</code></td><td>契約終了日</td><td>YYYY-MM-DD形式。例: <em>2028-03-31</em></td></tr>
+                                        <tr><td><code>contractPeriodMonths</code></td><td>契約期間（月数）</td><td>数字。例: <em>24</em></td></tr>
+                                        <tr><td><code>monthlyRent</code></td><td>月額賃料（円）</td><td>数字。例: <em>90000</em></td></tr>
+                                        <tr><td><code>depositMonths</code></td><td>敷金（ヶ月）</td><td>数字。例: <em>1</em></td></tr>
+                                        <tr><td><code>keyMoneyMonths</code></td><td>礼金（ヶ月）</td><td>数字。例: <em>1</em></td></tr>
+                                        <tr><td><code>otherInitialCost</code></td><td>その他初期費用（円）</td><td>数字。例: <em>50000</em></td></tr>
+                                        <tr><td><code>contractPropertyAddress</code></td><td>契約物件住所</td><td>例: <em>東京都渋谷区〇〇1-2-3</em></td></tr>
+                                        <tr><td><code>contractEndDateManual</code></td><td>契約終了日（手動）</td><td>自動計算と異なる場合に入力。YYYY-MM-DD形式</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- ステータス・メモ・フォローアップ -->
+                            <div class="guide-section">
+                                <div class="guide-section-title" style="background:#f0fdf4; color:#14532d; border-color:#bbf7d0;">
+                                    📌 ステータス・メモ・フォローアップ
+                                </div>
+                                <table class="guide-table">
+                                    <thead><tr><th>列名</th><th>項目名</th><th>説明・入力例</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>pipelineStatus</code></td><td>パイプラインステータス</td><td><em>初回相談</em> / <em>物件紹介</em> / <em>内見調整</em> / <em>申込準備</em> / <em>審査中</em> / <em>契約手続き</em>（空欄は「初回相談」になります）</td></tr>
+                                        <tr><td><code>notes</code></td><td>顧客メモ</td><td>顧客に見せられる情報。例: <em>予算内で良い物件を探したい</em></td></tr>
+                                        <tr><td><code>agentMemo</code></td><td>担当者メモ</td><td>内部用メモ。例: <em>猫を飼っている</em></td></tr>
+                                        <tr><td><code>desiredMoveInDate</code></td><td>希望入居日（日付型）</td><td>YYYY-MM-DD形式。例: <em>2026-04-01</em></td></tr>
+                                        <tr><td><code>applicationDate</code></td><td>申込日</td><td>YYYY-MM-DD形式</td></tr>
+                                        <tr><td><code>followUpDate</code></td><td>フォローアップ日</td><td>YYYY-MM-DD形式</td></tr>
+                                        <tr><td><code>additionalFollowUpDate</code></td><td>追加フォローアップ日</td><td>YYYY-MM-DD形式</td></tr>
+                                        <tr><td><code>additionalFollowUpReminder</code></td><td>追加フォローアップメモ</td><td>例: <em>3ヶ月後に再提案</em></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:14px; font-size:13px; color:#374151; margin-top:4px;">
+                                💡 <strong>ヒント：</strong>空欄の項目はインポート後にRentPipe上で編集できます。まずは <code>name</code>・<code>phone</code> だけ入力したデータでもインポート可能です。
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,9 +260,14 @@
     ...（全60項目）
   }
 ]</pre>
-                    <button class="btn-rentpipe btn-rentpipe-primary mt-2" onclick="downloadJsonTemplate()">
-                        ⬇️ 詳細テンプレートをダウンロード
-                    </button>
+                    <div class="flex gap-3 flex-wrap mt-2" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                        <button class="btn-rentpipe btn-rentpipe-primary" onclick="downloadJsonTemplate()">
+                            ⬇️ 詳細テンプレートをダウンロード
+                        </button>
+                        <button class="btn-rentpipe" onclick="selectFormat('csv'); setTimeout(()=>{toggleFieldGuide(true);document.getElementById('field-guide').scrollIntoView({behavior:'smooth'})},100);" style="border:2px solid #667eea; color:#667eea; background:white;">
+                            📖 項目ガイドを見る（CSV版）
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -169,6 +324,22 @@
             // プレビュー・結果をクリア
             hidePreview();
             hideResult();
+        }
+
+        function toggleFieldGuide(forceOpen) {
+            const guide = document.getElementById('field-guide');
+            const btn = document.getElementById('guide-toggle-btn');
+            const isHidden = guide.style.display === 'none';
+            const show = forceOpen !== undefined ? forceOpen : isHidden;
+
+            guide.style.display = show ? 'block' : 'none';
+            if (btn) {
+                btn.textContent = show ? '📖 項目ガイドを閉じる' : '📖 項目ガイドを見る';
+            }
+
+            if (show) {
+                setTimeout(() => guide.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+            }
         }
 
         function setupDragAndDrop() {
@@ -683,6 +854,60 @@
 
         .text-center {
             text-align: center;
+        }
+
+        /* 項目ガイド */
+        .guide-section {
+            margin-bottom: 16px;
+        }
+        .guide-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 12px;
+            border-radius: 6px;
+            border: 1px solid;
+            margin-bottom: 8px;
+        }
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        }
+        .guide-table th {
+            background: #f8fafc;
+            color: #374151;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .guide-table td {
+            padding: 7px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        .guide-table tr:last-child td {
+            border-bottom: none;
+        }
+        .guide-table tr:hover td {
+            background: #f9fafb;
+        }
+        .guide-table code {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 11.5px;
+            font-family: 'Courier New', monospace;
+        }
+        .guide-table em {
+            color: #059669;
+            font-style: normal;
         }
     </style>
 </body>
