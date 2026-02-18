@@ -160,7 +160,10 @@ const UnifiedDataManager = {
             }
 
             customers.push(customer);
-            this.saveCustomers(customers);
+            const saved = this.saveCustomers(customers);
+            if (!saved) {
+                throw new Error('LocalStorage への保存に失敗しました（容量不足の可能性があります）');
+            }
 
             // データ更新イベントを発火
             window.dispatchEvent(new CustomEvent('rentpipe-data-updated', {
@@ -261,7 +264,10 @@ const UnifiedDataManager = {
             customer.updatedAt = new Date().toISOString();
             customers[index] = customer;
 
-            this.saveCustomers(customers);
+            const saved = this.saveCustomers(customers);
+            if (!saved) {
+                throw new Error('LocalStorage への保存に失敗しました（容量不足の可能性があります）');
+            }
 
             // データ更新イベントを発火
             window.dispatchEvent(new CustomEvent('rentpipe-data-updated', {
@@ -287,9 +293,19 @@ const UnifiedDataManager = {
     deleteCustomer: async function(customerId) {
         try {
             let customers = this.getCustomers();
+            const originalLength = customers.length;
             customers = customers.filter(c => c.id !== customerId);
 
+            if (customers.length === originalLength) {
+                return { success: false, error: '顧客が見つかりません' };
+            }
+
             this.saveCustomers(customers);
+
+            // データ更新イベントを発火（addCustomer / updateCustomer と統一）
+            window.dispatchEvent(new CustomEvent('rentpipe-data-updated', {
+                detail: { source: 'delete-customer', customerId }
+            }));
 
             // Google Sheetsに同期
             if (window.UnifiedSheetsManager) {
@@ -374,15 +390,11 @@ const UnifiedDataManager = {
         const activeCustomers = this.getActiveCustomers();
         const inactiveCustomers = this.getInactiveCustomers();
 
-        const pipelineCounts = {
-            '初回相談': 0,
-            '物件紹介': 0,
-            '内見調整': 0,
-            '申込準備': 0,
-            '審査中': 0,
-            '契約手続き': 0,
-            '完了': 0
-        };
+        // ステータス一覧は PipelineConfig から取得（フォールバックあり）
+        const statusList = window.PipelineConfig?.STATUSES || ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き'];
+        const pipelineCounts = {};
+        statusList.forEach(s => { pipelineCounts[s] = 0; });
+        pipelineCounts['完了'] = 0; // レガシー互換（アーカイブ顧客）
 
         activeCustomers.forEach(customer => {
             if (pipelineCounts.hasOwnProperty(customer.pipelineStatus)) {

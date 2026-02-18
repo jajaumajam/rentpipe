@@ -252,7 +252,19 @@ const GoogleCalendarAPI = {
 
         description += `■ メッセージテンプレート\n`;
         description += `  以下のリンクからテンプレートを確認してください:\n`;
-        description += `  ${baseUrl}/templates.html\n\n`;
+
+        // 顧客IDとテンプレートIDをURLパラメータに付与（ディープリンク）
+        // カレンダーからアクセスすると、該当テンプレートが自動選択・スクロールされる
+        const customerId = customer.id || '';
+        if (timing.templateId && customerId) {
+            description += `  ${baseUrl}/templates.html?templateId=${timing.templateId}&customerId=${encodeURIComponent(customerId)}\n\n`;
+        } else if (timing.templateId) {
+            description += `  ${baseUrl}/templates.html?templateId=${timing.templateId}\n\n`;
+        } else if (customerId) {
+            description += `  ${baseUrl}/templates.html?customerId=${encodeURIComponent(customerId)}\n\n`;
+        } else {
+            description += `  ${baseUrl}/templates.html\n\n`;
+        }
 
         if (timing.templateId) {
             description += `  推奨テンプレート: ${this.getTemplateTitle(timing.templateId)}\n`;

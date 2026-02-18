@@ -431,7 +431,7 @@
             try {
                 const data = JSON.parse(authData);
                 const email = data.user?.email;
-                const adminEmails = ['jajaumajam@gmail.com'];
+                const adminEmails = [window.ADMIN_EMAIL || 'jajaumajam@gmail.com'];
                 return adminEmails.includes(email);
             } catch (e) {
                 console.error('認証データ解析エラー:', e);

@@ -17,7 +17,8 @@ const ENV_VARS = {
   '__SUPABASE_URL__': process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pjfspvwwzaemfmeizvhl.supabase.co',
   '__SUPABASE_ANON_KEY__': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   '__STRIPE_PUBLISHABLE_KEY__': process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  '__APP_URL__': process.env.NEXT_PUBLIC_APP_URL || 'https://rentpipe.vercel.app'
+  '__APP_URL__': process.env.NEXT_PUBLIC_APP_URL || 'https://rentpipe.vercel.app',
+  '__ADMIN_EMAIL__': process.env.ADMIN_EMAIL || 'jajaumajam@gmail.com'
 };
 
 try {

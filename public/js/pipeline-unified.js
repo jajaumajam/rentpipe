@@ -2,8 +2,8 @@
 class PipelineManager {
     constructor() {
         this.dataManager = null;
-        // 「完了」を削除（成約時は自動でアーカイブ）
-        this.statuses = ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き'];
+        // ステータス一覧は PipelineConfig から取得（定義の一元管理）
+        this.statuses = window.PipelineConfig?.STATUSES || ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き'];
         this.isUpdating = false; // 自分自身の更新中フラグ
         this.init();
     }
@@ -103,20 +103,11 @@ class PipelineManager {
 
         container.innerHTML = '';
 
-        // ステータスカラーマップ
-        const statusColors = {
-            '初回相談':  { dot: 'bg-blue-400',   header: 'bg-blue-50 border-blue-100',   count: 'bg-blue-500',   border: 'border-l-blue-400'   },
-            '物件紹介':  { dot: 'bg-purple-400',  header: 'bg-purple-50 border-purple-100', count: 'bg-purple-500', border: 'border-l-purple-400' },
-            '内見調整':  { dot: 'bg-cyan-400',    header: 'bg-cyan-50 border-cyan-100',   count: 'bg-cyan-500',   border: 'border-l-cyan-400'   },
-            '申込準備':  { dot: 'bg-amber-400',   header: 'bg-amber-50 border-amber-100', count: 'bg-amber-500',  border: 'border-l-amber-400'  },
-            '審査中':    { dot: 'bg-orange-400',  header: 'bg-orange-50 border-orange-100', count: 'bg-orange-500', border: 'border-l-orange-400' },
-            '契約手続き': { dot: 'bg-green-400',  header: 'bg-green-50 border-green-100', count: 'bg-green-500',  border: 'border-l-green-400'  },
-        };
-
         // 各ステータスごとにカラムを作成
         this.statuses.forEach(status => {
             const statusCustomers = customers.filter(c => c.pipelineStatus === status);
-            const colors = statusColors[status] || { dot: 'bg-gray-400', header: 'bg-gray-50 border-gray-100', count: 'bg-gray-500', border: 'border-l-gray-400' };
+            // カラーは PipelineConfig から取得（フォールバックあり）
+            const colors = window.PipelineConfig?.getTailwindColors(status) || { dot: 'bg-gray-400', header: 'bg-gray-50 border-gray-100', count: 'bg-gray-500', border: 'border-l-gray-400' };
 
             const column = document.createElement('div');
             column.className = 'bg-gray-50 rounded-2xl p-3 min-h-80 flex flex-col border border-gray-100';

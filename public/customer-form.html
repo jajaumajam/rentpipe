@@ -1188,6 +1188,7 @@
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/google-calendar-api.js"></script>
+    <script src="js/pipeline-config.js"></script>
     <script src="js/app-initializer.js"></script>
 
     <script>
@@ -1412,6 +1413,16 @@
         document.addEventListener('DOMContentLoaded', async () => {
             // ナビゲーション表示
             loadNavigation();
+
+            // パイプライン状態の選択肢を PipelineConfig から動的生成
+            const pipelineStatusSelect = document.getElementById('pipelineStatus');
+            if (pipelineStatusSelect && window.PipelineConfig?.STATUSES) {
+                const currentValue = pipelineStatusSelect.value;
+                pipelineStatusSelect.innerHTML = window.PipelineConfig.STATUSES.map(s =>
+                    `<option value="${s}">${s}</option>`
+                ).join('');
+                if (currentValue) pipelineStatusSelect.value = currentValue;
+            }
 
             // お知らせ通知を表示
             if (window.NotificationManager) {

@@ -27,6 +27,9 @@ const PageInitializer = {
             return;
         }
 
+        // 競合防止: フラグを即座に立ててから非同期処理を開始する
+        // （await前にフラグを立てることで、同時呼び出し時の二重初期化を防ぐ）
+        this.isInitialized = true;
         console.log('📄 PageInitializer: 初期化開始...');
 
         try {

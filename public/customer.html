@@ -234,18 +234,15 @@
     <!-- 顧客復元モーダル -->
     <div class="modal-overlay" id="restore-modal">
         <div class="modal-content">
-            <h3 id="restore-modal-title">顧客を復元</h3>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h3 id="restore-modal-title" style="margin: 0;">顧客を復元</h3>
+                <button onclick="closeRestoreModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #9ca3af; line-height: 1; padding: 0 4px;">✕</button>
+            </div>
             <p style="color: #6b7280; margin-bottom: 16px;">復元後のステータスを選択してください</p>
             <div class="restore-status-select">
                 <label style="font-weight: 500; margin-bottom: 8px; display: block;">復元先ステータス</label>
-                <select id="restore-status" style="width: 100%; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                    <option value="初回相談">初回相談</option>
-                    <option value="物件紹介">物件紹介</option>
-                    <option value="内見調整">内見調整</option>
-                    <option value="申込準備">申込準備</option>
-                    <option value="審査中">審査中</option>
-                    <option value="契約手続き">契約手続き</option>
-                </select>
+                <!-- オプションはPipelineConfigから動的生成（initRestoreModal()で挿入） -->
+                <select id="restore-status" style="width: 100%; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"></select>
             </div>
             <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
                 <button class="btn-modal-cancel" onclick="closeRestoreModal()">キャンセル</button>
@@ -454,6 +451,7 @@
     <script src="js/unified-sheets-manager.js"></script>
     <script src="js/unified-data-manager.js"></script>
     <script src="js/archive-manager.js"></script>
+    <script src="js/pipeline-config.js"></script>
     <script src="js/app-initializer.js"></script>
     <script src="js/page-initializer.js"></script>
 
@@ -463,8 +461,8 @@
         let currentActiveFilter = 'active';
         let allCustomers = [];
 
-        // ステータス色マップ
-        const statusColors = {
+        // ステータス色マップ（PipelineConfig が読み込まれていれば参照、なければフォールバック）
+        const statusColors = window.PipelineConfig?.STATUS_BADGE_COLORS || {
             '初回相談': { bg: '#fef3c7', color: '#92400e' },
             '物件紹介': { bg: '#dbeafe', color: '#1e40af' },
             '内見調整': { bg: '#e0e7ff', color: '#4338ca' },
@@ -505,6 +503,23 @@
                         updateStats();
                     }
                 });
+
+                // 復元モーダルのステータス選択肢を動的生成
+                initRestoreModal();
+
+                // パイプラインステータスフィルターボタンを PipelineConfig から動的生成
+                const statusFilters = document.getElementById('status-filters');
+                if (statusFilters && window.PipelineConfig?.STATUSES) {
+                    const btnClass = 'status-filter-btn px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 transition-all hover:bg-gray-50';
+                    const dynamicBtns = window.PipelineConfig.STATUSES.map(s =>
+                        `<button class="${btnClass}" data-status="${s}" onclick="filterByStatus('${s}')">${s}</button>`
+                    ).join('');
+                    // 「すべて」ボタンを温存し、個別ステータスボタンを動的生成で置き換える
+                    const allBtn = statusFilters.querySelector('[data-status="all"]');
+                    statusFilters.innerHTML = '';
+                    if (allBtn) statusFilters.appendChild(allBtn);
+                    statusFilters.insertAdjacentHTML('beforeend', dynamicBtns);
+                }
 
                 // 初期化完了後にコンテンツを表示
                 showContent();
@@ -700,9 +715,19 @@
             showStat('stat-new', newThisMonth);
         }
 
-        // 検索
+        // 検索（debounce付き: 300ms待ってから実行）
+        let _searchDebounceTimer = null;
         function searchCustomers() {
-            displayCustomers();
+            clearTimeout(_searchDebounceTimer);
+            _searchDebounceTimer = setTimeout(() => displayCustomers(), 300);
+        }
+
+        // 復元モーダルのステータス選択肢を PipelineConfig から動的生成
+        function initRestoreModal() {
+            const select = document.getElementById('restore-status');
+            if (!select) return;
+            const statuses = window.PipelineConfig?.STATUSES || ['初回相談', '物件紹介', '内見調整', '申込準備', '審査中', '契約手続き'];
+            select.innerHTML = statuses.map(s => `<option value="${s}">${s}</option>`).join('');
         }
 
         // 表示対象フィルター

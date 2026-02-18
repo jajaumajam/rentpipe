@@ -414,8 +414,22 @@
 
         <!-- カスタマイズヒント -->
         <div class="customization-hint">
-            <h4>💡 使い方</h4>
-            <p>「編集」ボタンでテンプレートをカスタマイズできます。編集後は「保存」ボタンを押してください。</p>
+            <h4>💡 使い方・利用可能な変数</h4>
+            <p>「編集」ボタンでテンプレートをカスタマイズできます。編集後は「保存」ボタンを押してください。<br>
+            以下の変数をテンプレートに記入すると、顧客選択時に自動で置き換わります。</p>
+            <div class="variable-list">
+                <span class="variable-tag">{お客様名}</span>
+                <span class="variable-tag">{担当者名}</span>
+                <span class="variable-tag">{物件名}</span>
+                <span class="variable-tag">{賃料}</span>
+                <span class="variable-tag">{入居日}</span>
+                <span class="variable-tag">{メールアドレス}</span>
+                <span class="variable-tag">{電話番号}</span>
+                <span class="variable-tag">{希望エリア}</span>
+                <span class="variable-tag">{希望間取り}</span>
+                <span class="variable-tag">{予算}</span>
+                <span class="variable-tag">{日時}</span>
+            </div>
         </div>
 
         <!-- テンプレート一覧 -->
@@ -783,6 +797,9 @@
                 loadCustomerList();
                 renderTemplates();
 
+                // URLパラメータによるディープリンク処理（カレンダーからのアクセス対応）
+                handleUrlParams();
+
             } catch (error) {
                 console.error('templates.html 初期化エラー:', error);
             }
@@ -873,6 +890,53 @@
 
             // localStorageにも保存（キャッシュとして）
             localStorage.setItem('rentpipe_custom_templates', JSON.stringify(customTemplates));
+        }
+
+        /**
+         * URLパラメータを読み取り、テンプレートと顧客を自動選択する
+         * カレンダーイベントから直接アクセスした場合に使用
+         * 例: templates.html?templateId=move-in-thanks&customerId=customer_abc123
+         */
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const templateId = params.get('templateId');
+            const customerId = params.get('customerId');
+
+            if (!templateId && !customerId) return;
+
+            // 顧客IDが指定されている場合、セレクターに反映してテンプレートを更新
+            if (customerId) {
+                const select = document.getElementById('customerSelect');
+                if (select) {
+                    select.value = customerId;
+                    updateTemplates(); // selectedCustomer をセットし renderTemplates() を呼び出す
+                }
+            }
+
+            // テンプレートIDが指定されている場合、対象カードまでスクロールしてハイライト
+            if (templateId) {
+                const scrollToTemplate = () => {
+                    let card = document.getElementById(`template-card-${templateId}`);
+
+                    // カードが見つからない場合は「すべて」カテゴリに切り替えて再試行
+                    if (!card) {
+                        filterByCategory('all');
+                        card = document.getElementById(`template-card-${templateId}`);
+                    }
+
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // 青いアウトラインで3秒間ハイライト
+                        card.style.outline = '3px solid #3b82f6';
+                        card.style.outlineOffset = '4px';
+                        card.style.transition = 'outline 0.5s ease';
+                        setTimeout(() => { card.style.outline = 'none'; }, 3000);
+                    }
+                };
+
+                // renderTemplates() のDOM反映を待ってからスクロール
+                setTimeout(scrollToTemplate, 150);
+            }
         }
 
         // 顧客リストを読み込み
@@ -1035,12 +1099,58 @@
             let result = template;
 
             if (selectedCustomer) {
-                const name = selectedCustomer.basicInfo?.name || selectedCustomer.name || 'お客様';
+                const basicInfo = selectedCustomer.basicInfo || {};
+                const preferences = selectedCustomer.preferences || {};
+                const contractInfo = selectedCustomer.contractInfo || {};
+                const budget = preferences.budget || {};
+
+                // 基本情報
+                const name = basicInfo.name || selectedCustomer.name || 'お客様';
                 result = result.replace(/{お客様名}/g, name);
+                result = result.replace(/{メールアドレス}/g, basicInfo.email || '（メールアドレス）');
+                result = result.replace(/{電話番号}/g, basicInfo.phone || '（電話番号）');
+
+                // 契約情報: 物件名・賃料・入居日
+                const propertyName = contractInfo.propertyAddress || contractInfo.propertyName || '（物件名）';
+                result = result.replace(/{物件名}/g, propertyName);
+
+                const rent = contractInfo.monthlyRent
+                    ? contractInfo.monthlyRent.toLocaleString('ja-JP') + '円'
+                    : '（賃料）';
+                result = result.replace(/{賃料}/g, rent);
+
+                const moveInDate = contractInfo.moveInDate || preferences.moveInDate || '（入居日）';
+                result = result.replace(/{入居日}/g, moveInDate);
+
+                // 希望条件
+                result = result.replace(/{希望エリア}/g, preferences.areas || '（希望エリア）');
+                result = result.replace(/{希望間取り}/g, preferences.layout || '（希望間取り）');
+
+                let budgetStr = '（予算）';
+                if (budget.min && budget.max) {
+                    budgetStr = budget.min.toLocaleString('ja-JP') + '円〜' + budget.max.toLocaleString('ja-JP') + '円';
+                } else if (budget.max) {
+                    budgetStr = budget.max.toLocaleString('ja-JP') + '円以下';
+                } else if (budget.min) {
+                    budgetStr = budget.min.toLocaleString('ja-JP') + '円以上';
+                }
+                result = result.replace(/{予算}/g, budgetStr);
+
+            } else {
+                // 顧客未選択時のフォールバック
+                result = result.replace(/{お客様名}/g, 'お客様');
+                result = result.replace(/{メールアドレス}/g, '（メールアドレス）');
+                result = result.replace(/{電話番号}/g, '（電話番号）');
+                result = result.replace(/{物件名}/g, '（物件名）');
+                result = result.replace(/{賃料}/g, '（賃料）');
+                result = result.replace(/{入居日}/g, '（入居日）');
+                result = result.replace(/{希望エリア}/g, '（希望エリア）');
+                result = result.replace(/{希望間取り}/g, '（希望間取り）');
+                result = result.replace(/{予算}/g, '（予算）');
             }
 
+            // 担当者名・日時は顧客選択に関係なく置換
             result = result.replace(/{担当者名}/g, agentName || '（担当者名）');
-            result = result.replace(/{物件名}/g, '（物件名）');
             result = result.replace(/{日時}/g, '（日時）');
 
             return result;
