@@ -286,11 +286,11 @@
             }
         }
         
-        // Google認証開始（Redirect Flow）
+        // Google認証開始
         async function startGoogleAuth() {
             const loginBtn = document.getElementById('loginBtn');
             loginBtn.disabled = true;
-            loginBtn.textContent = 'Googleへ移動中...';
+            loginBtn.textContent = '認証中...';
 
             try {
                 updateStep('step-init', 'active');
@@ -307,57 +307,14 @@
 
                 updateStep('step-init', 'completed');
                 updateStep('step-auth', 'active');
-                updateStatus('Googleの認証ページへ移動します...', 'loading', 'このページを離れてGoogleのログインページが開きます');
+                updateStatus('Google認証実行中...', 'loading', 'Googleのログインウィンドウが開きます');
 
-                // Redirect Flow: この呼び出しでGoogleへリダイレクトされる（戻らない）
-                window.GoogleDriveAPIv2.authenticate();
+                // Google認証実行（ポップアップ）
+                const userInfo = await window.GoogleDriveAPIv2.authenticate();
+                const accessToken = window.GoogleDriveAPIv2.accessToken;
 
-            } catch (error) {
-                console.error('❌ 認証開始エラー:', error);
-                updateStatus('認証の開始に失敗しました', 'error', error.message);
-                updateStep('step-init', 'error');
-                loginBtn.disabled = false;
-                loginBtn.textContent = '🔐 Googleでログイン';
-            }
-        }
-
-        // Redirect後のトークン受け取り処理
-        // Googleは認可後に login.html#access_token=xxx&token_type=Bearer&... にリダイレクトする
-        async function handleRedirectToken() {
-            const hash = window.location.hash.substring(1); // '#' を除去
-            if (!hash) return false;
-
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            const error = params.get('error');
-
-            // フラグメントを即座にURLから除去（セキュリティ：トークンをブラウザ履歴に残さない）
-            window.history.replaceState({}, '', window.location.pathname);
-
-            if (error) {
-                console.error('❌ OAuth エラー:', error);
-                updateStatus('Google認証がキャンセルまたは失敗しました', 'error', error);
-                return false;
-            }
-
-            if (!accessToken) return false;
-
-            console.log('✅ リダイレクトでアクセストークンを受け取りました');
-
-            try {
-                updateStep('step-init', 'completed');
-                updateStep('step-auth', 'active');
-                updateStatus('認証情報を処理中...', 'loading');
-
-                // Google Drive API を初期化してトークンをセット
-                if (!window.GoogleDriveAPIv2) {
-                    throw new Error('Google Drive API v2 が読み込まれていません');
-                }
-                await window.GoogleDriveAPIv2.initialize();
-                const userInfo = await window.GoogleDriveAPIv2.setupWithToken(accessToken);
-
-                if (!userInfo) {
-                    throw new Error('ユーザー情報の取得に失敗しました');
+                if (!userInfo || !accessToken) {
+                    throw new Error('認証情報またはアクセストークンの取得に失敗しました');
                 }
 
                 authState.userInfo = userInfo;
@@ -366,9 +323,8 @@
 
                 updateStep('step-auth', 'completed');
                 updateStep('step-save', 'active');
-                updateStatus('認証成功 - データ保存中...', 'success');
+                updateStatus('認証成功 - データ保存中...', 'success', '認証データとアクセストークンを保存しています');
 
-                // 統合認証データ保存
                 const saved = await saveIntegratedAuthData(userInfo, accessToken);
                 if (!saved) {
                     throw new Error('認証データの保存に失敗しました');
@@ -377,19 +333,40 @@
                 updateStep('step-save', 'completed');
                 updateStep('step-redirect', 'active');
                 updateStatus('ログイン完了！', 'success',
-                    userInfo.email + ' でログインしました。まもなく顧客管理画面へ移動します...');
+                    userInfo.email + ' でログインしました。まもなくリダイレクトします...');
 
-                setTimeout(() => {
+                setTimeout(function() {
                     window.location.href = 'customer.html';
-                }, 1500);
-
-                return true;
+                }, 2000);
 
             } catch (error) {
-                console.error('❌ トークン処理エラー:', error);
-                updateStatus('ログイン処理中にエラーが発生しました', 'error', error.message);
-                updateStep('step-auth', 'error');
-                return false;
+                console.error('❌ 認証エラー:', error);
+
+                const isPopupBlocked =
+                    error.message?.includes('popup') ||
+                    error.message?.includes('Popup') ||
+                    error.message?.includes('blocked') ||
+                    error.message?.includes('popup_failed_to_open') ||
+                    error.error === 'popup_failed_to_open';
+
+                if (isPopupBlocked) {
+                    updateStatus('ポップアップがブロックされています', 'error',
+                        'ブラウザのアドレスバー右端にある「ポップアップがブロックされました」のアイコンをクリックし、' +
+                        'rentpipe.vercel.app のポップアップを「常に許可」してから、もう一度ログインボタンを押してください。');
+                } else {
+                    updateStatus('認証に失敗しました', 'error', error.message);
+                }
+
+                if (authState.authenticated) {
+                    updateStep('step-save', 'error');
+                } else if (authState.initialized) {
+                    updateStep('step-auth', 'error');
+                } else {
+                    updateStep('step-init', 'error');
+                }
+
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔐 もう一度ログイン';
             }
         }
         
@@ -423,15 +400,10 @@
             try {
                 console.log('🚀 ログインページ初期化...');
 
-                // 1. Googleリダイレクトによるトークン受け取り（最優先）
-                // URLフラグメントに access_token があれば自動ログイン処理
-                const hasToken = await handleRedirectToken();
-                if (hasToken) return; // ログイン処理が開始されたので終了
-
-                // 2. 自動ログアウト理由を表示
+                // 1. 自動ログアウト理由を表示
                 showAutoLogoutReason();
 
-                // 3. ログアウト直後 or 自動ログアウト後はスキップ（自動ログインを防ぐ）
+                // 2. ログアウト直後 or 自動ログアウト後はスキップ（自動ログインを防ぐ）
                 const isAutoLogout = new URLSearchParams(window.location.search).get('reason');
                 if (sessionStorage.getItem('just_logged_out') === 'true' || isAutoLogout) {
                     console.log('🚪 ログアウト後 - 自動ログインをスキップ');
@@ -440,7 +412,7 @@
                     return;
                 }
 
-                // 4. 既にログイン済みかチェック（ローカルセッション）
+                // 3. 既にログイン済みかチェック（ローカルセッション）
                 if (window.IntegratedAuthManagerV2) {
                     await window.IntegratedAuthManagerV2.initialize();
                     const authState = window.IntegratedAuthManagerV2.getAuthState();
