@@ -102,40 +102,30 @@ window.GoogleDriveAPIv2 = {
         });
     },
     
-    // Token Client 初期化
+    // Token Client 初期化（Redirect Flow）
     initializeTokenClient: function() {
         try {
-            console.log('🔧 Token Client 初期化中...');
-            
+            console.log('🔧 Token Client 初期化中（Redirect Flow）...');
+
             if (!window.google?.accounts?.oauth2) {
                 throw new Error('Google Identity Services が利用できません');
             }
-            
+
+            // リダイレクト先URL（現在のオリジン + /login.html）
+            const redirectUri = window.location.origin + '/login.html';
+
             this.tokenClient = window.google.accounts.oauth2.initTokenClient({
                 client_id: this.config.clientId,
                 scope: this.config.scopes.join(' '),
-                callback: (response) => {
-                    console.log('✅ Token取得:', response);
-                    if (response.access_token) {
-                        this.accessToken = response.access_token;
-                        this.isAuthenticated = true;
-
-                        // gapiにトークンを設定（Calendar API等で使用）
-                        if (window.gapi?.client) {
-                            window.gapi.client.setToken({
-                                access_token: response.access_token
-                            });
-                        }
-
-                        // トークンをLocalStorageに保存
-                        localStorage.setItem('google_access_token', response.access_token);
-                        localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());
-                    }
-                }
+                // ux_mode: 'redirect' でポップアップなしのリダイレクト型フローを使用
+                ux_mode: 'redirect',
+                redirect_uri: redirectUri,
+                // redirect後はlogin.htmlのhandleRedirectToken()がコールバックを担当
+                callback: () => {},
             });
-            
-            console.log('✅ Token Client 初期化完了');
-            
+
+            console.log('✅ Token Client 初期化完了（redirect_uri:', redirectUri, '）');
+
         } catch (error) {
             console.error('❌ Token Client 初期化エラー:', error);
             throw error;
@@ -171,71 +161,43 @@ window.GoogleDriveAPIv2 = {
         }
     },
     
-    // 認証実行
-    authenticate: async function() {
-        try {
-            console.log('🔐 Google認証開始...');
-            
-            if (!this.isInitialized) {
-                throw new Error('Google Drive API が初期化されていません');
-            }
-            
-            return new Promise((resolve, reject) => {
-                try {
-                    this.tokenClient.callback = async (response) => {
-                        try {
-                            if (response.error) {
-                                reject(new Error(`認証エラー: ${response.error}`));
-                                return;
-                            }
-                            
-                            if (!response.access_token) {
-                                reject(new Error('アクセストークンが取得できませんでした'));
-                                return;
-                            }
-                            
-                            console.log('✅ アクセストークン取得成功');
-                            this.accessToken = response.access_token;
-                            this.isAuthenticated = true;
+    // 認証実行（Redirect Flow）
+    // requestAccessToken() を呼ぶとGoogleの認可ページへリダイレクトされる。
+    // 認可後は login.html#access_token=... に戻ってくるため、
+    // この関数はリダイレクトを開始するだけ（戻り値なし）。
+    authenticate: function() {
+        console.log('🔐 Google認証開始（Redirect Flow）...');
 
-                            // gapiにトークンを設定（Calendar API等で使用）
-                            if (window.gapi?.client) {
-                                window.gapi.client.setToken({
-                                    access_token: response.access_token
-                                });
-                                console.log('✅ gapi.clientにトークン設定完了');
-                            }
-
-                            // トークンを保存
-                            localStorage.setItem('google_access_token', response.access_token);
-                            localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());
-                            
-                            // ユーザー情報を取得
-                            const userInfo = await this.getUserInfo();
-                            this.userInfo = userInfo;
-                            
-                            console.log('✅ Google認証完了:', userInfo.email);
-                            resolve(userInfo);
-                            
-                        } catch (error) {
-                            console.error('❌ 認証コールバックエラー:', error);
-                            reject(error);
-                        }
-                    };
-                    
-                    // 認証フローを開始
-                    this.tokenClient.requestAccessToken({ prompt: 'consent' });
-                    
-                } catch (error) {
-                    console.error('❌ 認証開始エラー:', error);
-                    reject(error);
-                }
-            });
-            
-        } catch (error) {
-            console.error('❌ Google認証エラー:', error);
-            throw error;
+        if (!this.isInitialized) {
+            throw new Error('Google Drive API が初期化されていません');
         }
+
+        // Googleの認可ページへリダイレクト（ポップアップなし）
+        this.tokenClient.requestAccessToken({ prompt: '' });
+        // ↑ この行の実行後、ブラウザはGoogleへ遷移するため以降は実行されない
+    },
+
+    // アクセストークンをセットアップ（リダイレクト後にlogin.htmlから呼ばれる）
+    setupWithToken: async function(accessToken) {
+        console.log('🔑 トークンからセットアップ開始...');
+
+        this.accessToken = accessToken;
+        this.isAuthenticated = true;
+
+        // gapi.client にもトークンをセット
+        if (window.gapi?.client) {
+            window.gapi.client.setToken({ access_token: accessToken });
+        }
+
+        // localStorage に保存
+        localStorage.setItem('google_access_token', accessToken);
+        localStorage.setItem('google_token_expiry', (Date.now() + 3600000).toString());
+
+        // ユーザー情報を取得して返す
+        const userInfo = await this.getUserInfo();
+        this.userInfo = userInfo;
+        console.log('✅ セットアップ完了:', userInfo.email);
+        return userInfo;
     },
     
     // ユーザー情報取得
