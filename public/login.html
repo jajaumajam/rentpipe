@@ -3,158 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ログイン - RentPipe</title>
+    <title>RentPipe - 賃貸仲介エージェントの顧客管理ツール</title>
     <link rel="stylesheet" href="css/main.css">
-    <!-- Tailwind CSS (local build) -->
     <link rel="stylesheet" href="css/tailwind-output.css">
 
     <style>
-        .login-container {
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f4ff;
+            color: #111827;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+        }
+
+        /* ===== ヘッダー ===== */
+        .lp-header {
+            background: #1e40af;
+            color: white;
+            padding: 14px 32px;
+            display: flex;
             align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
         }
-        
-        .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            max-width: 450px;
+
+        /* ===== メインレイアウト ===== */
+        .lp-main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 0;
+            max-width: 1100px;
+            margin: 0 auto;
             width: 100%;
+            padding: 48px 32px;
+            align-items: start;
         }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
+
+        /* ===== 左カラム：説明 ===== */
+        .lp-left {
+            padding-right: 56px;
         }
-        
-        .login-header h1 {
-            font-size: 32px;
-            margin: 0 0 10px 0;
+
+        .lp-tagline {
+            font-size: 30px;
+            font-weight: 800;
+            color: #1e3a8a;
+            line-height: 1.3;
+            margin: 0 0 16px;
+            letter-spacing: -0.5px;
         }
-        
-        .login-header p {
+
+        .lp-sub {
+            font-size: 15px;
+            color: #4b5563;
+            line-height: 1.7;
+            margin: 0 0 36px;
+        }
+
+        .lp-features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .lp-feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid #e0e7ff;
+        }
+
+        .lp-feature-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .lp-feature-text h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin: 0 0 3px;
+        }
+
+        .lp-feature-text p {
+            font-size: 13px;
             color: #6b7280;
             margin: 0;
+            line-height: 1.5;
         }
-        
+
+        .lp-plan-note {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+
+        .lp-plan-note strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+        /* ===== 右カラム：ログインカード ===== */
+        .login-card {
+            background: white;
+            padding: 36px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(30,64,175,0.12);
+            border: 1px solid #dbeafe;
+            position: sticky;
+            top: 32px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .login-header h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1e3a8a;
+            margin: 0 0 6px;
+        }
+
+        .login-header p {
+            color: #6b7280;
+            font-size: 13px;
+            margin: 0;
+        }
+
         .login-btn {
             width: 100%;
-            padding: 16px;
-            background: #4285f4;
+            padding: 14px;
+            background: #2563eb;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
             transition: background 0.2s;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
-        
-        .login-btn:hover:not(:disabled) {
-            background: #3367d6;
-        }
-        
-        .login-btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-        }
-        
+
+        .login-btn:hover:not(:disabled) { background: #1d4ed8; }
+        .login-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
         .status-box {
-            padding: 15px;
+            padding: 12px 14px;
             border-radius: 8px;
-            margin: 20px 0;
-            font-size: 14px;
+            margin: 16px 0;
+            font-size: 13px;
+            line-height: 1.5;
         }
-        
-        .status-success {
-            background: #d1fae5;
-            border: 1px solid #10b981;
-            color: #065f46;
-        }
-        
-        .status-error {
-            background: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #991b1b;
-        }
-        
-        .status-loading {
-            background: #dbeafe;
-            border: 1px solid #3b82f6;
-            color: #1e40af;
-        }
-        
-        .progress-steps {
-            margin: 20px 0;
-        }
-        
+        .status-success { background: #d1fae5; border: 1px solid #10b981; color: #065f46; }
+        .status-error   { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+        .status-loading { background: #dbeafe; border: 1px solid #3b82f6; color: #1e40af; }
+
+        .progress-steps { margin: 16px 0 0; }
         .step {
             display: flex;
             align-items: center;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 8px 10px;
+            margin: 4px 0;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
         }
-        
-        .step-pending {
-            background: #f3f4f6;
-            color: #6b7280;
+        .step-pending   { background: #f3f4f6; color: #6b7280; }
+        .step-active    { background: #dbeafe; color: #1e40af; }
+        .step-completed { background: #d1fae5; color: #065f46; }
+        .step-error     { background: #fee2e2; color: #991b1b; }
+
+        .login-note {
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 16px;
+            line-height: 1.6;
         }
-        
-        .step-active {
-            background: #dbeafe;
-            color: #1e40af;
+
+        /* ===== フッター ===== */
+        .lp-footer {
+            text-align: center;
+            padding: 20px 16px;
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 2;
+            border-top: 1px solid #e5e7eb;
+            background: white;
         }
-        
-        .step-completed {
-            background: #d1fae5;
-            color: #065f46;
+        .lp-footer a {
+            color: #9ca3af;
+            text-decoration: none;
+            margin: 0 8px;
         }
-        
-        .step-error {
-            background: #fee2e2;
-            color: #991b1b;
+        .lp-footer a:hover { color: #374151; }
+
+        /* ===== モバイル ===== */
+        @media (max-width: 768px) {
+            .lp-main {
+                grid-template-columns: 1fr;
+                padding: 24px 16px;
+            }
+            .lp-left {
+                padding-right: 0;
+                order: 2;
+                margin-top: 32px;
+            }
+            .login-card {
+                order: 1;
+                position: static;
+            }
+            .lp-tagline { font-size: 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <header class="lp-header">
+        🏠 RentPipe
+    </header>
+
+    <main class="lp-main">
+        <!-- 左カラム：サービス説明 -->
+        <div class="lp-left">
+            <h1 class="lp-tagline">賃貸仲介の顧客管理を、<br>もっとシンプルに。</h1>
+            <p class="lp-sub">
+                RentPipeは、賃貸仲介エージェント専用の顧客管理（CRM）ツールです。<br>
+                お客様の希望条件・内見スケジュール・商談の進捗を一元管理し、成約までの流れをスムーズにサポートします。
+            </p>
+
+            <div class="lp-features">
+                <div class="lp-feature-item">
+                    <div class="lp-feature-icon">👥</div>
+                    <div class="lp-feature-text">
+                        <h4>顧客・希望条件の一元管理</h4>
+                        <p>氏名・連絡先から間取り・設備条件まで60以上の項目を体系的に記録。担当客の状況をいつでも素早く確認できます。</p>
+                    </div>
+                </div>
+                <div class="lp-feature-item">
+                    <div class="lp-feature-icon">📊</div>
+                    <div class="lp-feature-text">
+                        <h4>パイプライン管理</h4>
+                        <p>「初回相談→物件紹介→内見調整→審査中→成約」の商談ステージをカンバン形式で可視化。対応漏れを防ぎます。</p>
+                    </div>
+                </div>
+                <div class="lp-feature-item">
+                    <div class="lp-feature-icon">📅</div>
+                    <div class="lp-feature-text">
+                        <h4>Googleカレンダー連携</h4>
+                        <p>内見予定や成約後のフォローアップをワンクリックでGoogleカレンダーに登録。集合場所・物件情報もまとめて記録できます。</p>
+                    </div>
+                </div>
+                <div class="lp-feature-item">
+                    <div class="lp-feature-icon">🔒</div>
+                    <div class="lp-feature-text">
+                        <h4>データはあなた自身のGoogleドライブに保存</h4>
+                        <p>顧客情報はすべてあなたのGoogleアカウントに保存。RentPipeの運営者がデータにアクセスすることはありません。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lp-plan-note">
+                <strong>🆓 基本機能は無料でご利用いただけます</strong>
+                顧客管理・パイプライン管理は無料プランでご利用可能。<br>
+                Googleカレンダー連携・テンプレート機能等は Senior Agent プラン（¥2,480/月）でご利用いただけます。
+            </div>
+        </div>
+
+        <!-- 右カラム：ログインカード -->
         <div class="login-card">
             <div class="login-header">
-                <h1>🏠 RentPipe</h1>
-                <p>不動産エージェント向け顧客管理システム</p>
+                <h2>🏠 RentPipe</h2>
+                <p>Googleアカウントでログイン</p>
             </div>
-            
+
             <button id="loginBtn" class="login-btn" onclick="startGoogleAuth()">
                 🔐 Googleでログイン
             </button>
-            
+
             <div id="status-message" style="display: none;"></div>
-            
+
             <div class="progress-steps">
-                <div id="step-init" class="step step-pending">
-                    <span>1. システム初期化</span>
-                </div>
-                <div id="step-auth" class="step step-pending">
-                    <span>2. Google認証</span>
-                </div>
-                <div id="step-save" class="step step-pending">
-                    <span>3. 認証情報保存</span>
-                </div>
-                <div id="step-redirect" class="step step-pending">
-                    <span>4. 顧客管理画面へ</span>
-                </div>
+                <div id="step-init" class="step step-pending"><span>1. システム初期化</span></div>
+                <div id="step-auth" class="step step-pending"><span>2. Google認証</span></div>
+                <div id="step-save" class="step step-pending"><span>3. 認証情報保存</span></div>
+                <div id="step-redirect" class="step step-pending"><span>4. 顧客管理画面へ</span></div>
             </div>
+
+            <p class="login-note">
+                ログインすることで<a href="terms.html" style="color:#6b7280;">利用規約</a>および<a href="privacy.html" style="color:#6b7280;">プライバシーポリシー</a>に同意したものとみなします。
+            </p>
         </div>
-    </div>
+    </main>
+
+    <footer class="lp-footer">
+        <div>
+            <a href="about.html">RentPipeについて</a>
+            <a href="privacy.html">プライバシーポリシー</a>
+            <a href="terms.html">利用規約</a>
+            <a href="tokushoho.html">特定商取引法に基づく表記</a>
+        </div>
+        <div>&copy; 2025 RentPipe. All rights reserved.</div>
+    </footer>
 
     <!-- Google API Client & Identity Services -->
     <script src="https://accounts.google.com/gsi/client"></script>
@@ -169,7 +334,7 @@
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
     <script src="js/google-sheets-api.js"></script>
-    
+
     <script>
         let authState = {
             initialized: false,
@@ -177,8 +342,7 @@
             userInfo: null,
             accessToken: null
         };
-        
-        // ステータス表示
+
         function updateStatus(message, type, detail = '') {
             const statusDiv = document.getElementById('status-message');
             statusDiv.style.display = 'block';
@@ -186,13 +350,11 @@
             statusDiv.innerHTML = `<strong>${message}</strong>${detail ? '<br><small>' + detail + '</small>' : ''}`;
             console.log(`[${type.toUpperCase()}] ${message}`);
         }
-        
-        // ステップ更新
+
         function updateStep(stepId, status) {
             const step = document.getElementById(stepId);
             if (step) {
                 step.className = 'step step-' + status;
-                
                 if (status === 'completed') {
                     step.innerHTML = '<span>✅ ' + step.textContent.trim() + '</span>';
                 } else if (status === 'active') {
@@ -202,25 +364,19 @@
                 }
             }
         }
-        
-        // 統合認証データ保存（強化版）
+
         async function saveIntegratedAuthData(userInfo, accessToken) {
             try {
                 console.log('💾 統合認証データ保存開始...');
-                console.log('👤 ユーザー情報:', userInfo);
-                console.log('🔑 トークン:', accessToken ? 'あり' : 'なし');
-                
-                // IntegratedAuthManagerV2の初期化を確認
+
                 if (!window.IntegratedAuthManagerV2) {
                     throw new Error('IntegratedAuthManagerV2が読み込まれていません');
                 }
-                
+
                 if (!window.IntegratedAuthManagerV2.isInitialized) {
-                    console.log('🔧 IntegratedAuthManagerV2を初期化中...');
                     await window.IntegratedAuthManagerV2.initialize();
                 }
-                
-                // 1. RentPipe認証情報を保存
+
                 const rentpipeAuthData = {
                     isLoggedIn: true,
                     user: {
@@ -231,50 +387,34 @@
                     },
                     loginTime: new Date().toISOString()
                 };
-                
+
                 localStorage.setItem('rentpipe_auth', JSON.stringify(rentpipeAuthData));
-                console.log('✅ RentPipe認証情報保存完了');
-                
-                // 2. Google認証情報を保存（IntegratedAuthManagerV2経由）
-                const tokenExpiry = Date.now() + (3600 * 1000); // 1時間後
-                
+
+                const tokenExpiry = Date.now() + (3600 * 1000);
+
                 await window.IntegratedAuthManagerV2.updateGoogleAuth({
                     isSignedIn: true,
                     user: userInfo,
                     accessToken: accessToken,
                     tokenExpiry: tokenExpiry
                 });
-                
-                console.log('✅ Google認証情報保存完了（IntegratedAuthManagerV2）');
-                
-                // 3. 個別トークンも保存（互換性のため）
+
                 localStorage.setItem('google_access_token', accessToken);
                 localStorage.setItem('google_token_expiry', tokenExpiry.toString());
-                console.log('✅ 個別トークン保存完了（互換性）');
-                
-                // 4. 保存確認
+
                 const savedAuth = localStorage.getItem('rentpipe_auth');
                 const savedGoogleAuth = localStorage.getItem('google_auth_data');
                 const savedToken = localStorage.getItem('google_access_token');
-                
-                console.log('🔍 保存確認:');
-                console.log('  - rentpipe_auth:', !!savedAuth);
-                console.log('  - google_auth_data:', !!savedGoogleAuth);
-                console.log('  - google_access_token:', !!savedToken);
-                
+
                 if (!savedAuth || !savedGoogleAuth || !savedToken) {
                     throw new Error('認証情報の保存確認に失敗しました');
                 }
 
-                // 5. Supabaseにユーザー情報を同期
                 if (window.supabaseGoogleSync) {
-                    console.log('🔄 Supabaseにユーザー情報を同期中...');
                     try {
                         await window.supabaseGoogleSync.syncGoogleUser(userInfo);
-                        console.log('✅ Supabase同期完了');
                     } catch (syncError) {
                         console.warn('⚠️ Supabase同期失敗（処理は継続）:', syncError);
-                        // Supabase同期失敗はログインを妨げない
                     }
                 }
 
@@ -285,8 +425,7 @@
                 return false;
             }
         }
-        
-        // Google認証開始
+
         async function startGoogleAuth() {
             const loginBtn = document.getElementById('loginBtn');
             loginBtn.disabled = true;
@@ -309,7 +448,6 @@
                 updateStep('step-auth', 'active');
                 updateStatus('Google認証実行中...', 'loading', 'Googleのログインウィンドウが開きます');
 
-                // Google認証実行（ポップアップ）
                 const userInfo = await window.GoogleDriveAPIv2.authenticate();
                 const accessToken = window.GoogleDriveAPIv2.accessToken;
 
@@ -369,8 +507,7 @@
                 loginBtn.textContent = '🔐 もう一度ログイン';
             }
         }
-        
-        // 自動ログアウト理由を表示
+
         function showAutoLogoutReason() {
             const params = new URLSearchParams(window.location.search);
             const reason = params.get('reason');
@@ -387,38 +524,28 @@
             const statusDiv = document.getElementById('status-message');
             statusDiv.style.display = 'block';
             statusDiv.className = 'status-box';
-            statusDiv.style.cssText = 'display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:15px; border-radius:8px; margin:0 0 20px 0; font-size:14px;';
+            statusDiv.style.cssText = 'display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:12px 14px; border-radius:8px; margin:0 0 16px 0; font-size:13px;';
             statusDiv.innerHTML = `<strong>${msg.icon} ${msg.text}</strong>`;
 
-            // URLからreasonパラメータを除去（ブラウザ履歴を汚さない）
             const cleanUrl = window.location.pathname;
             window.history.replaceState({}, '', cleanUrl);
         }
 
-        // 初期化
         async function initialize() {
             try {
-                console.log('🚀 ログインページ初期化...');
-
-                // 1. 自動ログアウト理由を表示
                 showAutoLogoutReason();
 
-                // 2. ログアウト直後 or 自動ログアウト後はスキップ（自動ログインを防ぐ）
                 const isAutoLogout = new URLSearchParams(window.location.search).get('reason');
                 if (sessionStorage.getItem('just_logged_out') === 'true' || isAutoLogout) {
-                    console.log('🚪 ログアウト後 - 自動ログインをスキップ');
                     sessionStorage.removeItem('just_logged_out');
-                    console.log('✅ ログインページ初期化完了');
                     return;
                 }
 
-                // 3. 既にログイン済みかチェック（ローカルセッション）
                 if (window.IntegratedAuthManagerV2) {
                     await window.IntegratedAuthManagerV2.initialize();
                     const authState = window.IntegratedAuthManagerV2.getAuthState();
 
                     if (authState.isAuthenticated) {
-                        console.log('✅ 既にログイン済み - customer.htmlへリダイレクト');
                         updateStatus('既にログイン済みです', 'success', 'リダイレクト中...');
                         setTimeout(() => {
                             window.location.href = 'customer.html';
@@ -433,27 +560,9 @@
                 console.error('❌ 初期化エラー:', error);
             }
         }
-        
-        // ページ読み込み時に初期化
+
         window.addEventListener('DOMContentLoaded', initialize);
-        
         console.log('✅ ログインページ準備完了');
     </script>
-
-    <footer style="
-        text-align: center;
-        padding: 24px 16px;
-        font-size: 12px;
-        color: #9ca3af;
-        line-height: 2;
-    ">
-        <div style="margin-bottom: 6px;">
-            <a href="about.html" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">RentPipeについて</a>
-            <a href="privacy.html" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">プライバシーポリシー</a>
-            <a href="terms.html" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">利用規約</a>
-            <a href="tokushoho.html" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">特定商取引法に基づく表記</a>
-        </div>
-        <div>&copy; 2025 RentPipe. All rights reserved.</div>
-    </footer>
 </body>
 </html>
