@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー | RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            margin: 0;
+            padding: 0;
+        }
+        .legal-header {
+            background: #1e40af;
+            color: white;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .legal-header a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .legal-header a:hover { color: white; }
+        .legal-header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .legal-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 24px 80px;
+        }
+        .legal-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            padding: 48px;
+        }
+        .legal-card h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e40af;
+            margin: 0 0 8px;
+        }
+        .effective-date {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .legal-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin: 32px 0 12px;
+        }
+        .legal-card p, .legal-card li {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #374151;
+        }
+        .legal-card ul {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        .legal-card li { margin-bottom: 4px; }
+        .contact-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+        .contact-box p { margin: 4px 0; }
+        .contact-box a { color: #2563eb; }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 32px;
+            color: #6b7280;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .back-link:hover { color: #374151; }
+    </style>
+</head>
+<body>
+    <div class="legal-header">
+        <a href="login.html">← トップへ戻る</a>
+        <h1>🏠 RentPipe</h1>
+    </div>
+
+    <div class="legal-container">
+        <div class="legal-card">
+            <h2>プライバシーポリシー</h2>
+            <div class="effective-date">最終更新日：2025年6月1日</div>
+
+            <p>RentPipe（以下「本サービス」）は、ユーザーの個人情報の取り扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」）を定めます。</p>
+
+            <h3>1. 収集する情報</h3>
+            <p>本サービスは、以下の情報を収集します。</p>
+            <ul>
+                <li><strong>Googleアカウント情報：</strong>ログイン時にGoogleが提供する氏名・メールアドレス・プロフィール画像</li>
+                <li><strong>Google APIへのアクセス権限：</strong>Google Drive・Google Sheets・Google Calendarへのアクセストークン（ユーザーが許可した範囲のみ）</li>
+                <li><strong>顧客管理データ：</strong>ユーザー自身が入力した顧客情報（氏名・電話番号・希望条件等）。これらはユーザー自身のGoogle Driveに保存されます</li>
+                <li><strong>サービス利用情報：</strong>プラン情報、課金状態（Stripe経由）</li>
+            </ul>
+
+            <h3>2. 情報の利用目的</h3>
+            <ul>
+                <li>本サービスの提供・運営・改善</li>
+                <li>ユーザー認証およびアクセス管理</li>
+                <li>有料プランの課金処理（Stripe）</li>
+                <li>Google Calendar・Google Sheetsとの連携機能の提供</li>
+                <li>サービスに関する重要なお知らせの送付</li>
+            </ul>
+
+            <h3>3. データの保存場所</h3>
+            <p>本サービスはゼロナレッジアーキテクチャを採用しており、ユーザーが登録した顧客データは<strong>ユーザー自身のGoogleアカウントのGoogle Drive・Google Sheets</strong>に保存されます。運営者はこれらの顧客データにアクセスしません。</p>
+            <p>ユーザーの認証情報・プラン情報はSupabase（米国）に保存されます。</p>
+
+            <h3>4. 第三者への提供</h3>
+            <p>以下の場合を除き、ユーザーの個人情報を第三者に提供しません。</p>
+            <ul>
+                <li>ユーザーの同意がある場合</li>
+                <li>法令に基づく場合</li>
+                <li>サービス提供のために必要な業務委託先（Google、Stripe、Supabase、Vercel等）への提供</li>
+            </ul>
+
+            <h3>5. 利用する外部サービス</h3>
+            <ul>
+                <li><strong>Google Identity Services / Google APIs</strong>（認証・Drive・Sheets・Calendar連携）</li>
+                <li><strong>Stripe</strong>（決済処理）</li>
+                <li><strong>Supabase</strong>（認証・プラン管理）</li>
+                <li><strong>Vercel</strong>（ホスティング）</li>
+            </ul>
+            <p>各サービスのプライバシーポリシーについては、各社のウェブサイトをご参照ください。</p>
+
+            <h3>6. Cookieおよびローカルストレージ</h3>
+            <p>本サービスはローカルストレージを使用して認証状態やユーザー設定を保存します。ブラウザの設定によりこれらを無効化することができますが、一部機能が利用できなくなる場合があります。</p>
+
+            <h3>7. 個人情報の開示・訂正・削除</h3>
+            <p>ユーザーは自己の個人情報の開示・訂正・削除を求めることができます。ご要望はお問い合わせ先までご連絡ください。なお、顧客データはユーザー自身のGoogle Driveに保存されているため、ユーザー自身がいつでも削除できます。</p>
+
+            <h3>8. 未成年者の利用</h3>
+            <p>本サービスは不動産業務に従事する成人を対象としています。18歳未満の方のご利用はお断りします。</p>
+
+            <h3>9. プライバシーポリシーの変更</h3>
+            <p>本ポリシーは、必要に応じて改定することがあります。重要な変更がある場合は、サービス内またはメールにてお知らせします。</p>
+
+            <h3>10. お問い合わせ</h3>
+            <div class="contact-box">
+                <p>本ポリシーに関するご質問・ご要望は、以下までお問い合わせください。</p>
+                <p style="margin-top: 12px;"><strong>RentPipe 運営</strong></p>
+                <p>メール：<a id="contactEmail" href="#">（準備中）</a></p>
+            </div>
+        </div>
+
+        <a class="back-link" href="login.html">← トップページに戻る</a>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        const emailEl = document.getElementById('contactEmail');
+        const email = window.SUPPORT_EMAIL || '';
+        if (email && !email.includes('example.com')) {
+            emailEl.textContent = email;
+            emailEl.href = 'mailto:' + email;
+        } else {
+            emailEl.textContent = '（準備中）';
+            emailEl.removeAttribute('href');
+        }
+    </script>
+</body>
+</html>
