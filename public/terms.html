@@ -19,14 +19,8 @@
             padding: 20px 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
-        .legal-header a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .legal-header a:hover { color: white; }
         .legal-header h1 {
             margin: 0;
             font-size: 20px;
@@ -41,7 +35,10 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            padding: 48px;
+            padding: 40px;
+        }
+        @media (max-width: 600px) {
+            .legal-card { padding: 24px 20px; }
         }
         .legal-card h2 {
             font-size: 22px;
@@ -81,20 +78,10 @@
         }
         .contact-box p { margin: 4px 0; }
         .contact-box a { color: #2563eb; }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 32px;
-            color: #6b7280;
-            font-size: 14px;
-            text-decoration: none;
-        }
-        .back-link:hover { color: #374151; }
     </style>
 </head>
 <body>
     <div class="legal-header">
-        <a href="login.html">← トップへ戻る</a>
         <h1>🏠 RentPipe</h1>
     </div>
 
@@ -106,11 +93,11 @@
             <p>本利用規約（以下「本規約」）は、RentPipe（以下「本サービス」）の利用に関する条件を定めるものです。本サービスをご利用になる前に、本規約をよくお読みください。本サービスを利用することで、本規約に同意したものとみなします。</p>
 
             <h3>第1条（サービスの概要）</h3>
-            <p>本サービスは、不動産仲介業務に従事する方を対象とした顧客管理ツールです。Google Drive・Google Sheetsを用いたデータ管理、Google Calendarとの連携、パイプライン管理などの機能を提供します。</p>
+            <p>本サービスは、不動産賃貸仲介業務に従事する方を対象とした顧客管理（CRM）ツールです。Google Drive・Google Sheetsを用いたデータ管理、Google Calendarとの内見・フォローアップ連携、パイプライン管理などの機能を提供します。</p>
 
             <h3>第2条（利用資格）</h3>
             <ul>
-                <li>本サービスは、日本国内に居住し、不動産仲介業務に従事する18歳以上の方を対象とします</li>
+                <li>本サービスは、日本国内で不動産賃貸仲介業務に従事する18歳以上の方を対象とします</li>
                 <li>Googleアカウントを保有していることが利用の前提となります</li>
                 <li>反社会的勢力に該当する方の利用はお断りします</li>
             </ul>
@@ -140,7 +127,7 @@
             </ul>
 
             <h3>第6条（データの取り扱い）</h3>
-            <p>ユーザーが本サービスを通じて登録した顧客データは、ユーザー自身のGoogleアカウントに保存されます。ユーザーはこれらのデータについて責任を負います。本サービスの利用終了時には、ユーザー自身がGoogle Drive上のデータを管理・削除してください。</p>
+            <p>ユーザーが本サービスを通じて登録した賃貸仲介の顧客データは、ユーザー自身のGoogleアカウントに保存されます。ユーザーはこれらのデータについて責任を負います。本サービスの利用終了時には、ユーザー自身がGoogle Drive上のデータを管理・削除してください。</p>
 
             <h3>第7条（知的財産権）</h3>
             <p>本サービスに関する知的財産権は運営者に帰属します。ユーザーは本サービスをリバースエンジニアリング・複製・改変等してはなりません。</p>
@@ -169,8 +156,6 @@
                 <p>メール：<a id="contactEmail" href="#">（準備中）</a></p>
             </div>
         </div>
-
-        <a class="back-link" href="login.html">← トップページに戻る</a>
     </div>
 
     <script src="js/config.js"></script>

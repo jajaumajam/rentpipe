@@ -19,14 +19,8 @@
             padding: 20px 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
-        .legal-header a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .legal-header a:hover { color: white; }
         .legal-header h1 {
             margin: 0;
             font-size: 20px;
@@ -41,7 +35,10 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            padding: 48px;
+            padding: 40px;
+        }
+        @media (max-width: 600px) {
+            .legal-card { padding: 24px 20px; }
         }
         .legal-card h2 {
             font-size: 22px;
@@ -56,32 +53,41 @@
             padding-bottom: 24px;
             border-bottom: 1px solid #e5e7eb;
         }
-        .tokusho-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
+
+        /* 定義リスト形式 */
+        .tokusho-list {
+            margin: 0;
+            padding: 0;
         }
-        .tokusho-table tr {
-            border-bottom: 1px solid #e5e7eb;
+        .tokusho-item {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 14px 0;
         }
-        .tokusho-table tr:first-child {
-            border-top: 1px solid #e5e7eb;
+        .tokusho-item:first-child {
+            border-top: 1px solid #f3f4f6;
         }
-        .tokusho-table td {
-            padding: 16px 12px;
-            vertical-align: top;
-            line-height: 1.7;
-        }
-        .tokusho-table td:first-child {
+        .tokusho-term {
+            font-size: 12px;
             font-weight: 700;
-            color: #374151;
-            background: #f9fafb;
-            white-space: nowrap;
-            width: 200px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin: 0 0 4px;
         }
-        .tokusho-table td:last-child {
+        .tokusho-desc {
+            font-size: 14px;
             color: #374151;
+            line-height: 1.7;
+            margin: 0;
         }
+        .tokusho-desc small {
+            display: block;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
         .note-box {
             background: #fef9c3;
             border: 1px solid #fde68a;
@@ -92,20 +98,10 @@
             color: #92400e;
             line-height: 1.7;
         }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 32px;
-            color: #6b7280;
-            font-size: 14px;
-            text-decoration: none;
-        }
-        .back-link:hover { color: #374151; }
     </style>
 </head>
 <body>
     <div class="legal-header">
-        <a href="login.html">← トップへ戻る</a>
         <h1>🏠 RentPipe</h1>
     </div>
 
@@ -114,84 +110,71 @@
             <h2>特定商取引法に基づく表記</h2>
             <div class="effective-date">最終更新日：2025年6月1日</div>
 
-            <table class="tokusho-table">
-                <tr>
-                    <td>販売業者</td>
-                    <td>個人（RentPipe 運営）</td>
-                </tr>
-                <tr>
-                    <td>運営責任者</td>
-                    <td>請求があれば遅滞なく開示します</td>
-                </tr>
-                <tr>
-                    <td>所在地</td>
-                    <td>請求があれば遅滞なく開示します</td>
-                </tr>
-                <tr>
-                    <td>電話番号</td>
-                    <td>請求があれば遅滞なく開示します<br>
-                        <span style="font-size:12px;color:#6b7280;">（メールにてお問い合わせいただければ、必要に応じて対応いたします）</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>メールアドレス</td>
-                    <td><a id="contactEmail" href="#">（準備中）</a></td>
-                </tr>
-                <tr>
-                    <td>サービス名</td>
-                    <td>RentPipe</td>
-                </tr>
-                <tr>
-                    <td>販売価格</td>
-                    <td>
+            <div class="tokusho-list">
+                <div class="tokusho-item">
+                    <div class="tokusho-term">販売業者</div>
+                    <div class="tokusho-desc">個人（RentPipe 運営）</div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">運営責任者・所在地・電話番号</div>
+                    <div class="tokusho-desc">
+                        請求があれば遅滞なく開示します
+                        <small>メールにてお問い合わせいただければ、必要に応じて対応いたします</small>
+                    </div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">メールアドレス</div>
+                    <div class="tokusho-desc"><a id="contactEmail" href="#">（準備中）</a></div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">サービス名</div>
+                    <div class="tokusho-desc">RentPipe</div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">販売価格</div>
+                    <div class="tokusho-desc">
                         無料プラン：0円（基本機能）<br>
-                        Senior Agentプラン：2,480円／月（税込）<br>
-                        <span style="font-size:12px;color:#6b7280;">※ 料金は予告なく変更する場合があります。変更の際は事前にお知らせします。</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>支払方法</td>
-                    <td>クレジットカード（Visa・Mastercard・American Express・JCB 等 Stripe 対応カード）</td>
-                </tr>
-                <tr>
-                    <td>支払時期</td>
-                    <td>月次自動課金（お申し込み日から毎月同日）</td>
-                </tr>
-                <tr>
-                    <td>サービス提供時期</td>
-                    <td>お申し込み・決済完了後、即時ご利用いただけます</td>
-                </tr>
-                <tr>
-                    <td>解約・返金について</td>
-                    <td>
-                        設定ページからいつでも解約できます。解約後は次回更新日まで有料プランを継続してご利用いただけます。<br>
-                        日割り返金は原則として行っておりません。<br>
-                        <span style="font-size:12px;color:#6b7280;">※ 初回課金後の即時全額返金をご希望の場合は、課金日より7日以内にご連絡ください（個別対応）。</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>動作環境</td>
-                    <td>
-                        Google Chromeブラウザ（最新版推奨）<br>
-                        Googleアカウントが必要です<br>
-                        インターネット接続環境が必要です
-                    </td>
-                </tr>
-                <tr>
-                    <td>その他特記事項</td>
-                    <td>
-                        本サービスはベータ版として提供しています。機能・価格は予告なく変更される場合があります。<br>
-                        顧客データはユーザー自身のGoogle Driveに保存されます。
-                    </td>
-                </tr>
-            </table>
+                        Senior Agent プラン：2,480円／月（税込）
+                        <small>※ 料金は変更する場合があります。変更の際は事前にお知らせします。</small>
+                    </div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">支払方法</div>
+                    <div class="tokusho-desc">クレジットカード（Visa・Mastercard・American Express・JCB 等 Stripe 対応カード）</div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">支払時期</div>
+                    <div class="tokusho-desc">月次自動課金（お申し込み日から毎月同日）</div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">サービス提供時期</div>
+                    <div class="tokusho-desc">お申し込み・決済完了後、即時ご利用いただけます</div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">解約・返金</div>
+                    <div class="tokusho-desc">
+                        設定ページからいつでも解約できます。解約後は次回更新日まで有料プランを継続してご利用いただけます。日割り返金は原則として行っておりません。
+                        <small>※ 初回課金後の返金をご希望の場合は、課金日より7日以内にご連絡ください（個別対応）。</small>
+                    </div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">動作環境</div>
+                    <div class="tokusho-desc">
+                        Google Chrome 最新版推奨・Googleアカウント必須・インターネット接続環境必須
+                    </div>
+                </div>
+                <div class="tokusho-item">
+                    <div class="tokusho-term">その他</div>
+                    <div class="tokusho-desc">
+                        本サービスはベータ版として提供しています。顧客データはユーザー自身のGoogle Driveに保存されます。
+                    </div>
+                </div>
+            </div>
 
             <div class="note-box">
-                ご不明な点がございましたら、上記メールアドレスまでお問い合わせください。メールにてのお問い合わせの場合、原則として3営業日以内に返信いたします。
+                ご不明な点がございましたら、上記メールアドレスまでお問い合わせください。原則として3営業日以内に返信いたします。
             </div>
         </div>
-
-        <a class="back-link" href="login.html">← トップページに戻る</a>
     </div>
 
     <script src="js/config.js"></script>

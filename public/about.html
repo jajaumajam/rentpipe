@@ -19,14 +19,8 @@
             padding: 20px 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
-        .legal-header a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .legal-header a:hover { color: white; }
         .legal-header h1 {
             margin: 0;
             font-size: 20px;
@@ -40,10 +34,13 @@
         .hero-card {
             background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             border-radius: 16px;
-            padding: 48px;
+            padding: 48px 32px;
             text-align: center;
             color: white;
             margin-bottom: 24px;
+        }
+        @media (max-width: 600px) {
+            .hero-card { padding: 32px 20px; }
         }
         .hero-card .icon {
             font-size: 56px;
@@ -55,7 +52,7 @@
             margin: 0 0 8px;
         }
         .hero-card .tagline {
-            font-size: 16px;
+            font-size: 15px;
             opacity: 0.85;
             margin: 0 0 20px;
         }
@@ -72,6 +69,9 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
             padding: 32px 40px;
             margin-bottom: 20px;
+        }
+        @media (max-width: 600px) {
+            .info-card { padding: 24px 20px; }
         }
         .info-card h3 {
             font-size: 17px;
@@ -164,20 +164,10 @@
         }
         .contact-box p { margin: 4px 0; font-size: 14px; color: #374151; }
         .contact-box a { color: #2563eb; }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 32px;
-            color: #6b7280;
-            font-size: 14px;
-            text-decoration: none;
-        }
-        .back-link:hover { color: #374151; }
     </style>
 </head>
 <body>
     <div class="legal-header">
-        <a href="login.html">← トップへ戻る</a>
         <h1>🏠 RentPipe</h1>
     </div>
 
@@ -185,13 +175,13 @@
         <div class="hero-card">
             <div class="icon">🏠</div>
             <h2>RentPipe</h2>
-            <p class="tagline">不動産エージェントのための、スマートな顧客管理ツール</p>
+            <p class="tagline">賃貸仲介エージェントのための、スマートな顧客管理ツール</p>
             <span class="version-badge" id="versionBadge">v1.0.0-beta</span>
         </div>
 
         <div class="info-card">
             <h3>📋 RentPipeとは</h3>
-            <p>RentPipeは、不動産賃貸仲介に特化した個人向け顧客管理（CRM）ツールです。顧客情報の一元管理から、パイプライン管理、Google カレンダーへの内見・フォローアップ登録まで、仲介業務の実務に沿った機能を提供します。</p>
+            <p>RentPipeは、不動産賃貸仲介に特化した個人向け顧客管理（CRM）ツールです。お客様の希望条件・来店情報の一元管理から、パイプライン管理、Google カレンダーへの内見・フォローアップ登録まで、賃貸仲介の実務フローに沿った機能を提供します。</p>
             <p style="margin-top: 12px;">あなたのGoogleアカウントに紐付いたGoogle Drive・Google Sheetsにデータを保存するため、<strong>データはすべてあなた自身のものです。</strong></p>
         </div>
 
@@ -283,8 +273,6 @@
                 <li><a href="tokushoho.html" style="color: #2563eb;">特定商取引法に基づく表記</a></li>
             </ul>
         </div>
-
-        <a class="back-link" href="login.html">← トップページに戻る</a>
     </div>
 
     <script src="js/config.js"></script>

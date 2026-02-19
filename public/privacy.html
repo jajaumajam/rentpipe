@@ -19,14 +19,8 @@
             padding: 20px 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
-        .legal-header a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .legal-header a:hover { color: white; }
         .legal-header h1 {
             margin: 0;
             font-size: 20px;
@@ -41,7 +35,10 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            padding: 48px;
+            padding: 40px;
+        }
+        @media (max-width: 600px) {
+            .legal-card { padding: 24px 20px; }
         }
         .legal-card h2 {
             font-size: 22px;
@@ -81,20 +78,10 @@
         }
         .contact-box p { margin: 4px 0; }
         .contact-box a { color: #2563eb; }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 32px;
-            color: #6b7280;
-            font-size: 14px;
-            text-decoration: none;
-        }
-        .back-link:hover { color: #374151; }
     </style>
 </head>
 <body>
     <div class="legal-header">
-        <a href="login.html">← トップへ戻る</a>
         <h1>🏠 RentPipe</h1>
     </div>
 
@@ -110,7 +97,7 @@
             <ul>
                 <li><strong>Googleアカウント情報：</strong>ログイン時にGoogleが提供する氏名・メールアドレス・プロフィール画像</li>
                 <li><strong>Google APIへのアクセス権限：</strong>Google Drive・Google Sheets・Google Calendarへのアクセストークン（ユーザーが許可した範囲のみ）</li>
-                <li><strong>顧客管理データ：</strong>ユーザー自身が入力した顧客情報（氏名・電話番号・希望条件等）。これらはユーザー自身のGoogle Driveに保存されます</li>
+                <li><strong>顧客管理データ：</strong>ユーザー自身が入力した賃貸仲介顧客の情報（氏名・電話番号・希望条件等）。これらはユーザー自身のGoogle Driveに保存されます</li>
                 <li><strong>サービス利用情報：</strong>プラン情報、課金状態（Stripe経由）</li>
             </ul>
 
@@ -151,7 +138,7 @@
             <p>ユーザーは自己の個人情報の開示・訂正・削除を求めることができます。ご要望はお問い合わせ先までご連絡ください。なお、顧客データはユーザー自身のGoogle Driveに保存されているため、ユーザー自身がいつでも削除できます。</p>
 
             <h3>8. 未成年者の利用</h3>
-            <p>本サービスは不動産業務に従事する成人を対象としています。18歳未満の方のご利用はお断りします。</p>
+            <p>本サービスは不動産賃貸仲介業務に従事する成人を対象としています。18歳未満の方のご利用はお断りします。</p>
 
             <h3>9. プライバシーポリシーの変更</h3>
             <p>本ポリシーは、必要に応じて改定することがあります。重要な変更がある場合は、サービス内またはメールにてお知らせします。</p>
@@ -163,8 +150,6 @@
                 <p>メール：<a id="contactEmail" href="#">（準備中）</a></p>
             </div>
         </div>
-
-        <a class="back-link" href="login.html">← トップページに戻る</a>
     </div>
 
     <script src="js/config.js"></script>
