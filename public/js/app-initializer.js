@@ -34,7 +34,8 @@ const AppInitializer = {
                 console.log('⚠️ 未認証: ログインページにリダイレクト');
                 if (options.requireAuth !== false) {
                     window.location.href = 'login.html';
-                    throw new Error('認証が必要です');
+                    // throw ではなく return — リダイレクト後に throw しても無意味かつコンソールにエラーが残る
+                    return { success: false, error: '認証が必要です' };
                 }
                 return { success: false, error: '認証が必要です' };
             }
@@ -146,12 +147,12 @@ const AppInitializer = {
         }
 
         try {
-            const isAuthenticated = await IntegratedAuthManager.checkAuthStatus();
-            
+            const isAuthenticated = await window.IntegratedAuthManager.checkAuthStatus();
+
             if (isAuthenticated) {
-                const userEmail = IntegratedAuthManager.getUserEmail();
-                return { 
-                    isAuthenticated: true, 
+                const userEmail = window.IntegratedAuthManager.getUserEmail();
+                return {
+                    isAuthenticated: true,
                     user: { email: userEmail }
                 };
             } else {
@@ -172,7 +173,7 @@ const AppInitializer = {
         }
 
         try {
-            const result = await UnifiedSheetsManager.initSpreadsheet();
+            const result = await window.UnifiedSheetsManager.initSpreadsheet();
             return result;
         } catch (error) {
             console.error('Sheets初期化エラー:', error);
@@ -190,7 +191,7 @@ const AppInitializer = {
 
         try {
             // Google Sheets からデータを読み込み
-            const result = await UnifiedDataManager.syncFromSheetsImmediately();
+            const result = await window.UnifiedDataManager.syncFromSheetsImmediately();
             
             if (result.success) {
                 console.log(`📥 ${result.customers?.length || 0}件のデータを同期しました`);
@@ -214,7 +215,7 @@ const AppInitializer = {
     displayUserInfo: function() {
         const userEmailElement = document.getElementById('userEmail');
         if (userEmailElement && window.IntegratedAuthManager) {
-            const email = IntegratedAuthManager.getUserEmail();
+            const email = window.IntegratedAuthManager.getUserEmail();
             if (email) {
                 userEmailElement.textContent = email;
             }
@@ -230,8 +231,8 @@ const AppInitializer = {
             hasDataManager: typeof window.UnifiedDataManager !== 'undefined',
             hasSheetsManager: typeof window.UnifiedSheetsManager !== 'undefined',
             hasAuthManager: typeof window.IntegratedAuthManager !== 'undefined',
-            isAuthenticated: window.IntegratedAuthManager ? 
-                IntegratedAuthManager.isAuthenticated() : false
+            isAuthenticated: window.IntegratedAuthManager ?
+                window.IntegratedAuthManager.isAuthenticated() : false
         };
     }
 };

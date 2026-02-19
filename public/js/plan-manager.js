@@ -6,9 +6,6 @@
 (function() {
   'use strict';
 
-  // Supabase createClient は window.supabase.createClient として利用可能
-  const { createClient } = window.supabase;
-
 class PlanManager {
   constructor() {
     this.supabase = null;
@@ -37,7 +34,15 @@ class PlanManager {
         return;
       }
 
-      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+      // window.supabase の存在を initialize() 時点で確認（ロード時クラッシュを防ぐ）
+      if (!window.supabase?.createClient) {
+        console.warn('window.supabase が利用できません - ローカルモードで動作します');
+        this.currentPlan = 'free';
+        this.initialized = true;
+        return;
+      }
+
+      this.supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
       // Get current session
       const { data: { session } } = await this.supabase.auth.getSession();
