@@ -19,7 +19,8 @@ const ENV_VARS = {
   '__STRIPE_PUBLISHABLE_KEY__': process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
   '__APP_URL__': process.env.NEXT_PUBLIC_APP_URL || 'https://rentpipe.vercel.app',
   '__ADMIN_EMAIL__': process.env.ADMIN_EMAIL || 'jajaumajam@gmail.com',
-  '__STRIPE_PRICE_SENIOR_AGENT__': process.env.STRIPE_PRICE_SENIOR_AGENT || ''
+  '__STRIPE_PRICE_SENIOR_AGENT__': process.env.STRIPE_PRICE_SENIOR_AGENT || '',
+  '__SUPPORT_EMAIL__': process.env.SUPPORT_EMAIL || ''
 };
 
 try {

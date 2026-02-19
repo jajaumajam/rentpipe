@@ -177,7 +177,7 @@
     <script>
         const emailEl = document.getElementById('contactEmail');
         const email = window.SUPPORT_EMAIL || '';
-        if (email && !email.includes('example.com')) {
+        if (email) {
             emailEl.textContent = email;
             emailEl.href = 'mailto:' + email;
         } else {

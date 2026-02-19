@@ -24,8 +24,8 @@ window.ADMIN_EMAIL = '__ADMIN_EMAIL__';
 // 意見箱（LINEオープンチャット） - 公開情報なのでハードコード可
 window.FEEDBACK_LINE_URL = 'https://line.me/ti/g2/DsmrFz_36bh5BDMJ80DpDtNQ-0fjGDKx_cdoCg?utm_source=invitation&utm_medium=link_copy&utm_campaign=default';
 
-// サポートメール - 公開情報なのでハードコード可
-window.SUPPORT_EMAIL = 'support@rentpipe.example.com';
+// サポートメール（ビルド時に環境変数から注入）
+window.SUPPORT_EMAIL = '__SUPPORT_EMAIL__';
 
 // アプリバージョン
 window.APP_VERSION = '1.0.0-beta';
@@ -37,7 +37,7 @@ const _isLocalDev = typeof window !== 'undefined' &&
 
 window.AppConfig = {
   FEEDBACK_LINE_URL: window.FEEDBACK_LINE_URL,
-  SUPPORT_EMAIL: window.SUPPORT_EMAIL,
+  SUPPORT_EMAIL: window.SUPPORT_EMAIL || '',
   VERSION: window.APP_VERSION,
   APP_NAME: 'RentPipe',
   DEBUG_MODE: _isLocalDev,
