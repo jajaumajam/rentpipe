@@ -948,7 +948,7 @@
 
                     <div class="form-group">
                         <label>パイプライン状態</label>
-                        <select id="pipelineStatus" onchange="updateContractSectionVisibility(); updateArchiveSectionVisibility();">
+                        <select id="pipelineStatus" onchange="updateContractSectionVisibility(); updateArchiveSectionVisibility(); updateViewingScheduleVisibility();">
                             <option value="初回相談">初回相談</option>
                             <option value="物件紹介">物件紹介</option>
                             <option value="内見調整">内見調整</option>
@@ -1097,6 +1097,64 @@
                             📅 Googleカレンダーにフォローアップ予定を作成
                         </button>
                         <p class="help-text" style="margin-top: 8px;">契約終了前のフォローアップ予定をGoogleカレンダーに自動作成します</p>
+                    </div>
+                </div>
+
+                <!-- ========================================
+                     セクション6-A: 内見予定（内見調整ステージのみ）
+                ========================================= -->
+                <div class="form-section" id="viewingScheduleSection" style="display: none; border: 2px solid #3b82f6; background: #eff6ff;">
+                    <h2 class="section-title"><span class="icon">🏠</span> 内見予定をカレンダーに登録</h2>
+                    <p style="color: #6b7280; margin-bottom: 20px;">内見日時や物件情報を入力して、Googleカレンダーに予定を追加します。</p>
+
+                    <!-- 入力フォーム -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>内見日時 <span style="color:#ef4444;">*</span></label>
+                            <input type="datetime-local" id="viewingDateTime" style="width:100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>リマインド通知</label>
+                            <select id="viewingReminderHours" style="width:100%;">
+                                <option value="1">1時間前</option>
+                                <option value="3" selected>3時間前（推奨）</option>
+                                <option value="24">前日</option>
+                                <option value="48">2日前</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>物件名・住所</label>
+                            <input type="text" id="viewingPropertyName" placeholder="例：ライオンズマンション渋谷 201号室" style="width:100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>集合場所</label>
+                            <input type="text" id="viewingMeetingPlace" placeholder="現地集合" value="現地集合" style="width:100%;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>物件リンク（スーモ・ホームズ等）</label>
+                        <input type="url" id="viewingPropertyUrl" placeholder="https://suumo.jp/..." style="width:100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>予約先・管理会社情報</label>
+                        <textarea id="viewingContactInfo" rows="3" placeholder="例：〇〇不動産 田中様 / TEL: 03-xxxx-xxxx / 予約番号: A123" style="width:100%; resize:vertical;"></textarea>
+                        <p class="help-text">内見のキャンセル・変更時に参照できます</p>
+                    </div>
+
+                    <button type="button" id="registerViewingBtn" onclick="createViewingSchedule()" style="
+                        display: inline-flex; align-items: center; gap: 6px;
+                        background: #3b82f6; color: white; border: none;
+                        padding: 10px 20px; border-radius: 8px; font-size: 14px;
+                        font-weight: 600; cursor: pointer;">
+                        📅 Googleカレンダーに登録
+                    </button>
+
+                    <!-- 登録済み内見予定リスト -->
+                    <div id="viewingScheduleList" style="margin-top: 20px; display: none;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 10px;">登録済みの内見予定</h3>
+                        <div id="viewingScheduleItems"></div>
                     </div>
                 </div>
 
@@ -1624,6 +1682,10 @@
                 // アーカイブセクションの表示制御
                 updateArchiveSectionVisibility();
 
+                // 内見予定セクションの表示制御と既存データの描画
+                updateViewingScheduleVisibility();
+                renderViewingScheduleList(customer.viewingSchedule);
+
                 // カレンダーボタンの表示更新
                 setTimeout(() => updateCalendarButtonVisibility(), 100);
 
@@ -1821,6 +1883,180 @@
             }
         }
 
+        // =========================================================
+        // 内見予定セクション
+        // =========================================================
+
+        // 内見予定セクションの表示制御（内見調整ステージ × 編集モード時のみ表示）
+        function updateViewingScheduleVisibility() {
+            const status = document.getElementById('pipelineStatus')?.value;
+            const section = document.getElementById('viewingScheduleSection');
+            if (!section) return;
+
+            if (isEditMode && status === '内見調整') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // カレンダーに内見予定を登録
+        async function createViewingSchedule() {
+            const btn = document.getElementById('registerViewingBtn');
+            const originalText = btn.textContent;
+
+            try {
+                const dateTimeValue = document.getElementById('viewingDateTime').value;
+                if (!dateTimeValue) {
+                    alert('内見日時を入力してください');
+                    return;
+                }
+
+                const viewingData = {
+                    dateTime: dateTimeValue,
+                    propertyName: document.getElementById('viewingPropertyName').value.trim(),
+                    meetingPlace: document.getElementById('viewingMeetingPlace').value.trim() || '現地集合',
+                    propertyUrl: document.getElementById('viewingPropertyUrl').value.trim(),
+                    contactInfo: document.getElementById('viewingContactInfo').value.trim(),
+                    reminderHours: parseInt(document.getElementById('viewingReminderHours').value) || 3,
+                };
+
+                if (!window.GoogleCalendarAPI) {
+                    throw new Error('Google Calendar APIが利用できません');
+                }
+
+                btn.disabled = true;
+                btn.textContent = '登録中...';
+
+                const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                if (!customer) {
+                    throw new Error('顧客データが見つかりません');
+                }
+
+                const result = await window.GoogleCalendarAPI.createViewingEvent(customer, viewingData);
+
+                if (result.success) {
+                    // viewingSchedule 配列に追記
+                    customer.viewingSchedule = customer.viewingSchedule || [];
+                    customer.viewingSchedule.push({
+                        eventId: result.eventId,
+                        dateTime: result.dateTime,
+                        propertyName: result.propertyName,
+                        meetingPlace: viewingData.meetingPlace,
+                        propertyUrl: viewingData.propertyUrl,
+                        contactInfo: viewingData.contactInfo,
+                        createdAt: new Date().toISOString(),
+                    });
+
+                    await window.UnifiedDataManager.updateCustomer(customer);
+
+                    // フォームをリセット
+                    document.getElementById('viewingDateTime').value = '';
+                    document.getElementById('viewingPropertyName').value = '';
+                    document.getElementById('viewingMeetingPlace').value = '';
+                    document.getElementById('viewingPropertyUrl').value = '';
+                    document.getElementById('viewingContactInfo').value = '';
+
+                    renderViewingScheduleList(customer.viewingSchedule);
+                    alert('✅ 内見予定をGoogleカレンダーに登録しました');
+                } else {
+                    throw new Error(result.error || 'カレンダー登録に失敗しました');
+                }
+
+            } catch (error) {
+                console.error('❌ 内見予定登録エラー:', error);
+                alert('❌ エラー: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 登録済み内見予定リストを描画
+        function renderViewingScheduleList(schedules) {
+            const container = document.getElementById('viewingScheduleItems');
+            const listSection = document.getElementById('viewingScheduleList');
+            if (!container) return;
+
+            if (!schedules || schedules.length === 0) {
+                if (listSection) listSection.style.display = 'none';
+                return;
+            }
+
+            if (listSection) listSection.style.display = 'block';
+
+            container.innerHTML = schedules.map((s, index) => {
+                const dt = s.dateTime ? new Date(s.dateTime) : null;
+                const formatted = dt ? dt.toLocaleString('ja-JP', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit'
+                }) : '日時不明';
+
+                const propertyName = s.propertyName
+                    ? `<span style="font-weight:600;">${escapeHtml(s.propertyName)}</span>`
+                    : '<span style="color:#9ca3af;">物件名未記入</span>';
+
+                const urlPart = s.propertyUrl
+                    ? `<a href="${escapeHtml(s.propertyUrl)}" target="_blank" rel="noopener noreferrer" style="color:#3b82f6;font-size:0.8em;">物件リンク</a>`
+                    : '';
+
+                return `
+                <div style="background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:0.9em;color:#2563eb;margin-bottom:4px;">📅 ${escapeHtml(formatted)}</div>
+                        <div style="margin-bottom:2px;">${propertyName} ${urlPart}</div>
+                        <div style="font-size:0.82em;color:#6b7280;">集合: ${escapeHtml(s.meetingPlace || '現地集合')}</div>
+                    </div>
+                    <button type="button"
+                        onclick="deleteViewingEvent('${escapeHtml(s.eventId || '')}', ${index})"
+                        style="margin-left:12px;flex-shrink:0;background:none;border:1px solid #fca5a5;color:#ef4444;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.82em;"
+                        title="この内見予定を削除">削除</button>
+                </div>`;
+            }).join('');
+        }
+
+        // HTMLエスケープユーティリティ
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // 内見予定を削除
+        async function deleteViewingEvent(eventId, index) {
+            if (!confirm('この内見予定をカレンダーから削除しますか？')) return;
+
+            try {
+                // カレンダーから削除（eventIdがある場合）
+                if (eventId && window.GoogleCalendarAPI) {
+                    const delResult = await window.GoogleCalendarAPI.deleteCalendarEvent(eventId);
+                    if (!delResult.success) {
+                        console.warn('⚠️ カレンダーからの削除に失敗:', delResult.error);
+                        // カレンダー削除失敗でもローカルからは削除を続行
+                    }
+                }
+
+                // customer.viewingSchedule から除去
+                const customer = window.UnifiedDataManager.getCustomerById(editingCustomerId);
+                if (!customer) throw new Error('顧客データが見つかりません');
+
+                customer.viewingSchedule = (customer.viewingSchedule || []).filter((_, i) => i !== index);
+                await window.UnifiedDataManager.updateCustomer(customer);
+
+                renderViewingScheduleList(customer.viewingSchedule);
+                alert('✅ 内見予定を削除しました');
+
+            } catch (error) {
+                console.error('❌ 内見予定削除エラー:', error);
+                alert('❌ エラー: ' + error.message);
+            }
+        }
+
+        // =========================================================
         // 契約セクションの表示制御（ステータスに依存）
         function updateContractSectionVisibility() {
             const status = document.getElementById('pipelineStatus')?.value;

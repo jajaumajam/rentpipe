@@ -404,6 +404,85 @@ const GoogleCalendarAPI = {
     },
 
     /**
+     * 内見予定をGoogleカレンダーに登録（時刻指定イベント）
+     * @param {Object} customer - 顧客データ
+     * @param {Object} viewingData - 内見情報
+     * @param {string} viewingData.dateTime     - 内見日時 (ISO8601: "2025-03-15T14:00")
+     * @param {string} viewingData.propertyName - 物件名・住所
+     * @param {string} viewingData.meetingPlace - 集合場所（デフォルト：現地集合）
+     * @param {string} viewingData.propertyUrl  - 物件リンク（省略可）
+     * @param {string} viewingData.contactInfo  - 予約先・管理会社情報（省略可）
+     * @param {number} viewingData.reminderHours - リマインド時間数（1/3/24/48）
+     * @returns {Object} { success, eventId, dateTime, propertyName }
+     */
+    createViewingEvent: async function(customer, viewingData) {
+        const initResult = await this.init();
+        if (!initResult.success) {
+            return initResult;
+        }
+
+        const customerName = customer.basicInfo?.name || '顧客';
+        const phone = customer.basicInfo?.phone || '';
+        const { dateTime, propertyName, meetingPlace, propertyUrl, contactInfo, reminderHours } = viewingData;
+
+        // 開始・終了時刻（1時間ブロック）
+        const startDt = new Date(dateTime);
+        const endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
+        const toIso = (d) => d.toISOString().replace('.000Z', '+09:00')
+            // JST オフセット付きISO8601に変換
+            .replace(/\.\d{3}Z$/, '+09:00');
+
+        // JST で正確に変換（datetime-local は UTC ではなくローカル時刻）
+        const startIso = dateTime + ':00+09:00'; // "2025-03-15T14:00" → "2025-03-15T14:00:00+09:00"
+        const endDate = new Date(dateTime);
+        endDate.setHours(endDate.getHours() + 1);
+        const endPad = (n) => String(n).padStart(2, '0');
+        const endIso = `${endDate.getFullYear()}-${endPad(endDate.getMonth()+1)}-${endPad(endDate.getDate())}T${endPad(endDate.getHours())}:${endPad(endDate.getMinutes())}:00+09:00`;
+
+        // 説明欄の組み立て
+        let description = `【内見予定】\n\n■ 顧客情報\n  氏名: ${customerName}`;
+        if (phone) description += `\n  電話: ${phone}`;
+        description += `\n\n■ 物件情報\n  物件名: ${propertyName || '（未入力）'}`;
+        description += `\n  集合場所: ${meetingPlace || '現地集合'}`;
+        if (propertyUrl) description += `\n  物件リンク: ${propertyUrl}`;
+        if (contactInfo) description += `\n\n■ 予約先・管理会社\n  ${contactInfo.replace(/\n/g, '\n  ')}`;
+        description += '\n\n---\nRentPipeで作成されました';
+
+        const reminderMinutes = (reminderHours || 3) * 60;
+
+        try {
+            const response = await gapi.client.calendar.events.insert({
+                calendarId: 'primary',
+                resource: {
+                    summary: `🏠 内見: ${customerName}様 - ${propertyName || '物件'}`,
+                    description: description,
+                    start: { dateTime: startIso, timeZone: 'Asia/Tokyo' },
+                    end:   { dateTime: endIso,   timeZone: 'Asia/Tokyo' },
+                    reminders: {
+                        useDefault: false,
+                        overrides: [
+                            { method: 'email',  minutes: reminderMinutes },
+                            { method: 'popup',  minutes: reminderMinutes }
+                        ]
+                    }
+                }
+            });
+
+            const event = response.result;
+            console.log(`✅ 内見予定をカレンダーに登録: ${propertyName} - ${dateTime}`);
+            return {
+                success: true,
+                eventId: event.id,
+                dateTime: dateTime,
+                propertyName: propertyName
+            };
+        } catch (error) {
+            console.error('❌ 内見予定カレンダー登録エラー:', error);
+            return { success: false, error: error.message || '登録に失敗しました' };
+        }
+    },
+
+    /**
      * 顧客のフォローアップイベントをすべて削除
      */
     deleteAllFollowUpEvents: async function(customer) {
