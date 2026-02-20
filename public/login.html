@@ -162,32 +162,32 @@
         }
 
         .login-btn:hover:not(:disabled) { background: #1d4ed8; }
-        .login-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .login-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
 
         .status-box {
             padding: 12px 14px;
             border-radius: 8px;
-            margin: 16px 0;
+            margin: 12px 0 0;
             font-size: 13px;
             line-height: 1.5;
         }
-        .status-success { background: #d1fae5; border: 1px solid #10b981; color: #065f46; }
-        .status-error   { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
-        .status-loading { background: #dbeafe; border: 1px solid #3b82f6; color: #1e40af; }
-
-        .progress-steps { margin: 16px 0 0; }
-        .step {
-            display: flex;
-            align-items: center;
-            padding: 8px 10px;
-            margin: 4px 0;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        .step-pending   { background: #f3f4f6; color: #6b7280; }
-        .step-active    { background: #dbeafe; color: #1e40af; }
-        .step-completed { background: #d1fae5; color: #065f46; }
-        .step-error     { background: #fee2e2; color: #991b1b; }
+        .status-error { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+        .status-warn  { background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; }
 
         .login-note {
             font-size: 12px;
@@ -298,13 +298,6 @@
 
             <div id="status-message" style="display: none;"></div>
 
-            <div class="progress-steps">
-                <div id="step-init" class="step step-pending"><span>1. システム初期化</span></div>
-                <div id="step-auth" class="step step-pending"><span>2. Google認証</span></div>
-                <div id="step-save" class="step step-pending"><span>3. 認証情報保存</span></div>
-                <div id="step-redirect" class="step step-pending"><span>4. 顧客管理画面へ</span></div>
-            </div>
-
             <p class="login-note">
                 ログインすることで<a href="terms.html" style="color:#6b7280;">利用規約</a>および<a href="privacy.html" style="color:#6b7280;">プライバシーポリシー</a>に同意したものとみなします。
             </p>
@@ -316,7 +309,6 @@
             <a href="about.html">RentPipeについて</a>
             <a href="privacy.html">プライバシーポリシー</a>
             <a href="terms.html">利用規約</a>
-            <a href="tokushoho.html">特定商取引法に基づく表記</a>
         </div>
         <div>&copy; 2025 RentPipe. All rights reserved.</div>
     </footer>
@@ -343,26 +335,33 @@
             accessToken: null
         };
 
-        function updateStatus(message, type, detail = '') {
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.style.display = 'block';
-            statusDiv.className = 'status-box status-' + type;
-            statusDiv.innerHTML = `<strong>${message}</strong>${detail ? '<br><small>' + detail + '</small>' : ''}`;
-            console.log(`[${type.toUpperCase()}] ${message}`);
+        function setLoading(loading) {
+            const btn = document.getElementById('loginBtn');
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span>ログイン中...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '🔐 Googleでログイン';
+            }
         }
 
-        function updateStep(stepId, status) {
-            const step = document.getElementById(stepId);
-            if (step) {
-                step.className = 'step step-' + status;
-                if (status === 'completed') {
-                    step.innerHTML = '<span>✅ ' + step.textContent.trim() + '</span>';
-                } else if (status === 'active') {
-                    step.innerHTML = '<span>⏳ ' + step.textContent.trim() + '</span>';
-                } else if (status === 'error') {
-                    step.innerHTML = '<span>❌ ' + step.textContent.trim() + '</span>';
-                }
-            }
+        function showError(message, detail = '') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-box status-error';
+            statusDiv.innerHTML = `<strong>${message}</strong>${detail ? '<br><small style="display:block;margin-top:6px;line-height:1.6;">' + detail + '</small>' : ''}`;
+        }
+
+        function showWarn(message) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-box status-warn';
+            statusDiv.innerHTML = `<strong>${message}</strong>`;
+        }
+
+        function hideStatus() {
+            document.getElementById('status-message').style.display = 'none';
         }
 
         async function saveIntegratedAuthData(userInfo, accessToken) {
@@ -427,14 +426,10 @@
         }
 
         async function startGoogleAuth() {
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.disabled = true;
-            loginBtn.textContent = '認証中...';
+            setLoading(true);
+            hideStatus();
 
             try {
-                updateStep('step-init', 'active');
-                updateStatus('システム初期化中...', 'loading');
-
                 if (!window.GoogleDriveAPIv2) {
                     throw new Error('Google Drive API v2 が読み込まれていません');
                 }
@@ -443,10 +438,6 @@
                 if (!initialized) {
                     throw new Error('Google Drive API 初期化に失敗しました');
                 }
-
-                updateStep('step-init', 'completed');
-                updateStep('step-auth', 'active');
-                updateStatus('Google認証実行中...', 'loading', 'Googleのログインウィンドウが開きます');
 
                 const userInfo = await window.GoogleDriveAPIv2.authenticate();
                 const accessToken = window.GoogleDriveAPIv2.accessToken;
@@ -459,23 +450,12 @@
                 authState.accessToken = accessToken;
                 authState.authenticated = true;
 
-                updateStep('step-auth', 'completed');
-                updateStep('step-save', 'active');
-                updateStatus('認証成功 - データ保存中...', 'success', '認証データとアクセストークンを保存しています');
-
                 const saved = await saveIntegratedAuthData(userInfo, accessToken);
                 if (!saved) {
                     throw new Error('認証データの保存に失敗しました');
                 }
 
-                updateStep('step-save', 'completed');
-                updateStep('step-redirect', 'active');
-                updateStatus('ログイン完了！', 'success',
-                    userInfo.email + ' でログインしました。まもなくリダイレクトします...');
-
-                setTimeout(function() {
-                    window.location.href = 'customer.html';
-                }, 2000);
+                window.location.href = 'customer.html';
 
             } catch (error) {
                 console.error('❌ 認証エラー:', error);
@@ -488,23 +468,14 @@
                     error.error === 'popup_failed_to_open';
 
                 if (isPopupBlocked) {
-                    updateStatus('ポップアップがブロックされています', 'error',
-                        'ブラウザのアドレスバー右端にある「ポップアップがブロックされました」のアイコンをクリックし、' +
-                        'rentpipe.vercel.app のポップアップを「常に許可」してから、もう一度ログインボタンを押してください。');
+                    showError('ポップアップがブロックされています',
+                        'ブラウザのアドレスバー右端にある「ポップアップがブロックされました」のアイコンをクリックし、rentpipe.vercel.app のポップアップを「常に許可」してから、もう一度ログインしてください。');
                 } else {
-                    updateStatus('認証に失敗しました', 'error', error.message);
+                    showError('ログインに失敗しました', error.message);
                 }
 
-                if (authState.authenticated) {
-                    updateStep('step-save', 'error');
-                } else if (authState.initialized) {
-                    updateStep('step-auth', 'error');
-                } else {
-                    updateStep('step-init', 'error');
-                }
-
-                loginBtn.disabled = false;
-                loginBtn.textContent = '🔐 もう一度ログイン';
+                setLoading(false);
+                document.getElementById('loginBtn').innerHTML = '🔐 もう一度ログイン';
             }
         }
 
@@ -514,21 +485,14 @@
             if (!reason) return;
 
             const messages = {
-                timeout:       { text: '24時間操作がなかったため、自動的にログアウトしました。', icon: '⏰' },
-                token_expired: { text: 'セッションの有効期限が切れました。再度ログインしてください。', icon: '🔒' },
-                manual:        { text: 'ログアウトしました。', icon: '👋' },
+                timeout:       '24時間操作がなかったため、自動的にログアウトしました。',
+                token_expired: 'セッションの有効期限が切れました。再度ログインしてください。',
+                manual:        'ログアウトしました。',
             };
 
-            const msg = messages[reason] || { text: 'セッションが終了しました。再度ログインしてください。', icon: 'ℹ️' };
-
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.style.display = 'block';
-            statusDiv.className = 'status-box';
-            statusDiv.style.cssText = 'display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:12px 14px; border-radius:8px; margin:0 0 16px 0; font-size:13px;';
-            statusDiv.innerHTML = `<strong>${msg.icon} ${msg.text}</strong>`;
-
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, '', cleanUrl);
+            const text = messages[reason] || 'セッションが終了しました。再度ログインしてください。';
+            showWarn(text);
+            window.history.replaceState({}, '', window.location.pathname);
         }
 
         async function initialize() {
@@ -546,15 +510,10 @@
                     const authState = window.IntegratedAuthManagerV2.getAuthState();
 
                     if (authState.isAuthenticated) {
-                        updateStatus('既にログイン済みです', 'success', 'リダイレクト中...');
-                        setTimeout(() => {
-                            window.location.href = 'customer.html';
-                        }, 1000);
+                        window.location.href = 'customer.html';
                         return;
                     }
                 }
-
-                console.log('✅ ログインページ初期化完了');
 
             } catch (error) {
                 console.error('❌ 初期化エラー:', error);
