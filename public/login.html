@@ -185,14 +185,18 @@
         .google-btn-icon {
             width: 18px;
             height: 18px;
-            margin-right: 10px;
+            position: absolute;
+            left: 16px;
             flex-shrink: 0;
         }
 
+        .login-btn {
+            position: relative;
+        }
+
         .google-btn-text {
-            flex: 1;
             text-align: center;
-            padding-right: 18px; /* icon幅分のオフセットでテキストを視覚的に中央に */
+            width: 100%;
         }
 
         @keyframes spin {
