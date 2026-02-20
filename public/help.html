@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>よくある質問・使い方 | RentPipe</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            margin: 0;
+            padding: 0;
+        }
+        .legal-header {
+            background: #1e40af;
+            color: white;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .legal-header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .help-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ページタイトル */
+        .help-hero {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            padding: 32px 40px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 600px) {
+            .help-hero { padding: 24px 20px; }
+        }
+        .help-hero h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e40af;
+            margin: 0 0 8px;
+        }
+        .help-hero p {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        /* セクション見出し */
+        .help-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin: 32px 0 8px;
+            padding-left: 4px;
+        }
+
+        /* FAQ アコーディオン */
+        .faq-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .faq-item {
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 18px 40px 18px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            line-height: 1.5;
+            transition: background 0.15s;
+        }
+        .faq-question:hover {
+            background: #f9fafb;
+        }
+        .faq-question .q-label {
+            color: #1e40af;
+            font-size: 15px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .faq-question .chevron {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: #9ca3af;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .faq-item.open .faq-question .chevron {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        .faq-answer {
+            display: none;
+            padding: 0 20px 20px 46px;
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.8;
+        }
+        .faq-item.open .faq-answer {
+            display: block;
+        }
+        .faq-answer p { margin: 0 0 10px; }
+        .faq-answer p:last-child { margin-bottom: 0; }
+        .faq-answer ul {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        .faq-answer li { margin-bottom: 5px; }
+        .faq-answer .highlight-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+        .faq-answer .warn-box {
+            background: #fef9c3;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #92400e;
+        }
+        .faq-answer a {
+            color: #2563eb;
+        }
+
+        /* お問い合わせ */
+        .contact-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            padding: 32px 40px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .contact-card { padding: 24px 20px; }
+        }
+        .contact-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 8px;
+        }
+        .contact-card p {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0 0 16px;
+            line-height: 1.7;
+        }
+        .contact-card a {
+            color: #2563eb;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="legal-header">
+        <h1>🏠 RentPipe</h1>
+    </div>
+
+    <div class="help-container">
+        <div class="help-hero">
+            <h2>❓ よくある質問・使い方ガイド</h2>
+            <p>RentPipeに関するよくある質問をまとめています。解決しない場合はお問い合わせください。</p>
+        </div>
+
+        <!-- ========== 料金・プラン ========== -->
+        <div class="help-section-title">💳 料金・プラン</div>
+        <div class="faq-card">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>料金はかかりますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p><strong>現在はベータ版のため、すべての機能を無料でご利用いただけます。</strong></p>
+                    <p>顧客管理・パイプライン・テンプレート・Googleカレンダー連携・フォーム生成など、全機能が無料です。正式版リリース時は料金体系を設ける予定ですが、その際は事前にメールまたはサービス内でお知らせします。</p>
+                    <div class="highlight-box">🚀 ベータ版期間中は追加料金なしで全機能をお試しいただけます。</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>正式版ではどんなプランになりますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>正式版では以下の2プランを予定しています（内容は変更になる場合があります）。</p>
+                    <ul>
+                        <li><strong>無料プラン</strong>：顧客管理・パイプラインなど基本機能</li>
+                        <li><strong>Senior Agent プラン（月2,480円）</strong>：テンプレート・フォーム・カレンダー拡張などすべての機能</li>
+                    </ul>
+                    <p>支払いはクレジットカード（Stripe）による月次自動課金です。いつでも設定ページから解約できます。</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>解約・返金はできますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>設定ページからいつでも解約できます。解約後は次回更新日まで有料プランの機能を引き続きご利用いただけます。</p>
+                    <p>日割り返金は原則として行っておりませんが、初回課金後7日以内のご連絡については個別に対応いたします。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== アカウント・ログイン ========== -->
+        <div class="help-section-title">🔑 アカウント・ログイン</div>
+        <div class="faq-card">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>ログインできません（ポップアップがブロックされる）</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>RentPipeのログインはGoogleのポップアップウィンドウを使用します。ブラウザにブロックされると以下の手順で許可してください。</p>
+                    <ul>
+                        <li>アドレスバー右端に表示される「ポップアップがブロックされました」アイコンをクリック</li>
+                        <li>「rentpipe.vercel.app のポップアップを常に許可する」を選択</li>
+                        <li>再度「Googleでログイン」ボタンをクリック</li>
+                    </ul>
+                    <div class="highlight-box">💡 Google Chromeの最新版でのご利用を推奨しています。</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>どのGoogleアカウントでもログインできますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>はい、個人のGmailアカウント・Google Workspaceアカウントのどちらでもご利用いただけます。</p>
+                    <p>顧客データはログインしたGoogleアカウントのGoogle Driveに保存されるため、<strong>アカウントを変えると別のデータ環境になります</strong>。使用するアカウントは一つに統一することをお勧めします。</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>自動ログアウトされてしまいます</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>セキュリティのため、24時間操作がない場合に自動的にログアウトされます。再度「Googleでログイン」ボタンからログインしてください（データは失われません）。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== データ管理 ========== -->
+        <div class="help-section-title">💾 データ管理</div>
+        <div class="faq-card">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>データはどこに保存されますか？RentPipeに見られますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>登録した顧客データはすべて<strong>あなた自身のGoogleアカウントのGoogle Drive（Googleスプレッドシート）</strong>に保存されます。RentPipeの運営者がこれらのデータにアクセスすることはありません（ゼロナレッジ設計）。</p>
+                    <p>Google Driveの「RentPipe」フォルダをご自身で確認・編集・削除することが可能です。</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>顧客データをエクスポート（ダウンロード）できますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>データはGoogle Driveのスプレッドシートとして保存されているため、Google DriveまたはGoogle スプレッドシートから直接エクスポートできます。</p>
+                    <ul>
+                        <li>Google Drive で「RentPipe」フォルダを開く</li>
+                        <li>対象のスプレッドシートを開く</li>
+                        <li>メニューから「ファイル」→「ダウンロード」→「Microsoft Excel (.xlsx)」または「CSV」を選択</li>
+                    </ul>
+                    <p>RentPipeのアプリ内から直接エクスポートするボタンは現在準備中です。</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>既存の顧客データをインポートできますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>アプリ内からのCSVインポート機能は現在準備中です。</p>
+                    <p>現時点では、以下の方法で対応できます。</p>
+                    <ul>
+                        <li>RentPipeが自動生成したGoogleスプレッドシートを直接開き、既存データを手動で貼り付ける（列の形式を合わせる必要があります）</li>
+                        <li>お問い合わせいただければ、インポート方法をご案内します</li>
+                    </ul>
+                    <div class="warn-box">⚠️ スプレッドシートを直接編集する場合は、列の構造を変えないようにご注意ください。</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>退会・データ削除をしたい場合はどうすればいいですか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>退会・データ削除をご希望の場合は、下記お問い合わせ先までメールでご連絡ください。3営業日以内に対応いたします。</p>
+                    <ul>
+                        <li><strong>顧客データ（Googleスプレッドシート）</strong>：あなた自身のGoogle Driveに保存されているため、Google Drive上の「RentPipe」フォルダをご自身で削除できます</li>
+                        <li><strong>アカウント情報（プラン・メール等）</strong>：運営者が削除対応いたします</li>
+                        <li><strong>Googleのアクセス権限</strong>：<a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Googleアカウントの権限管理ページ</a>からRentPipeのアクセスを取り消せます</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Google連携 ========== -->
+        <div class="help-section-title">🔗 Google連携</div>
+        <div class="faq-card">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>Googleに付与する権限はどこで確認・取り消しできますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p><a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Googleアカウントの権限管理ページ（myaccount.google.com/permissions）</a>から、RentPipeに付与した権限の確認・取り消しができます。</p>
+                    <p>RentPipeが使用する権限は以下の通りです。</p>
+                    <ul>
+                        <li>Google Drive（データの保存・読み取り）</li>
+                        <li>Google スプレッドシート（顧客データの管理）</li>
+                        <li>Google カレンダー（内見・フォローアップ予定の登録）</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>Googleカレンダーに予定が追加されない</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>以下をご確認ください。</p>
+                    <ul>
+                        <li>ログインしているGoogleアカウントでカレンダーの書き込み権限が有効か</li>
+                        <li>一度ログアウトして再ログインし、Googleの権限許可画面でカレンダーにチェックが入っているか</li>
+                        <li>ブラウザのポップアップ許可が設定されているか</li>
+                    </ul>
+                    <p>解決しない場合はお問い合わせください。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== アンケートフォーム ========== -->
+        <div class="help-section-title">📋 アンケートフォーム</div>
+        <div class="faq-card">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>フォームを生成したら個人情報取扱いの説明文も自動で入りますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>はい。事前に設定ページの「🔒 個人情報取扱い設定」で担当者名・所属会社名・第三者提供先企業を登録しておくと、フォーム生成時に説明文が自動で冒頭に挿入されます。</p>
+                    <p>未設定の場合はフォーム生成がブロックされ、設定を促すメッセージが表示されます。</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>フォームの回答は自動で顧客登録されますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>はい。フォームの回答スプレッドシートとRentPipeを連携することで、回答が自動的に顧客リストへ登録されます。詳細はフォームページの手順に従ってください。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== トラブルシューティング ========== -->
+        <div class="help-section-title">🛠 トラブルシューティング</div>
+        <div class="faq-card">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>データが表示されない・消えてしまった</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>データはGoogle Driveに保存されているため、実際には消えていない可能性が高いです。以下をお試しください。</p>
+                    <ul>
+                        <li>ページを再読み込み（Ctrl+R / Cmd+R）する</li>
+                        <li>一度ログアウトして再ログインする</li>
+                        <li>Google Driveの「RentPipe」フォルダでスプレッドシートの中身を直接確認する</li>
+                        <li>別のGoogleアカウントでログインしていないか確認する</li>
+                    </ul>
+                    <div class="warn-box">⚠️ 複数のGoogleアカウントを使い分けている場合、アカウントごとにデータが異なります。</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>スマートフォンでも使えますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>スマートフォンのブラウザでもご利用いただけますが、PC（特にGoogle Chrome）での利用を推奨しています。スマートフォンではGoogle認証のポップアップが正常に動作しない場合があります。</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span class="q-label">Q</span>
+                    <span>ベータ版のため機能が突然使えなくなることはありますか？</span>
+                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="faq-answer">
+                    <p>ベータ版のため、予告なく機能の変更・停止が行われる場合があります。重要な変更がある場合は、可能な限り事前にお知らせします。</p>
+                    <p>顧客データはあなた自身のGoogle Driveに保存されているため、万が一RentPipeが停止した場合でもデータはそのまま残ります。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- お問い合わせ -->
+        <p class="help-section-title">📮 お問い合わせ</p>
+        <div class="contact-card">
+            <h3>解決しない場合はご連絡ください</h3>
+            <p>上記で解決しない場合や、その他ご不明点がございましたら、メールにてお問い合わせください。<br>原則として3営業日以内に返信いたします。</p>
+            <p id="contactEmailWrap">メール：<a id="contactEmail" href="#">（準備中）</a></p>
+            <p style="margin: 8px 0 0; font-size: 13px; color: #9ca3af;">フィードバックは <a id="lineUrl" href="#" target="_blank" rel="noopener noreferrer">LINEオープンチャット</a> でも受け付けています。</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        // メールアドレスをconfig.jsから設定
+        const emailEl = document.getElementById('contactEmail');
+        const email = window.SUPPORT_EMAIL || '';
+        if (email) {
+            emailEl.textContent = email;
+            emailEl.href = 'mailto:' + email;
+        } else {
+            emailEl.textContent = '（準備中）';
+            emailEl.removeAttribute('href');
+        }
+
+        const lineEl = document.getElementById('lineUrl');
+        const lineUrl = window.FEEDBACK_LINE_URL || '';
+        if (lineUrl) {
+            lineEl.href = lineUrl;
+        } else {
+            lineEl.removeAttribute('href');
+        }
+
+        // FAQアコーディオン
+        function toggleFaq(btn) {
+            const item = btn.closest('.faq-item');
+            const isOpen = item.classList.contains('open');
+            // 同じカード内の他を閉じる
+            const card = item.closest('.faq-card');
+            card.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+    </script>
+
+    <footer style="margin-top:40px;padding:24px 20px;text-align:center;border-top:1px solid #e5e7eb;background:#f9fafb;">
+        <style>
+            .legal-footer a{color:#6b7280;text-decoration:none;font-size:13px;margin:0 10px;}
+            .legal-footer a:hover{color:#374151;}
+            .legal-footer-links{margin-bottom:8px;}
+            .legal-footer-copy{font-size:12px;color:#9ca3af;}
+        </style>
+        <div class="legal-footer">
+            <div class="legal-footer-links">
+                <a href="about.html">RentPipeについて</a>
+                <a href="help.html">よくある質問</a>
+                <a href="privacy.html">プライバシーポリシー</a>
+                <a href="terms.html">利用規約</a>
+            </div>
+            <div class="legal-footer-copy">&copy; 2025 RentPipe. All rights reserved.</div>
+        </div>
+    </footer>
+</body>
+</html>
