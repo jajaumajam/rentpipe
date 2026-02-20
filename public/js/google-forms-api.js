@@ -116,6 +116,18 @@ const GoogleFormsManager = {
     },
 
     /**
+     * localStorage から個人情報設定を読み込む
+     */
+    loadPrivacySettingsFromStorage() {
+        try {
+            const raw = localStorage.getItem('rentpipe_privacy_settings');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    /**
      * Google Formを生成
      */
     async createForm() {
@@ -123,6 +135,21 @@ const GoogleFormsManager = {
         if (!accessToken) {
             throw new Error('Google認証が必要です。先にログインしてください。');
         }
+
+        // 個人情報取扱い設定のチェック
+        const privacySettings = this.loadPrivacySettingsFromStorage();
+        if (!privacySettings || !privacySettings.agentCompany) {
+            throw new Error('PRIVACY_NOT_SET');
+        }
+
+        // フォーム冒頭説明文を生成
+        const description = window.buildPrivacyDescription
+            ? window.buildPrivacyDescription(
+                privacySettings.agentName || '',
+                privacySettings.agentCompany || '',
+                privacySettings.thirdParties || []
+              )
+            : '';
 
         console.log('📝 Google Form 生成開始...');
 
@@ -136,7 +163,8 @@ const GoogleFormsManager = {
             body: JSON.stringify({
                 info: {
                     title: 'お部屋探しアンケート - RentPipe',
-                    documentTitle: 'お部屋探しアンケート'
+                    documentTitle: 'お部屋探しアンケート',
+                    description: description
                 }
             })
         });

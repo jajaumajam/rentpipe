@@ -60,3 +60,9 @@ CREATE TRIGGER set_updated_at
 CREATE INDEX idx_users_email ON public.users(email);
 CREATE INDEX idx_users_stripe_customer_id ON public.users(stripe_customer_id);
 CREATE INDEX idx_users_plan ON public.users(plan);
+
+-- 個人情報取扱い設定（第三者提供先企業）
+-- Migration: add privacy_settings column to existing users table
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS privacy_settings JSONB DEFAULT NULL;
+-- JSON structure: { agentName, agentCompany, thirdParties: [{id, name}], updatedAt }

@@ -109,3 +109,44 @@ export async function getUserByStripeCustomerId(customerId) {
 
   return data;
 }
+
+/**
+ * Get privacy settings for a user
+ * Returns { agentName, agentCompany, thirdParties: [{id, name}], updatedAt } or null
+ */
+export async function getPrivacySettings(userId) {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('privacy_settings')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching privacy settings:', error);
+    return null;
+  }
+
+  return data?.privacy_settings || null;
+}
+
+/**
+ * Update privacy settings for a user
+ */
+export async function updatePrivacySettings(userId, settings) {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .update({
+      privacy_settings: { ...settings, updatedAt: new Date().toISOString() },
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+    .select('privacy_settings')
+    .single();
+
+  if (error) {
+    console.error('Error updating privacy settings:', error);
+    throw error;
+  }
+
+  return data.privacy_settings;
+}
