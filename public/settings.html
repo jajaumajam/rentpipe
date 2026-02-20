@@ -859,27 +859,16 @@
         // 説明文を生成（google-forms-api.js と共有するためグローバルに定義）
         window.buildPrivacyDescription = function(agentName, agentCompany, thirdParties) {
             const parties = (thirdParties || []).filter(p => p.name && p.name.trim());
-            const partiesText = parties.length > 0
-                ? parties.map(p => '・' + p.name).join('\n')
-                : '（なし）';
-            const managerText = agentName && agentCompany
-                ? agentName + '（' + agentCompany + '）'
-                : (agentCompany || agentName || '未設定');
-            return [
-                '【個人情報の取扱いについて】',
-                '',
-                'このアンケートでご提供いただいた個人情報は、以下の目的で利用いたします。',
-                '■ 利用目的：お部屋探しに関するご提案・ご連絡のため',
-                '',
-                '■ 第三者への提供：',
-                'お客様のご要望に応じた物件紹介のため、以下の提携企業に情報を提供する場合があります。',
-                partiesText,
-                '',
-                '■ 管理者：' + managerText,
-                '',
-                '※ 上記以外の目的での利用・提供は行いません。',
-                '※ ご不明な点はお気軽にご担当エージェントにお問い合わせください。'
-            ].join('\n');
+            const lines = [];
+            lines.push('このアンケートでご提供いただいたお客様の個人情報は、お部屋探しに関するご案内、ご連絡及び' + (agentCompany || '（会社名未設定）') + 'による仲介業務のために利用させていただきます。');
+            if (parties.length > 0) {
+                const names = parties.map(p => p.name.trim()).join('、');
+                lines.push('また、お客様のご要望に応じたご案内のため、' + names + 'に情報を提供する場合があります。');
+            }
+            if (agentName) {
+                lines.push('担当：' + agentName);
+            }
+            return lines.join('\n');
         };
 
         function renderThirdPartyList() {
