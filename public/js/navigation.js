@@ -19,11 +19,11 @@ window.createNavigation = function() {
                         <a href="pipeline.html" class="nav-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
                             パイプライン
                         </a>
-                        <a href="forms.html" class="nav-link ${currentPage === 'forms.html' ? 'active' : ''}">
-                            フォーム
+                        <a href="forms.html" class="nav-link ${currentPage === 'forms.html' ? 'active' : ''}" onclick="return handleRestrictedNav(event, 'googleForms')">
+                            ${getMenuLabel('フォーム', 'googleForms')}
                         </a>
-                        <a href="templates.html" class="nav-link ${currentPage === 'templates.html' ? 'active' : ''}">
-                            テンプレート
+                        <a href="templates.html" class="nav-link ${currentPage === 'templates.html' ? 'active' : ''}" onclick="return handleRestrictedNav(event, 'templates')">
+                            ${getMenuLabel('テンプレート', 'templates')}
                         </a>
                         <a href="notifications.html" class="nav-link ${currentPage === 'notifications.html' ? 'active' : ''}">
                             お知らせ
@@ -62,11 +62,11 @@ window.createNavigation = function() {
                     <a href="pipeline.html" class="mobile-menu-link ${currentPage === 'pipeline.html' ? 'active' : ''}">
                         パイプライン
                     </a>
-                    <a href="forms.html" class="mobile-menu-link ${currentPage === 'forms.html' ? 'active' : ''}">
-                        フォーム
+                    <a href="forms.html" class="mobile-menu-link ${currentPage === 'forms.html' ? 'active' : ''}" onclick="return handleRestrictedNav(event, 'googleForms')">
+                        ${getMenuLabel('フォーム', 'googleForms')}
                     </a>
-                    <a href="templates.html" class="mobile-menu-link ${currentPage === 'templates.html' ? 'active' : ''}">
-                        テンプレート
+                    <a href="templates.html" class="mobile-menu-link ${currentPage === 'templates.html' ? 'active' : ''}" onclick="return handleRestrictedNav(event, 'templates')">
+                        ${getMenuLabel('テンプレート', 'templates')}
                     </a>
                     <a href="notifications.html" class="mobile-menu-link ${currentPage === 'notifications.html' ? 'active' : ''}">
                         お知らせ
@@ -235,3 +235,59 @@ window.handleLogout = function() {
 window.loadNavigation = function() {
     window.createNavigation();
 };
+
+// メニューラベルのロック表示ヘルパー（BETA_MODE=false かつ無料プランの場合のみ🔒を付与）
+function getMenuLabel(label, featureName) {
+    if (window.featureFlags && !window.featureFlags.isBetaMode()) {
+        const plan = localStorage.getItem('user_plan') || 'free';
+        if (!window.featureFlags.hasAccess(featureName, plan)) {
+            return `${label} 🔒`;
+        }
+    }
+    return label;
+}
+
+// 制限機能のナビゲーションハンドラ（BETA_MODE=false かつ無料プランの場合はモーダルを表示）
+window.handleRestrictedNav = function(event, featureName) {
+    if (window.featureFlags && !window.featureFlags.isBetaMode()) {
+        const plan = localStorage.getItem('user_plan') || 'free';
+        if (!window.featureFlags.hasAccess(featureName, plan)) {
+            event.preventDefault();
+            window.featureFlags.showUpgradeModal(featureName);
+            return false;
+        }
+    }
+    return true;
+};
+
+// フッター生成（全認証後ページ共通）
+window.createFooter = function() {
+    const isBeta = window.featureFlags ? window.featureFlags.isBetaMode() : true;
+    const tokushohoLink = isBeta
+        ? ''
+        : '<a href="tokushoho.html">特定商取引法に基づく表記</a>';
+
+    const footerHTML = `
+<footer style="margin-top:40px;padding:24px 20px;text-align:center;border-top:1px solid #e5e7eb;background:#f9fafb;">
+    <style>
+        .app-footer a{color:#6b7280;text-decoration:none;font-size:13px;margin:0 10px;}
+        .app-footer a:hover{color:#374151;}
+        .app-footer-links{margin-bottom:8px;}
+        .app-footer-copy{font-size:12px;color:#9ca3af;}
+    </style>
+    <div class="app-footer">
+        <div class="app-footer-links">
+            <a href="about.html">RentPipeについて</a>
+            <a href="privacy.html">プライバシーポリシー</a>
+            <a href="terms.html">利用規約</a>
+            ${tokushohoLink}
+        </div>
+        <div class="app-footer-copy">&copy; 2025 RentPipe. All rights reserved.</div>
+    </div>
+</footer>`;
+
+    document.body.insertAdjacentHTML('beforeend', footerHTML);
+};
+
+// フッターを描画
+window.createFooter();
