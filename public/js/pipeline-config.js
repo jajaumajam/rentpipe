@@ -37,7 +37,7 @@ window.PipelineConfig = {
      */
     STATUS_BADGE_COLORS: {
         '初回相談':  { bg: '#fef3c7', color: '#92400e' },
-        '物件紹介':  { bg: '#dbeafe', color: '#1e40af' },
+        '物件紹介':  { bg: '#dbeafe', color: '#3d4e6b' },
         '内見調整':  { bg: '#e0e7ff', color: '#4338ca' },
         '申込準備':  { bg: '#fce7f3', color: '#9d174d' },
         '審査中':    { bg: '#fed7aa', color: '#c2410c' },

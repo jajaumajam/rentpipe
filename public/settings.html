@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="img/logo-icon.svg">
     <title>設定 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <!-- Tailwind CSS (local build) -->
@@ -48,7 +49,7 @@
         .settings-section h2 {
             margin: 0 0 8px 0;
             font-size: 18px;
-            color: #1e3a8a;
+            color: #3d4e6b;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -145,12 +146,12 @@
         }
 
         .action-btn.primary {
-            background: #3b82f6;
+            background: #5b7fa6;
             color: white;
         }
 
         .action-btn.primary:hover {
-            background: #2563eb;
+            background: #4a6d8f;
         }
 
         .action-btn.secondary {
@@ -290,7 +291,7 @@
         .data-stat .value {
             font-size: 28px;
             font-weight: 700;
-            color: #1e3a8a;
+            color: #3d4e6b;
         }
 
         .data-stat .label {
@@ -362,7 +363,7 @@
         }
 
         .toggle-switch input:checked + .toggle-slider {
-            background-color: #3b82f6;
+            background-color: #5b7fa6;
         }
 
         .toggle-switch input:checked + .toggle-slider:before {
@@ -441,7 +442,7 @@
                 <div style="padding: 20px; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <div>
-                            <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e3a8a;">
+                            <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #3d4e6b;">
                                 現在のプラン: <span id="currentPlanName">Free</span>
                             </h3>
                             <p style="margin: 0; color: #64748b; font-size: 14px;">無制限の顧客管理が可能です</p>
@@ -463,11 +464,11 @@
 
                 <!-- プラン比較テーブル -->
                 <div id="planComparison" style="margin-top: 20px; display: none;">
-                    <h4 style="margin-bottom: 16px; color: #1e3a8a;">プラン比較</h4>
+                    <h4 style="margin-bottom: 16px; color: #3d4e6b;">プラン比較</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <!-- Free Plan -->
                         <div style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px; background: white;">
-                            <h3 style="margin: 0 0 8px 0; color: #1e3a8a;">Free</h3>
+                            <h3 style="margin: 0 0 8px 0; color: #3d4e6b;">Free</h3>
                             <p style="margin: 0 0 16px 0; font-size: 24px; font-weight: bold;">¥0</p>
                             <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
                                 <li>顧客管理（無制限）</li>
@@ -477,12 +478,12 @@
                         </div>
 
                         <!-- Senior Agent Plan -->
-                        <div style="border: 2px solid #3b82f6; border-radius: 8px; padding: 20px; background: linear-gradient(135deg, #eff6ff, #dbeafe); position: relative;">
-                            <div style="position: absolute; top: -12px; right: 16px; background: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        <div style="border: 2px solid #5b7fa6; border-radius: 8px; padding: 20px; background: linear-gradient(135deg, #eff6ff, #dbeafe); position: relative;">
+                            <div style="position: absolute; top: -12px; right: 16px; background: #5b7fa6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
                                 おすすめ
                             </div>
-                            <h3 style="margin: 0 0 8px 0; color: #1e3a8a;">Senior Agent</h3>
-                            <p style="margin: 0 0 16px 0; font-size: 24px; font-weight: bold; color: #3b82f6;">¥2,480<span style="font-size: 14px; color: #64748b;">/月</span></p>
+                            <h3 style="margin: 0 0 8px 0; color: #3d4e6b;">Senior Agent</h3>
+                            <p style="margin: 0 0 16px 0; font-size: 24px; font-weight: bold; color: #5b7fa6;">¥2,480<span style="font-size: 14px; color: #64748b;">/月</span></p>
                             <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
                                 <li>すべてのFree機能</li>
                                 <li>Googleフォーム連携</li>
@@ -550,7 +551,7 @@
                 </label>
                 <div id="thirdPartyList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;"></div>
                 <button onclick="addThirdParty()"
-                        style="background: none; border: none; color: #2563eb; font-size: 14px; cursor: pointer; padding: 4px 0; display: flex; align-items: center; gap: 4px;">
+                        style="background: none; border: none; color: #4a6d8f; font-size: 14px; cursor: pointer; padding: 4px 0; display: flex; align-items: center; gap: 4px;">
                     ＋ 企業を追加
                 </button>
             </div>
@@ -648,7 +649,7 @@
             <h2 class="text-lg font-bold text-gray-900 mb-1">💬 ご意見・ご要望</h2>
             <p class="text-sm text-gray-500 mb-4">機能改善のため、ユーザーコミュニティ（LINEオープンチャット）でぜひご意見をお聞かせください</p>
 
-            <div style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); padding: 24px; border-radius: 12px; color: white; margin-top: 16px;">
+            <div style="background: linear-gradient(135deg, #06b6d4 0%, #5b7fa6 100%); padding: 24px; border-radius: 12px; color: white; margin-top: 16px;">
                 <div style="display: flex; align-items: start; gap: 16px;">
                     <div style="font-size: 48px; line-height: 1;">💡</div>
                     <div style="flex: 1;">

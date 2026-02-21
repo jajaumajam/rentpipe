@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="img/logo-icon.svg">
     <title>顧客登録 - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <!-- Tailwind CSS (local build) -->
@@ -80,7 +81,7 @@
             color: #1f2937;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #3b82f6;
+            border-bottom: 2px solid #5b7fa6;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -138,7 +139,7 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
@@ -187,7 +188,7 @@
             -webkit-appearance: none;
             width: 20px;
             height: 20px;
-            background: #3b82f6;
+            background: #5b7fa6;
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -195,7 +196,7 @@
 
         .slider-value {
             display: inline-block;
-            background: #3b82f6;
+            background: #5b7fa6;
             color: white;
             padding: 4px 12px;
             border-radius: 20px;
@@ -319,12 +320,12 @@
         }
 
         .layout-checkbox-item:hover {
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
             background: #f0f9ff;
         }
 
         .layout-checkbox-item.checked {
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
             background: #eff6ff;
         }
 
@@ -386,12 +387,12 @@
         }
 
         .btn-primary {
-            background: #3b82f6;
+            background: #5b7fa6;
             color: white;
         }
 
         .btn-primary:hover {
-            background: #2563eb;
+            background: #4a6d8f;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
@@ -1027,14 +1028,14 @@
 
                     <!-- 概算初期費用計算結果 -->
                     <div class="form-group" style="background: #f0f9ff; padding: 20px; border-radius: 8px; border: 1px solid #93c5fd; margin-top: 15px;">
-                        <label style="font-weight: 600; color: #1e40af; margin-bottom: 12px; display: block;">💰 概算初期費用</label>
+                        <label style="font-weight: 600; color: #3d4e6b; margin-bottom: 12px; display: block;">💰 概算初期費用</label>
                         <div id="initialCostBreakdown" style="font-size: 14px; color: #374151; line-height: 1.8;">
                             <div>敷金: <span id="costDeposit">-</span></div>
                             <div>礼金: <span id="costKeyMoney">-</span></div>
                             <div>前家賃: <span id="costAdvanceRent">-</span> <span id="advanceRentDetail" style="font-size: 12px; color: #6b7280;"></span></div>
                             <div>仲介手数料（税込）: <span id="costBrokerFee">-</span></div>
                             <div>その他初期費用: <span id="costOther">-</span></div>
-                            <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #3b82f6; font-size: 18px; font-weight: 700; color: #1e40af;">
+                            <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #5b7fa6; font-size: 18px; font-weight: 700; color: #3d4e6b;">
                                 合計: <span id="costTotal">-</span>
                             </div>
                         </div>
@@ -1103,7 +1104,7 @@
                 <!-- ========================================
                      セクション6-A: 内見予定（内見調整ステージのみ）
                 ========================================= -->
-                <div class="form-section" id="viewingScheduleSection" style="display: none; border: 2px solid #3b82f6; background: #eff6ff;">
+                <div class="form-section" id="viewingScheduleSection" style="display: none; border: 2px solid #5b7fa6; background: #eff6ff;">
                     <h2 class="section-title"><span class="icon">🏠</span> 内見予定をカレンダーに登録</h2>
                     <p style="color: #6b7280; margin-bottom: 20px;">内見日時や物件情報を入力して、Googleカレンダーに予定を追加します。</p>
 
@@ -1145,7 +1146,7 @@
 
                     <button type="button" id="registerViewingBtn" onclick="createViewingSchedule()" style="
                         display: inline-flex; align-items: center; gap: 6px;
-                        background: #3b82f6; color: white; border: none;
+                        background: #5b7fa6; color: white; border: none;
                         padding: 10px 20px; border-radius: 8px; font-size: 14px;
                         font-weight: 600; cursor: pointer;">
                         📅 Googleカレンダーに登録
@@ -1997,13 +1998,13 @@
                     : '<span style="color:#9ca3af;">物件名未記入</span>';
 
                 const urlPart = s.propertyUrl
-                    ? `<a href="${escapeHtml(s.propertyUrl)}" target="_blank" rel="noopener noreferrer" style="color:#3b82f6;font-size:0.8em;">物件リンク</a>`
+                    ? `<a href="${escapeHtml(s.propertyUrl)}" target="_blank" rel="noopener noreferrer" style="color:#5b7fa6;font-size:0.8em;">物件リンク</a>`
                     : '';
 
                 return `
                 <div style="background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:0.9em;color:#2563eb;margin-bottom:4px;">📅 ${escapeHtml(formatted)}</div>
+                        <div style="font-size:0.9em;color:#4a6d8f;margin-bottom:4px;">📅 ${escapeHtml(formatted)}</div>
                         <div style="margin-bottom:2px;">${propertyName} ${urlPart}</div>
                         <div style="font-size:0.82em;color:#6b7280;">集合: ${escapeHtml(s.meetingPlace || '現地集合')}</div>
                     </div>

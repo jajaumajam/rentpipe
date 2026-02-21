@@ -3,12 +3,10 @@ window.createNavigation = function() {
     const currentPage = window.location.pathname.split('/').pop() || 'customer.html';
 
     const nav = `
-        <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative;">
+        <nav style="background: linear-gradient(135deg, #3d4e6b 0%, #576078 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative;">
             <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
                 <!-- ロゴ -->
-                <h1 style="color: white; margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px;">
-                    RentPipe
-                </h1>
+                <img src="img/logo-horizontal-white.svg" alt="RentPipe" style="height:28px;display:block;">
 
                 <!-- デスクトップメニュー -->
                 <div class="nav-desktop" style="display: flex; align-items: center; gap: 2rem;">
@@ -308,10 +306,10 @@ window.createLegalHeader = function() {
         const headerEl = document.getElementById('navigation');
         if (headerEl) {
             headerEl.style.cssText =
-                'background:#1e40af;color:white;padding:16px 24px;' +
+                'background:#3d4e6b;color:white;padding:16px 24px;' +
                 'display:flex;align-items:center;justify-content:space-between;';
             headerEl.innerHTML =
-                '<span style="font-size:20px;font-weight:700;">🏠 RentPipe</span>' +
+                '<img src="img/logo-horizontal-white.svg" alt="RentPipe" style="height:28px;">' +
                 '<a href="login.html" style="color:white;background:rgba(255,255,255,0.2);' +
                 'border:1px solid rgba(255,255,255,0.4);padding:6px 14px;border-radius:6px;' +
                 'font-size:13px;text-decoration:none;">ログイン →</a>';

@@ -43,7 +43,7 @@
     --color-danger-100: #fee2e2;
     --color-danger-500: #ef4444;
     --color-info-100: #dbeafe;
-    --color-info-500: #3b82f6;
+    --color-info-500: #5b7fa6;
 
     /* スペーシング */
     --spacing-xs: 8px;
@@ -178,7 +178,7 @@
         left: -100%;
         width: 100%;
         height: calc(100vh - 60px);
-        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+        background: linear-gradient(135deg, #3d4e6b, #5b7fa6);
         flex-direction: column;
         justify-content: flex-start;
         align-items: stretch;
@@ -294,12 +294,12 @@ body {
 }
 
 .btn-primary {
-    background: #1e3a8a;
+    background: #3d4e6b;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #1e40af;
+    background: #3d4e6b;
     transform: translateY(-2px);
 }
 
@@ -468,7 +468,7 @@ body {
 }
 
 .stage-number:not(:empty) {
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    background: linear-gradient(135deg, #3d4e6b, #5b7fa6);
     color: white;
 }
 
@@ -540,7 +540,7 @@ body {
     padding: 15px;
     background: #f8fafc;
     border-radius: 8px;
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid #5b7fa6;
 }
 
 .task-content h4 {
@@ -559,7 +559,7 @@ body {
     font-size: 12px;
     font-weight: bold;
     background: #dbeafe;
-    color: #2563eb;
+    color: #4a6d8f;
 }
 
 /* ===== モーダル ===== */
@@ -661,7 +661,7 @@ body {
 
 .form-input:focus {
     outline: none;
-    border-color: #1e3a8a;
+    border-color: #3d4e6b;
 }
 
 .budget-inputs {
@@ -704,7 +704,7 @@ body {
 }
 
 .quick-register-info strong {
-    color: #1e40af;
+    color: #3d4e6b;
 }
 
 /* ===== レスポンシブ対応 ===== */
@@ -943,7 +943,7 @@ body {
     width: 40px;
     height: 40px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #1e3a8a;
+    border-top: 4px solid #3d4e6b;
     border-radius: 50%;
     margin: 0 auto 15px;
     animation: spin 1s linear infinite;
@@ -1106,7 +1106,7 @@ textarea.error {
 .stat-value {
     font-size: 28px;
     font-weight: bold;
-    color: #1e3a8a;
+    color: #3d4e6b;
     margin-bottom: 5px;
 }
 
@@ -1191,12 +1191,12 @@ textarea.error {
 
 .action-btn:hover {
     background: #f1f5f9;
-    border-color: #3b82f6;
+    border-color: #5b7fa6;
     transform: translateY(-2px);
 }
 
 .welcome-message {
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    background: linear-gradient(135deg, #3d4e6b, #5b7fa6);
     color: white;
     padding: 30px;
     border-radius: 12px;
@@ -1312,7 +1312,7 @@ textarea.error {
 }
 
 .pipeline-stats .stat-card {
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    background: linear-gradient(135deg, #3d4e6b, #5b7fa6);
     color: white;
     padding: 15px 20px;
     border-radius: 8px;
@@ -1420,7 +1420,7 @@ textarea.error {
 
 .pipeline-column.drag-over {
     background: #e0e7ff;
-    border: 2px dashed #3b82f6;
+    border: 2px dashed #5b7fa6;
 }
 
 .card-name {
@@ -1443,7 +1443,7 @@ textarea.error {
 
 /* パイプラインステータスカラー */
 .status-initial { background: linear-gradient(135deg, #06b6d4, #0e7490); }
-.status-proposal { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+.status-proposal { background: linear-gradient(135deg, #5b7fa6, #3d4e6b); }
 .status-viewing { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
 .status-application { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .status-review { background: linear-gradient(135deg, #ef4444, #dc2626); }
@@ -1469,7 +1469,7 @@ textarea.error {
 }
 
 .form-header h1 {
-    color: #1e3a8a;
+    color: #3d4e6b;
     margin-bottom: 10px;
 }
 
@@ -1514,7 +1514,7 @@ textarea.error {
 }
 
 .step-circle.active {
-    background: #3b82f6;
+    background: #5b7fa6;
     color: white;
 }
 
@@ -1573,7 +1573,7 @@ textarea.error {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: #5b7fa6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -1638,7 +1638,7 @@ textarea.error {
 
 .export-option:hover {
     background: #f1f5f9;
-    border-color: #3b82f6;
+    border-color: #5b7fa6;
     transform: translateY(-2px);
 }
 
@@ -1758,8 +1758,8 @@ textarea.error {
 .confirmation-grid h3 {
     margin-top: 20px;
     margin-bottom: 10px;
-    color: #1e3a8a;
-    border-bottom: 2px solid #1e3a8a;
+    color: #3d4e6b;
+    border-bottom: 2px solid #3d4e6b;
     padding-bottom: 5px;
 }
 
@@ -1790,7 +1790,7 @@ textarea.error {
 }
 
 .profile-header h1 {
-    color: #1e3a8a;
+    color: #3d4e6b;
     font-size: 2rem;
     margin-bottom: 0.5rem;
 }
@@ -1803,7 +1803,7 @@ textarea.error {
 .section-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1e3a8a;
+    color: #3d4e6b;
     margin-bottom: 1.5rem;
     padding-bottom: 0.5rem;
     border-bottom: 2px solid #e5e7eb;
@@ -1849,7 +1849,7 @@ textarea.error {
 .form-group select:focus, 
 .form-group textarea:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: #5b7fa6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -2036,7 +2036,7 @@ textarea.error {
     width: 50px;
     height: 50px;
     border: 4px solid #e2e8f0;
-    border-top-color: #3b82f6;
+    border-top-color: #5b7fa6;
     border-radius: 50%;
     animation: spinner 0.8s linear infinite;
 }
@@ -2135,7 +2135,7 @@ textarea.error {
 }
 
 .customer-table .customer-name-cell a {
-    color: #3b82f6;
+    color: #5b7fa6;
     text-decoration: none;
 }
 
@@ -2194,7 +2194,7 @@ textarea.error {
 
 .customer-table .btn-table-action.btn-edit {
     background: #eff6ff;
-    color: #3b82f6;
+    color: #5b7fa6;
 }
 
 .customer-table .btn-table-action.btn-edit:hover {
@@ -2305,7 +2305,7 @@ textarea.error {
 }
 
 .plan-upgrade-modal h2 {
-  color: #1e3a8a;
+  color: #3d4e6b;
   margin-bottom: 10px;
   font-size: 24px;
 }
@@ -2336,7 +2336,7 @@ textarea.error {
 
 .plan-card.upgrade {
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  border-color: #3b82f6;
+  border-color: #5b7fa6;
   position: relative;
 }
 
@@ -2345,7 +2345,7 @@ textarea.error {
   position: absolute;
   top: -12px;
   right: 20px;
-  background: #3b82f6;
+  background: #5b7fa6;
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
@@ -2354,7 +2354,7 @@ textarea.error {
 }
 
 .plan-card h3 {
-  color: #1e3a8a;
+  color: #3d4e6b;
   margin-bottom: 16px;
   font-size: 18px;
 }
@@ -2362,7 +2362,7 @@ textarea.error {
 .plan-card .price {
   font-size: 32px;
   font-weight: bold;
-  color: #3b82f6;
+  color: #5b7fa6;
   margin-bottom: 16px;
 }
 
@@ -2385,7 +2385,7 @@ textarea.error {
 
 .btn-upgrade {
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #5b7fa6, #4a6d8f);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -2397,7 +2397,7 @@ textarea.error {
 }
 
 .btn-upgrade:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #4a6d8f, #1d4ed8);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
@@ -2447,7 +2447,7 @@ textarea.error {
 }
 
 .btn-rentpipe-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #576078 0%, #b5b5c5 100%);
   color: white;
 }
 
@@ -2508,7 +2508,7 @@ textarea.error {
 
 .input-rentpipe:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #576078;
 }
 
 /* バッジコンポーネント */
@@ -2522,7 +2522,7 @@ textarea.error {
 
 .badge-rentpipe-info {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #3d4e6b;
 }
 
 .badge-rentpipe-success {

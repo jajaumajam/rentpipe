@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-rentpipe-primary: #667eea;
-  --color-rentpipe-secondary: #764ba2;
+  --color-rentpipe-primary: #576078;
+  --color-rentpipe-secondary: #b5b5c5;
   --color-rentpipe-success: #10b981;
   --color-rentpipe-danger: #ef4444;
   --color-rentpipe-warning: #f59e0b;
-  --color-rentpipe-info: #3b82f6;
+  --color-rentpipe-info: #5b7fa6;
 }

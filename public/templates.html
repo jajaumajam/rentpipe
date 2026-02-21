@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="img/logo-icon.svg">
     <title>メッセージテンプレート - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <!-- Tailwind CSS (local build) -->
@@ -72,7 +73,7 @@
 
         .settings-field input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
         }
 
         .settings-actions {
@@ -91,12 +92,12 @@
         }
 
         .settings-btn.primary {
-            background: #3b82f6;
+            background: #5b7fa6;
             color: white;
         }
 
         .settings-btn.primary:hover {
-            background: #2563eb;
+            background: #4a6d8f;
         }
 
         .settings-btn.secondary {
@@ -128,13 +129,13 @@
         }
 
         .category-tab:hover {
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
         }
 
         .category-tab.active {
-            background: #3b82f6;
+            background: #5b7fa6;
             color: white;
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
         }
 
         /* 顧客選択 */
@@ -163,7 +164,7 @@
 
         .customer-select:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
         }
 
         /* テンプレートカード */
@@ -205,7 +206,7 @@
 
         .template-badge.pipeline {
             background: #dbeafe;
-            color: #1e40af;
+            color: #3d4e6b;
         }
 
         .template-badge.followup {
@@ -227,14 +228,14 @@
 
         .template-content.editing {
             background: white;
-            border-color: #3b82f6;
+            border-color: #5b7fa6;
         }
 
         .template-textarea {
             width: 100%;
             min-height: 200px;
             padding: 16px;
-            border: 2px solid #3b82f6;
+            border: 2px solid #5b7fa6;
             border-radius: 8px;
             font-size: 14px;
             line-height: 1.8;
@@ -268,12 +269,12 @@
         }
 
         .template-btn.copy {
-            background: #3b82f6;
+            background: #5b7fa6;
             color: white;
         }
 
         .template-btn.copy:hover {
-            background: #2563eb;
+            background: #4a6d8f;
         }
 
         .template-btn.copy.copied {
@@ -345,14 +346,14 @@
 
         .customization-hint h4 {
             margin: 0 0 8px 0;
-            color: #1e40af;
+            color: #3d4e6b;
             font-size: 14px;
         }
 
         .customization-hint p {
             margin: 0;
             font-size: 13px;
-            color: #1e3a8a;
+            color: #3d4e6b;
         }
 
         .variable-list {
@@ -364,7 +365,7 @@
 
         .variable-tag {
             background: #dbeafe;
-            color: #1e40af;
+            color: #3d4e6b;
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
@@ -927,7 +928,7 @@
                     if (card) {
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         // 青いアウトラインで3秒間ハイライト
-                        card.style.outline = '3px solid #3b82f6';
+                        card.style.outline = '3px solid #5b7fa6';
                         card.style.outlineOffset = '4px';
                         card.style.transition = 'outline 0.5s ease';
                         setTimeout(() => { card.style.outline = 'none'; }, 3000);

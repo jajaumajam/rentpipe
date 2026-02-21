@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="img/logo-icon.svg">
     <title>顧客インポート - RentPipe</title>
     <link rel="stylesheet" href="css/main.css">
     <!-- Tailwind CSS (local build) -->
@@ -67,7 +68,7 @@
                         <button class="btn-rentpipe btn-rentpipe-primary" onclick="downloadCsvTemplate()">
                             ⬇️ 詳細テンプレートをダウンロード
                         </button>
-                        <button class="btn-rentpipe" onclick="toggleFieldGuide()" id="guide-toggle-btn" style="border:2px solid #667eea; color:#667eea; background:white;">
+                        <button class="btn-rentpipe" onclick="toggleFieldGuide()" id="guide-toggle-btn" style="border:2px solid #3d4e6b; color:#3d4e6b; background:white;">
                             📖 項目ガイドを見る
                         </button>
                     </div>
@@ -93,7 +94,7 @@
 
                             <!-- 基本情報 -->
                             <div class="guide-section">
-                                <div class="guide-section-title" style="background:#eff6ff; color:#1e40af; border-color:#bfdbfe;">
+                                <div class="guide-section-title" style="background:#eff6ff; color:#3d4e6b; border-color:#bfdbfe;">
                                     👤 基本情報
                                 </div>
                                 <table class="guide-table">
@@ -264,7 +265,7 @@
                         <button class="btn-rentpipe btn-rentpipe-primary" onclick="downloadJsonTemplate()">
                             ⬇️ 詳細テンプレートをダウンロード
                         </button>
-                        <button class="btn-rentpipe" onclick="selectFormat('csv'); setTimeout(()=>{toggleFieldGuide(true);document.getElementById('field-guide').scrollIntoView({behavior:'smooth'})},100);" style="border:2px solid #667eea; color:#667eea; background:white;">
+                        <button class="btn-rentpipe" onclick="selectFormat('csv'); setTimeout(()=>{toggleFieldGuide(true);document.getElementById('field-guide').scrollIntoView({behavior:'smooth'})},100);" style="border:2px solid #3d4e6b; color:#3d4e6b; background:white;">
                             📖 項目ガイドを見る（CSV版）
                         </button>
                     </div>
@@ -857,7 +858,7 @@
         }
 
         .upload-area:hover, .upload-area.dragover {
-            border-color: #667eea;
+            border-color: #3d4e6b;
             background: #f8f9ff;
         }
 
@@ -919,7 +920,7 @@
 
         .spinner {
             border: 4px solid #f3f4f6;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #3d4e6b;
             border-radius: 50%;
             width: 40px;
             height: 40px;

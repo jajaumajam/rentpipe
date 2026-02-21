@@ -32,7 +32,7 @@
 
 .header-left h1 {
     margin: 0;
-    color: #1e3a8a;
+    color: #3d4e6b;
     font-size: 1.8rem;
 }
 
@@ -52,12 +52,12 @@
 }
 
 .btn-primary {
-    background: #3b82f6;
+    background: #5b7fa6;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #2563eb;
+    background: #4a6d8f;
     transform: translateY(-1px);
 }
 
@@ -94,7 +94,7 @@
 .column-header.status-application { background: #16a34a !important; }
 
 [data-status="審査"] .column-header,
-.column-header.status-screening { background: #2563eb !important; }
+.column-header.status-screening { background: #4a6d8f !important; }
 
 [data-status="契約"] .column-header,
 .column-header.status-contract { background: #7c3aed !important; }
@@ -298,7 +298,7 @@
         padding: 12px;
         margin-bottom: 10px;
         background: white;
-        border-left: 3px solid #3b82f6;
+        border-left: 3px solid #5b7fa6;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         border-radius: 6px;
         width: 100%;
@@ -413,7 +413,7 @@
         padding: 8px;
         border-radius: 6px;
         background: white;
-        border-left: 3px solid #3b82f6;
+        border-left: 3px solid #5b7fa6;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         cursor: pointer;
         transition: all 0.2s ease;

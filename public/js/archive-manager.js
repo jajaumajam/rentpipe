@@ -86,7 +86,7 @@ const ArchiveManager = {
                 }
                 .archive-manager-reason-input textarea:focus {
                     outline: none;
-                    border-color: #3b82f6;
+                    border-color: #5b7fa6;
                 }
                 .archive-manager-actions {
                     display: flex;
