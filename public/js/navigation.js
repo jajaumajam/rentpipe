@@ -292,3 +292,27 @@ window.createFooter = function() {
 
 // フッターを描画
 window.createFooter();
+
+// 法的ページ用ヘッダー（認証状態に応じてヘッダーを切り替え）
+window.createLegalHeader = function() {
+    const authData = localStorage.getItem('google_auth_data');
+    const isLoggedIn = !!authData;
+
+    if (isLoggedIn) {
+        // ログイン済み → 通常ナビバーを #navigation に挿入
+        window.createNavigation();
+    } else {
+        // 未ログイン → ロゴ＋ログインリンクのシンプルヘッダーに置き換え
+        const headerEl = document.getElementById('navigation');
+        if (headerEl) {
+            headerEl.style.cssText =
+                'background:#1e40af;color:white;padding:16px 24px;' +
+                'display:flex;align-items:center;justify-content:space-between;';
+            headerEl.innerHTML =
+                '<span style="font-size:20px;font-weight:700;">🏠 RentPipe</span>' +
+                '<a href="login.html" style="color:white;background:rgba(255,255,255,0.2);' +
+                'border:1px solid rgba(255,255,255,0.4);padding:6px 14px;border-radius:6px;' +
+                'font-size:13px;text-decoration:none;">ログイン →</a>';
+        }
+    }
+};
