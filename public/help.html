@@ -216,32 +216,6 @@
                     <div class="highlight-box">🚀 ベータ版期間中は追加料金なしで全機能をお試しいただけます。</div>
                 </div>
             </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span class="q-label">Q</span>
-                    <span>正式版ではどんなプランになりますか？</span>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                </button>
-                <div class="faq-answer">
-                    <p>正式版では以下の2プランを予定しています（内容は変更になる場合があります）。</p>
-                    <ul>
-                        <li><strong>無料プラン</strong>：顧客管理・パイプラインなど基本機能</li>
-                        <li><strong>Senior Agent プラン（月2,480円）</strong>：テンプレート・フォーム・カレンダー拡張などすべての機能</li>
-                    </ul>
-                    <p>支払いはクレジットカード（Stripe）による月次自動課金です。いつでも設定ページから解約できます。</p>
-                </div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span class="q-label">Q</span>
-                    <span>解約・返金はできますか？</span>
-                    <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                </button>
-                <div class="faq-answer">
-                    <p>設定ページからいつでも解約できます。解約後は次回更新日まで有料プランの機能を引き続きご利用いただけます。</p>
-                    <p>日割り返金は原則として行っておりませんが、初回課金後7日以内のご連絡については個別に対応いたします。</p>
-                </div>
-            </div>
         </div>
 
         <!-- ========== アカウント・ログイン ========== -->
@@ -323,12 +297,8 @@
                     <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
                 <div class="faq-answer">
-                    <p>アプリ内からのCSVインポート機能は現在準備中です。</p>
-                    <p>現時点では、以下の方法で対応できます。</p>
-                    <ul>
-                        <li>RentPipeが自動生成したGoogleスプレッドシートを直接開き、既存データを手動で貼り付ける（列の形式を合わせる必要があります）</li>
-                        <li>お問い合わせいただければ、インポート方法をご案内します</li>
-                    </ul>
+                    <p>ログイン後の設定ページからCSVテンプレートをダウンロードいただけます。テンプレートの列形式に合わせて既存データを貼り付け、Google DriveのRentPipeスプレッドシートに上書きすることでインポートが可能です。</p>
+                    <p>アプリ内からのワンクリックCSVインポート機能は現在準備中です。</p>
                     <div class="warn-box">⚠️ スプレッドシートを直接編集する場合は、列の構造を変えないようにご注意ください。</div>
                 </div>
             </div>
@@ -339,7 +309,7 @@
                     <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
                 <div class="faq-answer">
-                    <p>退会・データ削除をご希望の場合は、下記お問い合わせ先までメールでご連絡ください。3営業日以内に対応いたします。</p>
+                    <p>退会・データ削除をご希望の場合は、下記お問い合わせ先までメールでご連絡ください。可能な限り速やかにご対応いたします。</p>
                     <ul>
                         <li><strong>顧客データ（Googleスプレッドシート）</strong>：あなた自身のGoogle Driveに保存されているため、Google Drive上の「RentPipe」フォルダをご自身で削除できます</li>
                         <li><strong>アカウント情報（プラン・メール等）</strong>：運営者が削除対応いたします</li>
@@ -396,8 +366,12 @@
                     <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
                 <div class="faq-answer">
-                    <p>はい。事前に設定ページの「🔒 個人情報取扱い設定」で担当者名・所属会社名・第三者提供先企業を登録しておくと、フォーム生成時に説明文が自動で冒頭に挿入されます。</p>
-                    <p>未設定の場合はフォーム生成がブロックされ、設定を促すメッセージが表示されます。</p>
+                    <p>はい。事前に設定ページの「🔒 個人情報取扱い設定」で以下のいずれかを設定しておくと、フォーム生成時に個人情報の取扱いに関する説明が自動で冒頭に挿入されます。</p>
+                    <ul>
+                        <li><strong>自動生成テキスト</strong>：担当者名・所属会社名・第三者提供先企業を登録すると、説明文が自動生成されます</li>
+                        <li><strong>独自プライバシーポリシーURL</strong>：自社のプライバシーポリシーページURLを登録すると、フォームにリンクが表示されます</li>
+                    </ul>
+                    <p>所属会社名またはプライバシーポリシーURLのいずれかが設定されていない場合はフォーム生成がブロックされ、設定を促すメッセージが表示されます。</p>
                 </div>
             </div>
             <div class="faq-item">
@@ -439,7 +413,8 @@
                     <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
                 <div class="faq-answer">
-                    <p>スマートフォンのブラウザでもご利用いただけますが、PC（特にGoogle Chrome）での利用を推奨しています。スマートフォンではGoogle認証のポップアップが正常に動作しない場合があります。</p>
+                    <p>スマートフォンのブラウザからもご利用いただけます。スマートフォンでログインする場合は、ブラウザのポップアップ許可設定をオンにしてからお試しください。</p>
+                    <p>より快適にお使いいただくには、PC（Google Chrome）での利用をお勧めしています。</p>
                 </div>
             </div>
             <div class="faq-item">
@@ -459,7 +434,7 @@
         <p class="help-section-title">📮 お問い合わせ</p>
         <div class="contact-card">
             <h3>解決しない場合はご連絡ください</h3>
-            <p>上記で解決しない場合や、その他ご不明点がございましたら、メールにてお問い合わせください。<br>原則として3営業日以内に返信いたします。</p>
+            <p>上記で解決しない場合や、その他ご不明点がございましたら、メールにてお問い合わせください。可能な限り速やかにご対応いたします。</p>
             <p id="contactEmailWrap">メール：<a id="contactEmail" href="#">（準備中）</a></p>
             <p style="margin: 8px 0 0; font-size: 13px; color: #9ca3af;">フィードバックは <a id="lineUrl" href="#" target="_blank" rel="noopener noreferrer">LINEオープンチャット</a> でも受け付けています。</p>
         </div>

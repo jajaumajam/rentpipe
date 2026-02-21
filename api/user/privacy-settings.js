@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Email verification failed' });
     }
 
-    const { _action, agentName, agentCompany, thirdParties } = req.body;
+    const { _action, agentName, agentCompany, thirdParties, privacyPolicyUrl } = req.body;
 
     // GET action: return current privacy settings
     // (_action: 'get' or HTTP GET method)
@@ -63,6 +63,7 @@ export default async function handler(req, res) {
         agentName: agentName?.trim() || '',
         agentCompany: agentCompany?.trim() || '',
         thirdParties: validatedParties,
+        privacyPolicyUrl: privacyPolicyUrl?.trim() || '',
       });
 
       return res.status(200).json({ settings: updated });

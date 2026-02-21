@@ -555,6 +555,14 @@
                 </button>
             </div>
 
+            <div style="margin-bottom: 16px; padding: 12px 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                <p style="font-size: 13px; font-weight: 600; color: #374151; margin: 0 0 6px 0;">🔗 独自プライバシーポリシーURL（任意）</p>
+                <p style="font-size: 12px; color: #6b7280; margin: 0 0 8px 0;">自社のプライバシーポリシーページのURLを設定すると、フォーム冒頭にリンクが表示されます。設定した場合、上記の自動生成テキストに加えてURLリンクが挿入されます。</p>
+                <input type="url" id="privacyPolicyUrl" placeholder="例: https://example.com/privacy"
+                       style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 14px; box-sizing: border-box;"
+                       oninput="updatePrivacyPreview()">
+            </div>
+
             <div style="margin-bottom: 16px; padding: 16px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe;">
                 <p style="font-size: 12px; font-weight: 600; color: #1d4ed8; margin: 0 0 8px 0;">📋 フォームに挿入される説明文プレビュー</p>
                 <pre id="privacyPreview" style="font-size: 12px; color: #374151; white-space: pre-wrap; margin: 0; font-family: inherit; line-height: 1.6;">（担当者名・企業名・提供先を入力すると表示されます）</pre>
@@ -909,12 +917,17 @@
             const agentName = (document.getElementById('privacyAgentName')?.value || '').trim();
             const company = (document.getElementById('privacyAgentCompany')?.value || '').trim();
             const parties = privacyThirdParties.filter(p => p.name.trim());
+            const policyUrl = (document.getElementById('privacyPolicyUrl')?.value || '').trim();
             const preview = document.getElementById('privacyPreview');
             if (preview) {
-                if (!agentName && !company && parties.length === 0) {
+                if (!agentName && !company && parties.length === 0 && !policyUrl) {
                     preview.textContent = '（担当者名・企業名・提供先を入力すると表示されます）';
                 } else {
-                    preview.textContent = window.buildPrivacyDescription(agentName, company, parties);
+                    let text = window.buildPrivacyDescription(agentName, company, parties);
+                    if (policyUrl) {
+                        text += '\n\n▶ 個人情報取扱い方針：' + policyUrl;
+                    }
+                    preview.textContent = text;
                 }
             }
         }
@@ -928,6 +941,9 @@
                     document.getElementById('privacyAgentName').value = settings.agentName || '';
                     document.getElementById('privacyAgentCompany').value = settings.agentCompany || '';
                     privacyThirdParties = settings.thirdParties || [];
+                    if (document.getElementById('privacyPolicyUrl')) {
+                        document.getElementById('privacyPolicyUrl').value = settings.privacyPolicyUrl || '';
+                    }
                     renderThirdPartyList();
                     updatePrivacyPreview();
                 }
@@ -949,6 +965,9 @@
                         document.getElementById('privacyAgentName').value = settings.agentName || '';
                         document.getElementById('privacyAgentCompany').value = settings.agentCompany || '';
                         privacyThirdParties = settings.thirdParties || [];
+                        if (document.getElementById('privacyPolicyUrl')) {
+                            document.getElementById('privacyPolicyUrl').value = settings.privacyPolicyUrl || '';
+                        }
                         renderThirdPartyList();
                         updatePrivacyPreview();
                         // キャッシュを更新
@@ -964,6 +983,7 @@
             const agentName = (document.getElementById('privacyAgentName')?.value || '').trim();
             const agentCompany = (document.getElementById('privacyAgentCompany')?.value || '').trim();
             const thirdParties = privacyThirdParties.filter(p => p.name.trim());
+            const privacyPolicyUrl = (document.getElementById('privacyPolicyUrl')?.value || '').trim();
 
             const status = document.getElementById('privacySaveStatus');
             status.style.display = 'block';
@@ -984,7 +1004,8 @@
                         email: savedUser.email,
                         agentName,
                         agentCompany,
-                        thirdParties
+                        thirdParties,
+                        privacyPolicyUrl
                     })
                 });
 
@@ -995,7 +1016,7 @@
 
                 // localStorage にもキャッシュ（フォーム生成時に使用）
                 localStorage.setItem('rentpipe_privacy_settings',
-                    JSON.stringify({ agentName, agentCompany, thirdParties }));
+                    JSON.stringify({ agentName, agentCompany, thirdParties, privacyPolicyUrl }));
 
                 status.textContent = '✅ 保存しました';
                 status.style.color = '#16a34a';
@@ -1031,8 +1052,7 @@
             } catch (error) {
                 console.error('フォーム生成エラー:', error);
                 if (error.message === 'PRIVACY_NOT_SET') {
-                    alert('⚠️ フォームを生成する前に「個人情報取扱い設定」で所属会社名を入力・保存してください。\n\n画面を上にスクロールして「個人情報取扱い設定」セクションをご確認ください。');
-                    document.getElementById('privacyAgentCompany')?.focus();
+                    alert('⚠️ フォームを生成する前に「個人情報取扱い設定」で所属会社名または独自プライバシーポリシーURLを入力・保存してください。\n\n画面を上にスクロールして「個人情報取扱い設定」セクションをご確認ください。');
                     document.getElementById('privacyAgentCompany')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
                     alert('❌ フォーム生成に失敗しました: ' + error.message);

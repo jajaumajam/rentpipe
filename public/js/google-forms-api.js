@@ -136,20 +136,25 @@ const GoogleFormsManager = {
             throw new Error('Google認証が必要です。先にログインしてください。');
         }
 
-        // 個人情報取扱い設定のチェック
+        // 個人情報取扱い設定のチェック（所属会社名 または 独自プライバシーポリシーURL のいずれかが必要）
         const privacySettings = this.loadPrivacySettingsFromStorage();
-        if (!privacySettings || !privacySettings.agentCompany) {
+        if (!privacySettings || (!privacySettings.agentCompany && !privacySettings.privacyPolicyUrl)) {
             throw new Error('PRIVACY_NOT_SET');
         }
 
         // フォーム冒頭説明文を生成
-        const description = window.buildPrivacyDescription
+        let description = window.buildPrivacyDescription
             ? window.buildPrivacyDescription(
                 privacySettings.agentName || '',
                 privacySettings.agentCompany || '',
                 privacySettings.thirdParties || []
               )
             : '';
+
+        // 独自プライバシーポリシーURLが設定されている場合は末尾に追記
+        if (privacySettings.privacyPolicyUrl) {
+            description += (description ? '\n\n' : '') + '▶ 個人情報取扱い方針：' + privacySettings.privacyPolicyUrl;
+        }
 
         console.log('📝 Google Form 生成開始...');
 
