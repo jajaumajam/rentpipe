@@ -106,7 +106,7 @@ window.createNavigation = function() {
 
             /* モバイルメニュー */
             .mobile-menu {
-                background: rgba(102, 126, 234, 0.98);
+                background: rgba(61, 78, 107, 0.98);
                 position: absolute;
                 top: 100%;
                 left: 0;
@@ -293,8 +293,11 @@ window.createFooter();
 
 // 法的ページ用ヘッダー（認証状態に応じてヘッダーを切り替え）
 window.createLegalHeader = function() {
-    const authData = localStorage.getItem('google_auth_data');
-    const isLoggedIn = !!authData;
+    // 複数の認証キーで判定：いずれかが存在すればログイン済みとみなす
+    // ※ google_auth_data はトークン期限切れ時に auth-manager が削除するが、
+    //   法的ページでは auth-manager が動かないため期限切れでも残る → 有無のみで判定
+    const keys = ['google_auth_data', 'rentpipe_auth', 'rentpipe_user_info', 'google_access_token'];
+    const isLoggedIn = keys.some(k => !!localStorage.getItem(k));
 
     if (isLoggedIn) {
         // ログイン済み → legal-header クラスを除去してから通常ナビを挿入
