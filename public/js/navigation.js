@@ -299,7 +299,9 @@ window.createLegalHeader = function() {
     const isLoggedIn = !!authData;
 
     if (isLoggedIn) {
-        // ログイン済み → 通常ナビバーを #navigation に挿入
+        // ログイン済み → legal-header クラスを除去してから通常ナビを挿入
+        const headerEl = document.getElementById('navigation');
+        if (headerEl) headerEl.className = '';
         window.createNavigation();
     } else {
         // 未ログイン → ロゴ＋ログインリンクのシンプルヘッダーに置き換え
