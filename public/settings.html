@@ -369,6 +369,46 @@
         .toggle-switch input:checked + .toggle-slider:before {
             transform: translateX(22px);
         }
+
+        /* アコーディオン */
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 0;
+        }
+        .accordion-header h2 {
+            margin: 0;
+        }
+        .accordion-toggle {
+            font-size: 18px;
+            color: #9ca3af;
+            transition: transform 0.25s ease;
+            flex-shrink: 0;
+        }
+        .accordion-section.closed .accordion-toggle {
+            transform: rotate(-90deg);
+        }
+        .accordion-body {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.25s ease;
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .accordion-section.closed .accordion-body {
+            max-height: 0;
+            opacity: 0;
+        }
+        .accordion-desc {
+            transition: margin 0.3s ease;
+            margin-top: 4px;
+            margin-bottom: 16px;
+        }
+        .accordion-section.closed .accordion-desc {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -407,9 +447,13 @@
         <div id="settings-content" class="space-y-4" style="display: none;">
 
         <!-- ログイン中のアカウント情報 -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">👤 ログイン中のアカウント</h2>
-            <p class="text-sm text-gray-500 mb-4">現在ログインしているGoogleアカウントです</p>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">👤 ログイン中のアカウント</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">現在ログインしているGoogleアカウントです</p>
             <div class="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
                 <span class="text-2xl">✅</span>
                 <div>
@@ -417,12 +461,17 @@
                     <div class="text-sm text-gray-500">Google Drive・Sheetsと同期中</div>
                 </div>
             </div>
+            </div><!-- /accordion-body -->
         </div>
 
         <!-- プラン管理セクション -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">💎 プラン管理</h2>
-            <p class="text-sm text-gray-500 mb-4">現在のプランと機能を確認できます</p>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">💎 プラン管理</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">現在のプランと機能を確認できます</p>
 
             <!-- ベータ版バナー（BETA_MODE = true の場合のみ表示） -->
             <div id="betaBanner" style="display: none; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, #4CAF50, #45a049); border-radius: 8px; color: white; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);">
@@ -504,12 +553,17 @@
                     </button>
                 </div>
             </div>
+            </div><!-- /accordion-body -->
         </div>
 
         <!-- UI設定セクション -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">🎨 表示設定</h2>
-            <p class="text-sm text-gray-500 mb-4">画面の表示に関する設定です</p>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">🎨 表示設定</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">画面の表示に関する設定です</p>
 
             <div class="settings-item">
                 <div class="settings-item-info">
@@ -521,12 +575,17 @@
                     <span class="toggle-slider"></span>
                 </label>
             </div>
+            </div><!-- /accordion-body -->
         </div>
 
         <!-- 個人情報取扱い設定セクション -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">🔒 個人情報取扱い設定</h2>
-            <p class="text-sm text-gray-500 mb-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">🔒 個人情報取扱い設定</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">
                 アンケートフォームに表示される個人情報の取扱いに関する説明文の設定です。<br>
                 第三者提供先を登録しておくと、フォーム生成時に説明文へ自動的に挿入されます。
             </p>
@@ -575,12 +634,17 @@
                 </button>
             </div>
             <p id="privacySaveStatus" style="display:none; font-size: 14px; margin-top: 8px;"></p>
+            </div><!-- /accordion-body -->
         </div>
 
         <!-- フォーム設定セクション -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">📝 アンケートフォーム設定</h2>
-            <p class="text-sm text-gray-500 mb-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">📝 アンケートフォーム設定</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">
                 お客様がスマートフォン等で入力できるアンケートフォームを作成・管理します。<br>
                 一度作成すれば、フォームページで回答を取り込めるようになります。
             </p>
@@ -609,12 +673,17 @@
                     <li>作成後は「フォーム」ページでURLとQRコードを確認できます</li>
                 </ul>
             </div>
+            </div><!-- /accordion-body -->
         </div>
 
         <!-- データ管理セクション -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">📊 データ管理</h2>
-            <p class="text-sm text-gray-500 mb-4">顧客データの状態と同期を管理します</p>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">📊 データ管理</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">顧客データの状態と同期を管理します</p>
 
             <div class="data-info">
                 <div class="data-stat">
@@ -642,12 +711,17 @@
                     🗑️ ローカルデータをクリア
                 </button>
             </div>
+            </div><!-- /accordion-body -->
         </div>
 
         <!-- 意見箱・ユーザーコミュニティセクション -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">💬 ご意見・ご要望</h2>
-            <p class="text-sm text-gray-500 mb-4">機能改善のため、ユーザーコミュニティ（LINEオープンチャット）でぜひご意見をお聞かせください</p>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">💬 ご意見・ご要望</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">機能改善のため、ユーザーコミュニティ（LINEオープンチャット）でぜひご意見をお聞かせください</p>
 
             <div style="background: linear-gradient(135deg, #06b6d4 0%, #5b7fa6 100%); padding: 24px; border-radius: 12px; color: white; margin-top: 16px;">
                 <div style="display: flex; align-items: start; gap: 16px;">
@@ -670,6 +744,7 @@
                     </div>
                 </div>
             </div>
+            </div><!-- /accordion-body -->
         </div>
 
         </div><!-- /settings-content -->
@@ -1437,6 +1512,13 @@
         });
 
         console.log('✅ 設定ページ準備完了');
+    </script>
+
+    <script>
+        function toggleAccordion(headerEl) {
+            const section = headerEl.closest('.accordion-section');
+            section.classList.toggle('closed');
+        }
     </script>
 </body>
 </html>

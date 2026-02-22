@@ -389,11 +389,19 @@
             <h3>⚙️ テンプレート設定</h3>
             <div class="settings-row">
                 <div class="settings-field">
-                    <label>担当者名（テンプレートに反映されます）</label>
+                    <label>担当者名（{担当者名}に反映）</label>
                     <input type="text" id="agentNameInput" placeholder="例：山田太郎" value="">
                 </div>
+                <div class="settings-field">
+                    <label>担当者メールアドレス（{担当者メールアドレス}に反映）</label>
+                    <input type="email" id="agentEmailInput" placeholder="例：yamada@example.com" value="">
+                </div>
+                <div class="settings-field">
+                    <label>担当者電話番号（{担当者電話番号}に反映）</label>
+                    <input type="tel" id="agentPhoneInput" placeholder="例：090-1234-5678" value="">
+                </div>
                 <div class="settings-actions">
-                    <button class="settings-btn primary" onclick="saveAgentName()">保存</button>
+                    <button class="settings-btn primary" onclick="saveAgentSettings()">保存</button>
                 </div>
             </div>
         </div>
@@ -421,15 +429,8 @@
             <div class="variable-list">
                 <span class="variable-tag">{お客様名}</span>
                 <span class="variable-tag">{担当者名}</span>
-                <span class="variable-tag">{物件名}</span>
-                <span class="variable-tag">{賃料}</span>
-                <span class="variable-tag">{入居日}</span>
-                <span class="variable-tag">{メールアドレス}</span>
-                <span class="variable-tag">{電話番号}</span>
-                <span class="variable-tag">{希望エリア}</span>
-                <span class="variable-tag">{希望間取り}</span>
-                <span class="variable-tag">{予算}</span>
-                <span class="variable-tag">{日時}</span>
+                <span class="variable-tag">{担当者メールアドレス}</span>
+                <span class="variable-tag">{担当者電話番号}</span>
             </div>
         </div>
 
@@ -462,10 +463,12 @@
         let currentCategory = 'all';
         let selectedCustomer = null;
         let agentName = '';
+        let agentEmail = '';
+        let agentPhone = '';
         let editingTemplateId = null;
         let customTemplates = {}; // カスタマイズしたテンプレートを保存
 
-        // デフォルトのメッセージテンプレート定義
+        // デフォルトのメッセージテンプレート定義（変数は4つのみ使用）
         const defaultTemplates = [
             // ===== 商談進行中テンプレート =====
             {
@@ -483,7 +486,10 @@
 いくつか候補が見つかりましたらご連絡させていただきます。
 
 ご不明な点がございましたら、いつでもお気軽にお問い合わせください。
-引き続きよろしくお願いいたします。`
+
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'property-intro',
@@ -499,7 +505,7 @@
 ご希望の条件に合う物件が見つかりましたのでご紹介させていただきます。
 
 【ご紹介物件】
-・物件名：{物件名}
+・物件名：
 ・所在地：
 ・賃料：
 ・間取り：
@@ -508,7 +514,9 @@
 ご興味がございましたら、内見のご予約も承っております。
 ご都合の良い日時をお知らせいただけますでしょうか。
 
-よろしくお願いいたします。`
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'viewing-schedule',
@@ -524,14 +532,16 @@
 内見の日程が確定いたしましたのでご連絡いたします。
 
 【内見予定】
-・日時：{日時}
-・物件：{物件名}
+・日時：
+・物件：
 ・集合場所：現地（住所をお送りします）
 
 当日は私がご案内いたします。
 ご不明な点やご質問がございましたら、お気軽にお申し付けください。
 
-どうぞよろしくお願いいたします。`
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'viewing-reminder',
@@ -547,12 +557,15 @@
 明日の内見について、改めてご案内申し上げます。
 
 【明日の予定】
-・日時：{日時}
-・物件：{物件名}
+・日時：
+・物件：
 ・集合場所：現地
 
 お気をつけてお越しください。
-明日お会いできることを楽しみにしております。`
+明日お会いできることを楽しみにしております。
+
+{担当者名}
+📞 {担当者電話番号}`
             },
             {
                 id: 'after-viewing',
@@ -570,7 +583,9 @@
 ご質問やご不明な点がございましたら、お気軽にお問い合わせください。
 また、他にも条件に合う物件がございましたら、ご紹介させていただきます。
 
-ご検討のほど、よろしくお願いいたします。`
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'application-guide',
@@ -583,7 +598,7 @@
 お世話になっております。
 {担当者名}です。
 
-この度は{物件名}へのお申込みをご検討いただきありがとうございます。
+この度はお申込みをご検討いただきありがとうございます。
 
 【お申込みに必要な書類】
 ・ご本人確認書類（免許証・保険証など）
@@ -596,7 +611,11 @@
 3. 契約手続き
 4. 鍵のお渡し・入居
 
-ご不明な点がございましたら、お気軽にお問い合わせください。`
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'screening-progress',
@@ -609,13 +628,14 @@
 お世話になっております。
 {担当者名}です。
 
-現在、{物件名}の入居審査を進めております。
+現在、入居審査を進めております。
 審査結果が出ましたら、改めてご連絡させていただきます。
 
 通常、審査には3〜5営業日ほどお時間をいただいております。
 今しばらくお待ちくださいますようお願いいたします。
 
-ご質問がございましたら、お気軽にご連絡ください。`
+{担当者名}
+📞 {担当者電話番号}`
             },
             {
                 id: 'screening-passed',
@@ -629,7 +649,7 @@
 {担当者名}です。
 
 おめでとうございます！
-{物件名}の入居審査が無事通過いたしました。
+入居審査が無事通過いたしました。
 
 次は契約手続きに進みます。
 ご都合の良い日程をお知らせいただけますでしょうか。
@@ -640,7 +660,10 @@
 ・初期費用
 
 詳細は改めてご案内いたします。
-引き続きよろしくお願いいたします。`
+
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'contract-schedule',
@@ -656,8 +679,8 @@
 契約日程が確定いたしましたのでご案内いたします。
 
 【契約予定】
-・日時：{日時}
-・場所：弊社事務所
+・日時：
+・場所：
 ・所要時間：約1〜2時間
 
 【お持ちいただくもの】
@@ -665,12 +688,14 @@
 ・印鑑
 ・初期費用（振込でも可）
 
-ご不明な点がございましたら、お気軽にお問い合わせください。
-当日お会いできることを楽しみにしております。`
+当日お会いできることを楽しみにしております。
+
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
 
             // ===== 成約後フォローテンプレート =====
-            // ※ 仲介業者の業務範囲に留意したテンプレート
             {
                 id: 'move-in-thanks',
                 category: 'followup',
@@ -687,8 +712,11 @@
 今後、お引越しやお部屋探しのご予定がございましたら、いつでもお気軽にご相談ください。
 ご友人やお知り合いの方でお部屋をお探しの方がいらっしゃいましたら、ぜひご紹介いただけると幸いです。
 
-快適な新生活をお祈りしております。
-今後ともどうぞよろしくお願いいたします。`
+今後ともどうぞよろしくお願いいたします。
+
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'one-month-followup',
@@ -705,7 +733,8 @@
 今回のお部屋探しでお役に立てておりましたら幸いです。
 もしお知り合いの方でお部屋をお探しの方がいらっしゃいましたら、ぜひお声がけください。
 
-今後ともどうぞよろしくお願いいたします。`
+{担当者名}
+📞 {担当者電話番号}`
             },
             {
                 id: 'six-month-followup',
@@ -722,7 +751,8 @@
 もし今後、住み替えやお部屋探しのご予定がございましたら、ぜひお声がけください。
 また、ご友人やお知り合いでお部屋をお探しの方がいらっしゃいましたら、ご紹介いただけると大変嬉しく思います。
 
-今後ともどうぞよろしくお願いいたします。`
+{担当者名}
+📞 {担当者電話番号}`
             },
             {
                 id: 'one-year-followup',
@@ -737,11 +767,11 @@
 早いものでご入居から1年が経ちました。
 
 今後、住み替えをご検討されることがございましたら、お気軽にご相談ください。
-ご希望の条件に合った物件をお探しいたします。
-
 また、お知り合いの方でお部屋探しをされている方がいらっしゃいましたら、ぜひご紹介ください。
 
-今後ともどうぞよろしくお願いいたします。`
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             },
             {
                 id: 'referral-request',
@@ -756,10 +786,12 @@
 突然のご連絡失礼いたします。
 
 もしお知り合いやご友人の方でお部屋探しをされている方がいらっしゃいましたら、ぜひご紹介いただけると幸いです。
-{お客様名}様からのご紹介のお客様には、特典をご用意しております。
 
 ご検討いただけましたら嬉しく思います。
-今後ともどうぞよろしくお願いいたします。`
+今後ともどうぞよろしくお願いいたします。
+
+{担当者名}
+📞 {担当者電話番号}`
             },
             {
                 id: 'moving-consultation',
@@ -776,8 +808,9 @@
 もし現在、住み替えやお引越しをご検討でしたら、ぜひご相談ください。
 ご希望の条件（エリア、間取り、ご予算など）に合わせて、最適な物件をお探しいたします。
 
-お気軽にお問い合わせいただければ幸いです。
-どうぞよろしくお願いいたします。`
+{担当者名}
+📧 {担当者メールアドレス}
+📞 {担当者電話番号}`
             }
         ];
 
@@ -808,47 +841,49 @@
 
         // 設定を読み込み（Google Sheets優先）
         async function loadSettings() {
+            let settings = null;
             try {
-                // Google Sheetsから読み込み
                 if (window.UnifiedSheetsManager?.isEnabled || window.UnifiedSheetsManager?.spreadsheetId) {
-                    const settings = await window.UnifiedSheetsManager.loadSetting('templateSettings');
-                    if (settings && settings.agentName) {
-                        agentName = settings.agentName;
-                        document.getElementById('agentNameInput').value = agentName;
-                        console.log('📋 Google Sheets から担当者名読み込み:', agentName);
-                        return;
+                    settings = await window.UnifiedSheetsManager.loadSetting('templateSettings');
+                    if (settings) {
+                        console.log('📋 Google Sheets から担当者設定読み込み');
                     }
                 }
             } catch (e) {
                 console.warn('Google Sheets からの読み込みスキップ:', e.message);
             }
-            // フォールバック: localStorage
-            const localSettings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
-            agentName = localSettings.agentName || '';
+            if (!settings) {
+                settings = JSON.parse(localStorage.getItem('rentpipe_template_settings') || '{}');
+            }
+            agentName = settings.agentName || '';
+            agentEmail = settings.agentEmail || '';
+            agentPhone = settings.agentPhone || '';
             document.getElementById('agentNameInput').value = agentName;
+            document.getElementById('agentEmailInput').value = agentEmail;
+            document.getElementById('agentPhoneInput').value = agentPhone;
         }
 
-        // 担当者名を保存（Google Sheets + localStorage）
-        async function saveAgentName() {
+        // 担当者設定を保存（Google Sheets + localStorage）
+        async function saveAgentSettings() {
             agentName = document.getElementById('agentNameInput').value.trim();
+            agentEmail = document.getElementById('agentEmailInput').value.trim();
+            agentPhone = document.getElementById('agentPhoneInput').value.trim();
 
-            const settings = { agentName: agentName };
+            const settings = { agentName, agentEmail, agentPhone };
 
-            // Google Sheetsに保存
             if (window.UnifiedSheetsManager) {
                 try {
                     await window.UnifiedSheetsManager.saveSetting('templateSettings', settings);
-                    console.log('💾 Google Sheets に担当者名保存');
+                    console.log('💾 Google Sheets に担当者設定保存');
                 } catch (e) {
                     console.warn('Google Sheets への保存失敗:', e.message);
                 }
             }
 
-            // localStorageにも保存（キャッシュとして）
             localStorage.setItem('rentpipe_template_settings', JSON.stringify(settings));
 
             renderTemplates();
-            alert('✅ 担当者名を保存しました');
+            alert('✅ 担当者情報を保存しました');
         }
 
         // カスタムテンプレートを読み込み（Google Sheets優先）
@@ -1104,64 +1139,23 @@
             return card;
         }
 
-        // 変数を置換
+        // 変数を置換（4変数のみ）
         function replaceVariables(template) {
             let result = template;
 
+            // {お客様名}: 顧客データから取得
             if (selectedCustomer) {
                 const basicInfo = selectedCustomer.basicInfo || {};
-                const preferences = selectedCustomer.preferences || {};
-                const contractInfo = selectedCustomer.contractInfo || {};
-                const budget = preferences.budget || {};
-
-                // 基本情報
                 const name = basicInfo.name || selectedCustomer.name || 'お客様';
                 result = result.replace(/{お客様名}/g, name);
-                result = result.replace(/{メールアドレス}/g, basicInfo.email || '（メールアドレス）');
-                result = result.replace(/{電話番号}/g, basicInfo.phone || '（電話番号）');
-
-                // 契約情報: 物件名・賃料・入居日
-                const propertyName = contractInfo.propertyAddress || contractInfo.propertyName || '（物件名）';
-                result = result.replace(/{物件名}/g, propertyName);
-
-                const rent = contractInfo.monthlyRent
-                    ? contractInfo.monthlyRent.toLocaleString('ja-JP') + '円'
-                    : '（賃料）';
-                result = result.replace(/{賃料}/g, rent);
-
-                const moveInDate = contractInfo.moveInDate || preferences.moveInDate || '（入居日）';
-                result = result.replace(/{入居日}/g, moveInDate);
-
-                // 希望条件
-                result = result.replace(/{希望エリア}/g, preferences.areas || '（希望エリア）');
-                result = result.replace(/{希望間取り}/g, preferences.layout || '（希望間取り）');
-
-                let budgetStr = '（予算）';
-                if (budget.min && budget.max) {
-                    budgetStr = budget.min.toLocaleString('ja-JP') + '円〜' + budget.max.toLocaleString('ja-JP') + '円';
-                } else if (budget.max) {
-                    budgetStr = budget.max.toLocaleString('ja-JP') + '円以下';
-                } else if (budget.min) {
-                    budgetStr = budget.min.toLocaleString('ja-JP') + '円以上';
-                }
-                result = result.replace(/{予算}/g, budgetStr);
-
             } else {
-                // 顧客未選択時のフォールバック
                 result = result.replace(/{お客様名}/g, 'お客様');
-                result = result.replace(/{メールアドレス}/g, '（メールアドレス）');
-                result = result.replace(/{電話番号}/g, '（電話番号）');
-                result = result.replace(/{物件名}/g, '（物件名）');
-                result = result.replace(/{賃料}/g, '（賃料）');
-                result = result.replace(/{入居日}/g, '（入居日）');
-                result = result.replace(/{希望エリア}/g, '（希望エリア）');
-                result = result.replace(/{希望間取り}/g, '（希望間取り）');
-                result = result.replace(/{予算}/g, '（予算）');
             }
 
-            // 担当者名・日時は顧客選択に関係なく置換
+            // 担当者情報はテンプレート設定から取得
             result = result.replace(/{担当者名}/g, agentName || '（担当者名）');
-            result = result.replace(/{日時}/g, '（日時）');
+            result = result.replace(/{担当者メールアドレス}/g, agentEmail || '（担当者メールアドレス）');
+            result = result.replace(/{担当者電話番号}/g, agentPhone || '（担当者電話番号）');
 
             return result;
         }

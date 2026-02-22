@@ -91,6 +91,36 @@
             font-size: 20px;
         }
 
+        /* アコーディオン */
+        .section-title {
+            cursor: pointer;
+            justify-content: space-between;
+        }
+        .section-title-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-toggle {
+            font-size: 14px;
+            color: #9ca3af;
+            transition: transform 0.25s ease;
+            flex-shrink: 0;
+        }
+        .form-section.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+        .section-body {
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.25s ease;
+            max-height: 9999px;
+            opacity: 1;
+        }
+        .form-section.collapsed .section-body {
+            max-height: 0;
+            opacity: 0;
+        }
+
         /* フォームグループ */
         .form-group {
             margin-bottom: 20px;
@@ -441,6 +471,18 @@
             .layout-checkbox-group {
                 grid-template-columns: repeat(3, 1fr);
             }
+
+            /* モバイル行間を詰める */
+            .form-group {
+                margin-bottom: 12px;
+            }
+            .form-row {
+                gap: 10px;
+            }
+            .form-section {
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
         }
 
         /* アーカイブアクションボタン */
@@ -492,7 +534,8 @@
                      セクション1: 基本情報
                 ========================================= -->
                 <div class="form-section">
-                    <h2 class="section-title"><span class="icon">👤</span> 基本情報</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">👤</span> 基本情報</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
 
                     <div class="form-row">
                         <div class="form-group">
@@ -624,13 +667,15 @@
                         <label>引越しの理由</label>
                         <input type="text" id="movingReason">
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション2: 希望条件
                 ========================================= -->
                 <div class="form-section">
-                    <h2 class="section-title"><span class="icon">🏠</span> 希望条件</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">🏠</span> 希望条件</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
 
                     <div class="form-group">
                         <label>ご予算（管理費込み）</label>
@@ -819,13 +864,15 @@
                             </div>
                         </div>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション3: 設備・条件
                 ========================================= -->
                 <div class="form-section">
-                    <h2 class="section-title"><span class="icon">⚙️</span> 設備・こだわり条件</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">⚙️</span> 設備・こだわり条件</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
                     <p style="color: #6b7280; margin-bottom: 20px;">必要な設備があればチェックしてください（任意）</p>
 
                     <div class="equipment-category">
@@ -927,25 +974,29 @@
                             </div>
                         </div>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション4: その他
                 ========================================= -->
                 <div class="form-section">
-                    <h2 class="section-title"><span class="icon">📝</span> その他</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">📝</span> その他</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
 
                     <div class="form-group">
                         <label>その他ご要望・ご質問</label>
                         <textarea id="notes"></textarea>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション5: パイプライン状態（管理者用）
                 ========================================= -->
                 <div class="form-section" id="adminSection" style="display: none;">
-                    <h2 class="section-title"><span class="icon">📊</span> 管理者設定</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">📊</span> 管理者設定</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
 
                     <div class="form-group">
                         <label>パイプライン状態</label>
@@ -963,13 +1014,15 @@
                         <label>エージェントメモ</label>
                         <textarea id="agentMemo" placeholder="【初回ヒアリング】&#10;・絶対条件:&#10;・妥協可能:&#10;・その他メモ:" style="min-height: 150px;"></textarea>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション6: 申込・契約情報（管理者用）
                 ========================================= -->
                 <div class="form-section" id="contractSection" style="display: none;">
-                    <h2 class="section-title"><span class="icon">📝</span> 申込・契約情報</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">📝</span> 申込・契約情報</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
                     <p style="color: #6b7280; margin-bottom: 20px;">審査中〜契約時に入力してください。初期費用の概算計算やフォローアップに使用されます。</p>
 
                     <!-- 申込情報 -->
@@ -1099,13 +1152,15 @@
                         </button>
                         <p class="help-text" style="margin-top: 8px;">契約終了前のフォローアップ予定をGoogleカレンダーに自動作成します</p>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション6-A: 内見予定（内見調整ステージのみ）
                 ========================================= -->
                 <div class="form-section" id="viewingScheduleSection" style="display: none; border: 2px solid #5b7fa6; background: #eff6ff;">
-                    <h2 class="section-title"><span class="icon">🏠</span> 内見予定をカレンダーに登録</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">🏠</span> 内見予定をカレンダーに登録</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
                     <p style="color: #6b7280; margin-bottom: 20px;">内見日時や物件情報を入力して、Googleカレンダーに予定を追加します。</p>
 
                     <!-- 入力フォーム -->
@@ -1157,13 +1212,15 @@
                         <h3 style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 10px;">登録済みの内見予定</h3>
                         <div id="viewingScheduleItems"></div>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション7: アーカイブ操作（最下部）
                 ========================================= -->
                 <div class="form-section" id="archiveSection" style="display: none; border: 2px solid #fbbf24; background: #fffbeb;">
-                    <h2 class="section-title"><span class="icon">📦</span> アーカイブ</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">📦</span> アーカイブ</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
                     <p style="color: #6b7280; margin-bottom: 20px;">案件が終了した場合にアーカイブ処理を行います。</p>
 
                     <!-- 審査中以降の場合：成約/失注の両方 -->
@@ -1190,13 +1247,15 @@
                             ※ 案内途中で見込みがなくなった場合にアーカイブします
                         </p>
                     </div>
+                </div><!-- /section-body -->
                 </div>
 
                 <!-- ========================================
                      セクション8: 追加フォローアップ（成約アーカイブ済み顧客用）
                 ========================================= -->
                 <div class="form-section" id="additionalFollowUpSection" style="display: none; border: 2px solid #10b981; background: #f0fdf4;">
-                    <h2 class="section-title"><span class="icon">📅</span> 追加フォローアップ</h2>
+                    <h2 class="section-title" onclick="toggleFormSection(this)"><span class="section-title-inner"><span class="icon">📅</span> 追加フォローアップ</span><span class="section-toggle">▼</span></h2>
+                <div class="section-body">
                     <p style="color: #6b7280; margin-bottom: 20px;">成約済みの顧客に対して、追加のフォローアップ予定をカレンダーに登録できます。</p>
 
                     <div class="form-row">
@@ -1228,6 +1287,7 @@
                 <div class="button-group">
                     <button type="button" class="btn btn-secondary" onclick="handleCancel()">キャンセル</button>
                     <button type="submit" class="btn btn-primary" id="submitBtn">登録する</button>
+                </div><!-- /section-body -->
                 </div>
             </form>
         </div>
@@ -1468,10 +1528,19 @@
             return Array.from(checkboxes).map(cb => cb.value);
         }
 
+        // アコーディオン開閉
+        function toggleFormSection(h2El) {
+            const section = h2El.closest('.form-section');
+            if (section) section.classList.toggle('collapsed');
+        }
+
         // ページ初期化完了後に編集モードをチェック
         document.addEventListener('DOMContentLoaded', async () => {
             // ナビゲーション表示
             loadNavigation();
+
+            // 全セクションを初期状態で折りたたむ
+            document.querySelectorAll('.form-section').forEach(s => s.classList.add('collapsed'));
 
             // パイプライン状態の選択肢を PipelineConfig から動的生成
             const pipelineStatusSelect = document.getElementById('pipelineStatus');
@@ -1516,8 +1585,10 @@
                     await window.AppInitializer.initializationPromise;
                 }
 
-                // 顧客データを読み込み
+                // ローディング表示してから顧客データを読み込み
+                PageInitializer.showLoading('顧客データを読み込み中...');
                 await loadCustomerData(customerId);
+                PageInitializer.hideLoading();
             }
         });
 
