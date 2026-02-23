@@ -180,7 +180,36 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 16px;
+            margin-bottom: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .template-toggle {
+            font-size: 13px;
+            color: #9ca3af;
+            transition: transform 0.25s ease;
+            flex-shrink: 0;
+            margin-left: 8px;
+            margin-top: 4px;
+        }
+
+        .template-card.collapsed .template-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .template-body {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.25s ease;
+            max-height: 2000px;
+            opacity: 1;
+            margin-top: 16px;
+        }
+
+        .template-card.collapsed .template-body {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
         }
 
         .template-title {
@@ -466,6 +495,7 @@
         let agentEmail = '';
         let agentPhone = '';
         let editingTemplateId = null;
+        const openTemplateIds = new Set(); // 展開中カードのID管理
         let customTemplates = {}; // カスタマイズしたテンプレートを保存
 
         // デフォルトのメッセージテンプレート定義（変数は4つのみ使用）
@@ -1072,8 +1102,11 @@
 
         // テンプレートカードを作成
         function createTemplateCard(template) {
+            const isEditing = editingTemplateId === template.id;
+            const isOpen = isEditing || openTemplateIds.has(template.id);
+
             const card = document.createElement('div');
-            card.className = 'template-card';
+            card.className = 'template-card' + (isOpen ? '' : ' collapsed');
             card.id = `template-card-${template.id}`;
 
             const badgeClass = template.category === 'pipeline' ? 'pipeline' : 'followup';
@@ -1084,46 +1117,54 @@
             const templateContent = getTemplateContent(template.id);
             const content = replaceVariables(templateContent);
 
-            const isEditing = editingTemplateId === template.id;
-
             // DOM操作でXSSを完全に防ぐ: innerHTML に直接入るのは制御済みのHTML（クラス名・data属性）のみ
             if (isEditing) {
                 card.innerHTML = `
-                    <div class="template-header">
+                    <div class="template-header" onclick="toggleTemplateCard('${template.id}')">
                         <div>
                             <h3 class="template-title"></h3>
                             <p class="template-description"></p>
                         </div>
-                        <span class="template-badge ${badgeClass}">${badgeText}</span>
+                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                            <span class="template-badge ${badgeClass}">${badgeText}</span>
+                            <span class="template-toggle">▼</span>
+                        </div>
                     </div>
-                    <textarea class="template-textarea" id="edit-textarea-${template.id}">${escapeHtml(templateContent)}</textarea>
-                    <div class="template-actions">
-                        <button class="template-btn save" onclick="saveTemplate('${template.id}')">
-                            💾 保存
-                        </button>
-                        <button class="template-btn cancel" onclick="cancelEdit()">
-                            キャンセル
-                        </button>
-                        ${isCustomized(template.id) ? `<button class="template-btn reset" onclick="resetTemplate('${template.id}')">🔄 デフォルトに戻す</button>` : ''}
+                    <div class="template-body">
+                        <textarea class="template-textarea" id="edit-textarea-${template.id}">${escapeHtml(templateContent)}</textarea>
+                        <div class="template-actions">
+                            <button class="template-btn save" onclick="saveTemplate('${template.id}')">
+                                💾 保存
+                            </button>
+                            <button class="template-btn cancel" onclick="cancelEdit()">
+                                キャンセル
+                            </button>
+                            ${isCustomized(template.id) ? `<button class="template-btn reset" onclick="resetTemplate('${template.id}')">🔄 デフォルトに戻す</button>` : ''}
+                        </div>
                     </div>
                 `;
             } else {
                 card.innerHTML = `
-                    <div class="template-header">
+                    <div class="template-header" onclick="toggleTemplateCard('${template.id}')">
                         <div>
                             <h3 class="template-title"></h3>
                             <p class="template-description"></p>
                         </div>
-                        <span class="template-badge ${badgeClass}">${badgeText}</span>
+                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                            <span class="template-badge ${badgeClass}">${badgeText}</span>
+                            <span class="template-toggle">▼</span>
+                        </div>
                     </div>
-                    <div class="template-content"></div>
-                    <div class="template-actions">
-                        <button class="template-btn copy" onclick="copyTemplate(this, '${template.id}')">
-                            📋 コピー
-                        </button>
-                        <button class="template-btn edit" onclick="editTemplate('${template.id}')">
-                            ✏️ 編集
-                        </button>
+                    <div class="template-body">
+                        <div class="template-content"></div>
+                        <div class="template-actions">
+                            <button class="template-btn copy" onclick="copyTemplate(this, '${template.id}')">
+                                📋 コピー
+                            </button>
+                            <button class="template-btn edit" onclick="editTemplate('${template.id}')">
+                                ✏️ 編集
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -1139,6 +1180,19 @@
             return card;
         }
 
+        // テンプレートカードの開閉トグル
+        function toggleTemplateCard(templateId) {
+            // 編集中カードは閉じない
+            if (editingTemplateId === templateId) return;
+            if (openTemplateIds.has(templateId)) {
+                openTemplateIds.delete(templateId);
+            } else {
+                openTemplateIds.add(templateId);
+            }
+            const card = document.getElementById(`template-card-${templateId}`);
+            if (card) card.classList.toggle('collapsed', !openTemplateIds.has(templateId));
+        }
+
         // 変数を置換（4変数のみ）
         function replaceVariables(template) {
             let result = template;
@@ -1149,7 +1203,7 @@
                 const name = basicInfo.name || selectedCustomer.name || 'お客様';
                 result = result.replace(/{お客様名}/g, name);
             } else {
-                result = result.replace(/{お客様名}/g, 'お客様');
+                result = result.replace(/{お客様名}/g, '{お客様名}');
             }
 
             // 担当者情報はテンプレート設定から取得
@@ -1197,6 +1251,7 @@
             }
 
             editingTemplateId = templateId;
+            openTemplateIds.add(templateId); // 編集時は展開状態を保持
             renderTemplates();
 
             // テキストエリアにフォーカス
