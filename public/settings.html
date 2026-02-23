@@ -1519,6 +1519,11 @@
             const section = headerEl.closest('.accordion-section');
             section.classList.toggle('closed');
         }
+
+        // 初期状態：全セクション折りたたむ
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.accordion-section').forEach(s => s.classList.add('closed'));
+        });
     </script>
 </body>
 </html>
