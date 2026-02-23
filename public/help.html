@@ -190,6 +190,16 @@
             font-weight: 500;
         }
     </style>
+    <script>
+        // 未ログイン時はlogin.htmlへリダイレクト
+        (function() {
+            const keys = ['google_auth_data', 'rentpipe_auth', 'rentpipe_user_info', 'google_access_token'];
+            const isLoggedIn = keys.some(function(k) { return !!localStorage.getItem(k); });
+            if (!isLoggedIn) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
 </head>
 <body>
     <div id="navigation" class="legal-header">
@@ -382,7 +392,7 @@
                     <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
                 <div class="faq-answer">
-                    <p>はい。フォームの回答スプレッドシートとRentPipeを連携することで、回答が自動的に顧客リストへ登録されます。詳細はフォームページの手順に従ってください。</p>
+                    <p>いいえ、自動では登録されません。フォームの回答はGoogleスプレッドシートに蓄積されますが、RentPipeの「フォーム」ページを開き、「回答を取り込む」ボタンを押すことで顧客リストに取り込まれます。取り込み操作は任意のタイミングで行えます。</p>
                 </div>
             </div>
         </div>
@@ -432,28 +442,21 @@
         </div>
 
         <!-- お問い合わせ -->
-        <p class="help-section-title">📮 お問い合わせ</p>
+        <p class="help-section-title">📮 お問い合わせ・フィードバック</p>
         <div class="contact-card">
-            <h3>解決しない場合はご連絡ください</h3>
-            <p>上記で解決しない場合や、その他ご不明点がございましたら、メールにてお問い合わせください。可能な限り速やかにご対応いたします。</p>
-            <p id="contactEmailWrap">メール：<a id="contactEmail" href="#">（準備中）</a></p>
-            <p style="margin: 8px 0 0; font-size: 13px; color: #9ca3af;">フィードバックは <a id="lineUrl" href="#" target="_blank" rel="noopener noreferrer">LINEオープンチャット</a> でも受け付けています。</p>
+            <h3>ご不明点・ご要望はLINEオープンチャットへ</h3>
+            <p>上記で解決しない場合や、機能のご要望・バグ報告などは、LINEオープンチャット（ユーザーコミュニティ）でお気軽にお知らせください。</p>
+            <p style="margin: 12px 0 0;">
+                <a id="lineUrl" href="#" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-flex;align-items:center;gap:6px;background:#3d4e6b;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">
+                    💬 コミュニティに参加する
+                </a>
+            </p>
         </div>
     </div>
 
     <script src="js/config.js"></script>
     <script>
-        // メールアドレスをconfig.jsから設定
-        const emailEl = document.getElementById('contactEmail');
-        const email = window.SUPPORT_EMAIL || '';
-        if (email) {
-            emailEl.textContent = email;
-            emailEl.href = 'mailto:' + email;
-        } else {
-            emailEl.textContent = '（準備中）';
-            emailEl.removeAttribute('href');
-        }
-
         const lineEl = document.getElementById('lineUrl');
         const lineUrl = window.FEEDBACK_LINE_URL || '';
         if (lineUrl) {
