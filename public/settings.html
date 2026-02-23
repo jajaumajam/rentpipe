@@ -714,6 +714,36 @@
             </div><!-- /accordion-body -->
         </div>
 
+        <!-- 紹介セクション -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <h2 class="text-lg font-bold text-gray-900">🎁 RentPipeを紹介する</h2>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            <div class="accordion-body">
+            <p class="text-sm text-gray-500 accordion-desc">RentPipeを同僚や知人に紹介してください</p>
+
+            <div style="background: linear-gradient(135deg, #3d4e6b 0%, #576078 100%); padding: 24px; border-radius: 12px; color: white; margin-top: 16px;">
+                <div style="display: flex; align-items: start; gap: 16px;">
+                    <div style="font-size: 48px; line-height: 1;">🏠</div>
+                    <div style="flex: 1;">
+                        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">気に入ったら、ぜひ紹介を</h3>
+                        <p style="margin: 0 0 16px 0; opacity: 0.9; line-height: 1.6;">
+                            RentPipeを使っている同僚や知人のエージェントがいれば、ぜひ紹介してください。
+                        </p>
+                        <button onclick="shareRentPipe()"
+                            style="display: inline-flex; align-items: center; gap: 8px; background: white; color: #3d4e6b; padding: 12px 24px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; font-size: 14px; transition: transform 0.2s, box-shadow 0.2s;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                            <span style="font-size: 18px;">📤</span>
+                            <span>RentPipeを紹介する</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div><!-- /accordion-body -->
+        </div>
+
         <!-- 意見箱・ユーザーコミュニティセクション -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 accordion-section">
             <div class="accordion-header" onclick="toggleAccordion(this)">
@@ -1518,6 +1548,30 @@
         function toggleAccordion(headerEl) {
             const section = headerEl.closest('.accordion-section');
             section.classList.toggle('closed');
+        }
+
+        async function shareRentPipe() {
+            const siteUrl = (window.APP_URL && !window.APP_URL.includes('__')) ? window.APP_URL : 'https://rentpipe.vercel.app';
+            const shareData = {
+                title: 'RentPipe',
+                text: '賃貸仲介エージェント向けの顧客管理ツール「RentPipe」を使っています。もし良ければ使ってみてください！',
+                url: siteUrl
+            };
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (e) {
+                    // キャンセル等は無視
+                }
+            } else {
+                // フォールバック: URLをクリップボードにコピー
+                try {
+                    await navigator.clipboard.writeText(shareData.url);
+                    alert('URLをクリップボードにコピーしました！');
+                } catch (e) {
+                    prompt('以下のURLをコピーしてください:', shareData.url);
+                }
+            }
         }
 
         // 初期状態：全セクション折りたたむ
