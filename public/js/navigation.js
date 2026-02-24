@@ -23,6 +23,9 @@ window.createNavigation = function() {
                         <a href="templates.html" class="nav-link ${currentPage === 'templates.html' ? 'active' : ''}" onclick="return handleRestrictedNav(event, 'templates')">
                             ${getMenuLabel('テンプレート', 'templates')}
                         </a>
+                        <a href="data.html" class="nav-link ${currentPage === 'data.html' ? 'active' : ''}">
+                            データ
+                        </a>
                         <a href="notifications.html" class="nav-link ${currentPage === 'notifications.html' ? 'active' : ''}">
                             お知らせ
                         </a>
@@ -65,6 +68,9 @@ window.createNavigation = function() {
                     </a>
                     <a href="templates.html" class="mobile-menu-link ${currentPage === 'templates.html' ? 'active' : ''}" onclick="return handleRestrictedNav(event, 'templates')">
                         ${getMenuLabel('テンプレート', 'templates')}
+                    </a>
+                    <a href="data.html" class="mobile-menu-link ${currentPage === 'data.html' ? 'active' : ''}">
+                        データ
                     </a>
                     <a href="notifications.html" class="mobile-menu-link ${currentPage === 'notifications.html' ? 'active' : ''}">
                         お知らせ

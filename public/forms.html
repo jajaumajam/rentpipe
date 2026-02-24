@@ -301,9 +301,9 @@
             <div class="flex flex-col items-center py-14 px-6 text-center">
                 <div class="text-5xl mb-4">📝</div>
                 <h2 class="text-xl font-bold text-gray-900 mb-2">フォームが未作成です</h2>
-                <p class="text-gray-500 text-sm mb-6">設定画面からアンケートフォームを作成してください</p>
-                <a href="settings.html" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rentpipe-primary to-rentpipe-secondary text-white font-semibold rounded-xl text-sm hover:shadow-md transition-all">
-                    ⚙️ 設定画面へ移動
+                <p class="text-gray-500 text-sm mb-6">下の「フォーム詳細設定」からアンケートフォームを作成してください</p>
+                <a href="#formSettingsSection" onclick="openFormSettings()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rentpipe-primary to-rentpipe-secondary text-white font-semibold rounded-xl text-sm hover:shadow-md transition-all">
+                    ⚙️ フォーム設定へ
                 </a>
             </div>
         </div>
@@ -355,18 +355,134 @@
                 <a href="#" class="text-rentpipe-primary hover:underline text-sm flex items-center gap-1" onclick="openForm(); return false;">
                     🔗 フォームを開く
                 </a>
-                <a href="settings.html" class="text-rentpipe-primary hover:underline text-sm flex items-center gap-1">
+                <a href="#formSettingsSection" class="text-rentpipe-primary hover:underline text-sm flex items-center gap-1">
                     ⚙️ フォーム設定
                 </a>
             </div>
         </div>
+
+        <!-- フォーム設定セクション -->
+        <div id="formSettingsSection" class="bg-white rounded-2xl shadow-sm border border-gray-100 mt-4">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex justify-between items-center cursor-pointer" onclick="toggleFormSettings(this)">
+                    <h2 class="text-lg font-bold text-gray-900">⚙️ フォーム詳細設定</h2>
+                    <span id="formSettingsToggle" style="font-size:18px; color:#9ca3af; transition:transform 0.25s ease; transform: rotate(-90deg);">▼</span>
+                </div>
+            </div>
+            <div id="formSettingsBody" style="display:none;">
+                <div class="p-6">
+                    <p class="text-sm text-gray-500 mb-4">アンケートフォームの生成・管理と個人情報取扱い設定を行います。</p>
+
+                    <!-- フォームステータス -->
+                    <div id="formConfigStatusForms" class="flex items-center gap-4 p-4 rounded-xl mb-4 bg-gray-50 border border-gray-200">
+                        <span style="font-size:28px;">📋</span>
+                        <div>
+                            <div class="font-semibold text-gray-900" id="formConfigTitleForms">フォーム未作成</div>
+                            <div class="text-sm text-gray-500" id="formConfigDescForms">フォームを生成してください</div>
+                        </div>
+                    </div>
+
+                    <!-- フォーム生成・リセットボタン -->
+                    <div class="flex gap-3 flex-wrap mb-4">
+                        <button id="createFormBtnForms" class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold rounded-lg text-sm transition-all" style="background:#3d4e6b;" onmouseover="this.style.background='#2e3c52'" onmouseout="this.style.background='#3d4e6b'" onclick="createFormFromFormsPage()">
+                            ✨ フォームを生成
+                        </button>
+                        <button id="resetFormBtnForms" class="inline-flex items-center gap-2 px-5 py-2.5 font-semibold rounded-lg text-sm transition-all border border-red-200 text-red-600 bg-red-50 hover:bg-red-100" style="display:none;" onclick="confirmResetFormFromFormsPage()">
+                            🗑️ フォーム設定をリセット
+                        </button>
+                    </div>
+
+                    <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl mb-6">
+                        <p class="text-xs text-amber-800 leading-relaxed">💡 フォームを生成すると、Googleドライブにフォームが作成されます。作成後はURLとQRコードが上に表示されます。</p>
+                    </div>
+
+                    <!-- 個人情報取扱い設定 -->
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-1">🔒 個人情報取扱い設定</h3>
+                        <p class="text-sm text-gray-500 mb-4">アンケートフォームに表示される個人情報の取扱いに関する説明文の設定です。<br>第三者提供先を登録しておくと、フォーム生成時に説明文へ自動的に挿入されます。</p>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">担当者名（エージェント名）</label>
+                            <input type="text" id="privacyAgentNameForms" placeholder="例: 山田 太郎"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                   oninput="updatePrivacyPreviewForms()">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">所属会社名 <span class="text-red-500 text-xs">（必須・フォーム生成前に保存してください）</span></label>
+                            <input type="text" id="privacyAgentCompanyForms" placeholder="例: 〇〇不動産株式会社"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                   oninput="updatePrivacyPreviewForms()">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                第三者提供先企業
+                                <span class="text-xs text-gray-400 ml-1">（顧客情報を共有する提携企業）</span>
+                            </label>
+                            <div id="thirdPartyListForms" class="flex flex-col gap-2 mb-2"></div>
+                            <button onclick="addThirdPartyForms()"
+                                    class="text-sm text-rentpipe-primary cursor-pointer border-none bg-transparent flex items-center gap-1 p-0">
+                                ＋ 企業を追加
+                            </button>
+                        </div>
+
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <p class="text-xs font-semibold text-gray-700 mb-1">🔗 独自プライバシーポリシーURL（任意）</p>
+                            <p class="text-xs text-gray-500 mb-2">自社のプライバシーポリシーページのURLを設定すると、フォーム冒頭にリンクが表示されます。</p>
+                            <input type="url" id="privacyPolicyUrlForms" placeholder="例: https://example.com/privacy"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                   oninput="updatePrivacyPreviewForms()">
+                        </div>
+
+                        <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="text-xs font-semibold text-blue-800 mb-2">📋 フォームに挿入される説明文プレビュー</p>
+                            <pre id="privacyPreviewForms" class="text-xs text-gray-700 whitespace-pre-wrap m-0 font-sans leading-relaxed">（担当者名・企業名・提供先を入力すると表示されます）</pre>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="savePrivacySettingsForms()" class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold rounded-lg text-sm" style="background:#3d4e6b;" onmouseover="this.style.background='#2e3c52'" onmouseout="this.style.background='#3d4e6b'">
+                                💾 保存する
+                            </button>
+                        </div>
+                        <p id="privacySaveStatusForms" style="display:none; font-size:14px; margin-top:8px;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <!-- フォームリセット確認モーダル -->
+    <div id="resetFormModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:12px; padding:24px; max-width:480px; width:90%;">
+            <h3 style="margin:0 0 14px 0; color:#1f2937;">⚠️ フォーム設定をリセット</h3>
+            <div style="color:#4b5563; margin-bottom:20px; line-height:1.6;">
+                <p style="margin:0 0 10px 0;">フォーム設定をリセットしますか？</p>
+                <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px 16px; margin:10px 0;">
+                    <p style="margin:0 0 8px 0; color:#dc2626; font-size:14px; font-weight:600;">⚠️ この操作を行うと:</p>
+                    <ul style="margin:0; padding-left:18px; font-size:13px; color:#7f1d1d;">
+                        <li>RentPipeとフォームの連携が解除されます</li>
+                        <li>QRコードが表示されなくなります</li>
+                        <li>新しいフォームを生成し直す必要があります</li>
+                    </ul>
+                </div>
+                <p style="font-size:13px; color:#6b7280; margin:0;">※ Googleドライブ上のフォーム自体は削除されません</p>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button onclick="document.getElementById('resetFormModal').style.display='none'" style="padding:10px 20px; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;">キャンセル</button>
+                <button onclick="executeResetFormFromFormsPage()" style="padding:10px 20px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;">実行する</button>
+            </div>
+        </div>
+    </div>
 
     <!-- スクリプト -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
+    <script src="js/feature-flags.js"></script>
     <script src="js/session-manager.js"></script>
+    <script src="js/plan-manager.js"></script>
+    <script src="js/supabase-google-sync.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/integrated-auth-manager-v2.js"></script>
     <script src="js/google-drive-api-v2.js"></script>
@@ -576,6 +692,280 @@
         }
 
         console.log('✅ フォームページ準備完了');
+    </script>
+
+    <script>
+        // ===== フォーム設定セクション =====
+
+        // 個人情報説明文を生成（google-forms-api.js と共有するためグローバルに定義）
+        window.buildPrivacyDescription = function(agentName, agentCompany, thirdParties) {
+            const parties = (thirdParties || []).filter(p => p.name && p.name.trim());
+            const lines = [];
+            lines.push('このアンケートでご提供いただいたお客様の個人情報は、お部屋探しに関するご案内、ご連絡及び' + (agentCompany || '（会社名未設定）') + 'による仲介業務のために利用させていただきます。');
+            if (parties.length > 0) {
+                const names = parties.map(p => p.name.trim()).join('、');
+                lines.push('また、お客様のご要望に応じたご案内のため、' + names + 'に情報を提供する場合があります。');
+            }
+            if (agentName) {
+                lines.push('担当：' + agentName);
+            }
+            return lines.join('\n');
+        };
+
+        // フォーム設定を開いてスクロール
+        function openFormSettings() {
+            const body = document.getElementById('formSettingsBody');
+            const toggle = document.getElementById('formSettingsToggle');
+            if (body && (body.style.display === 'none' || body.style.display === '')) {
+                body.style.display = 'block';
+                if (toggle) toggle.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // フォーム設定アコーディオン
+        function toggleFormSettings(headerEl) {
+            const body = document.getElementById('formSettingsBody');
+            const toggle = document.getElementById('formSettingsToggle');
+            const isHidden = body.style.display === 'none' || body.style.display === '';
+            body.style.display = isHidden ? 'block' : 'none';
+            toggle.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+        }
+
+        // フォームステータス表示を更新（フォームページ用）
+        function updateFormConfigStatusForms() {
+            const config = window.GoogleFormsManager?.formConfig;
+            const statusEl = document.getElementById('formConfigStatusForms');
+            const titleEl = document.getElementById('formConfigTitleForms');
+            const descEl = document.getElementById('formConfigDescForms');
+            const createBtn = document.getElementById('createFormBtnForms');
+            const resetBtn = document.getElementById('resetFormBtnForms');
+            if (!statusEl) return;
+
+            if (config && config.formId) {
+                const createdAt = new Date(config.createdAt).toLocaleString('ja-JP');
+                statusEl.className = 'flex items-center gap-4 p-4 rounded-xl mb-4 bg-green-50 border border-green-200';
+                statusEl.querySelector('span').textContent = '✅';
+                if (titleEl) titleEl.textContent = 'フォーム作成済み';
+                if (descEl) descEl.textContent = '作成日: ' + createdAt;
+                if (createBtn) createBtn.style.display = 'none';
+                if (resetBtn) resetBtn.style.display = 'inline-flex';
+            } else {
+                statusEl.className = 'flex items-center gap-4 p-4 rounded-xl mb-4 bg-gray-50 border border-gray-200';
+                statusEl.querySelector('span').textContent = '📋';
+                if (titleEl) titleEl.textContent = 'フォーム未作成';
+                if (descEl) descEl.textContent = 'フォームを生成してください';
+                if (createBtn) createBtn.style.display = 'inline-flex';
+                if (resetBtn) resetBtn.style.display = 'none';
+            }
+        }
+
+        // フォーム生成（フォームページから）
+        async function createFormFromFormsPage() {
+            const btn = document.getElementById('createFormBtnForms');
+            const originalText = btn.innerHTML;
+            try {
+                const isAuthenticated = window.GoogleDriveAPIv2?.isAuthenticated ||
+                                        window.IntegratedAuthManager?.getAuthState()?.googleAuth?.accessToken;
+                if (!isAuthenticated) {
+                    alert('⚠️ 認証が必要です。ページを再読み込みしてください。');
+                    return;
+                }
+                btn.disabled = true;
+                btn.innerHTML = '⏳ 生成中...';
+                await window.GoogleFormsManager.createForm();
+                updateFormConfigStatusForms();
+                updateFormDisplay();
+                alert('✅ アンケートフォームを生成しました！\n\nQRコードとURLが上に表示されます。');
+            } catch (error) {
+                console.error('フォーム生成エラー:', error);
+                if (error.message === 'PRIVACY_NOT_SET') {
+                    alert('⚠️ フォームを生成する前に「個人情報取扱い設定」で所属会社名または独自プライバシーポリシーURLを入力・保存してください。');
+                    document.getElementById('privacyAgentCompanyForms')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    alert('❌ フォーム生成に失敗しました: ' + error.message);
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // フォームリセット確認（フォームページから）
+        function confirmResetFormFromFormsPage() {
+            const modal = document.getElementById('resetFormModal');
+            modal.style.display = 'flex';
+        }
+
+        // フォームリセット実行
+        async function executeResetFormFromFormsPage() {
+            document.getElementById('resetFormModal').style.display = 'none';
+            await window.GoogleFormsManager.resetFormConfig();
+            updateFormConfigStatusForms();
+            updateFormDisplay();
+            alert('✅ フォーム設定をリセットしました');
+        }
+
+        // ===== 個人情報取扱い設定（フォームページ用） =====
+        let privacyThirdPartiesForms = [];
+
+        function renderThirdPartyListForms() {
+            const list = document.getElementById('thirdPartyListForms');
+            if (!list) return;
+            if (privacyThirdPartiesForms.length === 0) {
+                list.innerHTML = '';
+                return;
+            }
+            list.innerHTML = privacyThirdPartiesForms.map((p, i) => `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="text" value="${p.name.replace(/"/g, '&quot;')}" placeholder="例: ABC仲介株式会社"
+                           style="flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 14px;"
+                           oninput="updateThirdPartyForms(${i}, this.value)">
+                    <button onclick="removeThirdPartyForms(${i})"
+                            style="background: none; border: none; color: #f87171; font-size: 18px; cursor: pointer; padding: 4px; line-height: 1;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addThirdPartyForms() {
+            privacyThirdPartiesForms.push({ id: crypto.randomUUID(), name: '' });
+            renderThirdPartyListForms();
+        }
+
+        function removeThirdPartyForms(index) {
+            privacyThirdPartiesForms.splice(index, 1);
+            renderThirdPartyListForms();
+            updatePrivacyPreviewForms();
+        }
+
+        function updateThirdPartyForms(index, value) {
+            if (privacyThirdPartiesForms[index]) privacyThirdPartiesForms[index].name = value;
+            updatePrivacyPreviewForms();
+        }
+
+        function updatePrivacyPreviewForms() {
+            const agentName = (document.getElementById('privacyAgentNameForms')?.value || '').trim();
+            const company = (document.getElementById('privacyAgentCompanyForms')?.value || '').trim();
+            const parties = privacyThirdPartiesForms.filter(p => p.name.trim());
+            const policyUrl = (document.getElementById('privacyPolicyUrlForms')?.value || '').trim();
+            const preview = document.getElementById('privacyPreviewForms');
+            if (preview) {
+                if (!agentName && !company && parties.length === 0 && !policyUrl) {
+                    preview.textContent = '（担当者名・企業名・提供先を入力すると表示されます）';
+                } else {
+                    let text = window.buildPrivacyDescription
+                        ? window.buildPrivacyDescription(agentName, company, parties)
+                        : '';
+                    if (policyUrl) {
+                        text += '\n\n▶ 個人情報取扱い方針：' + policyUrl;
+                    }
+                    preview.textContent = text;
+                }
+            }
+        }
+
+        async function loadPrivacySettingsForms() {
+            try {
+                const cached = localStorage.getItem('rentpipe_privacy_settings');
+                if (cached) {
+                    const settings = JSON.parse(cached);
+                    if (document.getElementById('privacyAgentNameForms'))
+                        document.getElementById('privacyAgentNameForms').value = settings.agentName || '';
+                    if (document.getElementById('privacyAgentCompanyForms'))
+                        document.getElementById('privacyAgentCompanyForms').value = settings.agentCompany || '';
+                    privacyThirdPartiesForms = settings.thirdParties || [];
+                    if (document.getElementById('privacyPolicyUrlForms'))
+                        document.getElementById('privacyPolicyUrlForms').value = settings.privacyPolicyUrl || '';
+                    renderThirdPartyListForms();
+                    updatePrivacyPreviewForms();
+                }
+
+                const savedUser = window.supabaseGoogleSync?.getSavedUser();
+                if (!savedUser?.id || !savedUser?.email) return;
+
+                const res = await fetch('/api/user/privacy-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: savedUser.id, email: savedUser.email, _action: 'get' })
+                });
+                if (res.ok) {
+                    const { settings } = await res.json();
+                    if (settings) {
+                        if (document.getElementById('privacyAgentNameForms'))
+                            document.getElementById('privacyAgentNameForms').value = settings.agentName || '';
+                        if (document.getElementById('privacyAgentCompanyForms'))
+                            document.getElementById('privacyAgentCompanyForms').value = settings.agentCompany || '';
+                        privacyThirdPartiesForms = settings.thirdParties || [];
+                        if (document.getElementById('privacyPolicyUrlForms'))
+                            document.getElementById('privacyPolicyUrlForms').value = settings.privacyPolicyUrl || '';
+                        renderThirdPartyListForms();
+                        updatePrivacyPreviewForms();
+                        localStorage.setItem('rentpipe_privacy_settings', JSON.stringify(settings));
+                    }
+                }
+            } catch (e) {
+                console.warn('個人情報設定読み込みエラー (forms):', e);
+            }
+        }
+
+        async function savePrivacySettingsForms() {
+            const agentName = (document.getElementById('privacyAgentNameForms')?.value || '').trim();
+            const agentCompany = (document.getElementById('privacyAgentCompanyForms')?.value || '').trim();
+            const thirdParties = privacyThirdPartiesForms.filter(p => p.name.trim());
+            const privacyPolicyUrl = (document.getElementById('privacyPolicyUrlForms')?.value || '').trim();
+
+            const status = document.getElementById('privacySaveStatusForms');
+            status.style.display = 'block';
+            status.textContent = '保存中...';
+            status.style.color = '#6b7280';
+
+            try {
+                const savedUser = window.supabaseGoogleSync?.getSavedUser();
+                if (!savedUser?.id || !savedUser?.email) {
+                    throw new Error('ユーザー情報が見つかりません。再度ログインしてください。');
+                }
+                const res = await fetch('/api/user/privacy-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: savedUser.id,
+                        email: savedUser.email,
+                        agentName,
+                        agentCompany,
+                        thirdParties,
+                        privacyPolicyUrl
+                    })
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || '保存に失敗しました');
+                }
+                localStorage.setItem('rentpipe_privacy_settings',
+                    JSON.stringify({ agentName, agentCompany, thirdParties, privacyPolicyUrl }));
+                status.textContent = '✅ 保存しました';
+                status.style.color = '#16a34a';
+                updatePrivacyPreviewForms();
+            } catch (e) {
+                console.error('個人情報設定保存エラー (forms):', e);
+                status.textContent = '❌ ' + e.message;
+                status.style.color = '#dc2626';
+            }
+        }
+
+        // ページ初期化後にフォーム設定を読み込む
+        document.addEventListener('DOMContentLoaded', () => {
+            // AppInitializer完了後に読み込む
+            if (window.AppInitializer && window.AppInitializer.initializationPromise) {
+                window.AppInitializer.initializationPromise.then(() => {
+                    updateFormConfigStatusForms();
+                    loadPrivacySettingsForms();
+                });
+            } else {
+                setTimeout(() => {
+                    updateFormConfigStatusForms();
+                    loadPrivacySettingsForms();
+                }, 800);
+            }
+        });
     </script>
 </body>
 </html>

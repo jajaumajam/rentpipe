@@ -1309,6 +1309,7 @@
     <script src="js/google-calendar-api.js"></script>
     <script src="js/pipeline-config.js"></script>
     <script src="js/app-initializer.js"></script>
+    <script src="js/page-initializer.js"></script>
 
     <script>
         console.log('📝 顧客フォームページ読み込み開始...');
@@ -1539,8 +1540,10 @@
             // ナビゲーション表示
             loadNavigation();
 
-            // 全セクションを初期状態で折りたたむ
-            document.querySelectorAll('.form-section').forEach(s => s.classList.add('collapsed'));
+            // 全セクションを初期状態で折りたたむ（基本情報セクションは展開のまま）
+            document.querySelectorAll('.form-section').forEach((s, i) => {
+                if (i !== 0) s.classList.add('collapsed');
+            });
 
             // パイプライン状態の選択肢を PipelineConfig から動的生成
             const pipelineStatusSelect = document.getElementById('pipelineStatus');

@@ -101,6 +101,33 @@ const PageInitializer = {
     showLoading(message = '処理中...') {
         let overlay = document.getElementById(this.config.loadingOverlayId);
 
+        // skeleton-pulse アニメーションが未定義なら追加
+        if (!document.getElementById('page-initializer-styles')) {
+            const style = document.createElement('style');
+            style.id = 'page-initializer-styles';
+            style.textContent = `
+                @keyframes skeleton-pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.4; }
+                }
+                #loading-overlay .loading-content {
+                    background: white;
+                    padding: 32px 40px;
+                    border-radius: 16px;
+                    text-align: center;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+                #loading-overlay .loading-spinner {
+                    border: 4px solid #e5e7eb !important;
+                    border-top: 4px solid #3d4e6b !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         // オーバーレイがなければ作成
         if (!overlay) {
             overlay = document.createElement('div');
@@ -109,7 +136,11 @@ const PageInitializer = {
             overlay.innerHTML = `
                 <div class="loading-content">
                     <div class="loading-spinner"></div>
-                    <p class="loading-text">${message}</p>
+                    <p class="loading-text" style="font-size:14px;color:#6b7280;margin:8px 0 0;">${message}</p>
+                    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;width:160px;">
+                        <div style="height:9px;background:#f3f4f6;border-radius:6px;animation:skeleton-pulse 1.5s ease-in-out infinite;"></div>
+                        <div style="height:9px;background:#f3f4f6;border-radius:6px;width:75%;animation:skeleton-pulse 1.5s ease-in-out infinite 0.2s;"></div>
+                    </div>
                 </div>
             `;
             document.body.appendChild(overlay);
