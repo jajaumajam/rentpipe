@@ -4,7 +4,7 @@ window.createNavigation = function() {
 
     const nav = `
         <nav style="background: linear-gradient(135deg, #3d4e6b 0%, #576078 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;">
-            <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <div style="max-width: 1536px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
                 <!-- ロゴ -->
                 <img src="img/logo-horizontal-white.svg" alt="RentPipe" style="height:28px;display:block;">
 
@@ -122,7 +122,7 @@ window.createNavigation = function() {
                 animation: slideDown 0.2s ease-out;
             }
             .mobile-menu-content {
-                max-width: 1200px;
+                max-width: 1536px;
                 margin: 0 auto;
                 padding: 0.5rem;
             }
