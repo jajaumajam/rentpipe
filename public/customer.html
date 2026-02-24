@@ -408,8 +408,25 @@
             表示: <strong class="text-gray-800" id="display-count">0</strong> 件 / 全 <strong class="text-gray-800" id="total-count">0</strong> 件
         </div>
 
+        <!-- 顧客テーブル スケルトン -->
+        <div id="customer-table-skeleton" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex flex-col items-center gap-4 py-14 px-8">
+                <div class="w-10 h-10 rounded-full border-4 border-gray-200 border-t-rentpipe-primary"
+                     style="animation: spin 1s linear infinite;"></div>
+                <div class="text-sm text-gray-400">読み込み中...</div>
+                <div class="w-full max-w-xs space-y-2">
+                    <div class="h-3 bg-gray-200 rounded"
+                         style="animation: skeleton-pulse 1.5s ease-in-out infinite;"></div>
+                    <div class="h-3 bg-gray-200 rounded w-4/5 mx-auto"
+                         style="animation: skeleton-pulse 1.5s ease-in-out infinite 0.2s;"></div>
+                    <div class="h-3 bg-gray-200 rounded w-3/5 mx-auto"
+                         style="animation: skeleton-pulse 1.5s ease-in-out infinite 0.4s;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 顧客テーブル -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div id="customer-table-wrapper" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="display: none;">
             <div class="overflow-x-auto">
             <table class="customer-table w-full" id="customer-table">
                 <thead>
@@ -424,10 +441,6 @@
                     </tr>
                 </thead>
                 <tbody id="customer-tbody">
-                    <!-- スケルトンローダー -->
-                    <tr class="skeleton-row"><td colspan="7" class="px-4 py-3"><div class="skeleton-line"></div></td></tr>
-                    <tr class="skeleton-row"><td colspan="7" class="px-4 py-3"><div class="skeleton-line"></div></td></tr>
-                    <tr class="skeleton-row"><td colspan="7" class="px-4 py-3"><div class="skeleton-line" style="width:80%"></div></td></tr>
                 </tbody>
             </table>
             </div><!-- /overflow-x-auto -->
@@ -536,9 +549,12 @@
             }
         });
 
-        // スケルトンを除去（データ読み込み完了時）
+        // スケルトンを除去してテーブルを表示（データ読み込み完了時）
         function showContent() {
-            document.querySelectorAll('.skeleton-row').forEach(r => r.remove());
+            const skeleton = document.getElementById('customer-table-skeleton');
+            if (skeleton) skeleton.remove();
+            const wrapper = document.getElementById('customer-table-wrapper');
+            if (wrapper) wrapper.style.display = 'block';
         }
 
         // 最大5秒でスケルトンを強制除去（フォールバック）

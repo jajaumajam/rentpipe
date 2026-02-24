@@ -471,6 +471,18 @@
                 <span class="accordion-toggle">▼</span>
             </div>
             <div class="accordion-body">
+            <!-- プラン読み込み中スケルトン -->
+            <div id="plan-skeleton" class="flex items-center gap-3 py-6 px-1">
+                <div class="w-7 h-7 flex-shrink-0 rounded-full border-4 border-gray-200 border-t-rentpipe-primary"
+                     style="animation: spin 1s linear infinite;"></div>
+                <div class="flex-1 space-y-2">
+                    <div class="h-3 bg-gray-200 rounded w-3/5"
+                         style="animation: skeleton-pulse 1.5s ease-in-out infinite;"></div>
+                    <div class="h-3 bg-gray-200 rounded w-2/5"
+                         style="animation: skeleton-pulse 1.5s ease-in-out infinite 0.2s;"></div>
+                </div>
+            </div>
+
             <p class="text-sm text-gray-500 accordion-desc">現在のプランと機能を確認できます</p>
 
             <!-- ベータ版バナー（BETA_MODE = true の場合のみ表示） -->
@@ -612,6 +624,11 @@
 
         // 最大5秒でスケルトンを強制除去（フォールバック）
         setTimeout(hideLoading, 5000);
+        // plan-skeleton も5秒でフォールバック除去
+        setTimeout(() => {
+            const s = document.getElementById('plan-skeleton');
+            if (s) s.remove();
+        }, 5000);
 
         // ページ初期化
         document.addEventListener('DOMContentLoaded', async () => {
@@ -824,8 +841,15 @@
                     }
                 }
 
+                // プラン読み込み完了：スケルトンを除去
+                const planSkeleton = document.getElementById('plan-skeleton');
+                if (planSkeleton) planSkeleton.remove();
+
             } catch (error) {
                 console.error('プラン情報更新エラー:', error);
+                // エラー時もスケルトンを除去
+                const planSkeleton = document.getElementById('plan-skeleton');
+                if (planSkeleton) planSkeleton.remove();
             }
         }
 
