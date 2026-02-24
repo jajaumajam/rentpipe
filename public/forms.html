@@ -387,8 +387,8 @@
                         <button id="createFormBtnForms" class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold rounded-lg text-sm transition-all" style="background:#3d4e6b;" onmouseover="this.style.background='#2e3c52'" onmouseout="this.style.background='#3d4e6b'" onclick="createFormFromFormsPage()">
                             ✨ フォームを生成
                         </button>
-                        <button id="resetFormBtnForms" class="inline-flex items-center gap-2 px-5 py-2.5 font-semibold rounded-lg text-sm transition-all border border-red-200 text-red-600 bg-red-50 hover:bg-red-100" style="display:none;" onclick="confirmResetFormFromFormsPage()">
-                            🗑️ フォーム設定をリセット
+                        <button id="resetFormBtnForms" class="inline-flex items-center gap-2 px-5 py-2.5 font-semibold rounded-lg text-sm transition-all border border-red-200 text-red-600 bg-red-50 hover:bg-red-100" style="display:none;" onclick="confirmRegenerateFormFromFormsPage()">
+                            🔄 フォームを削除して再生成
                         </button>
                     </div>
 
@@ -729,6 +729,8 @@
             const isHidden = body.style.display === 'none' || body.style.display === '';
             body.style.display = isHidden ? 'block' : 'none';
             toggle.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+            // 開いた時にステータスを最新化（初期表示時に GoogleFormsManager が未初期化の場合に対応）
+            if (isHidden) updateFormConfigStatusForms();
         }
 
         // フォームステータス表示を更新（フォームページ用）
@@ -764,9 +766,9 @@
             const btn = document.getElementById('createFormBtnForms');
             const originalText = btn.innerHTML;
             try {
-                const isAuthenticated = window.GoogleDriveAPIv2?.isAuthenticated ||
-                                        window.IntegratedAuthManager?.getAuthState()?.googleAuth?.accessToken;
-                if (!isAuthenticated) {
+                // GoogleFormsManager.getAccessToken() で認証チェックを統一
+                const accessToken = window.GoogleFormsManager?.getAccessToken?.();
+                if (!accessToken) {
                     alert('⚠️ 認証が必要です。ページを再読み込みしてください。');
                     return;
                 }
@@ -784,6 +786,42 @@
                 } else {
                     alert('❌ フォーム生成に失敗しました: ' + error.message);
                 }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // フォームを削除して再生成（確認）
+        function confirmRegenerateFormFromFormsPage() {
+            if (confirm('既存のフォームを削除して新しいフォームを再生成しますか？\n\n注意: 既存のフォームへのリンク・QRコードは無効になります。')) {
+                executeRegenerateFormFromFormsPage();
+            }
+        }
+
+        // フォームを削除して再生成（実行）
+        async function executeRegenerateFormFromFormsPage() {
+            const btn = document.getElementById('resetFormBtnForms');
+            const originalText = btn.innerHTML;
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ 処理中...';
+                await window.GoogleFormsManager.resetFormConfig();
+                await window.GoogleFormsManager.createForm();
+                updateFormConfigStatusForms();
+                updateFormDisplay();
+                alert('✅ フォームを再生成しました！\n\n新しいQRコードとURLが上に表示されます。');
+            } catch (error) {
+                console.error('フォーム再生成エラー:', error);
+                if (error.message === 'PRIVACY_NOT_SET') {
+                    alert('⚠️ フォームを生成する前に「個人情報取扱い設定」で所属会社名または独自プライバシーポリシーURLを入力・保存してください。');
+                    document.getElementById('privacyAgentCompanyForms')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    alert('❌ フォーム再生成に失敗しました: ' + error.message);
+                }
+                // リセットは完了している可能性があるためステータスを更新
+                updateFormConfigStatusForms();
+                updateFormDisplay();
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;

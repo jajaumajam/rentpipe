@@ -1635,7 +1635,8 @@
 
         // セクションスケルトン表示・非表示ヘルパー
         function showSectionSkeletons() {
-            document.querySelectorAll('.section-skeleton').forEach(el => {
+            // collapsed でない（展開中の）セクションのスケルトンだけ表示
+            document.querySelectorAll('.form-section:not(.collapsed) .section-skeleton').forEach(el => {
                 el.style.display = 'flex';
             });
         }
@@ -1700,6 +1701,8 @@
                 showSectionSkeletons();
                 // 5秒フォールバック
                 setTimeout(() => { hideSectionSkeletons(); }, 5000);
+                // ブラウザが描画する機会を1フレーム確保してからデータ取得
+                await new Promise(r => setTimeout(r, 50));
                 await loadCustomerData(customerId);
                 hideSectionSkeletons();
             }
