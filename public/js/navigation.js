@@ -3,7 +3,7 @@ window.createNavigation = function() {
     const currentPage = window.location.pathname.split('/').pop() || 'customer.html';
 
     const nav = `
-        <nav style="background: linear-gradient(135deg, #3d4e6b 0%, #576078 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;">
+        <nav style="background: linear-gradient(135deg, #3d4e6b 0%, #576078 100%); padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: fixed; top: 0; left: 0; right: 0; z-index: 1000;">
             <div style="max-width: 1536px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
                 <!-- ロゴ -->
                 <img src="img/logo-horizontal-white.svg" alt="RentPipe" style="height:28px;display:block;">
@@ -178,6 +178,11 @@ window.createNavigation = function() {
     const navContainer = document.getElementById('navigation');
     if (navContainer) {
         navContainer.innerHTML = nav;
+        // fixed ナビゲーション分のpaddingをbodyに設定（コンテンツが隠れないよう補正）
+        const navEl = navContainer.querySelector('nav');
+        if (navEl) {
+            document.body.style.paddingTop = navEl.offsetHeight + 'px';
+        }
     }
 
     // ユーザー情報表示
