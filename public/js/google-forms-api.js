@@ -158,7 +158,7 @@ const GoogleFormsManager = {
 
         console.log('📝 Google Form 生成開始...');
 
-        // 1. 空のフォームを作成（API仕様: 作成時はtitleのみ設定可能）
+        // 1. 空のフォームを作成（API仕様: title・documentTitleは作成時のみ設定可能）
         const createResponse = await fetch('https://forms.googleapis.com/v1/forms', {
             method: 'POST',
             headers: {
@@ -167,7 +167,8 @@ const GoogleFormsManager = {
             },
             body: JSON.stringify({
                 info: {
-                    title: 'お部屋探しアンケート - RentPipe'
+                    title: 'お部屋探しアンケート - RentPipe',
+                    documentTitle: 'お部屋探しアンケート'
                 }
             })
         });
@@ -187,10 +188,9 @@ const GoogleFormsManager = {
             {
                 updateFormInfo: {
                     info: {
-                        description: description,
-                        documentTitle: 'お部屋探しアンケート'
+                        description: description
                     },
-                    updateMask: 'description,documentTitle'
+                    updateMask: 'description'
                 }
             },
             ...this.buildFormQuestions()
