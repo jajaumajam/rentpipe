@@ -524,13 +524,19 @@
     <!-- ナビゲーション（動的生成） -->
     <div id="navigation"></div>
 
+    <!-- 編集モード読み込み中オーバーレイ -->
+    <div id="editLoadingOverlay" style="display:none; position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:500; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+        <div style="width:48px;height:48px;border-radius:50%;border:4px solid #e5e7eb;border-top-color:#3d4e6b;animation:spin 1s linear infinite;"></div>
+        <p style="color:#3d4e6b;font-weight:600;font-size:15px;margin:0;">顧客データを読み込み中...</p>
+    </div>
+
     <!-- お知らせバナー -->
     <div id="notification-banners" style="max-width: 1200px; margin: 0 auto; padding: 16px 20px 0;"></div>
 
     <div class="form-container">
         <div class="form-card">
             <div class="form-header">
-                <h1 id="formTitle">📱 お部屋探しアンケート</h1>
+                <h1 id="formTitle">📝 新規顧客登録</h1>
                 <p id="formDescription">まずは基本的な情報を教えてください</p>
                 <span class="time-estimate">所要時間: 約5分</span>
             </div>
@@ -1381,11 +1387,11 @@
                         ※ 契約更新後や、リピート確認など任意のタイミングでフォロー予定を追加できます
                     </p>
                 </div>
+                </div>
 
                 <div class="button-group">
                     <button type="button" class="btn btn-secondary" onclick="handleCancel()">キャンセル</button>
                     <button type="submit" class="btn btn-primary" id="submitBtn">登録する</button>
-                </div><!-- /section-body -->
                 </div>
             </form>
         </div>
@@ -1646,6 +1652,14 @@
 
         // ページ初期化完了後に編集モードをチェック
         document.addEventListener('DOMContentLoaded', async () => {
+            // 編集モードの場合は即座にオーバーレイを表示（空欄フラッシュ防止）
+            const urlParamsEarly = new URLSearchParams(window.location.search);
+            if (urlParamsEarly.has('edit')) {
+                document.getElementById('editLoadingOverlay').style.display = 'flex';
+            } else {
+                document.title = '新規顧客登録 - RentPipe';
+            }
+
             // ナビゲーション表示
             loadNavigation();
 
@@ -1683,6 +1697,7 @@
                 editingCustomerId = customerId;
 
                 // タイトル変更
+                document.title = '顧客情報編集 - RentPipe';
                 document.getElementById('formTitle').textContent = '✏️ 顧客情報編集';
                 document.getElementById('formDescription').textContent = '顧客情報を更新してください';
                 document.querySelector('.time-estimate').style.display = 'none';
@@ -1699,12 +1714,17 @@
 
                 // セクション内インラインスケルトンを表示してから顧客データを読み込み
                 showSectionSkeletons();
-                // 5秒フォールバック
-                setTimeout(() => { hideSectionSkeletons(); }, 5000);
+                // 5秒フォールバック（スケルトン・オーバーレイ両方を解除）
+                setTimeout(() => {
+                    hideSectionSkeletons();
+                    document.getElementById('editLoadingOverlay').style.display = 'none';
+                }, 5000);
                 // ブラウザが描画する機会を1フレーム確保してからデータ取得
                 await new Promise(r => setTimeout(r, 50));
                 await loadCustomerData(customerId);
                 hideSectionSkeletons();
+                // オーバーレイを解除
+                document.getElementById('editLoadingOverlay').style.display = 'none';
             }
         });
 
