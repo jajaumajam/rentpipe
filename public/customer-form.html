@@ -538,7 +538,6 @@
             <div class="form-header">
                 <h1 id="formTitle">📝 新規顧客登録</h1>
                 <p id="formDescription">まずは基本的な情報を教えてください</p>
-                <span class="time-estimate">所要時間: 約5分</span>
             </div>
 
             <form id="customerForm" onsubmit="handleSubmit(event)">
@@ -1700,7 +1699,6 @@
                 document.title = '顧客情報編集 - RentPipe';
                 document.getElementById('formTitle').textContent = '✏️ 顧客情報編集';
                 document.getElementById('formDescription').textContent = '顧客情報を更新してください';
-                document.querySelector('.time-estimate').style.display = 'none';
                 document.getElementById('submitBtn').textContent = '更新する';
 
                 // 管理者セクションを表示（visibleクラスを追加）
@@ -2303,7 +2301,13 @@
             if (additionalFollowUpSection) additionalFollowUpSection.style.display = 'none';
 
             if (archiveSection && isEditMode) {
-                // 編集モードのみ表示
+                // 初回相談はアーカイブ不要のため非表示
+                const hideStatuses = ['初回相談'];
+                if (hideStatuses.includes(status)) {
+                    archiveSection.style.display = 'none';
+                    return;
+                }
+
                 archiveSection.style.display = 'block';
 
                 // 審査中以降は成約/失注の両方、それ以前は失注のみ
