@@ -69,6 +69,15 @@
             display: block !important;
         }
 
+        /* 内見予定・アーカイブ・追加フォローアップは初期非表示（JSで制御） */
+        #viewingScheduleSection, #archiveSection, #additionalFollowUpSection {
+            display: none !important;
+        }
+
+        #viewingScheduleSection.visible, #archiveSection.visible, #additionalFollowUpSection.visible {
+            display: block !important;
+        }
+
 
         .form-section:last-of-type {
             border-bottom: none;
@@ -2100,9 +2109,9 @@
             if (!section) return;
 
             if (isEditMode && status === '内見調整') {
-                section.style.display = 'block';
+                section.classList.add('visible');
             } else {
-                section.style.display = 'none';
+                section.classList.remove('visible');
             }
         }
 
@@ -2291,24 +2300,24 @@
                 const customer = window.UnifiedDataManager?.getCustomerById(editingCustomerId);
                 if (customer && customer.isActive === false && customer.archiveReason === '成約') {
                     // 成約アーカイブ済み：アーカイブセクション非表示、追加フォローアップセクション表示
-                    if (archiveSection) archiveSection.style.display = 'none';
-                    if (additionalFollowUpSection) additionalFollowUpSection.style.display = 'block';
+                    if (archiveSection) archiveSection.classList.remove('visible');
+                    if (additionalFollowUpSection) additionalFollowUpSection.classList.add('visible');
                     return;
                 }
             }
 
             // 追加フォローアップセクションは非表示
-            if (additionalFollowUpSection) additionalFollowUpSection.style.display = 'none';
+            if (additionalFollowUpSection) additionalFollowUpSection.classList.remove('visible');
 
             if (archiveSection && isEditMode) {
                 // 初回相談はアーカイブ不要のため非表示
                 const hideStatuses = ['初回相談'];
                 if (hideStatuses.includes(status)) {
-                    archiveSection.style.display = 'none';
+                    archiveSection.classList.remove('visible');
                     return;
                 }
 
-                archiveSection.style.display = 'block';
+                archiveSection.classList.add('visible');
 
                 // 審査中以降は成約/失注の両方、それ以前は失注のみ
                 const advancedStatuses = ['審査中', '契約手続き', '完了'];
