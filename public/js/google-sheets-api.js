@@ -6,7 +6,6 @@ window.GoogleSheetsAPI = {
     config: {
         clientId: '586040985916-r5v9q1242tiplplj0p5p9f664c70ipjj.apps.googleusercontent.com',
         scopes: [
-            'https://www.googleapis.com/auth/spreadsheets',
             'https://www.googleapis.com/auth/drive.file'
         ],
         discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
